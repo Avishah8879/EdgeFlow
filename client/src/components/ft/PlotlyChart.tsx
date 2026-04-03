@@ -1,23 +1,13 @@
 /**
- * PlotlyChart - Wrapper for react-plotly.js that works with CDN-loaded Plotly
+ * PlotlyChart - Wrapper for react-plotly.js using bundled plotly.js
  *
- * This component handles the case where Plotly is loaded from CDN (window.Plotly)
- * rather than being bundled. It uses createPlotlyComponent from react-plotly.js
- * to create a React component that uses the global Plotly instance.
- *
- * This approach avoids bundling the 4.7MB plotly.js library, which causes
- * memory issues during Vite builds on memory-constrained environments.
+ * Uses the bundled plotly.js npm package rather than CDN loading,
+ * which is more reliable and avoids window.Plotly undefined crashes.
  */
+import Plotly from 'plotly.js';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
-// Declare the global Plotly type from CDN
-declare global {
-  interface Window {
-    Plotly: typeof import('plotly.js');
-  }
-}
-
-// Create the Plot component using the global Plotly instance loaded via CDN
-const PlotlyChart = createPlotlyComponent(window.Plotly);
+// Create the Plot component using the bundled Plotly instance
+const PlotlyChart = createPlotlyComponent(Plotly as any);
 
 export default PlotlyChart;

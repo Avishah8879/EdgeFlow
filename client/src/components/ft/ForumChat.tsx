@@ -28,6 +28,8 @@ export function ForumChat() {
     queryKey: QUERY_KEY,
     refetchInterval: 3000,
     placeholderData: keepPreviousData,
+    select: (raw: any) =>
+      Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [],
   });
 
   const { mutate: postMessage, isPending: isSending, error: sendError } = useMutation<

@@ -21,6 +21,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id: string) {
+          if (id.includes('node_modules/plotly.js')) {
+            return 'vendor-plotly';
+          }
           if (id.includes('node_modules/lightweight-charts') || id.includes('node_modules/recharts')) {
             return 'vendor-charts';
           }

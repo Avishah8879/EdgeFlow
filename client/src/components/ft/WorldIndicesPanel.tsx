@@ -63,6 +63,21 @@ export function WorldIndicesPanel() {
     queryKey: ['/api/indices'],
     staleTime: 60000, // 1 minute
     refetchInterval: 60000, // Auto-refresh every minute
+    select: (raw: any): MarketIndex[] => {
+      const arr = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+      return arr.map((item: any): MarketIndex => ({
+        symbol: item.symbol ?? '',
+        name: item.name ?? item.symbol ?? '',
+        region: (item.region as MarketIndex['region']) ?? 'Asia-Pacific',
+        value: Number(item.value ?? item.ltp ?? item.last_price ?? 0),
+        change: Number(item.change ?? 0),
+        changePercent: Number(item.changePercent ?? item.change_pct ?? item.change_percent ?? 0),
+        dayLow: Number(item.dayLow ?? item.low ?? item.value ?? item.ltp ?? 0),
+        dayHigh: Number(item.dayHigh ?? item.high ?? item.value ?? item.ltp ?? 0),
+        volume: item.volume ? Number(item.volume) : undefined,
+        lastUpdate: item.lastUpdate ?? item.updated_at ?? new Date().toISOString(),
+      }));
+    },
   });
 
   const formatVolume = (volume?: number): string => {
