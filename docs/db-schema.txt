@@ -1,0 +1,1395 @@
+================================================================================
+TIPHUB DATABASE SCHEMA DOCUMENTATION
+================================================================================
+
+Database: Tiphub
+Host: 13.204.159.237
+Generated: 2025-12-22T19:36:53.891483
+
+DATABASE STATISTICS
+--------------------------------------------------------------------------------
+Total Tables:           7
+Tables with Data:       7
+Empty Tables:           0
+Continuous Aggregates:  3
+Materialized Views:     0
+Database Size:          8669 MB
+
+
+================================================================================
+TABLES DIRECTORY
+================================================================================
+
+  ltp_live                                        28302753 rows       7209 MB
+  market_movers_live                                    80 rows        216 kB
+  ohlc_1hour                                      18201865 rows         24 kB
+  ohlc_1min_intraday                                577947 rows         24 kB
+  stock_analysis                                      2958 rows       1080 kB
+  stock_fundamentals                                  3014 rows         31 MB
+  tickers                                             3014 rows        960 kB
+
+
+================================================================================
+DETAILED TABLE SCHEMAS
+================================================================================
+
+
+--------------------------------------------------------------------------------
+TABLE: ltp_live
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 28302753
+Size: 7209 MB
+
+COLUMNS:
+  id                             int4                 NOT NULL   DEFAULT nextval('ltp_live_id_seq_new'::regclass) [PK]
+  ticker_id                      int4                 NOT NULL   
+  symbol                         character varying(50) NOT NULL   
+  exchange                       character varying(10) NOT NULL   
+  token                          character varying(50) NOT NULL   
+  ltp                            numeric              NOT NULL   
+  open                           numeric              NOT NULL   
+  high                           numeric              NOT NULL   
+  low                            numeric              NOT NULL   
+  close                          numeric              NOT NULL   
+  percent_change                 numeric              NULL       
+  trade_volume                   int8                 NULL       
+  lower_circuit                  numeric              NULL       
+  upper_circuit                  numeric              NULL       
+  week_52_low                    numeric              NULL       
+  week_52_high                   numeric              NULL       
+  timestamp                      timestamp            NOT NULL   DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  ticker_id -> tickers(id)
+
+INDEXES:
+  idx_ltp_live_symbol (symbol) - btree
+    Definition: CREATE INDEX idx_ltp_live_symbol ON public.ltp_live USING btree (symbol)
+  idx_ltp_live_ticker (ticker_id) - btree
+    Definition: CREATE INDEX idx_ltp_live_ticker ON public.ltp_live USING btree (ticker_id)
+  idx_ltp_live_ticker_timestamp (ticker_id, timestamp) - btree
+    Definition: CREATE INDEX idx_ltp_live_ticker_timestamp ON public.ltp_live USING btree (ticker_id, "timestamp" DESC)
+  idx_ltp_live_timestamp (timestamp) - btree
+    Definition: CREATE INDEX idx_ltp_live_timestamp ON public.ltp_live USING btree ("timestamp" DESC)
+  [PRIMARY] UNIQUE ltp_live_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX ltp_live_pkey ON public.ltp_live USING btree (id)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 17180
+    ticker_id: 1918
+    symbol: CHAVDA
+    exchange: NSE
+    token: 18654
+    ltp: 119.60
+    open: 0.00
+    high: 122.00
+    low: 119.00
+    close: 123.10
+    percent_change: NULL
+    trade_volume: NULL
+    lower_circuit: NULL
+    upper_circuit: NULL
+    week_52_low: NULL
+    week_52_high: NULL
+    timestamp: 2025-12-15T09:15:17.071545
+
+  Row 2:
+    id: 17226
+    ticker_id: 687
+    symbol: STYLAMIND
+    exchange: NSE
+    token: 5186
+    ltp: 2221.00
+    open: 2210.10
+    high: 2221.00
+    low: 2200.00
+    close: 2227.60
+    percent_change: NULL
+    trade_volume: NULL
+    lower_circuit: NULL
+    upper_circuit: NULL
+    week_52_low: NULL
+    week_52_high: NULL
+    timestamp: 2025-12-15T09:15:17.268667
+
+  Row 3:
+    id: 17227
+    ticker_id: 335
+    symbol: SUMIT
+    exchange: NSE
+    token: 11140
+    ltp: 70.00
+    open: 70.00
+    high: 70.00
+    low: 70.00
+    close: 69.63
+    percent_change: NULL
+    trade_volume: NULL
+    lower_circuit: NULL
+    upper_circuit: NULL
+    week_52_low: NULL
+    week_52_high: NULL
+    timestamp: 2025-12-15T09:15:17.268681
+
+  Row 4:
+    id: 17400
+    ticker_id: 2032
+    symbol: SWARAJENG
+    exchange: NSE
+    token: 3384
+    ltp: 3710.00
+    open: 3710.00
+    high: 3710.00
+    low: 3710.00
+    close: 3712.70
+    percent_change: NULL
+    trade_volume: NULL
+    lower_circuit: NULL
+    upper_circuit: NULL
+    week_52_low: NULL
+    week_52_high: NULL
+    timestamp: 2025-12-15T09:15:17.580598
+
+  Row 5:
+    id: 17571
+    ticker_id: 1476
+    symbol: DUCOL
+    exchange: NSE
+    token: 13766
+    ltp: 160.00
+    open: 0.00
+    high: 160.20
+    low: 157.05
+    close: 159.35
+    percent_change: NULL
+    trade_volume: NULL
+    lower_circuit: NULL
+    upper_circuit: NULL
+    week_52_low: NULL
+    week_52_high: NULL
+    timestamp: 2025-12-15T09:15:18.000998
+
+
+--------------------------------------------------------------------------------
+TABLE: market_movers_live
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 80
+Size: 216 kB
+
+COLUMNS:
+  id                             int4                 NOT NULL   DEFAULT nextval('market_movers_live_id_seq_new'::regclass) [PK]
+  ticker_id                      int4                 NOT NULL   
+  symbol                         character varying(50) NOT NULL   
+  ltp                            numeric              NOT NULL   
+  change_percent                 numeric              NULL       
+  change_amount                  numeric              NULL       
+  trade_volume                   int8                 NULL       
+  lower_circuit                  numeric              NULL       
+  upper_circuit                  numeric              NULL       
+  week_52_low                    numeric              NULL       
+  week_52_high                   numeric              NULL       
+  proximity_percent              numeric              NULL       
+  category                       character varying(20) NOT NULL   
+  rank                           int4                 NOT NULL   
+  snapshot_time                  timestamp            NOT NULL   DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  ticker_id -> tickers(id)
+
+CHECK CONSTRAINTS:
+  market_movers_live_category_check: CHECK (((category)::text = ANY ((ARRAY['GAINER'::character varying, 'LOSER'::character varying, 'NEAR_52W_HIGH'::character varying, 'NEAR_52W_LOW'::character varying, 'VOLUME_GAINER'::character varying])::text[])))
+  market_movers_live_rank_check: CHECK (((rank > 0) AND (rank <= 20)))
+
+INDEXES:
+  idx_movers_category (category) - btree
+    Definition: CREATE INDEX idx_movers_category ON public.market_movers_live USING btree (category)
+  idx_movers_category_rank (category, rank) - btree
+    Definition: CREATE INDEX idx_movers_category_rank ON public.market_movers_live USING btree (category, rank)
+  idx_movers_latest_rank (category, rank, snapshot_time) - btree
+    Definition: CREATE INDEX idx_movers_latest_rank ON public.market_movers_live USING btree (category, snapshot_time DESC, rank)
+  idx_movers_snapshot (snapshot_time) - btree
+    Definition: CREATE INDEX idx_movers_snapshot ON public.market_movers_live USING btree (snapshot_time DESC)
+  idx_movers_ticker (ticker_id) - btree
+    Definition: CREATE INDEX idx_movers_ticker ON public.market_movers_live USING btree (ticker_id)
+  UNIQUE idx_movers_unique_snapshot (ticker_id, category, snapshot_time) - btree
+    Definition: CREATE UNIQUE INDEX idx_movers_unique_snapshot ON public.market_movers_live USING btree (ticker_id, category, snapshot_time)
+  [PRIMARY] UNIQUE market_movers_live_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX market_movers_live_pkey ON public.market_movers_live USING btree (id)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 34458
+    ticker_id: 587
+    symbol: QUADFUTURE
+    ltp: 338.50
+    change_percent: 19.9900
+    change_amount: 56.40
+    trade_volume: 16192477
+    lower_circuit: 225.70
+    upper_circuit: 338.50
+    week_52_low: 248.55
+    week_52_high: 744.00
+    proximity_percent: NULL
+    category: GAINER
+    rank: 1
+    snapshot_time: 2025-12-22T16:00:02.187922
+
+  Row 2:
+    id: 34459
+    ticker_id: 994
+    symbol: REXPRO
+    ltp: 54.70
+    change_percent: 19.9600
+    change_amount: 9.10
+    trade_volume: 18000
+    lower_circuit: 36.50
+    upper_circuit: 54.70
+    week_52_low: 41.60
+    week_52_high: 120.00
+    proximity_percent: NULL
+    category: GAINER
+    rank: 2
+    snapshot_time: 2025-12-22T16:00:02.187922
+
+  Row 3:
+    id: 34460
+    ticker_id: 2782
+    symbol: ARUNAYA
+    ltp: 22.30
+    change_percent: 19.8900
+    change_amount: 3.70
+    trade_volume: 196000
+    lower_circuit: 14.90
+    upper_circuit: 22.30
+    week_52_low: 17.50
+    week_52_high: 46.50
+    proximity_percent: NULL
+    category: GAINER
+    rank: 3
+    snapshot_time: 2025-12-22T16:00:02.187922
+
+  Row 4:
+    id: 34461
+    ticker_id: 916
+    symbol: JWL
+    ltp: 310.45
+    change_percent: 19.2900
+    change_amount: 50.20
+    trade_volume: 74126106
+    lower_circuit: 208.20
+    upper_circuit: 312.30
+    week_52_low: 247.15
+    week_52_high: 548.50
+    proximity_percent: NULL
+    category: GAINER
+    rank: 4
+    snapshot_time: 2025-12-22T16:00:02.187922
+
+  Row 5:
+    id: 34462
+    ticker_id: 244
+    symbol: IDEAFORGE
+    ltp: 495.40
+    change_percent: 16.7000
+    change_amount: 70.90
+    trade_volume: 12128054
+    lower_circuit: 339.60
+    upper_circuit: 509.40
+    week_52_low: 304.20
+    week_52_high: 659.85
+    proximity_percent: NULL
+    category: GAINER
+    rank: 5
+    snapshot_time: 2025-12-22T16:00:02.187922
+
+
+--------------------------------------------------------------------------------
+TABLE: ohlc_1hour
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 18201865
+Size: 24 kB
+
+COLUMNS:
+  ticker_id                      int4                 NOT NULL    [PK]
+  ts                             timestamptz          NOT NULL    [PK]
+  open                           numeric              NOT NULL   
+  high                           numeric              NOT NULL   
+  low                            numeric              NOT NULL   
+  close                          numeric              NOT NULL   
+  volume                         int8                 NULL       
+
+PRIMARY KEY: (ticker_id, ts)
+
+CHECK CONSTRAINTS:
+  check_ohlc_1hour_high_low: CHECK (((high >= low) AND (high >= open) AND (high >= close) AND (low <= open) AND (low <= close)))
+  check_ohlc_1hour_positive_prices: CHECK (((open > (0)::numeric) AND (high > (0)::numeric) AND (low > (0)::numeric) AND (close > (0)::numeric)))
+
+INDEXES:
+  idx_ohlc_1hour_ticker (ticker_id, ts) - btree
+    Definition: CREATE INDEX idx_ohlc_1hour_ticker ON public.ohlc_1hour USING btree (ticker_id, ts DESC)
+  [PRIMARY] UNIQUE ohlc_1hour_pkey (ticker_id, ts) - btree
+    Definition: CREATE UNIQUE INDEX ohlc_1hour_pkey ON public.ohlc_1hour USING btree (ticker_id, ts)
+  ohlc_1hour_ts_idx (ts) - btree
+    Definition: CREATE INDEX ohlc_1hour_ts_idx ON public.ohlc_1hour USING btree (ts DESC)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    ticker_id: 1
+    ts: 2020-12-31T03:45:00+00:00
+    open: 21.7500
+    high: 21.7500
+    low: 21.7500
+    close: 21.7500
+    volume: 0
+
+  Row 2:
+    ticker_id: 1
+    ts: 2020-12-30T05:45:00+00:00
+    open: 21.7500
+    high: 21.7500
+    low: 21.7500
+    close: 21.7500
+    volume: 0
+
+  Row 3:
+    ticker_id: 1
+    ts: 2020-12-30T04:45:00+00:00
+    open: 21.7500
+    high: 21.7500
+    low: 21.7500
+    close: 21.7500
+    volume: 0
+
+  Row 4:
+    ticker_id: 1
+    ts: 2020-12-30T03:45:00+00:00
+    open: 21.7500
+    high: 21.7500
+    low: 21.7500
+    close: 21.7500
+    volume: 0
+
+  Row 5:
+    ticker_id: 1
+    ts: 2020-12-29T08:45:00+00:00
+    open: 21.7500
+    high: 21.7500
+    low: 21.7500
+    close: 21.7500
+    volume: 0
+
+
+--------------------------------------------------------------------------------
+TABLE: ohlc_1min_intraday
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 577947
+Size: 24 kB
+
+COLUMNS:
+  ticker_id                      int4                 NOT NULL    [PK]
+  ts                             timestamptz          NOT NULL    [PK]
+  open                           numeric              NOT NULL   
+  high                           numeric              NOT NULL   
+  low                            numeric              NOT NULL   
+  close                          numeric              NOT NULL   
+  volume                         int8                 NULL       
+
+PRIMARY KEY: (ticker_id, ts)
+
+CHECK CONSTRAINTS:
+  check_ohlc_1min_high_low: CHECK (((high >= low) AND (high >= open) AND (high >= close) AND (low <= open) AND (low <= close)))
+  check_ohlc_1min_positive_prices: CHECK (((open > (0)::numeric) AND (high > (0)::numeric) AND (low > (0)::numeric) AND (close > (0)::numeric)))
+
+INDEXES:
+  idx_ohlc_1min_ticker (ticker_id, ts) - btree
+    Definition: CREATE INDEX idx_ohlc_1min_ticker ON public.ohlc_1min_intraday USING btree (ticker_id, ts DESC)
+  [PRIMARY] UNIQUE ohlc_1min_intraday_pkey (ticker_id, ts) - btree
+    Definition: CREATE UNIQUE INDEX ohlc_1min_intraday_pkey ON public.ohlc_1min_intraday USING btree (ticker_id, ts)
+  ohlc_1min_intraday_ts_idx (ts) - btree
+    Definition: CREATE INDEX ohlc_1min_intraday_ts_idx ON public.ohlc_1min_intraday USING btree (ts DESC)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    ticker_id: 1468
+    ts: 2025-12-22T03:37:00+00:00
+    open: 42.9000
+    high: 42.9000
+    low: 42.9000
+    close: 42.9000
+    volume: 280
+
+  Row 2:
+    ticker_id: 1468
+    ts: 2025-12-22T03:45:00+00:00
+    open: 42.9000
+    high: 43.8900
+    low: 42.9000
+    close: 43.8900
+    volume: 700
+
+  Row 3:
+    ticker_id: 1468
+    ts: 2025-12-22T03:46:00+00:00
+    open: 43.5000
+    high: 43.5000
+    low: 43.5000
+    close: 43.5000
+    volume: 697
+
+  Row 4:
+    ticker_id: 1469
+    ts: 2025-12-22T03:45:00+00:00
+    open: 70.4900
+    high: 70.9900
+    low: 70.4900
+    close: 70.9900
+    volume: 11
+
+  Row 5:
+    ticker_id: 1469
+    ts: 2025-12-22T03:46:00+00:00
+    open: 70.9900
+    high: 72.0100
+    low: 70.9900
+    close: 72.0000
+    volume: 430
+
+
+--------------------------------------------------------------------------------
+TABLE: stock_analysis
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 2958
+Size: 1080 kB
+
+COLUMNS:
+  id                             int4                 NOT NULL   DEFAULT nextval('stock_analysis_id_seq'::regclass) [PK]
+  ticker_id                      int4                 NOT NULL   
+  ticker_symbol                  character varying(20) NOT NULL   
+  valuation_dcf                  numeric              NULL       
+  valuation_metric               character varying(50) NULL       
+  target_price                   numeric              NULL       
+  performance_benchmark          numeric              NULL       
+  performance_pct_of_benchmark   numeric              NULL       
+  growth_expected_vs_projections numeric              NULL       
+  growth_vs_sector_rate          numeric              NULL       
+  growth_notes                   text                 NULL       
+  profitability_pct_of_revenue   numeric              NULL       
+  profitability_metric           character varying(50) NULL       
+  analyst_recommendation         character varying(50) NULL       
+  entry_point                    numeric              NULL       
+  entry_rating                   character varying(50) NULL       
+  report_title                   character varying(500) NULL       
+  pdf_url                        text                 NULL       
+  analyst_name                   character varying(200) NULL       
+  notes                          text                 NULL       
+  analysis_date                  date                 NOT NULL   
+  is_active                      bool                 NULL       DEFAULT true
+  created_at                     timestamp            NULL       DEFAULT CURRENT_TIMESTAMP
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  ticker_id -> tickers(id)
+
+UNIQUE CONSTRAINTS:
+  unique_ticker_analysis_date: ticker_id
+  unique_ticker_analysis_date: analysis_date
+
+INDEXES:
+  idx_analysis_recommendation (analyst_recommendation) - btree
+    Definition: CREATE INDEX idx_analysis_recommendation ON public.stock_analysis USING btree (analyst_recommendation)
+  idx_analysis_ticker_active (ticker_id, analysis_date) - btree
+    Definition: CREATE INDEX idx_analysis_ticker_active ON public.stock_analysis USING btree (ticker_id, analysis_date DESC) WHERE (is_active = true)
+  [PRIMARY] UNIQUE stock_analysis_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX stock_analysis_pkey ON public.stock_analysis USING btree (id)
+  UNIQUE unique_ticker_analysis_date (ticker_id, analysis_date) - btree
+    Definition: CREATE UNIQUE INDEX unique_ticker_analysis_date ON public.stock_analysis USING btree (ticker_id, analysis_date)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 706
+    ticker_id: 653
+    ticker_symbol: ROYALARC
+    valuation_dcf: NULL
+    valuation_metric: Fair Valued
+    target_price: NULL
+    performance_benchmark: 0.2417
+    performance_pct_of_benchmark: 3.0212
+    growth_expected_vs_projections: 0.1640
+    growth_vs_sector_rate: NULL
+    growth_notes: NULL
+    profitability_pct_of_revenue: 0.0920
+    profitability_metric: Average
+    analyst_recommendation: Hold
+    entry_point: NULL
+    entry_rating: Average
+    report_title: NULL
+    pdf_url: NULL
+    analyst_name: NULL
+    notes: NULL
+    analysis_date: 2025-12-22
+    is_active: True
+    created_at: 2025-12-22T09:06:30.926302
+
+  Row 2:
+    id: 729
+    ticker_id: 678
+    ticker_symbol: JAGSNPHARM
+    valuation_dcf: NULL
+    valuation_metric: Fair Valued
+    target_price: NULL
+    performance_benchmark: -0.2525
+    performance_pct_of_benchmark: -3.1563
+    growth_expected_vs_projections: 0.1800
+    growth_vs_sector_rate: NULL
+    growth_notes: NULL
+    profitability_pct_of_revenue: 0.2191
+    profitability_metric: High
+    analyst_recommendation: Buy
+    entry_point: NULL
+    entry_rating: Good
+    report_title: NULL
+    pdf_url: NULL
+    analyst_name: NULL
+    notes: NULL
+    analysis_date: 2025-12-22
+    is_active: True
+    created_at: 2025-12-22T09:06:35.167545
+
+  Row 3:
+    id: 830
+    ticker_id: 781
+    ticker_symbol: SHEKHAWATI
+    valuation_dcf: NULL
+    valuation_metric: Slightly Overvalued
+    target_price: NULL
+    performance_benchmark: -0.3280
+    performance_pct_of_benchmark: -4.1000
+    growth_expected_vs_projections: 0.6040
+    growth_vs_sector_rate: NULL
+    growth_notes: NULL
+    profitability_pct_of_revenue: 0.1040
+    profitability_metric: Average
+    analyst_recommendation: Hold
+    entry_point: NULL
+    entry_rating: Average
+    report_title: NULL
+    pdf_url: NULL
+    analyst_name: NULL
+    notes: NULL
+    analysis_date: 2025-12-22
+    is_active: True
+    created_at: 2025-12-22T09:06:54.357385
+
+  Row 4:
+    id: 946
+    ticker_id: 898
+    ticker_symbol: HOLMARC
+    valuation_dcf: NULL
+    valuation_metric: Overvalued
+    target_price: NULL
+    performance_benchmark: -0.3490
+    performance_pct_of_benchmark: -4.3625
+    growth_expected_vs_projections: 0.1470
+    growth_vs_sector_rate: NULL
+    growth_notes: NULL
+    profitability_pct_of_revenue: 0.1010
+    profitability_metric: Average
+    analyst_recommendation: Exit
+    entry_point: NULL
+    entry_rating: Bad
+    report_title: NULL
+    pdf_url: NULL
+    analyst_name: NULL
+    notes: NULL
+    analysis_date: 2025-12-22
+    is_active: True
+    created_at: 2025-12-22T09:07:16.316150
+
+  Row 5:
+    id: 1026
+    ticker_id: 979
+    ticker_symbol: PCBL
+    valuation_dcf: NULL
+    valuation_metric: Undervalued
+    target_price: NULL
+    performance_benchmark: -0.3600
+    performance_pct_of_benchmark: -4.5000
+    growth_expected_vs_projections: 0.1250
+    growth_vs_sector_rate: NULL
+    growth_notes: NULL
+    profitability_pct_of_revenue: 0.0520
+    profitability_metric: Average
+    analyst_recommendation: Buy
+    entry_point: NULL
+    entry_rating: Good
+    report_title: NULL
+    pdf_url: NULL
+    analyst_name: NULL
+    notes: NULL
+    analysis_date: 2025-12-22
+    is_active: True
+    created_at: 2025-12-22T09:07:31.135323
+
+
+--------------------------------------------------------------------------------
+TABLE: stock_fundamentals
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 3014
+Size: 31 MB
+
+COLUMNS:
+  id                             int4                 NOT NULL   DEFAULT nextval('stock_fundamentals_id_seq'::regclass) [PK]
+  ticker_id                      int4                 NULL       
+  long_name                      character varying(200) NULL       
+  sector                         character varying(100) NULL       
+  industry                       character varying(100) NULL       
+  market_cap                     int8                 NULL       
+  current_price                  numeric              NULL       
+  trailing_pe                    numeric              NULL       
+  forward_pe                     numeric              NULL       
+  price_to_book                  numeric              NULL       
+  price_to_sales                 numeric              NULL       
+  peg_ratio                      numeric              NULL       
+  profit_margin                  numeric              NULL       
+  operating_margin               numeric              NULL       
+  return_on_equity               numeric              NULL       
+  return_on_assets               numeric              NULL       
+  revenue_growth                 numeric              NULL       
+  earnings_growth                numeric              NULL       
+  debt_to_equity                 numeric              NULL       
+  current_ratio                  numeric              NULL       
+  quick_ratio                    numeric              NULL       
+  total_cash                     int8                 NULL       
+  total_debt                     int8                 NULL       
+  shares_outstanding             int8                 NULL       
+  float_shares                   int8                 NULL       
+  dividend_yield                 numeric              NULL       
+  dividend_rate                  numeric              NULL       
+  payout_ratio                   numeric              NULL       
+  ex_dividend_date               date                 NULL       
+  volume                         int8                 NULL       
+  avg_volume                     int8                 NULL       
+  enterprise_value               int8                 NULL       
+  previous_close                 numeric              NULL       
+  open_price                     numeric              NULL       
+  day_high                       numeric              NULL       
+  day_low                        numeric              NULL       
+  fifty_two_week_high            numeric              NULL       
+  fifty_two_week_low             numeric              NULL       
+  description                    text                 NULL       
+  website                        character varying(200) NULL       
+  income_statement               jsonb                NULL       
+  balance_sheet                  jsonb                NULL       
+  cash_flow                      jsonb                NULL       
+  quarterly_financials           jsonb                NULL       
+  dividends_history              jsonb                NULL       
+  last_updated                   timestamp            NULL       DEFAULT CURRENT_TIMESTAMP
+  fetch_error                    text                 NULL       
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  ticker_id -> tickers(id)
+
+UNIQUE CONSTRAINTS:
+  stock_fundamentals_ticker_id_key: ticker_id
+
+INDEXES:
+  idx_fundamentals_div_yield (dividend_yield) - btree
+    Definition: CREATE INDEX idx_fundamentals_div_yield ON public.stock_fundamentals USING btree (dividend_yield DESC) WHERE (dividend_yield IS NOT NULL)
+  idx_fundamentals_dividend_stocks (dividend_yield, payout_ratio) - btree
+    Definition: CREATE INDEX idx_fundamentals_dividend_stocks ON public.stock_fundamentals USING btree (dividend_yield DESC, payout_ratio) WHERE ((dividend_yield > (0)::numeric) AND (payout_ratio IS NOT NULL))
+  idx_fundamentals_market_cap (market_cap) - btree
+    Definition: CREATE INDEX idx_fundamentals_market_cap ON public.stock_fundamentals USING btree (market_cap DESC NULLS LAST)
+  idx_fundamentals_pb (price_to_book) - btree
+    Definition: CREATE INDEX idx_fundamentals_pb ON public.stock_fundamentals USING btree (price_to_book) WHERE (price_to_book > (0)::numeric)
+  idx_fundamentals_pe (trailing_pe) - btree
+    Definition: CREATE INDEX idx_fundamentals_pe ON public.stock_fundamentals USING btree (trailing_pe) WHERE (trailing_pe > (0)::numeric)
+  idx_fundamentals_price (current_price) - btree
+    Definition: CREATE INDEX idx_fundamentals_price ON public.stock_fundamentals USING btree (current_price) WHERE (current_price IS NOT NULL)
+  idx_fundamentals_quality (return_on_equity, return_on_assets) - btree
+    Definition: CREATE INDEX idx_fundamentals_quality ON public.stock_fundamentals USING btree (return_on_equity DESC, return_on_assets DESC) WHERE ((return_on_equity IS NOT NULL) AND (return_on_assets IS NOT NULL))
+  idx_fundamentals_roa (return_on_assets) - btree
+    Definition: CREATE INDEX idx_fundamentals_roa ON public.stock_fundamentals USING btree (return_on_assets DESC) WHERE (return_on_assets IS NOT NULL)
+  idx_fundamentals_roe (return_on_equity) - btree
+    Definition: CREATE INDEX idx_fundamentals_roe ON public.stock_fundamentals USING btree (return_on_equity DESC) WHERE (return_on_equity IS NOT NULL)
+  idx_fundamentals_sector (sector) - btree
+    Definition: CREATE INDEX idx_fundamentals_sector ON public.stock_fundamentals USING btree (sector) WHERE (sector IS NOT NULL)
+  idx_fundamentals_valuation (trailing_pe, price_to_book) - btree
+    Definition: CREATE INDEX idx_fundamentals_valuation ON public.stock_fundamentals USING btree (trailing_pe, price_to_book) WHERE ((trailing_pe > (0)::numeric) AND (price_to_book > (0)::numeric))
+  idx_stock_fundamentals_ticker_id (ticker_id) - btree
+    Definition: CREATE INDEX idx_stock_fundamentals_ticker_id ON public.stock_fundamentals USING btree (ticker_id)
+  [PRIMARY] UNIQUE stock_fundamentals_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX stock_fundamentals_pkey ON public.stock_fundamentals USING btree (id)
+  UNIQUE stock_fundamentals_ticker_id_key (ticker_id) - btree
+    Definition: CREATE UNIQUE INDEX stock_fundamentals_ticker_id_key ON public.stock_fundamentals USING btree (ticker_id)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 882
+    ticker_id: 1
+    long_name: GOLDSTAR POWER LIMITED
+    sector: 
+    industry: 
+    market_cap: NULL
+    current_price: 7.2000
+    trailing_pe: NULL
+    forward_pe: NULL
+    price_to_book: NULL
+    price_to_sales: NULL
+    peg_ratio: NULL
+    profit_margin: NULL
+    operating_margin: NULL
+    return_on_equity: NULL
+    return_on_assets: NULL
+    revenue_growth: NULL
+    earnings_growth: NULL
+    debt_to_equity: NULL
+    current_ratio: NULL
+    quick_ratio: NULL
+    total_cash: NULL
+    total_debt: NULL
+    shares_outstanding: NULL
+    float_shares: NULL
+    dividend_yield: NULL
+    dividend_rate: NULL
+    payout_ratio: NULL
+    ex_dividend_date: NULL
+    volume: 33750
+    avg_volume: NULL
+    enterprise_value: NULL
+    previous_close: 7.3000
+    open_price: 7.1500
+    day_high: 7.5500
+    day_low: 7.1500
+    fifty_two_week_high: 7.5500
+    fifty_two_week_low: 7.1500
+    description: Indian manufacturer and marketer of energy storage solutions, operating primarily in the battery and...
+    website: 
+    income_statement: NULL
+    balance_sheet: NULL
+    cash_flow: NULL
+    quarterly_financials: NULL
+    dividends_history: NULL
+    last_updated: 2025-12-22T15:32:40.085994
+    fetch_error: 
+
+  Row 2:
+    id: 181
+    ticker_id: 1411
+    long_name: Amara Raja Energy & Mobility Limited
+    sector: Industrials
+    industry: Electrical Equipment & Parts
+    market_cap: 173068779520
+    current_price: 945.6000
+    trailing_pe: 19.19
+    forward_pe: 15.99
+    price_to_book: 2.24
+    price_to_sales: 1.31
+    peg_ratio: NULL
+    profit_margin: 0.0683
+    operating_margin: 0.0646
+    return_on_equity: 0.1201
+    return_on_assets: 0.0551
+    revenue_growth: 0.0670
+    earnings_growth: 0.1740
+    debt_to_equity: 4.01
+    current_ratio: 1.77
+    quick_ratio: 0.64
+    total_cash: 3309400064
+    total_debt: 3098899968
+    shares_outstanding: 183025364
+    float_shares: 103521808
+    dividend_yield: 1.1400
+    dividend_rate: 10.80
+    payout_ratio: 0.2132
+    ex_dividend_date: 2025-11-13
+    volume: 146368
+    avg_volume: 360078
+    enterprise_value: 172819906560
+    previous_close: 940.3000
+    open_price: 941.9500
+    day_high: 947.0000
+    day_low: 935.0000
+    fifty_two_week_high: 1360.0000
+    fifty_two_week_low: 832.3000
+    description: Manufactures and sells energy storage solutions, primarily lead-acid batteries for automotive and in...
+    website: https://www.amararajaeandm.com
+    income_statement: {
+    "2022-03-31": {
+        "EBIT": 7054600000.0,
+        "EBITDA": 11011800000.0,
+        "Basic EPS": 30.01,
+        "Write Off": 34800000.0,
+        "Net Income": 5125700000.0,
+        "Diluted E...
+    balance_sheet: {
+    "2022-03-31": {
+        "Net PPE": 33566000000.0,
+        "Goodwill": null,
+        "Net Debt": null,
+        "Payables": 11559900000.0,
+        "Gross PPE": 50799300000.0,
+        "Inventory": ...
+    cash_flow: {
+    "2022-03-31": {
+        "Sale Of PPE": 11700000.0,
+        "Depreciation": 3760300000.0,
+        "Free Cash Flow": -1276600000.0,
+        "Changes In Cash": -621100000.0,
+        "Purchase Of PP...
+    quarterly_financials: {
+    "2024-06-30": {
+        "EBIT": 3441500000.0,
+        "EBITDA": 4667500000.0,
+        "Basic EPS": 13.61,
+        "Net Income": 2491200000.0,
+        "Diluted EPS": 13.61,
+        "Gross Profit"...
+    dividends_history: {
+    "2023-11-10": 4.8,
+    "2024-07-18": 5.1,
+    "2024-11-14": 5.3,
+    "2025-08-01": 5.2,
+    "2025-11-13": 5.4
+}
+    last_updated: 2025-12-22T15:32:40.197237
+    fetch_error: 
+
+  Row 3:
+    id: 694
+    ticker_id: 1300
+    long_name: Emami Paper Mills Limited
+    sector: Basic Materials
+    industry: Paper & Paper Products
+    market_cap: 5375716352
+    current_price: 88.8000
+    trailing_pe: 37.15
+    forward_pe: NULL
+    price_to_book: 1.21
+    price_to_sales: 0.29
+    peg_ratio: NULL
+    profit_margin: 0.0101
+    operating_margin: 0.0499
+    return_on_equity: 0.0266
+    return_on_assets: 0.0280
+    revenue_growth: -0.0900
+    earnings_growth: -0.0630
+    debt_to_equity: 101.48
+    current_ratio: 1.00
+    quick_ratio: 0.36
+    total_cash: 63900000
+    total_debt: 5906100224
+    shares_outstanding: 60499050
+    float_shares: 13040012
+    dividend_yield: 1.8000
+    dividend_rate: 1.60
+    payout_ratio: 0.6695
+    ex_dividend_date: 2025-08-26
+    volume: 57443
+    avg_volume: 36707
+    enterprise_value: 12655670272
+    previous_close: 89.3600
+    open_price: 89.3500
+    day_high: 90.4800
+    day_low: 88.7000
+    fifty_two_week_high: 128.0000
+    fifty_two_week_low: 82.5100
+    description: Produces paper and paperboard products including packaging boards, newsprint, writing and printing p...
+    website: https://www.emamipaper.com
+    income_statement: {
+    "2022-03-31": {
+        "EBIT": 2179200000.0,
+        "EBITDA": 2918000000.0,
+        "Basic EPS": 18.17,
+        "Net Income": 1148000000.0,
+        "Diluted EPS": 14.45,
+        "Gross Profit"...
+    balance_sheet: {
+    "2021-03-31": {
+        "Net PPE": null,
+        "Net Debt": null,
+        "Payables": null,
+        "Gross PPE": null,
+        "Inventory": null,
+        "Properties": null,
+        "Total Debt...
+    cash_flow: {
+    "2022-03-31": {
+        "Sale Of PPE": 4800000.0,
+        "Depreciation": 738800000.0,
+        "Free Cash Flow": 2937800000.0,
+        "Changes In Cash": -117600000.0,
+        "Purchase Of PPE":...
+    quarterly_financials: {
+    "2024-06-30": {
+        "EBIT": null,
+        "EBITDA": null,
+        "Basic EPS": 1.91,
+        "Net Income": null,
+        "Diluted EPS": 1.61,
+        "Gross Profit": null,
+        "Pretax In...
+    dividends_history: {
+    "2019-08-01": 1.2,
+    "2022-08-11": 1.6,
+    "2023-09-05": 1.6,
+    "2024-08-21": 1.6,
+    "2025-08-26": 1.6
+}
+    last_updated: 2025-12-22T15:32:40.295408
+    fetch_error: 
+
+  Row 4:
+    id: 752
+    ticker_id: 316
+    long_name: The Fertilisers and Chemicals Travancore Limited
+    sector: Basic Materials
+    industry: Agricultural Inputs
+    market_cap: 548069998592
+    current_price: 847.0000
+    trailing_pe: 526.09
+    forward_pe: NULL
+    price_to_book: 39.86
+    price_to_sales: 11.72
+    peg_ratio: NULL
+    profit_margin: 0.0222
+    operating_margin: 0.0195
+    return_on_equity: 0.0776
+    return_on_assets: 0.0150
+    revenue_growth: 0.1250
+    earnings_growth: 0.8820
+    debt_to_equity: 278.99
+    current_ratio: 0.92
+    quick_ratio: 0.54
+    total_cash: 22224209920
+    total_debt: 38365233152
+    shares_outstanding: 647071974
+    float_shares: 64707000
+    dividend_yield: 0.0500
+    dividend_rate: 0.39
+    payout_ratio: 0.2422
+    ex_dividend_date: 2025-09-19
+    volume: 180293
+    avg_volume: 160070
+    enterprise_value: 564209319936
+    previous_close: 838.3000
+    open_price: 838.1500
+    day_high: 864.8000
+    day_low: 825.0000
+    fifty_two_week_high: 1112.0000
+    fifty_two_week_low: 565.0000
+    description: Engages in the manufacture and marketing of complex, straight, organic, and imported fertilizers alo...
+    website: https://www.fact.co.in
+    income_statement: {
+    "2022-03-31": {
+        "EBIT": 5883033000.0,
+        "EBITDA": 6154904000.0,
+        "Basic EPS": 5.35,
+        "Write Off": 1888000.0,
+        "Net Income": 3463755000.0,
+        "Diluted EPS"...
+    balance_sheet: {
+    "2021-03-31": {
+        "Net PPE": null,
+        "Net Debt": null,
+        "Payables": null,
+        "Gross PPE": null,
+        "Inventory": null,
+        "Properties": null,
+        "Total Debt...
+    cash_flow: {
+    "2022-03-31": {
+        "Sale Of PPE": 27000.0,
+        "Depreciation": 271871000.0,
+        "Free Cash Flow": 879629000.0,
+        "Changes In Cash": 32746000.0,
+        "Purchase Of PPE": -638...
+    quarterly_financials: {
+    "2024-06-30": {
+        "EBIT": -22900000.0,
+        "EBITDA": 30300000.0,
+        "Basic EPS": -0.75,
+        "Net Income": -486700000.0,
+        "Diluted EPS": -0.75,
+        "Gross Profit": 1...
+    dividends_history: {
+    "2023-09-22": 1.0,
+    "2024-09-20": 0.97,
+    "2025-09-19": 0.39
+}
+    last_updated: 2025-12-22T15:32:40.389114
+    fetch_error: 
+
+  Row 5:
+    id: 2899
+    ticker_id: 15
+    long_name: Gujarat Raffia Industries Limited
+    sector: 
+    industry: 
+    market_cap: NULL
+    current_price: 61.5400
+    trailing_pe: 29.73
+    forward_pe: NULL
+    price_to_book: 1.54
+    price_to_sales: NULL
+    peg_ratio: NULL
+    profit_margin: 0.0136
+    operating_margin: 0.0121
+    return_on_equity: 0.0329
+    return_on_assets: 0.0277
+    revenue_growth: 3.7730
+    earnings_growth: 1.6920
+    debt_to_equity: 10.05
+    current_ratio: 1.74
+    quick_ratio: 0.62
+    total_cash: 4717000
+    total_debt: 21824000
+    shares_outstanding: NULL
+    float_shares: 3287431
+    dividend_yield: NULL
+    dividend_rate: NULL
+    payout_ratio: NULL
+    ex_dividend_date: NULL
+    volume: 106
+    avg_volume: 19174
+    enterprise_value: 352060416
+    previous_close: 62.8000
+    open_price: 61.5400
+    day_high: 61.5400
+    day_low: 61.5400
+    fifty_two_week_high: 105.8800
+    fifty_two_week_low: 34.8700
+    description: Manufactures HDPE and plastic-based products such as tarpaulins, geomembranes, pond linings, woven b...
+    website: https://www.griltarp.com
+    income_statement: NULL
+    balance_sheet: NULL
+    cash_flow: NULL
+    quarterly_financials: NULL
+    dividends_history: NULL
+    last_updated: 2025-12-22T15:32:40.486526
+    fetch_error: 
+
+
+--------------------------------------------------------------------------------
+TABLE: tickers
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 3014
+Size: 960 kB
+
+COLUMNS:
+  id                             int4                 NOT NULL   DEFAULT nextval('tickers_id_seq'::regclass) [PK]
+  symbol                         character varying(20) NOT NULL   
+  name                           character varying(200) NULL       
+  exchange                       character varying(10) NOT NULL   DEFAULT 'NSE'::character varying
+  sector                         character varying(100) NULL       
+  industry                       character varying(100) NULL       
+  token                          character varying(50) NULL       
+  is_active                      bool                 NULL       DEFAULT true
+  created_at                     timestamp            NULL       DEFAULT CURRENT_TIMESTAMP
+  suffix                         character varying(10) NULL       
+
+PRIMARY KEY: (id)
+
+UNIQUE CONSTRAINTS:
+  tickers_symbol_key: symbol
+
+INDEXES:
+  idx_tickers_active (id) - btree
+    Definition: CREATE INDEX idx_tickers_active ON public.tickers USING btree (id) WHERE (is_active = true)
+  idx_tickers_fulltext_search (N/A) - gin
+    Definition: CREATE INDEX idx_tickers_fulltext_search ON public.tickers USING gin (to_tsvector('english'::regconfig, (((COALESCE(symbol, ''::character varying))::text || ' '::text) || (COALESCE(name, ''::character varying))::text)))
+  idx_tickers_industry (industry) - btree
+    Definition: CREATE INDEX idx_tickers_industry ON public.tickers USING btree (industry) WHERE (industry IS NOT NULL)
+  idx_tickers_sector (sector) - btree
+    Definition: CREATE INDEX idx_tickers_sector ON public.tickers USING btree (sector) WHERE (sector IS NOT NULL)
+  idx_tickers_symbol_active (symbol) - btree
+    Definition: CREATE INDEX idx_tickers_symbol_active ON public.tickers USING btree (symbol) WHERE (is_active = true)
+  idx_tickers_token (token) - btree
+    Definition: CREATE INDEX idx_tickers_token ON public.tickers USING btree (token) WHERE (token IS NOT NULL)
+  [PRIMARY] UNIQUE tickers_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX tickers_pkey ON public.tickers USING btree (id)
+  UNIQUE tickers_symbol_key (symbol) - btree
+    Definition: CREATE UNIQUE INDEX tickers_symbol_key ON public.tickers USING btree (symbol)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 52
+    symbol: OSIAHYPER
+    name: OSIAHYPER
+    exchange: NSE
+    sector: NULL
+    industry: NULL
+    token: 12643
+    is_active: True
+    created_at: 2025-11-19T21:24:40.765578
+    suffix: -BE
+
+  Row 2:
+    id: 75
+    symbol: PKTEA
+    name: PKTEA
+    exchange: NSE
+    sector: NULL
+    industry: NULL
+    token: 10318
+    is_active: True
+    created_at: 2025-11-19T21:24:40.765591
+    suffix: -BE
+
+  Row 3:
+    id: 83
+    symbol: COFFEEDAY
+    name: COFFEEDAY
+    exchange: NSE
+    sector: NULL
+    industry: NULL
+    token: 11169
+    is_active: True
+    created_at: 2025-11-19T21:24:40.765602
+    suffix: -BE
+
+  Row 4:
+    id: 107
+    symbol: GVKPIL
+    name: GVKPIL
+    exchange: NSE
+    sector: NULL
+    industry: NULL
+    token: 13229
+    is_active: True
+    created_at: 2025-11-19T21:24:40.765617
+    suffix: -BE
+
+  Row 5:
+    id: 111
+    symbol: MOXSH
+    name: MOXSH
+    exchange: NSE
+    sector: NULL
+    industry: NULL
+    token: 13507
+    is_active: True
+    created_at: 2025-11-19T21:24:40.765620
+    suffix: -ST
+
+
+================================================================================
+TABLE RELATIONSHIPS (Foreign Keys)
+================================================================================
+
+ltp_live.ticker_id -> tickers.id
+market_movers_live.ticker_id -> tickers.id
+stock_analysis.ticker_id -> tickers.id
+stock_fundamentals.ticker_id -> tickers.id
+
+
+================================================================================
+INDEXES SUMMARY
+================================================================================
+
+
+ltp_live:
+  - idx_ltp_live_symbol (btree)
+  - idx_ltp_live_ticker (btree)
+  - idx_ltp_live_ticker_timestamp (btree)
+  - idx_ltp_live_timestamp (btree)
+  - ltp_live_pkey (btree)
+
+market_movers_live:
+  - idx_movers_category (btree)
+  - idx_movers_category_rank (btree)
+  - idx_movers_latest_rank (btree)
+  - idx_movers_snapshot (btree)
+  - idx_movers_ticker (btree)
+  - idx_movers_unique_snapshot (btree)
+  - market_movers_live_pkey (btree)
+
+ohlc_1hour:
+  - idx_ohlc_1hour_ticker (btree)
+  - ohlc_1hour_pkey (btree)
+  - ohlc_1hour_ts_idx (btree)
+
+ohlc_1min_intraday:
+  - idx_ohlc_1min_ticker (btree)
+  - ohlc_1min_intraday_pkey (btree)
+  - ohlc_1min_intraday_ts_idx (btree)
+
+stock_analysis:
+  - idx_analysis_recommendation (btree)
+  - idx_analysis_ticker_active (btree)
+  - stock_analysis_pkey (btree)
+  - unique_ticker_analysis_date (btree)
+
+stock_fundamentals:
+  - idx_fundamentals_div_yield (btree)
+  - idx_fundamentals_dividend_stocks (btree)
+  - idx_fundamentals_market_cap (btree)
+  - idx_fundamentals_pb (btree)
+  - idx_fundamentals_pe (btree)
+  - idx_fundamentals_price (btree)
+  - idx_fundamentals_quality (btree)
+  - idx_fundamentals_roa (btree)
+  - idx_fundamentals_roe (btree)
+  - idx_fundamentals_sector (btree)
+  - idx_fundamentals_valuation (btree)
+  - idx_stock_fundamentals_ticker_id (btree)
+  - stock_fundamentals_pkey (btree)
+  - stock_fundamentals_ticker_id_key (btree)
+
+tickers:
+  - idx_tickers_active (btree)
+  - idx_tickers_fulltext_search (gin)
+  - idx_tickers_industry (btree)
+  - idx_tickers_sector (btree)
+  - idx_tickers_symbol_active (btree)
+  - idx_tickers_token (btree)
+  - tickers_pkey (btree)
+  - tickers_symbol_key (btree)
+
+
+================================================================================
+CONTINUOUS AGGREGATES (TimescaleDB)
+================================================================================
+
+SUMMARY:
+--------------------------------------------------------------------------------
+  ohlc_daily                             2647424 rows       0 bytes    (from: _materialized_hypertable_10)
+  ohlc_monthly                            132182 rows       0 bytes    (from: _materialized_hypertable_12)
+  ohlc_weekly                             565249 rows       0 bytes    (from: _materialized_hypertable_11)
+
+
+DETAILED CONTINUOUS AGGREGATE INFORMATION:
+================================================================================
+
+--------------------------------------------------------------------------------
+CONTINUOUS AGGREGATE: ohlc_daily
+--------------------------------------------------------------------------------
+
+Owner: postgres
+Materialization Hypertable: _timescaledb_internal._materialized_hypertable_10
+Row Count: 2647424
+Size: 0 bytes
+
+REFRESH POLICY: None configured
+
+RETENTION POLICY: No retention policy (indefinite)
+
+VIEW DEFINITION:
+SELECT ticker_id,
+    time_bucket('1 day'::interval, ts) AS day,
+    first(open, ts) AS open,
+    max(high) AS high,
+    min(low) AS low,
+    last(close, ts) AS close,
+    sum(volume) AS volume
+   FROM ohlc_1hour
+  GROUP BY ticker_id, (time_bucket('1 day'::interval, ts));
+
+
+--------------------------------------------------------------------------------
+CONTINUOUS AGGREGATE: ohlc_monthly
+--------------------------------------------------------------------------------
+
+Owner: postgres
+Materialization Hypertable: _timescaledb_internal._materialized_hypertable_12
+Row Count: 132182
+Size: 0 bytes
+
+REFRESH POLICY: None configured
+
+RETENTION POLICY: No retention policy (indefinite)
+
+VIEW DEFINITION:
+SELECT ticker_id,
+    time_bucket('1 mon'::interval, ts) AS month,
+    first(open, ts) AS open,
+    max(high) AS high,
+    min(low) AS low,
+    last(close, ts) AS close,
+    sum(volume) AS volume
+   FROM ohlc_1hour
+  GROUP BY ticker_id, (time_bucket('1 mon'::interval, ts));
+
+
+--------------------------------------------------------------------------------
+CONTINUOUS AGGREGATE: ohlc_weekly
+--------------------------------------------------------------------------------
+
+Owner: postgres
+Materialization Hypertable: _timescaledb_internal._materialized_hypertable_11
+Row Count: 565249
+Size: 0 bytes
+
+REFRESH POLICY: None configured
+
+RETENTION POLICY: No retention policy (indefinite)
+
+VIEW DEFINITION:
+SELECT ticker_id,
+    time_bucket('7 days'::interval, ts) AS week,
+    first(open, ts) AS open,
+    max(high) AS high,
+    min(low) AS low,
+    last(close, ts) AS close,
+    sum(volume) AS volume
+   FROM ohlc_1hour
+  GROUP BY ticker_id, (time_bucket('7 days'::interval, ts));
+
+
+================================================================================
+AGGREGATE HIERARCHY
+================================================================================
+
+Data flow from source tables to continuous aggregates:
+
+_materialized_hypertable_10 (source hypertable)
+  └─> ohlc_daily
+
+_materialized_hypertable_11 (source hypertable)
+  └─> ohlc_weekly
+
+_materialized_hypertable_12 (source hypertable)
+  └─> ohlc_monthly
+
+
+================================================================================
+MATERIALIZED VIEWS (Standard PostgreSQL)
+================================================================================
+
+No standard materialized views found.
+(Note: TimescaleDB continuous aggregates are shown in the previous section)

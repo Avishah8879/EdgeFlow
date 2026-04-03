@@ -1,0 +1,31 @@
+# Tiphub log rotation configuration
+# Place at /etc/logrotate.d/tiphub
+# The deploy.sh script replaces __PROJECT_DIR__ with the actual path
+
+# Nginx logs (tiphub-specific)
+/var/log/nginx/tiphub-*.log {
+    daily
+    missingok
+    rotate 30
+    compress
+    delaycompress
+    notifempty
+    create 0640 www-data adm
+    sharedscripts
+    postrotate
+        [ -f /var/run/nginx.pid ] && kill -USR1 `cat /var/run/nginx.pid`
+    endscript
+}
+
+# Application logs (PM2 managed, backup rotation)
+# PM2's pm2-logrotate handles primary rotation, this is a safety net
+__PROJECT_DIR__/logs/*.log {
+    daily
+    missingok
+    rotate 30
+    compress
+    delaycompress
+    notifempty
+    copytruncate
+    create 0644 ubuntu ubuntu
+}

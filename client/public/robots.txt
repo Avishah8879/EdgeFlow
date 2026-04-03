@@ -1,0 +1,66 @@
+# Robots.txt for Tiphub - AI-Powered Stock Analysis Platform
+# https://tiphub.ai
+
+User-agent: *
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+# Block API routes
+Disallow: /api/
+
+# Block authentication routes
+Disallow: /auth/
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+
+# Block admin panel
+Disallow: /admin/
+
+# Block user profile (private data)
+Disallow: /profile
+
+# AI Crawlers - explicitly allowed
+User-agent: GPTBot
+Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /profile
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /profile
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /profile
+
+User-agent: Google-Extended
+Allow: /
+
+# Block aggressive scrapers
+User-agent: Bytespider
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+# Sitemap location
+Sitemap: https://tiphub.ai/sitemap.xml
+
+# Crawl delay (optional - be respectful to server resources)
+Crawl-delay: 1

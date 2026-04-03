@@ -1,0 +1,1100 @@
+{
+  "info": {
+    "_postman_id": "tiphub-public-data-api-v1",
+    "name": "Tiphub Public Data API",
+    "description": "# Tiphub Public Data API\n\nA curated collection of Tiphub data endpoints for accessing Indian stock market data.\n\n## Getting Started\n\n1. Set  to  (default)\n2. Set  — get one from the [Tiphub Developer Portal](https://tiphub.ai/developer)\n3. All endpoints use the  header for authentication\n\n## Rate Limits\n\n| Tier | Requests/min |\n|------|--------------|\n| Basic | 30 |\n| Premium | 120 |\n\n## Data Coverage\n\n- **Exchange:** NSE (National Stock Exchange of India)\n- **Stocks:** 3,000+ tickers\n- **Timeframes:** 1-minute to monthly OHLC\n- **Fundamentals:** Market cap, PE ratios, margins, dividends, and more\n- **News:** Financial news via Google News",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://tiphub.ai",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "test_ticker",
+      "value": "RELIANCE",
+      "type": "string"
+    },
+    {
+      "key": "test_task_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Tickers",
+      "description": "List and search stock tickers available in the Tiphub database. Use these endpoints to discover ticker symbols before querying price or fundamental data.",
+      "item": [
+        {
+          "name": "Search Stocks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/search?q=TCS&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "TCS"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Fast stock search with 3-tier optimization: in-memory cache → ticker index → database.\n\n**Auth:** API Key (optional)\n**Cache:** 5 minutes\n**Params:**\n- `q`: search string (min 1 char)\n- `limit`: max results (default: 50, max: 100)"
+          },
+          "response": [
+            {
+              "name": "200 - Search Results",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/search?q=TCS&limit=10"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"results\": [\n    {\n      \"id\": 289,\n      \"symbol\": \"TCS\",\n      \"name\": \"Tata Consultancy Svcs Lt\",\n      \"token\": \"11536\",\n      \"suffix\": \"-EQ\",\n      \"long_name\": \"Tata Consultancy Services Limited\"\n    },\n    {\n      \"id\": 1842,\n      \"symbol\": \"TCSISEC\",\n      \"name\": \"TCS iON Sec T II\",\n      \"token\": null,\n      \"suffix\": \"-EQ\",\n      \"long_name\": null\n    }\n  ],\n  \"count\": 2\n}"
+            }
+          ]
+        },
+        {
+          "name": "Tickers (All)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tickers?limit=100",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tickers"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            },
+            "description": "List all ticker symbols from the database.\n\n**Auth:** API Key (optional)\n**Cache:** 1 hour\n**Params:** `limit` — max results"
+          },
+          "response": [
+            {
+              "name": "200 - Tickers",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/tickers?limit=100"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"symbol\": \"RELIANCE\",\n      \"name\": \"Reliance Industries Ltd\",\n      \"exchange\": \"NSE\",\n      \"suffix\": \"-EQ\",\n      \"is_active\": true\n    },\n    {\n      \"id\": 2,\n      \"symbol\": \"TCS\",\n      \"name\": \"Tata Consultancy Svcs Lt\",\n      \"exchange\": \"NSE\",\n      \"suffix\": \"-EQ\",\n      \"is_active\": true\n    }\n  ],\n  \"count\": 2\n}"
+            }
+          ]
+        },
+        {
+          "name": "Tickers with Hourly Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tickers/with-hourly-data?limit=50",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tickers",
+                "with-hourly-data"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Tickers that have OHLC hourly data available (for backtesting and screening).\n\n**Auth:** API Key (optional)\n**Cache:** 24 hours"
+          },
+          "response": [
+            {
+              "name": "200 - Tickers",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/tickers/with-hourly-data?limit=50"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"symbol\": \"RELIANCE\",\n      \"name\": \"Reliance Industries Ltd\",\n      \"long_name\": \"Reliance Industries Limited\"\n    },\n    {\n      \"id\": 2,\n      \"symbol\": \"TCS\",\n      \"name\": \"Tata Consultancy Svcs Lt\",\n      \"long_name\": \"Tata Consultancy Services Limited\"\n    }\n  ],\n  \"count\": 2\n}"
+            }
+          ]
+        },
+        {
+          "name": "Tickers NSE Only",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tickers/nse?limit=50",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tickers",
+                "nse"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Equity tickers from NSE only (filtered by `-EQ` suffix).\n\n**Auth:** API Key (optional)\n**Cache:** 1 hour"
+          },
+          "response": [
+            {
+              "name": "200 - NSE Tickers",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/tickers/nse?limit=50"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"symbol\": \"RELIANCE\",\n      \"name\": \"Reliance Industries Ltd\",\n      \"exchange\": \"NSE\",\n      \"suffix\": \"-EQ\"\n    }\n  ],\n  \"count\": 1\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Price Data",
+      "description": "Real-time and historical price data. Fetch last traded prices (LTP) for single or multiple stocks, and OHLC candlestick data across multiple timeframes.",
+      "item": [
+        {
+          "name": "Stock LTP (Single)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/stock-ltp/{{test_ticker}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stock-ltp",
+                "{{test_ticker}}"
+              ]
+            },
+            "description": "Real-time Last Traded Price with intraday OHLC for a single stock.\n\n**Auth:** API Key (optional)\n**Cache:** 1 minute\n**Source:** `ltp_live` table (cleared EOD)"
+          },
+          "response": [
+            {
+              "name": "200 - LTP Data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/stock-ltp/RELIANCE"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"symbol\": \"RELIANCE\",\n  \"exchange\": \"NSE\",\n  \"token\": \"2885\",\n  \"ltp\": 2520.5,\n  \"open\": 2495,\n  \"high\": 2535.8,\n  \"low\": 2488.25,\n  \"close\": 2520.5,\n  \"prev_close\": 2489.3,\n  \"volume\": 8500000,\n  \"changePercent\": 1.25,\n  \"timestamp\": \"2025-01-15T11:30:00+05:30\"\n}"
+            },
+            {
+              "name": "404 - Ticker Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/stock-ltp/INVALID"
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Ticker INVALID not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Stock LTP (Bulk)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbols\": [\"RELIANCE\", \"TCS\", \"INFY\", \"HDFCBANK\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/stock-ltp/bulk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stock-ltp",
+                "bulk"
+              ]
+            },
+            "description": "Batch fetch LTP for multiple stock symbols in one request.\n\n**Auth:** API Key (optional)\n**Cache:** 1 minute\n**Limit:** Max 100 symbols per request"
+          },
+          "response": [
+            {
+              "name": "200 - Bulk LTP",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/stock-ltp/bulk"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"symbol\": \"RELIANCE\",\n      \"ltp\": 2520.5,\n      \"open\": 2495,\n      \"high\": 2535.8,\n      \"low\": 2488.25,\n      \"prev_close\": 2489.3,\n      \"volume\": 8500000,\n      \"changePercent\": 1.25\n    },\n    {\n      \"symbol\": \"TCS\",\n      \"ltp\": 3890.75,\n      \"open\": 3910,\n      \"high\": 3920.5,\n      \"low\": 3875,\n      \"prev_close\": 3908.4,\n      \"volume\": 3200000,\n      \"changePercent\": -0.45\n    },\n    {\n      \"symbol\": \"INFY\",\n      \"ltp\": 1845.2,\n      \"open\": 1830,\n      \"high\": 1852.9,\n      \"low\": 1825.5,\n      \"prev_close\": 1832.6,\n      \"volume\": 5100000,\n      \"changePercent\": 0.69\n    },\n    {\n      \"symbol\": \"HDFCBANK\",\n      \"ltp\": 1685,\n      \"open\": 1690.5,\n      \"high\": 1698.75,\n      \"low\": 1678.2,\n      \"prev_close\": 1692.3,\n      \"volume\": 6800000,\n      \"changePercent\": -0.43\n    }\n  ],\n  \"count\": 4\n}"
+            }
+          ]
+        },
+        {
+          "name": "Price Chart - Daily",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/price-chart/{{test_ticker}}?timeframe=1day&months=6",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "price-chart",
+                "{{test_ticker}}"
+              ],
+              "query": [
+                {
+                  "key": "timeframe",
+                  "value": "1day"
+                },
+                {
+                  "key": "months",
+                  "value": "6"
+                }
+              ]
+            },
+            "description": "Historical OHLC price data for charting.\n\n**Auth:** API Key (optional)\n**Cache:** 30 minutes\n**Params:**\n- `timeframe`: 1min, 1hour, 1day, 1week, 1month\n- `months`: lookback period (default: 6)"
+          },
+          "response": [
+            {
+              "name": "200 - Daily OHLC",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/price-chart/RELIANCE?timeframe=1day&months=6"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ticker\": \"RELIANCE\",\n  \"timeframe\": \"1day\",\n  \"price_data\": [\n    {\n      \"time\": \"2025-01-13\",\n      \"open\": 2470,\n      \"high\": 2498.5,\n      \"low\": 2458.2,\n      \"close\": 2489.3,\n      \"volume\": 9200000\n    },\n    {\n      \"time\": \"2025-01-14\",\n      \"open\": 2492,\n      \"high\": 2510.75,\n      \"low\": 2480,\n      \"close\": 2501.8,\n      \"volume\": 7800000\n    },\n    {\n      \"time\": \"2025-01-15\",\n      \"open\": 2495,\n      \"high\": 2535.8,\n      \"low\": 2488.25,\n      \"close\": 2520.5,\n      \"volume\": 8500000\n    }\n  ],\n  \"count\": 3\n}"
+            }
+          ]
+        },
+        {
+          "name": "Price Chart - Hourly",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/price-chart/{{test_ticker}}?timeframe=1hour&months=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "price-chart",
+                "{{test_ticker}}"
+              ],
+              "query": [
+                {
+                  "key": "timeframe",
+                  "value": "1hour"
+                },
+                {
+                  "key": "months",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Hourly OHLC data. Best for 1-3 month analysis windows.\n\n**Auth:** API Key (optional)\n**Cache:** 30 minutes"
+          },
+          "response": [
+            {
+              "name": "200 - Hourly OHLC",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/price-chart/RELIANCE?timeframe=1hour&months=1"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ticker\": \"RELIANCE\",\n  \"timeframe\": \"1hour\",\n  \"price_data\": [\n    {\n      \"time\": \"2025-01-15T09:15:00+05:30\",\n      \"open\": 2495,\n      \"high\": 2510.25,\n      \"low\": 2492.5,\n      \"close\": 2508,\n      \"volume\": 2100000\n    },\n    {\n      \"time\": \"2025-01-15T10:15:00+05:30\",\n      \"open\": 2508.5,\n      \"high\": 2525,\n      \"low\": 2505,\n      \"close\": 2522.75,\n      \"volume\": 1800000\n    }\n  ],\n  \"count\": 2\n}"
+            }
+          ]
+        },
+        {
+          "name": "Bulk Prices by Ticker ID",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ticker_ids\": [1, 2, 3, 4, 5]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/prices/bulk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "prices",
+                "bulk"
+              ]
+            },
+            "description": "Batch fetch current prices by ticker IDs. Used internally by search results to enrich with live prices.\n\n**Auth:** API Key (optional)\n**Cache:** 1 minute\n**Limit:** Max 100 ticker IDs"
+          },
+          "response": [
+            {
+              "name": "200 - Bulk Prices",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/prices/bulk"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"1\": {\n    \"current_price\": 2520.5,\n    \"change_percent\": 1.25,\n    \"prev_close\": 2489.3\n  },\n  \"2\": {\n    \"current_price\": 3890.75,\n    \"change_percent\": -0.45,\n    \"prev_close\": 3908.4\n  },\n  \"3\": {\n    \"current_price\": 1845.2,\n    \"change_percent\": 0.69,\n    \"prev_close\": 1832.6\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Stock Quote",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/quote/RELIANCE?timeframe=&months=6",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "quote",
+                "RELIANCE"
+              ],
+              "query": [
+                {
+                  "key": "timeframe",
+                  "value": ""
+                },
+                {
+                  "key": "months",
+                  "value": "6"
+                }
+              ]
+            },
+            "description": "Get a unified stock quote combining real-time price (OHLC, LTP, change%), fundamentals (market cap, PE, sector, industry), and optional historical candles. Pass `timeframe` param (1hour, 1day, 1week, 1month) to include candles.\n\n**Auth:** API Key (optional)\n**Params:**\n- `timeframe`: 1hour, 1day, 1week, 1month (empty = no candles)\n- `months`: lookback period for candles (default: 6)"
+          },
+          "response": [
+            {
+              "name": "Success - Quote",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/quote/RELIANCE"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"symbol\": \"RELIANCE\",\n    \"name\": \"Reliance Industries Limited\",\n    \"exchange\": \"NSE\",\n    \"sector\": \"Energy\",\n    \"industry\": \"Oil & Gas Refining & Marketing\",\n    \"ohlc\": {\n      \"open\": 1250.0,\n      \"high\": 1265.5,\n      \"low\": 1245.0,\n      \"close\": 1240.0,\n      \"volume\": 8500000\n    },\n    \"ltp\": 1260.75,\n    \"change\": 20.75,\n    \"change_percent\": 1.67,\n    \"market_cap\": 17050000000000,\n    \"pe_ratio\": 28.5,\n    \"pb_ratio\": 2.8,\n    \"dividend_yield\": 0.32,\n    \"week_52_high\": 1380.0,\n    \"week_52_low\": 1050.0,\n    \"lower_circuit\": 1116.0,\n    \"upper_circuit\": 1364.0,\n    \"timestamp\": \"2026-01-15T11:30:00+05:30\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Bulk Stock Quotes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbols\": [\"RELIANCE\", \"TCS\", \"HDFCBANK\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/quote-bulk?timeframe=&months=6",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "quote-bulk"
+              ],
+              "query": [
+                {
+                  "key": "timeframe",
+                  "value": ""
+                },
+                {
+                  "key": "months",
+                  "value": "6"
+                }
+              ]
+            },
+            "description": "Get unified quotes for multiple symbols at once (max 50). Invalid symbols are collected in an errors array.\n\n**Auth:** API Key (optional)\n**Params:**\n- `timeframe`: 1hour, 1day, 1week, 1month (empty = no candles)\n- `months`: lookback period for candles (default: 6)\n**Body:** `{ \"symbols\": [\"RELIANCE\", \"TCS\", ...] }`"
+          },
+          "response": [
+            {
+              "name": "Success - Bulk Quotes",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/quote-bulk"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"data\": [\n      {\n        \"symbol\": \"RELIANCE\",\n        \"name\": \"Reliance Industries Limited\",\n        \"exchange\": \"NSE\",\n        \"sector\": \"Energy\",\n        \"industry\": \"Oil & Gas Refining & Marketing\",\n        \"ohlc\": {\"open\": 1250.0, \"high\": 1265.5, \"low\": 1245.0, \"close\": 1240.0, \"volume\": 8500000},\n        \"ltp\": 1260.75,\n        \"change\": 20.75,\n        \"change_percent\": 1.67,\n        \"market_cap\": 17050000000000,\n        \"pe_ratio\": 28.5,\n        \"pb_ratio\": 2.8,\n        \"dividend_yield\": 0.32,\n        \"week_52_high\": 1380.0,\n        \"week_52_low\": 1050.0,\n        \"lower_circuit\": 1116.0,\n        \"upper_circuit\": 1364.0,\n        \"timestamp\": \"2026-01-15T11:30:00+05:30\"\n      },\n      {\n        \"symbol\": \"TCS\",\n        \"name\": \"Tata Consultancy Services Limited\",\n        \"exchange\": \"NSE\",\n        \"sector\": \"Technology\",\n        \"industry\": \"Information Technology Services\",\n        \"ohlc\": {\"open\": 3800.0, \"high\": 3850.0, \"low\": 3790.0, \"close\": 3795.0, \"volume\": 2100000},\n        \"ltp\": 3835.0,\n        \"change\": 40.0,\n        \"change_percent\": 1.05,\n        \"market_cap\": 13900000000000,\n        \"pe_ratio\": 32.1,\n        \"pb_ratio\": 14.5,\n        \"dividend_yield\": 1.2,\n        \"week_52_high\": 4200.0,\n        \"week_52_low\": 3300.0,\n        \"lower_circuit\": 3415.5,\n        \"upper_circuit\": 4174.5,\n        \"timestamp\": \"2026-01-15T11:30:00+05:30\"\n      }\n    ],\n    \"count\": 2,\n    \"errors\": null\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Fundamentals",
+      "description": "Stock fundamentals and financial data. Browse stocks by market cap, get detailed company financials, and access analyst research.",
+      "item": [
+        {
+          "name": "Stocks - Large Cap",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/stocks?cap_type=large&page=1&limit=30",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stocks"
+              ],
+              "query": [
+                {
+                  "key": "cap_type",
+                  "value": "large"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "30"
+                }
+              ]
+            },
+            "description": "Paginated stock list with fundamentals data. Filter by market capitalization.\n\n**Auth:** API Key (optional)\n**Cache:** 5 minutes\n**Params:**\n- `cap_type`: all, large, mid, small\n- `search`: search by symbol or company name\n- `page`: page number (default: 1)\n- `limit`: results per page (default: 30)"
+          },
+          "response": [
+            {
+              "name": "200 - Stock List",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/stocks?cap_type=large&page=1&limit=30"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"symbol\": \"RELIANCE\",\n      \"name\": \"Reliance Industries Limited\",\n      \"exchange\": \"NSE\",\n      \"sector\": \"Energy\",\n      \"industry\": \"Oil & Gas Refining & Marketing\",\n      \"current_price\": 2520.5,\n      \"previous_close\": 2489.3,\n      \"market_cap\": 17050000000000,\n      \"trailing_pe\": 28.5,\n      \"forward_pe\": 24.2,\n      \"price_to_book\": 2.8,\n      \"dividend_yield\": 0.32,\n      \"fifty_two_week_high\": 3024.9,\n      \"fifty_two_week_low\": 2220.3\n    }\n  ],\n  \"count\": 1,\n  \"total\": 150,\n  \"page\": 1,\n  \"pages\": 5\n}"
+            }
+          ]
+        },
+        {
+          "name": "Stocks - Search",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/stocks?search=reliance&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stocks"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "reliance"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Search stocks by symbol or company name within the stock browser.\n\n**Auth:** API Key (optional)\n**Cache:** 5 minutes"
+          },
+          "response": [
+            {
+              "name": "200 - Search Results",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/stocks?search=reliance&page=1&limit=10"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"symbol\": \"RELIANCE\",\n      \"name\": \"Reliance Industries Limited\",\n      \"current_price\": 2520.5,\n      \"market_cap\": 17050000000000,\n      \"sector\": \"Energy\"\n    }\n  ],\n  \"count\": 1,\n  \"total\": 1,\n  \"page\": 1,\n  \"pages\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "Stock Detail (Full)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/stock-detail/{{test_ticker}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stock-detail",
+                "{{test_ticker}}"
+              ]
+            },
+            "description": "Comprehensive stock page data: fundamentals, financials, company info.\n\n**Auth:** API Key (optional)\n**Cache:** 1 hour\n**Returns:** Full stock_fundamentals row + ticker info."
+          },
+          "response": [
+            {
+              "name": "200 - Stock Detail",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/stock-detail/RELIANCE"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ticker\": {\n    \"id\": 1,\n    \"symbol\": \"RELIANCE\",\n    \"name\": \"Reliance Industries Ltd\",\n    \"exchange\": \"NSE\",\n    \"sector\": \"Energy\",\n    \"industry\": \"Oil & Gas Refining & Marketing\"\n  },\n  \"fundamentals\": {\n    \"current_price\": 2520.5,\n    \"previous_close\": 2489.3,\n    \"open_price\": 2495,\n    \"day_high\": 2535.8,\n    \"day_low\": 2488.25,\n    \"fifty_two_week_high\": 3024.9,\n    \"fifty_two_week_low\": 2220.3,\n    \"market_cap\": 17050000000000,\n    \"trailing_pe\": 28.5,\n    \"forward_pe\": 24.2,\n    \"price_to_book\": 2.8,\n    \"dividend_yield\": 0.32,\n    \"profit_margin\": 0.087,\n    \"return_on_equity\": 0.129,\n    \"revenue_growth\": 0.12,\n    \"earnings_growth\": 0.18,\n    \"total_debt\": 3250000000000,\n    \"debt_to_equity\": 38.5,\n    \"description\": \"Reliance Industries Limited is an Indian multinational conglomerate...\",\n    \"website\": \"https://www.ril.com\",\n    \"long_name\": \"Reliance Industries Limited\",\n    \"last_updated\": \"2025-01-15T06:00:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Stock Scorecard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/stock-scorecard/{{test_ticker}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stock-scorecard",
+                "{{test_ticker}}"
+              ]
+            },
+            "description": "7-dimension stock quality scorecard with scores for valuation, profitability, growth, momentum, financial health, dividend, and analyst sentiment.\n\n**Auth:** API Key (optional)\n**Cache:** 1 hour"
+          },
+          "response": [
+            {
+              "name": "200 - Scorecard",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/stock-scorecard/RELIANCE"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ticker\": \"RELIANCE\",\n  \"overall_score\": 72,\n  \"scores\": {\n    \"valuation\": {\n      \"score\": 65,\n      \"grade\": \"B\",\n      \"details\": \"PE ratio above sector average\"\n    },\n    \"profitability\": {\n      \"score\": 80,\n      \"grade\": \"A\",\n      \"details\": \"Strong margins and ROE\"\n    },\n    \"growth\": {\n      \"score\": 75,\n      \"grade\": \"B+\",\n      \"details\": \"Consistent revenue and earnings growth\"\n    },\n    \"momentum\": {\n      \"score\": 70,\n      \"grade\": \"B\",\n      \"details\": \"Trading above 50-DMA\"\n    },\n    \"financial_health\": {\n      \"score\": 60,\n      \"grade\": \"B-\",\n      \"details\": \"Moderate debt-to-equity\"\n    },\n    \"dividend\": {\n      \"score\": 55,\n      \"grade\": \"C+\",\n      \"details\": \"Low yield but consistent payout\"\n    },\n    \"analyst\": {\n      \"score\": 85,\n      \"grade\": \"A\",\n      \"details\": \"80% Buy/Strong Buy ratings\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Shareholding Pattern",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/shareholding/{{test_ticker}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "shareholding",
+                "{{test_ticker}}"
+              ]
+            },
+            "description": "Quarterly shareholding pattern breakdown (promoters, FII, DII, public).\n\n**Auth:** API Key (optional)\n**Cache:** 1 hour"
+          },
+          "response": [
+            {
+              "name": "200 - Shareholding",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/shareholding/RELIANCE"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ticker\": \"RELIANCE\",\n  \"quarters\": [\n    {\n      \"quarter\": \"Q3 2024\",\n      \"date\": \"2024-12-31\",\n      \"promoters\": 50.3,\n      \"fii\": 23.5,\n      \"dii\": 14.2,\n      \"public_\": 12\n    },\n    {\n      \"quarter\": \"Q2 2024\",\n      \"date\": \"2024-09-30\",\n      \"promoters\": 50.3,\n      \"fii\": 23.1,\n      \"dii\": 14.5,\n      \"public_\": 12.1\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Analysts Hub",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analysts-hub",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "analysts-hub"
+              ]
+            },
+            "description": "Aggregated analyst recommendations and research reports across all covered stocks.\n\n**Auth:** API Key (optional)\n**Cache:** 1 hour"
+          },
+          "response": [
+            {
+              "name": "200 - Analysts Hub",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/analysts-hub"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"ticker_symbol\": \"RELIANCE\",\n      \"sector\": \"Energy\",\n      \"analyst_recommendation\": \"Buy\",\n      \"entry_point\": 2400,\n      \"target_price\": 2900,\n      \"entry_rating\": \"Strong\",\n      \"report_title\": \"Reliance: New Energy Pivot\",\n      \"analysis_date\": \"2025-01-10\"\n    }\n  ],\n  \"count\": 1\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "News & Sentiment",
+      "description": "Financial news articles and AI-powered sentiment analysis for individual stocks.",
+      "item": [
+        {
+          "name": "News",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/news?ticker=RELIANCE",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "news"
+              ],
+              "query": [
+                {
+                  "key": "ticker",
+                  "value": "RELIANCE"
+                }
+              ]
+            },
+            "description": "Financial news articles for a stock from Google News.\n\n**Auth:** API Key (optional)\n**Cache:** 24 hours\n**Params:** `ticker` — stock symbol (e.g., RELIANCE, TCS)"
+          },
+          "response": [
+            {
+              "name": "200 - News Articles",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/news?ticker=RELIANCE"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ticker\": \"RELIANCE\",\n  \"articles\": [\n    {\n      \"title\": \"Reliance Industries Q3 results: Net profit rises 12%\",\n      \"description\": \"Reliance Industries reported a 12% year-on-year rise in consolidated net profit...\",\n      \"source\": \"Economic Times\",\n      \"url\": \"https://economictimes.com/...\",\n      \"published_at\": \"2025-01-15T08:30:00Z\"\n    },\n    {\n      \"title\": \"RIL to invest $10bn in green energy\",\n      \"description\": \"Reliance Industries chairman announced massive investment in renewable energy...\",\n      \"source\": \"Livemint\",\n      \"url\": \"https://livemint.com/...\",\n      \"published_at\": \"2025-01-14T14:00:00Z\"\n    }\n  ],\n  \"count\": 2\n}"
+            }
+          ]
+        },
+        {
+          "name": "Sentiment - Sync",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ticker\": \"RELIANCE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/sentiment-analysis",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "sentiment-analysis"
+              ]
+            },
+            "description": "Synchronous ML sentiment analysis using FinBERT model on Google News articles.\n\n**Auth:** API Key (optional)\n**Cache:** 24 hours\n**Processing:** 5-15 seconds (ML inference)"
+          },
+          "response": [
+            {
+              "name": "200 - Sentiment Result",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/sentiment-analysis"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ticker\": \"RELIANCE\",\n  \"overall_sentiment\": \"Bullish\",\n  \"confidence\": 0.72,\n  \"summary\": {\n    \"positive\": 8,\n    \"negative\": 3,\n    \"neutral\": 4,\n    \"total\": 15\n  },\n  \"fundamentals\": {\n    \"market_cap\": \"17.05T\",\n    \"pe_ratio\": 28.5,\n    \"beta\": 0.85,\n    \"current_price\": 2520.5\n  },\n  \"articles\": [\n    {\n      \"title\": \"Reliance Industries Q3 results: Net profit rises 12%\",\n      \"description\": \"Strong quarterly performance driven by retail and digital segments...\",\n      \"source\": \"Economic Times\",\n      \"url\": \"https://economictimes.com/...\",\n      \"sentiment\": \"positive\",\n      \"confidence\": 0.89,\n      \"published_at\": \"2025-01-15T08:30:00Z\"\n    }\n  ],\n  \"cached\": false,\n  \"analyzed_at\": \"2025-01-15T11:30:00Z\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

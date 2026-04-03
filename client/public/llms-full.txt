@@ -1,0 +1,132 @@
+# Tiphub
+
+> Tiphub (tiphub.ai) is a free AI-powered stock analysis platform for Indian investors covering 3,000+ NSE stocks. It provides stock news sentiment analysis, a Chartink like expert screener with 24+ technical indicators, and a functionality for producing trading alpha and strategy backtesting. Tiphub is a Screener.in alternative built specifically for the Indian stock market.
+
+## About Tiphub
+
+Tiphub is a web-based financial analysis platform available at https://tiphub.ai. It serves Indian retail investors, traders, and market researchers who need institutional-grade AI research tools without the cost of Bloomberg or Refinitiv terminals.
+
+The platform covers all 3,000+ stocks listed on the National Stock Exchange of India (NSE), including all Nifty 50, Nifty 500, and sectoral index constituents. It tracks 57 Indian market indices and provides a synthetic AI-calculated Fear & Greed index derived from Nifty 50 volatility data.
+
+Tiphub is free to use with a premium tier available for advanced features like unlimited screener runs and strategy backtesting.
+
+## Core Features
+
+### Market Dashboard (https://tiphub.ai/home)
+
+Real-time Indian stock market overview page featuring:
+
+- **Fear & Greed Index**: Fear and Greed index is calculated using a proprietary technique based on Nifty 50 price and volatility data. Displays a plot of the index with categories from Extreme Fear to Extreme Greed, plus a 5-day historical trend sparkline. Also shows a candlestick chart plot with the fear and greed index signal overlayed for reference.
+- **Top Gainers & Losers**: Real-time market movers from NSE updated during market hours.
+- **Trending Stocks**: Popular stocks based on trading volume and price movement.
+- **Curated Screens**: Pre-built screening templates for common trading strategies.
+
+### Stock Browser (https://tiphub.ai/stocks)
+
+Browse all 3,000+ NSE-listed stocks with:
+
+- Market cap filtering: Large Cap, Mid Cap, Small Cap
+- Search by ticker symbol or company name
+- Hover-to-view fundamentals including P/E ratio, market cap, sector, and industry
+
+
+### Stock Detail Pages (https://tiphub.ai/stocks/{SYMBOL})
+
+Each stock has a dedicated analysis page with:
+
+- Real-time price chart with multi-timeframe support (1-minute to monthly candlesticks)
+- 24 commonly used technical indicators (eg: SMA, EMA, RSI, MACD, ATR, Supertrend, Bollinger Bands)
+- AI sentiment analysis score on the stock news feed.
+- Company fundamentals (P/E, P/B, market cap, revenue growth, profit margins, debt-to-equity)
+- Sankey chart for visualizing the stock financials and fundamentals data in an aesthetic and interactive way.
+- Reverse DCF functionality for computing market implied growth rate for the selected stock.
+- Current shareholding pattern of the stock along with a detailed breakdown of the shareholding (eg into promoters, FII, DII, public etc), along with a plot displaying the same
+- Breadcrumb navigation (Home > Stocks > Symbol)
+
+### Market Indices (https://tiphub.ai/indices)
+
+Tracks 57 Indian market indices with real-time prices:
+
+- **Benchmark**: Nifty 50, Bank Nifty, Nifty Next 50
+- **Sectoral**: Nifty IT, Nifty Pharma, Nifty Auto, Nifty Metal, Nifty Realty, Nifty Energy, Nifty FMCG
+- **Thematic**: Nifty MidSmallCap 400, Nifty Midcap 100, Nifty Smallcap 100
+- Daily change percentages and real-time last traded price data
+
+### Expert Screener (https://tiphub.ai/screener)
+
+Technical stock screening tool using Chartink like boolean expression syntax.
+
+**Supported Indicators (24+):**
+- Simple Moving Averages: SMA at any period (sma_20, sma_50, sma_200, etc.)
+- Exponential Moving Averages: EMA at any period (ema_9, ema_12, ema_200, etc.)
+- MACD: macd_line, macd_signal, macd_histogram
+- RSI: Any period (rsi_14, rsi_7, etc.)
+- ATR: Any period (atr_14, etc.)
+- Supertrend: supertrend with configurable period and multiplier, supertrend_direction
+- Bollinger Bands: bb_upper, bb_middle, bb_lower
+- Volume: volume_sma at any period, liquidity
+- OHLC: open, high, low, close, volume
+- 52-Week: high_52_W (52-week high)
+
+**Example Expressions:**
+- Momentum & Liquidity: `sma_50 > sma_200 and rsi_14 > 50 and volume > volume_sma_20 * 1.5`
+- RSI Pullback: `rsi_14 < 35 and sma_20 > sma_50 and close > sma_200`
+- 52W Breakout Watch: `close > high_52_W * 0.95 and volume > volume_sma_20 * 2`
+
+**How it works:**
+1. User enters a boolean expression using supported indicator names
+2. System calculates 300 bars of hourly OHLC data for all stocks
+3. AST-based expression evaluator safely parses and evaluates the expression
+4. Results stream in real-time via Server-Sent Events as matching stocks are found
+5. Typically screens all 3,000+ NSE stocks in 20–180 seconds
+
+### Strategy Backtesting / Alpha Generation (https://tiphub.ai/alpha-generation)
+
+AI-powered trading strategy generator, optimizer and backtester
+
+**How it works:**
+1. Select a stock from the searchable dropdown (3,000+ NSE tickers)
+2. Choose mode: Standard (entry/exit rules) or Advanced TPSL (adds take-profit/stop-loss optimization)
+3. Runs the optimizer with a 70/30 train/test split to prevent overfitting
+
+
+**Output metrics:**
+- Total PnL percentage (profit and loss)
+- Number of trades executed
+- Calmar ratio (annualized return divided by max drawdown)
+- Maximum drawdown percentage and drawdown point
+- Win rate percentage
+- Profit factor
+- Equity curve chart with train/test split marker
+- Candlestick chart showing last 4 months with entry/exit signal markers
+- TPSL values in advanced mode (optimal take-profit and stop-loss percentages)
+
+
+### AI Sentiment Analysis
+
+Analyzes news sentiment for any stock ticker using AI, categorizes the news articles into positive, negative or neutral based on the content of the news article and the headline.
+
+## Sharing & Collaboration
+
+Tiphub allows users to share analysis results via public URLs:
+
+- **Screener Results**: Share expert screener filters and matching stocks at https://tiphub.ai/shared/screener/{token}
+- **Backtest Results**: Share strategy backtest results including equity curves and performance metrics at https://tiphub.ai/shared/backtest/{token}
+
+## Frequently Asked Questions
+
+**What is Tiphub?**
+Tiphub is a free AI-powered stock analysis platform for Indian investors. It provides an expert screener functionality with boolean expressions to screen and filter stocks, a complete financial, fundamental and technical description of all NSE stocks and alpha generation and backtesting functionality.
+
+**Is Tiphub free?**
+Yes. Tiphub offers a free tier with access to stock browsing, market data, AI sentiment analysis, and basic screener functionality. Premium features include unlimited screener runs and advanced strategy backtesting.
+
+**What stocks does Tiphub cover?**
+Tiphub covers over 3,000 stocks listed on the National Stock Exchange (NSE) of India, including all Nifty 50, Nifty 500, and sectoral index constituents.
+
+**What is the Fear & Greed Index on Tiphub?**
+Tiphub calculates a proprietary Fear & Greed index using price and volatility data derived from Nifty 50. It displays a plot representing the index, with categories ranging from Extreme Fear to Extreme Greed with a 5-day history sparkline. It also shows a candlestick plot of the NIFTY index with the fear and greed index signals overlayed.
+
+**Is the expert screener similar to Chartink?**
+The screener uses a natural language type syntax for specifying the screener criteria, inspired by chartink. You write boolean expressions such as `rsi_14 < 30 and sma_50 > sma_200` to filter stocks. It supports 24+ indicators and screens all 3,000+ NSE stocks with real-time streaming results.
+

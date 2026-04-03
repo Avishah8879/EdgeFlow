@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.venv/
+.mypy_cache/
+.pytest_cache/
+
+# Build / output
+dist/
+build/
+coverage/
+
+# Logs
+*.log
+logs/
+*.log.gz
+*.log__*
+
+# Local environment & tooling
+.env
+.env.local
+.env.production
+.env.*.local
+.local/
+.python-version
+server/public/
+uploads/
+
+# Allow .env.example to be tracked
+!.env.example
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Misc
+*.tar.gz
+vite.config.ts.*
+

@@ -1,0 +1,2743 @@
+================================================================================
+TIPHUB AUTH DATABASE SCHEMA DOCUMENTATION
+================================================================================
+
+Database: Tiphub_auth
+Host: 13.204.159.237
+Generated: 2025-12-22T19:36:34.945778
+
+DATABASE STATISTICS
+--------------------------------------------------------------------------------
+Total Tables:           26
+Tables with Data:       17
+Empty Tables:           9
+Continuous Aggregates:  0
+Materialized Views:     0
+Database Size:          15 MB
+
+
+================================================================================
+TABLES DIRECTORY
+================================================================================
+
+  admin_audit_log                                       41 rows        112 kB
+  analytics_daily_summary                                0 rows         40 kB
+  auth_logs                                            827 rows        472 kB
+  click_events                                        2984 rows        912 kB
+  feature_flag_audit                                     2 rows         64 kB
+  feature_flag_overrides                                 0 rows         48 kB
+  feature_flags                                         12 rows         96 kB
+  feature_usage                                        221 rows        176 kB
+  migration_history                                     14 rows         48 kB
+  notification_dismissals                                0 rows         56 kB
+  oauth_accounts                                         0 rows         48 kB
+  otp_codes                                              0 rows         56 kB
+  page_views                                          2365 rows       1184 kB
+  privacy_consent                                       15 rows         56 kB
+  rate_limit_configs                                    17 rows         80 kB
+  rate_limit_overrides                                   0 rows         40 kB
+  rate_limit_usage                                       0 rows         32 kB
+  rate_limit_violations                                  0 rows         48 kB
+  saved_backtest_results                                 6 rows        864 kB
+  saved_screener_results                                 2 rows        168 kB
+  search_events                                         93 rows        112 kB
+  sessions                                             555 rows        928 kB
+  subscription_plans                                     3 rows         48 kB
+  system_config                                         26 rows         48 kB
+  system_notifications                                   0 rows         64 kB
+  users                                                 24 rows        304 kB
+
+
+================================================================================
+DETAILED TABLE SCHEMAS
+================================================================================
+
+
+--------------------------------------------------------------------------------
+TABLE: admin_audit_log
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 41
+Size: 112 kB
+
+COLUMNS:
+  id                             int8                 NOT NULL   DEFAULT nextval('admin_audit_log_id_seq'::regclass) [PK]
+  admin_user_id                  uuid                 NOT NULL   
+  action                         character varying(100) NOT NULL   
+  target_type                    character varying(50) NULL       
+  target_id                      character varying(255) NULL       
+  previous_value                 jsonb                NULL       
+  new_value                      jsonb                NULL       
+  ip_address                     character varying(45) NULL       
+  user_agent                     text                 NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  admin_user_id -> users(id)
+
+INDEXES:
+  [PRIMARY] UNIQUE admin_audit_log_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX admin_audit_log_pkey ON public.admin_audit_log USING btree (id)
+  idx_admin_audit_admin (admin_user_id, created_at) - btree
+    Definition: CREATE INDEX idx_admin_audit_admin ON public.admin_audit_log USING btree (admin_user_id, created_at DESC)
+  idx_admin_audit_created (created_at) - btree
+    Definition: CREATE INDEX idx_admin_audit_created ON public.admin_audit_log USING btree (created_at DESC)
+  idx_admin_audit_target (target_type, target_id) - btree
+    Definition: CREATE INDEX idx_admin_audit_target ON public.admin_audit_log USING btree (target_type, target_id)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 1
+    admin_user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    action: impersonate_user
+    target_type: user
+    target_id: a18eb3da-3826-450d-aefa-228eb62fbace
+    previous_value: NULL
+    new_value: {
+    "targetRole": "moderator",
+    "targetEmail": "suhas9176@gmail.com"
+}
+    ip_address: 127.0.0.1
+    user_agent: NULL
+    created_at: 2025-12-02T23:14:30.118978+00:00
+
+  Row 2:
+    id: 2
+    admin_user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    action: impersonate_user
+    target_type: user
+    target_id: a18eb3da-3826-450d-aefa-228eb62fbace
+    previous_value: NULL
+    new_value: {
+    "targetRole": "moderator",
+    "targetEmail": "suhas9176@gmail.com"
+}
+    ip_address: 127.0.0.1
+    user_agent: NULL
+    created_at: 2025-12-02T23:15:00.108921+00:00
+
+  Row 3:
+    id: 3
+    admin_user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    action: update_config
+    target_type: system_config
+    target_id: pages.page_visible_indices
+    previous_value: {
+    "value": true
+}
+    new_value: {
+    "value": false
+}
+    ip_address: 127.0.0.1
+    user_agent: NULL
+    created_at: 2025-12-03T11:50:26.566315+00:00
+
+  Row 4:
+    id: 4
+    admin_user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    action: update_config
+    target_type: system_config
+    target_id: pages.page_visible_indices
+    previous_value: {
+    "value": false
+}
+    new_value: {
+    "value": true
+}
+    ip_address: 127.0.0.1
+    user_agent: NULL
+    created_at: 2025-12-03T11:51:24.361819+00:00
+
+  Row 5:
+    id: 5
+    admin_user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    action: update_config
+    target_type: system_config
+    target_id: pages.page_visible_backtest
+    previous_value: {
+    "value": true
+}
+    new_value: {
+    "value": false
+}
+    ip_address: 127.0.0.1
+    user_agent: NULL
+    created_at: 2025-12-03T11:51:29.392535+00:00
+
+
+--------------------------------------------------------------------------------
+TABLE: analytics_daily_summary
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 0
+Size: 40 kB
+
+COLUMNS:
+  id                             int8                 NOT NULL   DEFAULT nextval('analytics_daily_summary_id_seq'::regclass) [PK]
+  date                           date                 NOT NULL   
+  metric_type                    character varying(50) NOT NULL   
+  metric_key                     character varying(255) NULL       
+  count                          int4                 NOT NULL   DEFAULT 0
+  unique_users                   int4                 NULL       DEFAULT 0
+  metadata                       jsonb                NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+UNIQUE CONSTRAINTS:
+  analytics_daily_summary_date_metric_type_metric_key_key: date
+  analytics_daily_summary_date_metric_type_metric_key_key: metric_type
+  analytics_daily_summary_date_metric_type_metric_key_key: metric_key
+
+INDEXES:
+  UNIQUE analytics_daily_summary_date_metric_type_metric_key_key (date, metric_type, metric_key) - btree
+    Definition: CREATE UNIQUE INDEX analytics_daily_summary_date_metric_type_metric_key_key ON public.analytics_daily_summary USING btree (date, metric_type, metric_key)
+  [PRIMARY] UNIQUE analytics_daily_summary_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX analytics_daily_summary_pkey ON public.analytics_daily_summary USING btree (id)
+  idx_analytics_daily_date (date) - btree
+    Definition: CREATE INDEX idx_analytics_daily_date ON public.analytics_daily_summary USING btree (date DESC)
+  idx_analytics_daily_type (date, metric_type) - btree
+    Definition: CREATE INDEX idx_analytics_daily_type ON public.analytics_daily_summary USING btree (metric_type, date DESC)
+
+
+--------------------------------------------------------------------------------
+TABLE: auth_logs
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 827
+Size: 472 kB
+
+COLUMNS:
+  id                             int8                 NOT NULL   DEFAULT nextval('auth_logs_id_seq'::regclass) [PK]
+  user_id                        uuid                 NULL       
+  event_type                     character varying(50) NOT NULL   
+  provider                       character varying(20) NULL       
+  ip_address                     character varying(45) NULL       
+  user_agent                     text                 NULL       
+  device_info                    text                 NULL       
+  location                       character varying(255) NULL       
+  success                        bool                 NOT NULL   
+  failure_reason                 text                 NULL       
+  metadata                       jsonb                NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  user_id -> users(id)
+
+CHECK CONSTRAINTS:
+  check_event_type: CHECK ((((event_type)::text = ANY ((ARRAY['signup'::character varying, 'login'::character varying, 'logout'::character varying, 'failed_login'::character varying, 'account_locked'::character varying, 'account_unlocked'::character varying, 'session_revoked'::character varying, 'all_sessions_revoked'::character varying, 'token_refresh'::character varying, 'password_change'::character varying, 'password_reset_request'::character varying, 'password_reset_requested'::character varying, 'password_reset_complete'::character varying, 'password_reset_completed'::character varying, 'password_reset_failed'::character varying, 'email_verification'::character varying, 'email_verification_requested'::character varying, 'email_verification_failed'::character varying, 'email_verified'::character varying, 'oauth_link'::character varying, 'oauth_unlink'::character varying, 'subscription_upgrade'::character varying, 'subscription_downgrade'::character varying, 'subscription_cancel'::character varying, 'trial_started'::character varying, 'trial_expired'::character varying, 'subscription_expired'::character varying, 'account_deletion_requested'::character varying, 'account_deletion_failed'::character varying, 'account_deleted'::character varying, 'unauthorized_access_attempt'::character varying])::text[])) OR ((event_type)::text ~~ 'admin_%'::text)))
+
+INDEXES:
+  [PRIMARY] UNIQUE auth_logs_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX auth_logs_pkey ON public.auth_logs USING btree (id)
+  idx_auth_logs_created_at (created_at) - btree
+    Definition: CREATE INDEX idx_auth_logs_created_at ON public.auth_logs USING btree (created_at DESC)
+  idx_auth_logs_event_type (event_type) - btree
+    Definition: CREATE INDEX idx_auth_logs_event_type ON public.auth_logs USING btree (event_type)
+  idx_auth_logs_failed_logins (user_id, event_type, created_at) - btree
+    Definition: CREATE INDEX idx_auth_logs_failed_logins ON public.auth_logs USING btree (user_id, event_type, created_at) WHERE (((event_type)::text = 'failed_login'::text) AND (success = false))
+  idx_auth_logs_ip (ip_address) - btree
+    Definition: CREATE INDEX idx_auth_logs_ip ON public.auth_logs USING btree (ip_address)
+  idx_auth_logs_recent_failures (user_id, created_at) - btree
+    Definition: CREATE INDEX idx_auth_logs_recent_failures ON public.auth_logs USING btree (user_id, created_at DESC) WHERE (((event_type)::text = 'failed_login'::text) AND (success = false))
+  idx_auth_logs_subscription_events (user_id, event_type, created_at) - btree
+    Definition: CREATE INDEX idx_auth_logs_subscription_events ON public.auth_logs USING btree (user_id, event_type, created_at DESC) WHERE ((event_type)::text = ANY ((ARRAY['subscription_upgrade'::character varying, 'subscription_downgrade'::character varying, 'subscription_cancel'::character varying, 'trial_started'::character varying, 'trial_expired'::character varying, 'subscription_expired'::character varying, 'admin_upgrade'::character varying])::text[]))
+  idx_auth_logs_success (success) - btree
+    Definition: CREATE INDEX idx_auth_logs_success ON public.auth_logs USING btree (success)
+  idx_auth_logs_user_id (user_id) - btree
+    Definition: CREATE INDEX idx_auth_logs_user_id ON public.auth_logs USING btree (user_id)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 1
+    user_id: 78471cbf-67ee-48f3-9ab4-b61a285fc989
+    event_type: signup
+    provider: google
+    ip_address: 127.0.0.1
+    user_agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Sa...
+    device_info: NULL
+    location: NULL
+    success: True
+    failure_reason: NULL
+    metadata: {
+    "tier": "premium",
+    "username": "Avishah69"
+}
+    created_at: 2025-11-25T22:05:05.966830+00:00
+
+  Row 2:
+    id: 2
+    user_id: 78471cbf-67ee-48f3-9ab4-b61a285fc989
+    event_type: logout
+    provider: google
+    ip_address: 127.0.0.1
+    user_agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Sa...
+    device_info: NULL
+    location: NULL
+    success: True
+    failure_reason: NULL
+    metadata: NULL
+    created_at: 2025-11-25T22:05:48.266255+00:00
+
+  Row 3:
+    id: 3
+    user_id: NULL
+    event_type: signup
+    provider: password
+    ip_address: 127.0.0.1
+    user_agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Sa...
+    device_info: NULL
+    location: NULL
+    success: False
+    failure_reason: That username is already taken.
+    metadata: NULL
+    created_at: 2025-11-25T22:06:28.557128+00:00
+
+  Row 4:
+    id: 4
+    user_id: 78471cbf-67ee-48f3-9ab4-b61a285fc989
+    event_type: login
+    provider: google
+    ip_address: 127.0.0.1
+    user_agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Sa...
+    device_info: NULL
+    location: NULL
+    success: True
+    failure_reason: NULL
+    metadata: NULL
+    created_at: 2025-11-25T22:07:10.630857+00:00
+
+  Row 5:
+    id: 5
+    user_id: 7af2913e-ad5f-4ba3-bb62-0729ab40c4b1
+    event_type: signup
+    provider: google
+    ip_address: 127.0.0.1
+    user_agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Sa...
+    device_info: NULL
+    location: NULL
+    success: True
+    failure_reason: NULL
+    metadata: {
+    "tier": "premium",
+    "username": "ks07dev"
+}
+    created_at: 2025-11-25T23:30:43.316736+00:00
+
+
+--------------------------------------------------------------------------------
+TABLE: click_events
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 2984
+Size: 912 kB
+
+COLUMNS:
+  id                             int8                 NOT NULL   DEFAULT nextval('click_events_id_seq'::regclass) [PK]
+  user_id                        uuid                 NULL       
+  session_id                     character varying(64) NOT NULL   
+  page_path                      character varying(500) NOT NULL   
+  element_type                   character varying(50) NULL       
+  element_id                     character varying(255) NULL       
+  element_text                   character varying(500) NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  user_id -> users(id)
+
+INDEXES:
+  [PRIMARY] UNIQUE click_events_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX click_events_pkey ON public.click_events USING btree (id)
+  idx_clicks_created (created_at) - btree
+    Definition: CREATE INDEX idx_clicks_created ON public.click_events USING btree (created_at DESC)
+  idx_clicks_session (session_id) - btree
+    Definition: CREATE INDEX idx_clicks_session ON public.click_events USING btree (session_id)
+  idx_clicks_user (user_id, created_at) - btree
+    Definition: CREATE INDEX idx_clicks_user ON public.click_events USING btree (user_id, created_at DESC)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 1
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    session_id: 1764717030136-fe7ufo9fl8h
+    page_path: /admin
+    element_type: link
+    element_id: NULL
+    element_text: Admin Dashboard
+    created_at: 2025-12-02T23:13:18.542381+00:00
+
+  Row 2:
+    id: 2
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    session_id: 1764717030136-fe7ufo9fl8h
+    page_path: /admin/users
+    element_type: button
+    element_id: NULL
+    element_text: Users
+    created_at: 2025-12-02T23:13:21.635421+00:00
+
+  Row 3:
+    id: 3
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    session_id: 1764717030136-fe7ufo9fl8h
+    page_path: /admin/analytics
+    element_type: button
+    element_id: NULL
+    element_text: Analytics
+    created_at: 2025-12-02T23:13:23.403897+00:00
+
+  Row 4:
+    id: 4
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    session_id: 1764717030136-fe7ufo9fl8h
+    page_path: /admin/notifications
+    element_type: button
+    element_id: NULL
+    element_text: Notifications
+    created_at: 2025-12-02T23:13:26.599800+00:00
+
+  Row 5:
+    id: 5
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    session_id: 1764717030136-fe7ufo9fl8h
+    page_path: /admin/audit
+    element_type: button
+    element_id: NULL
+    element_text: Audit Logs
+    created_at: 2025-12-02T23:13:27.422617+00:00
+
+
+--------------------------------------------------------------------------------
+TABLE: feature_flag_audit
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 2
+Size: 64 kB
+
+COLUMNS:
+  id                             int8                 NOT NULL   DEFAULT nextval('feature_flag_audit_id_seq'::regclass) [PK]
+  flag_id                        int4                 NOT NULL   
+  admin_id                       uuid                 NOT NULL   
+  action                         character varying(50) NOT NULL   
+  old_value                      jsonb                NULL       
+  new_value                      jsonb                NULL       
+  ip_address                     character varying(45) NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  flag_id -> feature_flags(id)
+  admin_id -> users(id)
+
+INDEXES:
+  [PRIMARY] UNIQUE feature_flag_audit_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX feature_flag_audit_pkey ON public.feature_flag_audit USING btree (id)
+  idx_feature_flag_audit_created (created_at) - btree
+    Definition: CREATE INDEX idx_feature_flag_audit_created ON public.feature_flag_audit USING btree (created_at DESC)
+  idx_feature_flag_audit_flag (flag_id) - btree
+    Definition: CREATE INDEX idx_feature_flag_audit_flag ON public.feature_flag_audit USING btree (flag_id)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 1
+    flag_id: 5
+    admin_id: ca29558a-a601-412a-8392-26a01ad1f38c
+    action: toggle
+    old_value: {
+    "isEnabled": true
+}
+    new_value: {
+    "isEnabled": false
+}
+    ip_address: 162.158.88.13
+    created_at: 2025-12-17T12:35:15.590146+00:00
+
+  Row 2:
+    id: 2
+    flag_id: 5
+    admin_id: ca29558a-a601-412a-8392-26a01ad1f38c
+    action: toggle
+    old_value: {
+    "isEnabled": false
+}
+    new_value: {
+    "isEnabled": true
+}
+    ip_address: 162.158.88.13
+    created_at: 2025-12-17T12:35:33.051529+00:00
+
+
+--------------------------------------------------------------------------------
+TABLE: feature_flag_overrides
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 0
+Size: 48 kB
+
+COLUMNS:
+  id                             int4                 NOT NULL   DEFAULT nextval('feature_flag_overrides_id_seq'::regclass) [PK]
+  flag_id                        int4                 NOT NULL   
+  user_id                        uuid                 NOT NULL   
+  is_enabled                     bool                 NOT NULL   
+  reason                         text                 NULL       
+  created_by                     uuid                 NULL       
+  expires_at                     timestamptz          NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  flag_id -> feature_flags(id)
+  user_id -> users(id)
+  created_by -> users(id)
+
+UNIQUE CONSTRAINTS:
+  unique_flag_user: flag_id
+  unique_flag_user: user_id
+
+INDEXES:
+  [PRIMARY] UNIQUE feature_flag_overrides_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX feature_flag_overrides_pkey ON public.feature_flag_overrides USING btree (id)
+  idx_feature_flag_overrides_expires (expires_at) - btree
+    Definition: CREATE INDEX idx_feature_flag_overrides_expires ON public.feature_flag_overrides USING btree (expires_at) WHERE (expires_at IS NOT NULL)
+  idx_feature_flag_overrides_flag (flag_id) - btree
+    Definition: CREATE INDEX idx_feature_flag_overrides_flag ON public.feature_flag_overrides USING btree (flag_id)
+  idx_feature_flag_overrides_user (user_id) - btree
+    Definition: CREATE INDEX idx_feature_flag_overrides_user ON public.feature_flag_overrides USING btree (user_id)
+  UNIQUE unique_flag_user (flag_id, user_id) - btree
+    Definition: CREATE UNIQUE INDEX unique_flag_user ON public.feature_flag_overrides USING btree (flag_id, user_id)
+
+
+--------------------------------------------------------------------------------
+TABLE: feature_flags
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 12
+Size: 96 kB
+
+COLUMNS:
+  id                             int4                 NOT NULL   DEFAULT nextval('feature_flags_id_seq'::regclass) [PK]
+  key                            character varying(100) NOT NULL   
+  name                           character varying(200) NOT NULL   
+  description                    text                 NULL       
+  is_enabled                     bool                 NULL       DEFAULT false
+  target_tiers                   _varchar             NULL       DEFAULT NULL::character varying[]
+  target_roles                   _varchar             NULL       DEFAULT NULL::character varying[]
+  rollout_percentage             int4                 NULL       DEFAULT 100
+  starts_at                      timestamptz          NULL       
+  expires_at                     timestamptz          NULL       
+  category                       character varying(50) NULL       DEFAULT 'general'::character varying
+  created_by                     uuid                 NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+  updated_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  created_by -> users(id)
+
+UNIQUE CONSTRAINTS:
+  feature_flags_key_key: key
+
+CHECK CONSTRAINTS:
+  check_rollout_percentage: CHECK (((rollout_percentage >= 0) AND (rollout_percentage <= 100)))
+
+INDEXES:
+  UNIQUE feature_flags_key_key (key) - btree
+    Definition: CREATE UNIQUE INDEX feature_flags_key_key ON public.feature_flags USING btree (key)
+  [PRIMARY] UNIQUE feature_flags_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX feature_flags_pkey ON public.feature_flags USING btree (id)
+  idx_feature_flags_category (category) - btree
+    Definition: CREATE INDEX idx_feature_flags_category ON public.feature_flags USING btree (category)
+  idx_feature_flags_enabled (is_enabled) - btree
+    Definition: CREATE INDEX idx_feature_flags_enabled ON public.feature_flags USING btree (is_enabled) WHERE (is_enabled = true)
+  idx_feature_flags_key (key) - btree
+    Definition: CREATE INDEX idx_feature_flags_key ON public.feature_flags USING btree (key)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 1
+    key: dark_mode_v2
+    name: Dark Mode V2
+    description: New dark mode design with improved contrast
+    is_enabled: False
+    target_tiers: NULL
+    target_roles: NULL
+    rollout_percentage: 100
+    starts_at: NULL
+    expires_at: NULL
+    category: ui
+    created_by: NULL
+    created_at: 2025-12-02T19:26:15.322863+00:00
+    updated_at: 2025-12-02T19:26:15.322863+00:00
+
+  Row 2:
+    id: 2
+    key: new_navigation
+    name: New Navigation
+    description: Redesigned navigation bar
+    is_enabled: False
+    target_tiers: NULL
+    target_roles: NULL
+    rollout_percentage: 100
+    starts_at: NULL
+    expires_at: NULL
+    category: ui
+    created_by: NULL
+    created_at: 2025-12-02T19:26:15.322863+00:00
+    updated_at: 2025-12-02T19:26:15.322863+00:00
+
+  Row 3:
+    id: 3
+    key: beta_features
+    name: Beta Features
+    description: Access to beta features
+    is_enabled: False
+    target_tiers: [
+    "premium"
+]
+    target_roles: NULL
+    rollout_percentage: 100
+    starts_at: NULL
+    expires_at: NULL
+    category: ui
+    created_by: NULL
+    created_at: 2025-12-02T19:26:15.322863+00:00
+    updated_at: 2025-12-02T19:26:15.322863+00:00
+
+  Row 4:
+    id: 4
+    key: advanced_screener
+    name: Advanced Screener
+    description: Access to advanced screener expressions
+    is_enabled: True
+    target_tiers: [
+    "premium"
+]
+    target_roles: NULL
+    rollout_percentage: 100
+    starts_at: NULL
+    expires_at: NULL
+    category: features
+    created_by: NULL
+    created_at: 2025-12-02T19:26:15.322863+00:00
+    updated_at: 2025-12-02T19:26:15.322863+00:00
+
+  Row 5:
+    id: 6
+    key: export_data
+    name: Data Export
+    description: Ability to export data as CSV
+    is_enabled: True
+    target_tiers: [
+    "premium"
+]
+    target_roles: NULL
+    rollout_percentage: 100
+    starts_at: NULL
+    expires_at: NULL
+    category: features
+    created_by: NULL
+    created_at: 2025-12-02T19:26:15.322863+00:00
+    updated_at: 2025-12-02T19:26:15.322863+00:00
+
+
+--------------------------------------------------------------------------------
+TABLE: feature_usage
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 221
+Size: 176 kB
+
+COLUMNS:
+  id                             int8                 NOT NULL   DEFAULT nextval('feature_usage_id_seq'::regclass) [PK]
+  user_id                        uuid                 NOT NULL   
+  feature_type                   character varying(50) NOT NULL   
+  feature_params                 jsonb                NOT NULL   
+  result_summary                 jsonb                NULL       
+  execution_time_ms              int4                 NULL       
+  success                        bool                 NULL       DEFAULT true
+  error_message                  text                 NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  user_id -> users(id)
+
+CHECK CONSTRAINTS:
+  check_feature_type: CHECK (((feature_type)::text = ANY ((ARRAY['screener'::character varying, 'backtest'::character varying, 'sentiment'::character varying, 'search'::character varying, 'price_chart'::character varying, 'technical_indicators'::character varying])::text[])))
+
+INDEXES:
+  [PRIMARY] UNIQUE feature_usage_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX feature_usage_pkey ON public.feature_usage USING btree (id)
+  idx_feature_usage_created (created_at) - btree
+    Definition: CREATE INDEX idx_feature_usage_created ON public.feature_usage USING btree (created_at DESC)
+  idx_feature_usage_type (feature_type, created_at) - btree
+    Definition: CREATE INDEX idx_feature_usage_type ON public.feature_usage USING btree (feature_type, created_at DESC)
+  idx_feature_usage_user (user_id, created_at) - btree
+    Definition: CREATE INDEX idx_feature_usage_user ON public.feature_usage USING btree (user_id, created_at DESC)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 1
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    feature_type: backtest
+    feature_params: {
+    "mode": "advanced",
+    "ticker": "RELIANCE"
+}
+    result_summary: NULL
+    execution_time_ms: 7446
+    success: True
+    error_message: NULL
+    created_at: 2025-12-02T23:52:26.349962+00:00
+
+  Row 2:
+    id: 2
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    feature_type: screener
+    feature_params: {
+    "expression": "(close > 0.9 * high_52_W) and (ema_20 > ema_50)"
+}
+    result_summary: {
+    "matched": 996,
+    "universe": 3000
+}
+    execution_time_ms: 25742
+    success: True
+    error_message: NULL
+    created_at: 2025-12-03T00:12:09.570586+00:00
+
+  Row 3:
+    id: 3
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    feature_type: screener
+    feature_params: {
+    "expression": "(close > 0.9 * high_52_W) and (ema_20 > ema_50)"
+}
+    result_summary: {
+    "matched": 996,
+    "universe": 3000
+}
+    execution_time_ms: 26048
+    success: True
+    error_message: NULL
+    created_at: 2025-12-03T00:17:10.742622+00:00
+
+  Row 4:
+    id: 4
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    feature_type: screener
+    feature_params: {
+    "expression": "(close > 0.9 * high_52_W) and (ema_20 > ema_50)"
+}
+    result_summary: {
+    "matched": 996,
+    "universe": 3000
+}
+    execution_time_ms: 27227
+    success: True
+    error_message: NULL
+    created_at: 2025-12-03T00:19:56.456818+00:00
+
+  Row 5:
+    id: 5
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    feature_type: screener
+    feature_params: {
+    "expression": "(close > 0.9 * high_52_W) and (ema_20 > ema_50)"
+}
+    result_summary: {
+    "matched": 996,
+    "universe": 3000
+}
+    execution_time_ms: 26031
+    success: True
+    error_message: NULL
+    created_at: 2025-12-03T00:20:30.482873+00:00
+
+
+--------------------------------------------------------------------------------
+TABLE: migration_history
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 14
+Size: 48 kB
+
+COLUMNS:
+  id                             int4                 NOT NULL   DEFAULT nextval('migration_history_id_seq'::regclass) [PK]
+  migration_name                 character varying(255) NOT NULL   
+  applied_at                     timestamptz          NULL       DEFAULT now()
+  success                        bool                 NULL       DEFAULT true
+  error_message                  text                 NULL       
+
+PRIMARY KEY: (id)
+
+UNIQUE CONSTRAINTS:
+  migration_history_migration_name_key: migration_name
+
+INDEXES:
+  UNIQUE migration_history_migration_name_key (migration_name) - btree
+    Definition: CREATE UNIQUE INDEX migration_history_migration_name_key ON public.migration_history USING btree (migration_name)
+  [PRIMARY] UNIQUE migration_history_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX migration_history_pkey ON public.migration_history USING btree (id)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 1
+    migration_name: 004_create_auth_tables.sql
+    applied_at: 2025-11-25T14:46:39.598032+00:00
+    success: True
+    error_message: NULL
+
+  Row 2:
+    id: 2
+    migration_name: 005_add_terms_acceptance.sql
+    applied_at: 2025-11-25T21:54:18.688318+00:00
+    success: True
+    error_message: NULL
+
+  Row 3:
+    id: 3
+    migration_name: 006_subscription_system.sql
+    applied_at: 2025-12-02T17:16:31.729081+00:00
+    success: False
+    error_message: trigger "update_subscription_plans_updated_at" for relation "subscription_plans" already exists
+
+  Row 4:
+    id: 5
+    migration_name: 007_upgrade_all_users_to_premium.sql
+    applied_at: 2025-12-02T17:19:11.339030+00:00
+    success: True
+    error_message: NULL
+
+  Row 5:
+    id: 6
+    migration_name: 008_admin_analytics_system.sql
+    applied_at: 2025-12-02T17:19:24.758538+00:00
+    success: True
+    error_message: NULL
+
+
+--------------------------------------------------------------------------------
+TABLE: notification_dismissals
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 0
+Size: 56 kB
+
+COLUMNS:
+  id                             int8                 NOT NULL   DEFAULT nextval('notification_dismissals_id_seq'::regclass) [PK]
+  user_id                        uuid                 NOT NULL   
+  notification_id                uuid                 NOT NULL   
+  dismissed_at                   timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  user_id -> users(id)
+  notification_id -> system_notifications(id)
+
+UNIQUE CONSTRAINTS:
+  notification_dismissals_user_id_notification_id_key: user_id
+  notification_dismissals_user_id_notification_id_key: notification_id
+
+INDEXES:
+  idx_dismissals_user (user_id) - btree
+    Definition: CREATE INDEX idx_dismissals_user ON public.notification_dismissals USING btree (user_id)
+  [PRIMARY] UNIQUE notification_dismissals_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX notification_dismissals_pkey ON public.notification_dismissals USING btree (id)
+  UNIQUE notification_dismissals_user_id_notification_id_key (user_id, notification_id) - btree
+    Definition: CREATE UNIQUE INDEX notification_dismissals_user_id_notification_id_key ON public.notification_dismissals USING btree (user_id, notification_id)
+
+
+--------------------------------------------------------------------------------
+TABLE: oauth_accounts
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 0
+Size: 48 kB
+
+COLUMNS:
+  id                             uuid                 NOT NULL   DEFAULT gen_random_uuid() [PK]
+  user_id                        uuid                 NOT NULL   
+  provider                       character varying(20) NOT NULL   
+  provider_user_id               character varying(255) NOT NULL   
+  access_token                   text                 NULL       
+  refresh_token                  text                 NULL       
+  token_expires_at               timestamptz          NULL       
+  email                          character varying(255) NULL       
+  name                           character varying(255) NULL       
+  avatar_url                     text                 NULL       
+  profile_data                   jsonb                NULL       
+  linked_at                      timestamptz          NULL       DEFAULT now()
+  last_used_at                   timestamptz          NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+  updated_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  user_id -> users(id)
+
+UNIQUE CONSTRAINTS:
+  unique_provider_user: provider
+  unique_provider_user: provider_user_id
+
+INDEXES:
+  idx_oauth_last_used (last_used_at) - btree
+    Definition: CREATE INDEX idx_oauth_last_used ON public.oauth_accounts USING btree (last_used_at DESC)
+  idx_oauth_provider (provider, provider_user_id) - btree
+    Definition: CREATE INDEX idx_oauth_provider ON public.oauth_accounts USING btree (provider, provider_user_id)
+  idx_oauth_user_id (user_id) - btree
+    Definition: CREATE INDEX idx_oauth_user_id ON public.oauth_accounts USING btree (user_id)
+  [PRIMARY] UNIQUE oauth_accounts_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX oauth_accounts_pkey ON public.oauth_accounts USING btree (id)
+  UNIQUE unique_provider_user (provider, provider_user_id) - btree
+    Definition: CREATE UNIQUE INDEX unique_provider_user ON public.oauth_accounts USING btree (provider, provider_user_id)
+
+
+--------------------------------------------------------------------------------
+TABLE: otp_codes
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 0
+Size: 56 kB
+
+COLUMNS:
+  id                             int8                 NOT NULL   DEFAULT nextval('otp_codes_id_seq'::regclass) [PK]
+  user_id                        uuid                 NULL       
+  email                          character varying(255) NOT NULL   
+  code                           character varying(6) NOT NULL   
+  purpose                        character varying(20) NOT NULL   
+  attempts                       int4                 NULL       DEFAULT 0
+  max_attempts                   int4                 NULL       DEFAULT 3
+  expires_at                     timestamptz          NOT NULL   
+  verified_at                    timestamptz          NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  user_id -> users(id)
+
+CHECK CONSTRAINTS:
+  check_otp_purpose: CHECK (((purpose)::text = ANY ((ARRAY['password_reset'::character varying, 'email_verification'::character varying, 'login_verify'::character varying, 'account_deletion'::character varying])::text[])))
+
+INDEXES:
+  idx_otp_email (email, purpose, expires_at) - btree
+    Definition: CREATE INDEX idx_otp_email ON public.otp_codes USING btree (email, purpose, expires_at)
+  idx_otp_user (user_id) - btree
+    Definition: CREATE INDEX idx_otp_user ON public.otp_codes USING btree (user_id) WHERE (user_id IS NOT NULL)
+  [PRIMARY] UNIQUE otp_codes_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX otp_codes_pkey ON public.otp_codes USING btree (id)
+
+
+--------------------------------------------------------------------------------
+TABLE: page_views
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 2365
+Size: 1184 kB
+
+COLUMNS:
+  id                             int8                 NOT NULL   DEFAULT nextval('page_views_id_seq'::regclass) [PK]
+  user_id                        uuid                 NULL       
+  session_id                     character varying(64) NOT NULL   
+  page_path                      character varying(500) NOT NULL   
+  page_title                     character varying(255) NULL       
+  referrer                       character varying(500) NULL       
+  duration_seconds               int4                 NULL       
+  device_type                    character varying(20) NULL       
+  browser                        character varying(50) NULL       
+  os                             character varying(50) NULL       
+  screen_resolution              character varying(20) NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  user_id -> users(id)
+
+INDEXES:
+  idx_page_views_created (created_at) - btree
+    Definition: CREATE INDEX idx_page_views_created ON public.page_views USING btree (created_at DESC)
+  idx_page_views_path (page_path, created_at) - btree
+    Definition: CREATE INDEX idx_page_views_path ON public.page_views USING btree (page_path, created_at DESC)
+  idx_page_views_session (session_id) - btree
+    Definition: CREATE INDEX idx_page_views_session ON public.page_views USING btree (session_id)
+  idx_page_views_user (user_id, created_at) - btree
+    Definition: CREATE INDEX idx_page_views_user ON public.page_views USING btree (user_id, created_at DESC)
+  [PRIMARY] UNIQUE page_views_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX page_views_pkey ON public.page_views USING btree (id)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 1
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    session_id: 1764717030136-fe7ufo9fl8h
+    page_path: /screener
+    page_title: Tiphub - Democratizing market research
+    referrer: http://127.0.0.1:5000/screener
+    duration_seconds: 3
+    device_type: desktop
+    browser: Chrome
+    os: Windows
+    screen_resolution: 1920x1080
+    created_at: 2025-12-02T23:11:22.654548+00:00
+
+  Row 2:
+    id: 2
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    session_id: 1764717030136-fe7ufo9fl8h
+    page_path: /admin
+    page_title: Tiphub - Democratizing market research
+    referrer: http://127.0.0.1:5000/screener
+    duration_seconds: 3
+    device_type: desktop
+    browser: Chrome
+    os: Windows
+    screen_resolution: 1920x1080
+    created_at: 2025-12-02T23:13:18.534554+00:00
+
+  Row 3:
+    id: 3
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    session_id: 1764717030136-fe7ufo9fl8h
+    page_path: /admin/users
+    page_title: Tiphub - Democratizing market research
+    referrer: http://127.0.0.1:5000/screener
+    duration_seconds: 2
+    device_type: desktop
+    browser: Chrome
+    os: Windows
+    screen_resolution: 1920x1080
+    created_at: 2025-12-02T23:13:21.635887+00:00
+
+  Row 4:
+    id: 4
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    session_id: 1764717030136-fe7ufo9fl8h
+    page_path: /admin/analytics
+    page_title: Tiphub - Democratizing market research
+    referrer: http://127.0.0.1:5000/screener
+    duration_seconds: 3
+    device_type: desktop
+    browser: Chrome
+    os: Windows
+    screen_resolution: 1920x1080
+    created_at: 2025-12-02T23:13:23.403371+00:00
+
+  Row 5:
+    id: 5
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    session_id: 1764717030136-fe7ufo9fl8h
+    page_path: /admin/notifications
+    page_title: Tiphub - Democratizing market research
+    referrer: http://127.0.0.1:5000/screener
+    duration_seconds: 1
+    device_type: desktop
+    browser: Chrome
+    os: Windows
+    screen_resolution: 1920x1080
+    created_at: 2025-12-02T23:13:26.600546+00:00
+
+
+--------------------------------------------------------------------------------
+TABLE: privacy_consent
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 15
+Size: 56 kB
+
+COLUMNS:
+  id                             int8                 NOT NULL   DEFAULT nextval('privacy_consent_id_seq'::regclass) [PK]
+  user_id                        uuid                 NULL       
+  session_id                     character varying(64) NULL       
+  consent_level                  character varying(20) NOT NULL   DEFAULT 'none'::character varying
+  ip_address                     character varying(45) NULL       
+  user_agent                     text                 NULL       
+  consented_at                   timestamptz          NULL       DEFAULT now()
+  updated_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  user_id -> users(id)
+
+CHECK CONSTRAINTS:
+  check_consent_identity: CHECK (((user_id IS NOT NULL) OR (session_id IS NOT NULL)))
+  check_consent_level: CHECK (((consent_level)::text = ANY ((ARRAY['none'::character varying, 'essential'::character varying, 'all'::character varying])::text[])))
+
+INDEXES:
+  idx_privacy_consent_session (session_id) - btree
+    Definition: CREATE INDEX idx_privacy_consent_session ON public.privacy_consent USING btree (session_id) WHERE (session_id IS NOT NULL)
+  idx_privacy_consent_user (user_id) - btree
+    Definition: CREATE INDEX idx_privacy_consent_user ON public.privacy_consent USING btree (user_id) WHERE (user_id IS NOT NULL)
+  [PRIMARY] UNIQUE privacy_consent_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX privacy_consent_pkey ON public.privacy_consent USING btree (id)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 1
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    session_id: NULL
+    consent_level: all
+    ip_address: 127.0.0.1
+    user_agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Sa...
+    consented_at: 2025-12-02T22:22:59.031624+00:00
+    updated_at: 2025-12-02T22:22:59.031624+00:00
+
+  Row 2:
+    id: 2
+    user_id: db3fa48a-e83f-4904-87e2-7dcf69cff53b
+    session_id: NULL
+    consent_level: all
+    ip_address: 86.98.222.96
+    user_agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0....
+    consented_at: 2025-12-03T13:14:24.848778+00:00
+    updated_at: 2025-12-03T13:14:24.848778+00:00
+
+  Row 3:
+    id: 3
+    user_id: ca29558a-a601-412a-8392-26a01ad1f38c
+    session_id: NULL
+    consent_level: all
+    ip_address: 103.172.72.159
+    user_agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Sa...
+    consented_at: 2025-12-03T13:35:13.333486+00:00
+    updated_at: 2025-12-03T13:35:13.333486+00:00
+
+  Row 4:
+    id: 4
+    user_id: 78471cbf-67ee-48f3-9ab4-b61a285fc989
+    session_id: NULL
+    consent_level: all
+    ip_address: 86.98.222.96
+    user_agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Sa...
+    consented_at: 2025-12-04T10:04:45.827415+00:00
+    updated_at: 2025-12-04T10:04:45.827415+00:00
+
+  Row 5:
+    id: 5
+    user_id: 44365f1c-e8bc-4110-b264-04f00d6bc7eb
+    session_id: NULL
+    consent_level: all
+    ip_address: 86.98.222.96
+    user_agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0....
+    consented_at: 2025-12-04T10:09:01.991583+00:00
+    updated_at: 2025-12-04T10:09:01.991583+00:00
+
+
+--------------------------------------------------------------------------------
+TABLE: rate_limit_configs
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 17
+Size: 80 kB
+
+COLUMNS:
+  id                             int4                 NOT NULL   DEFAULT nextval('rate_limit_configs_id_seq'::regclass) [PK]
+  endpoint_key                   character varying(100) NOT NULL   
+  tier                           character varying(20) NOT NULL   DEFAULT 'all'::character varying
+  window_ms                      int4                 NOT NULL   DEFAULT 900000
+  max_requests                   int4                 NOT NULL   DEFAULT 100
+  description                    text                 NULL       
+  is_active                      bool                 NULL       DEFAULT true
+  created_at                     timestamptz          NULL       DEFAULT now()
+  updated_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+UNIQUE CONSTRAINTS:
+  unique_endpoint_tier: endpoint_key
+  unique_endpoint_tier: tier
+
+CHECK CONSTRAINTS:
+  check_tier: CHECK (((tier)::text = ANY ((ARRAY['all'::character varying, 'basic'::character varying, 'premium'::character varying, 'admin'::character varying])::text[])))
+
+INDEXES:
+  idx_rate_limit_configs_active (is_active) - btree
+    Definition: CREATE INDEX idx_rate_limit_configs_active ON public.rate_limit_configs USING btree (is_active) WHERE (is_active = true)
+  idx_rate_limit_configs_endpoint (endpoint_key) - btree
+    Definition: CREATE INDEX idx_rate_limit_configs_endpoint ON public.rate_limit_configs USING btree (endpoint_key)
+  [PRIMARY] UNIQUE rate_limit_configs_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX rate_limit_configs_pkey ON public.rate_limit_configs USING btree (id)
+  UNIQUE unique_endpoint_tier (endpoint_key, tier) - btree
+    Definition: CREATE UNIQUE INDEX unique_endpoint_tier ON public.rate_limit_configs USING btree (endpoint_key, tier)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 1
+    endpoint_key: auth_login
+    tier: all
+    window_ms: 900000
+    max_requests: 5
+    description: Login attempts per 15 minutes
+    is_active: True
+    created_at: 2025-12-02T19:26:15.038290+00:00
+    updated_at: 2025-12-02T19:26:15.038290+00:00
+
+  Row 2:
+    id: 2
+    endpoint_key: auth_signup
+    tier: all
+    window_ms: 3600000
+    max_requests: 3
+    description: Signup attempts per hour
+    is_active: True
+    created_at: 2025-12-02T19:26:15.038290+00:00
+    updated_at: 2025-12-02T19:26:15.038290+00:00
+
+  Row 3:
+    id: 3
+    endpoint_key: auth_refresh
+    tier: all
+    window_ms: 3600000
+    max_requests: 20
+    description: Token refresh per hour
+    is_active: True
+    created_at: 2025-12-02T19:26:15.038290+00:00
+    updated_at: 2025-12-02T19:26:15.038290+00:00
+
+  Row 4:
+    id: 4
+    endpoint_key: auth_oauth
+    tier: all
+    window_ms: 300000
+    max_requests: 10
+    description: OAuth attempts per 5 minutes
+    is_active: True
+    created_at: 2025-12-02T19:26:15.038290+00:00
+    updated_at: 2025-12-02T19:26:15.038290+00:00
+
+  Row 5:
+    id: 5
+    endpoint_key: api_general
+    tier: basic
+    window_ms: 900000
+    max_requests: 100
+    description: General API requests per 15 minutes
+    is_active: True
+    created_at: 2025-12-02T19:26:15.038290+00:00
+    updated_at: 2025-12-02T19:26:15.038290+00:00
+
+
+--------------------------------------------------------------------------------
+TABLE: rate_limit_overrides
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 0
+Size: 40 kB
+
+COLUMNS:
+  id                             int4                 NOT NULL   DEFAULT nextval('rate_limit_overrides_id_seq'::regclass) [PK]
+  user_id                        uuid                 NOT NULL   
+  endpoint_key                   character varying(100) NOT NULL   
+  window_ms                      int4                 NOT NULL   
+  max_requests                   int4                 NOT NULL   
+  reason                         text                 NULL       
+  created_by                     uuid                 NULL       
+  expires_at                     timestamptz          NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+  updated_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  user_id -> users(id)
+  created_by -> users(id)
+
+UNIQUE CONSTRAINTS:
+  unique_user_endpoint: user_id
+  unique_user_endpoint: endpoint_key
+
+INDEXES:
+  idx_rate_limit_overrides_expires (expires_at) - btree
+    Definition: CREATE INDEX idx_rate_limit_overrides_expires ON public.rate_limit_overrides USING btree (expires_at) WHERE (expires_at IS NOT NULL)
+  idx_rate_limit_overrides_user (user_id) - btree
+    Definition: CREATE INDEX idx_rate_limit_overrides_user ON public.rate_limit_overrides USING btree (user_id)
+  [PRIMARY] UNIQUE rate_limit_overrides_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX rate_limit_overrides_pkey ON public.rate_limit_overrides USING btree (id)
+  UNIQUE unique_user_endpoint (user_id, endpoint_key) - btree
+    Definition: CREATE UNIQUE INDEX unique_user_endpoint ON public.rate_limit_overrides USING btree (user_id, endpoint_key)
+
+
+--------------------------------------------------------------------------------
+TABLE: rate_limit_usage
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 0
+Size: 32 kB
+
+COLUMNS:
+  id                             int8                 NOT NULL   DEFAULT nextval('rate_limit_usage_id_seq'::regclass) [PK]
+  identifier                     character varying(255) NOT NULL   
+  endpoint_key                   character varying(100) NOT NULL   
+  request_count                  int4                 NULL       DEFAULT 1
+  window_start                   timestamptz          NOT NULL   
+  window_end                     timestamptz          NOT NULL   
+  created_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+UNIQUE CONSTRAINTS:
+  unique_identifier_endpoint_window: identifier
+  unique_identifier_endpoint_window: endpoint_key
+  unique_identifier_endpoint_window: window_start
+
+INDEXES:
+  idx_rate_limit_usage_identifier (identifier, endpoint_key) - btree
+    Definition: CREATE INDEX idx_rate_limit_usage_identifier ON public.rate_limit_usage USING btree (identifier, endpoint_key)
+  idx_rate_limit_usage_window (window_end) - btree
+    Definition: CREATE INDEX idx_rate_limit_usage_window ON public.rate_limit_usage USING btree (window_end)
+  [PRIMARY] UNIQUE rate_limit_usage_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX rate_limit_usage_pkey ON public.rate_limit_usage USING btree (id)
+  UNIQUE unique_identifier_endpoint_window (identifier, endpoint_key, window_start) - btree
+    Definition: CREATE UNIQUE INDEX unique_identifier_endpoint_window ON public.rate_limit_usage USING btree (identifier, endpoint_key, window_start)
+
+
+--------------------------------------------------------------------------------
+TABLE: rate_limit_violations
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 0
+Size: 48 kB
+
+COLUMNS:
+  id                             int8                 NOT NULL   DEFAULT nextval('rate_limit_violations_id_seq'::regclass) [PK]
+  user_id                        uuid                 NULL       
+  ip_address                     character varying(45) NOT NULL   
+  endpoint_key                   character varying(100) NOT NULL   
+  endpoint_path                  character varying(500) NULL       
+  request_count                  int4                 NOT NULL   
+  limit_max                      int4                 NOT NULL   
+  window_ms                      int4                 NOT NULL   
+  user_agent                     text                 NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  user_id -> users(id)
+
+INDEXES:
+  idx_rate_limit_violations_created (created_at) - btree
+    Definition: CREATE INDEX idx_rate_limit_violations_created ON public.rate_limit_violations USING btree (created_at DESC)
+  idx_rate_limit_violations_endpoint (endpoint_key, created_at) - btree
+    Definition: CREATE INDEX idx_rate_limit_violations_endpoint ON public.rate_limit_violations USING btree (endpoint_key, created_at DESC)
+  idx_rate_limit_violations_ip (ip_address) - btree
+    Definition: CREATE INDEX idx_rate_limit_violations_ip ON public.rate_limit_violations USING btree (ip_address)
+  idx_rate_limit_violations_user (user_id) - btree
+    Definition: CREATE INDEX idx_rate_limit_violations_user ON public.rate_limit_violations USING btree (user_id) WHERE (user_id IS NOT NULL)
+  [PRIMARY] UNIQUE rate_limit_violations_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX rate_limit_violations_pkey ON public.rate_limit_violations USING btree (id)
+
+
+--------------------------------------------------------------------------------
+TABLE: saved_backtest_results
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 6
+Size: 864 kB
+
+COLUMNS:
+  id                             uuid                 NOT NULL   DEFAULT gen_random_uuid() [PK]
+  user_id                        uuid                 NULL       
+  name                           character varying(255) NOT NULL   
+  ticker                         character varying(50) NOT NULL   
+  mode                           character varying(20) NOT NULL   
+  custom_rules                   text                 NULL       
+  strategy_condition             text                 NOT NULL   
+  metrics                        jsonb                NOT NULL   
+  equity_curve                   jsonb                NULL       
+  candlestick_data               jsonb                NULL       
+  tpsl_values                    jsonb                NULL       
+  execution_time_ms              int4                 NULL       
+  is_shared                      bool                 NULL       DEFAULT false
+  share_token                    character varying(64) NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+  updated_at                     timestamptz          NULL       DEFAULT now()
+  train_end_date                 character varying(50) NULL       
+  train_end_index                int4                 NULL       
+  max_drawdown_point             jsonb                NULL       
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  user_id -> users(id)
+
+UNIQUE CONSTRAINTS:
+  saved_backtest_results_share_token_key: share_token
+
+INDEXES:
+  idx_saved_backtest_shared (share_token) - btree
+    Definition: CREATE INDEX idx_saved_backtest_shared ON public.saved_backtest_results USING btree (share_token) WHERE (share_token IS NOT NULL)
+  idx_saved_backtest_ticker (ticker) - btree
+    Definition: CREATE INDEX idx_saved_backtest_ticker ON public.saved_backtest_results USING btree (ticker)
+  idx_saved_backtest_user (user_id, created_at) - btree
+    Definition: CREATE INDEX idx_saved_backtest_user ON public.saved_backtest_results USING btree (user_id, created_at DESC)
+  [PRIMARY] UNIQUE saved_backtest_results_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX saved_backtest_results_pkey ON public.saved_backtest_results USING btree (id)
+  UNIQUE saved_backtest_results_share_token_key (share_token) - btree
+    Definition: CREATE UNIQUE INDEX saved_backtest_results_share_token_key ON public.saved_backtest_results USING btree (share_token)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 92f900fc-3dc7-40bf-a294-a5378b20a64f
+    user_id: db3fa48a-e83f-4904-87e2-7dcf69cff53b
+    name: AshokaMet
+    ticker: ASHOKAMET
+    mode: standard
+    custom_rules: NULL
+    strategy_condition: ((ATR_2 > 1.5 * ATR_20) or (Close < sma_daily_20 + 2 * ATR_5)) and (Close - High < -0.75*(High - Low...
+    metrics: {
+    "avg_p": 0.007743236398809758,
+    "max_dd": 246.05221636743977,
+    "Worst_10": -0.046779406013937555,
+    "win_rate": 65.42372881355932,
+    "num_trades": 590,
+    "calmar_ratio": 20.597980379...
+    equity_curve: [
+    {
+        "date": "2023-06-27T03:45:00+00:00",
+        "value": 0
+    },
+    {
+        "date": "2023-06-27T04:45:00+00:00",
+        "value": 0
+    },
+    {
+        "date": "2023-06-27T05:45:00+0...
+    candlestick_data: [
+    {
+        "low": 17.08,
+        "date": "2025-08-04T03:45:00+00:00",
+        "high": 18.51,
+        "open": 17.25,
+        "close": 17.37
+    },
+    {
+        "low": 17.28,
+        "date": "2025...
+    tpsl_values: NULL
+    execution_time_ms: 5200
+    is_shared: True
+    share_token: 7a27da114e225e9c8e19b61bf15da7413a327ce4acaafa0808fab7fd8d434afc
+    created_at: 2025-12-03T13:32:15.798746+00:00
+    updated_at: 2025-12-03T13:32:31.678061+00:00
+    train_end_date: NULL
+    train_end_index: NULL
+    max_drawdown_point: NULL
+
+  Row 2:
+    id: 398adb4e-eb2f-4191-b693-cd3f297dc332
+    user_id: db3fa48a-e83f-4904-87e2-7dcf69cff53b
+    name: Aeroflex
+    ticker: AERONEU
+    mode: advanced
+    custom_rules: NULL
+    strategy_condition: ((ATR_5 > ATR_10) and (RSI_14 < 30)) or (Close - High < -0.75*(High - Low))
+    metrics: {
+    "avg_p": 0.0027477952568060204,
+    "max_dd": 40.47151379736387,
+    "Worst_10": -0.0499999999999999,
+    "win_rate": 46.186440677966104,
+    "num_trades": 944,
+    "calmar_ratio": 14.1986848971...
+    equity_curve: [
+    {
+        "date": "2023-01-12T03:45:00+00:00",
+        "value": 0
+    },
+    {
+        "date": "2023-01-12T04:45:00+00:00",
+        "value": 0
+    },
+    {
+        "date": "2023-01-12T05:45:00+0...
+    candlestick_data: [
+    {
+        "low": 118,
+        "date": "2025-08-04T03:45:00+00:00",
+        "high": 121.7,
+        "open": 118,
+        "close": 118.55
+    },
+    {
+        "low": 118.55,
+        "date": "2025-0...
+    tpsl_values: {
+    "stop_pct": 0.005,
+    "target_pct": 0.035
+}
+    execution_time_ms: 5700
+    is_shared: True
+    share_token: 1e389386450c1fe3f896625c363aacfb81c11bdbb622944921e09f720cac2bc6
+    created_at: 2025-12-03T13:38:37.667999+00:00
+    updated_at: 2025-12-03T13:38:47.789595+00:00
+    train_end_date: NULL
+    train_end_index: NULL
+    max_drawdown_point: NULL
+
+  Row 3:
+    id: e242a842-9dfd-47e1-947d-4d6ee27b810e
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    name: test
+    ticker: ADANIENT
+    mode: standard
+    custom_rules: NULL
+    strategy_condition: ((sma_daily_50 > sma_daily_200) and (Close < sma_daily_2 + 0.25 * ATR_10)) or (RSI_7 > RSI_14 > RSI_...
+    metrics: {
+    "avg_p": 0.0017518976586513705,
+    "max_dd": 108.98764709084875,
+    "Worst_10": -0.05925754302970262,
+    "win_rate": 23.215434083601284,
+    "num_trades": 1555,
+    "calmar_ratio": 3.16652992...
+    equity_curve: [
+    {
+        "date": "2020-12-10T08:45:00+00:00",
+        "value": 0
+    },
+    {
+        "date": "2020-12-10T09:45:00+00:00",
+        "value": 0
+    },
+    {
+        "date": "2020-12-11T03:45:00+0...
+    candlestick_data: [
+    {
+        "low": 2108.63,
+        "date": "2025-08-08T09:45:00+00:00",
+        "high": 2115.71,
+        "open": 2112.6,
+        "close": 2112.6
+    },
+    {
+        "low": 2116.39,
+        "date...
+    tpsl_values: NULL
+    execution_time_ms: 7000
+    is_shared: False
+    share_token: NULL
+    created_at: 2025-12-09T07:49:15.943562+00:00
+    updated_at: 2025-12-09T07:49:15.943562+00:00
+    train_end_date: NULL
+    train_end_index: NULL
+    max_drawdown_point: NULL
+
+  Row 4:
+    id: 8dc0e467-21ad-4b6f-9626-22556ac3cb3a
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    name: tt
+    ticker: ADANIENT
+    mode: standard
+    custom_rules: NULL
+    strategy_condition: ((Close < sma_daily_2 + 0.25 * ATR_10) or (Open > Close)) and (RSI_7 > RSI_14 > RSI_20)
+    metrics: {
+    "avg_p": 0.003081226213171935,
+    "max_dd": 47.03224839650409,
+    "Worst_10": -0.060503359591558836,
+    "win_rate": 48.222565687789796,
+    "num_trades": 647,
+    "calmar_ratio": 3.5144978573...
+    equity_curve: [
+    {
+        "date": "2020-12-10T08:45:00+00:00",
+        "value": 0
+    },
+    {
+        "date": "2020-12-10T09:45:00+00:00",
+        "value": 0
+    },
+    {
+        "date": "2020-12-11T03:45:00+0...
+    candlestick_data: [
+    {
+        "low": 2108.63,
+        "date": "2025-08-08T09:45:00+00:00",
+        "high": 2115.71,
+        "open": 2112.6,
+        "close": 2112.6
+    },
+    {
+        "low": 2116.39,
+        "date...
+    tpsl_values: NULL
+    execution_time_ms: 7000
+    is_shared: False
+    share_token: NULL
+    created_at: 2025-12-09T09:25:26.942471+00:00
+    updated_at: 2025-12-09T09:25:26.942471+00:00
+    train_end_date: 2024-06-11T06:45:00+00:00
+    train_end_index: 6040
+    max_drawdown_point: {
+    "date": "2024-05-10T06:45:00+00:00",
+    "value": 732.3482589301278
+}
+
+  Row 5:
+    id: 7571f23f-7be7-4e2e-9448-b1b077e32b4b
+    user_id: NULL
+    name: hhhj
+    ticker: 5PAISA
+    mode: standard
+    custom_rules: NULL
+    strategy_condition: ((Close - High < -0.75*(High - Low)) or (ATR_2 > 1.5 * ATR_20)) and (ATR_5 < ATR_10)
+    metrics: {
+    "avg_p": 0.0019292144389530213,
+    "max_dd": 17.401569416955542,
+    "Worst_10": -0.05063293052849556,
+    "win_rate": 63.67239101717305,
+    "num_trades": 757,
+    "calmar_ratio": 5.1668513477...
+    equity_curve: [
+    {
+        "date": "2020-12-21T03:45:00+00:00",
+        "value": 0
+    },
+    {
+        "date": "2020-12-21T04:45:00+00:00",
+        "value": 0
+    },
+    {
+        "date": "2020-12-21T05:45:00+0...
+    candlestick_data: [
+    {
+        "low": 366,
+        "date": "2025-08-18T03:45:00+00:00",
+        "high": 372.2,
+        "open": 366,
+        "close": 369.5
+    },
+    {
+        "low": 367.9,
+        "date": "2025-08-...
+    tpsl_values: NULL
+    execution_time_ms: 4600
+    is_shared: False
+    share_token: NULL
+    created_at: 2025-12-17T15:09:04.162148+00:00
+    updated_at: 2025-12-17T15:09:04.162148+00:00
+    train_end_date: 2024-06-21T05:45:00+00:00
+    train_end_index: 6043
+    max_drawdown_point: {
+    "date": "2024-01-29T08:45:00+00:00",
+    "value": 198.68129605639945
+}
+
+
+--------------------------------------------------------------------------------
+TABLE: saved_screener_results
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 2
+Size: 168 kB
+
+COLUMNS:
+  id                             uuid                 NOT NULL   DEFAULT gen_random_uuid() [PK]
+  user_id                        uuid                 NULL       
+  name                           character varying(255) NOT NULL   
+  expression                     text                 NOT NULL   
+  result_count                   int4                 NOT NULL   
+  matching_symbols               jsonb                NOT NULL   
+  execution_time_ms              int4                 NULL       
+  is_shared                      bool                 NULL       DEFAULT false
+  share_token                    character varying(64) NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+  updated_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  user_id -> users(id)
+
+UNIQUE CONSTRAINTS:
+  saved_screener_results_share_token_key: share_token
+
+INDEXES:
+  idx_saved_screener_shared (share_token) - btree
+    Definition: CREATE INDEX idx_saved_screener_shared ON public.saved_screener_results USING btree (share_token) WHERE (share_token IS NOT NULL)
+  idx_saved_screener_user (user_id, created_at) - btree
+    Definition: CREATE INDEX idx_saved_screener_user ON public.saved_screener_results USING btree (user_id, created_at DESC)
+  [PRIMARY] UNIQUE saved_screener_results_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX saved_screener_results_pkey ON public.saved_screener_results USING btree (id)
+  UNIQUE saved_screener_results_share_token_key (share_token) - btree
+    Definition: CREATE UNIQUE INDEX saved_screener_results_share_token_key ON public.saved_screener_results USING btree (share_token)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: ab0e208e-6249-400e-b389-9cc2aa4cc796
+    user_id: db3fa48a-e83f-4904-87e2-7dcf69cff53b
+    name: test
+    expression: (close > 0.9 * high_52_W) and (ema_20 > ema_50)
+    result_count: 555
+    matching_symbols: [
+    {
+        "symbol": "ABCAPITAL",
+        "indicators": {
+            "ema_20": 355.2408,
+            "ema_50": 349.6924,
+            "high_52_W": 360.15
+        }
+    },
+    {
+        "symbol": ...
+    execution_time_ms: 48079
+    is_shared: True
+    share_token: 89abbfe1a70c708ea5e457429d5b80cf9275db5620b2133331a5330ae259c69d
+    created_at: 2025-12-03T13:28:48.855377+00:00
+    updated_at: 2025-12-03T13:29:12.184551+00:00
+
+  Row 2:
+    id: f9f6ba9a-9c37-4c3d-b2f2-a8566a45cf23
+    user_id: 78471cbf-67ee-48f3-9ab4-b61a285fc989
+    name: Testing Avi
+    expression: (close > ema_50) and (ema_50 > ema_150) and (liquidity > 1000000000)
+    result_count: 3
+    matching_symbols: [
+    {
+        "symbol": "HDFCBANK",
+        "indicators": {
+            "ema_50": 999.1272,
+            "ema_150": 996.2357
+        }
+    },
+    {
+        "symbol": "IDEA",
+        "indicators": {
+ ...
+    execution_time_ms: 113253
+    is_shared: True
+    share_token: 5815cf4c19f629b69fa98d3be82464093a06da5efc318881eb49e9653ee2f672
+    created_at: 2025-12-04T10:07:41.087857+00:00
+    updated_at: 2025-12-04T10:08:00.090095+00:00
+
+
+--------------------------------------------------------------------------------
+TABLE: search_events
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 93
+Size: 112 kB
+
+COLUMNS:
+  id                             int8                 NOT NULL   DEFAULT nextval('search_events_id_seq'::regclass) [PK]
+  user_id                        uuid                 NULL       
+  session_id                     character varying(64) NOT NULL   
+  query                          character varying(500) NOT NULL   
+  result_count                   int4                 NULL       
+  selected_result                character varying(100) NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  user_id -> users(id)
+
+INDEXES:
+  idx_search_created (created_at) - btree
+    Definition: CREATE INDEX idx_search_created ON public.search_events USING btree (created_at DESC)
+  idx_search_query (query) - btree
+    Definition: CREATE INDEX idx_search_query ON public.search_events USING btree (query)
+  idx_search_user (user_id, created_at) - btree
+    Definition: CREATE INDEX idx_search_user ON public.search_events USING btree (user_id, created_at DESC)
+  [PRIMARY] UNIQUE search_events_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX search_events_pkey ON public.search_events USING btree (id)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 1
+    user_id: db3fa48a-e83f-4904-87e2-7dcf69cff53b
+    session_id: 1764767664849-c4n3odvc52u
+    query: ramco
+    result_count: 3
+    selected_result: RAMCOSYS
+    created_at: 2025-12-03T13:25:53.706436+00:00
+
+  Row 2:
+    id: 2
+    user_id: ca29558a-a601-412a-8392-26a01ad1f38c
+    session_id: 1764772961785-jr33qhx2bl
+    query: trending
+    result_count: 5
+    selected_result: DKEGL
+    created_at: 2025-12-03T14:56:10.094513+00:00
+
+  Row 3:
+    id: 3
+    user_id: ca29558a-a601-412a-8392-26a01ad1f38c
+    session_id: 1764930599261-bwwx8m4lmsd
+    query: sabtn
+    result_count: 1
+    selected_result: SABTNL
+    created_at: 2025-12-05T10:32:35.057592+00:00
+
+  Row 4:
+    id: 4
+    user_id: ca29558a-a601-412a-8392-26a01ad1f38c
+    session_id: 1764930599261-bwwx8m4lmsd
+    query: bls
+    result_count: 2
+    selected_result: BLS
+    created_at: 2025-12-05T10:34:11.247838+00:00
+
+  Row 5:
+    id: 5
+    user_id: 21c3460b-11a3-4e1f-a5d4-ec2f447b8488
+    session_id: 1764937679598-07ojjlh0qgbe
+    query: adanient
+    result_count: 1
+    selected_result: ADANIENT
+    created_at: 2025-12-05T12:29:01.663870+00:00
+
+
+--------------------------------------------------------------------------------
+TABLE: sessions
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 555
+Size: 928 kB
+
+COLUMNS:
+  id                             uuid                 NOT NULL   DEFAULT gen_random_uuid() [PK]
+  user_id                        uuid                 NOT NULL   
+  token_hash                     character varying(64) NOT NULL   
+  refresh_token_hash             character varying(64) NULL       
+  device_info                    text                 NULL       
+  ip_address                     character varying(45) NULL       
+  location                       character varying(255) NULL       
+  issued_at                      timestamptz          NULL       DEFAULT now()
+  expires_at                     timestamptz          NOT NULL   
+  last_activity_at               timestamptz          NULL       DEFAULT now()
+  revoked                        bool                 NULL       DEFAULT false
+  revoked_at                     timestamptz          NULL       
+  revoked_reason                 text                 NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  user_id -> users(id)
+
+UNIQUE CONSTRAINTS:
+  sessions_token_hash_key: token_hash
+  sessions_refresh_token_hash_key: refresh_token_hash
+
+CHECK CONSTRAINTS:
+  check_expiry: CHECK ((expires_at > issued_at))
+
+INDEXES:
+  idx_sessions_active (user_id, expires_at, revoked) - btree
+    Definition: CREATE INDEX idx_sessions_active ON public.sessions USING btree (user_id, revoked, expires_at) WHERE (revoked = false)
+  idx_sessions_active_user (user_id, expires_at) - btree
+    Definition: CREATE INDEX idx_sessions_active_user ON public.sessions USING btree (user_id, expires_at DESC) WHERE (revoked = false)
+  idx_sessions_expires_at (expires_at) - btree
+    Definition: CREATE INDEX idx_sessions_expires_at ON public.sessions USING btree (expires_at)
+  idx_sessions_last_activity (last_activity_at) - btree
+    Definition: CREATE INDEX idx_sessions_last_activity ON public.sessions USING btree (last_activity_at DESC)
+  idx_sessions_refresh_token_hash (refresh_token_hash) - btree
+    Definition: CREATE INDEX idx_sessions_refresh_token_hash ON public.sessions USING btree (refresh_token_hash)
+  idx_sessions_token_hash (token_hash) - btree
+    Definition: CREATE INDEX idx_sessions_token_hash ON public.sessions USING btree (token_hash)
+  idx_sessions_user_id (user_id) - btree
+    Definition: CREATE INDEX idx_sessions_user_id ON public.sessions USING btree (user_id)
+  idx_sessions_validation (token_hash, expires_at, revoked) - btree
+    Definition: CREATE INDEX idx_sessions_validation ON public.sessions USING btree (token_hash, revoked, expires_at)
+  [PRIMARY] UNIQUE sessions_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX sessions_pkey ON public.sessions USING btree (id)
+  UNIQUE sessions_refresh_token_hash_key (refresh_token_hash) - btree
+    Definition: CREATE UNIQUE INDEX sessions_refresh_token_hash_key ON public.sessions USING btree (refresh_token_hash)
+  UNIQUE sessions_token_hash_key (token_hash) - btree
+    Definition: CREATE UNIQUE INDEX sessions_token_hash_key ON public.sessions USING btree (token_hash)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 2b81e7c0-df57-4118-bcad-9df5ad5c14dd
+    user_id: 10ec6c72-9d1a-423f-b112-5af4ba370528
+    token_hash: dbfa0450335e702f7d0a7dd14c4bc32b19e3d4981b1e53a448f64fbf97296408
+    refresh_token_hash: b462c7ed58237cc6ae8c3f5a1fe2c32b54a2a7d0a538c7e70d0c575dbd5f45f4
+    device_info: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Sa...
+    ip_address: 2402:e280:3d28:598:45ce:58b9:5e51:c039
+    location: NULL
+    issued_at: 2025-12-01T07:45:01.767425+00:00
+    expires_at: 2025-12-01T13:45:01+00:00
+    last_activity_at: 2025-12-01T07:45:01.767425+00:00
+    revoked: False
+    revoked_at: NULL
+    revoked_reason: NULL
+    created_at: 2025-12-01T07:45:01.767425+00:00
+
+  Row 2:
+    id: d18ca5f7-d0ee-408f-9344-586ba092f38b
+    user_id: bbf4fa7c-6201-4c22-a8c2-ecdc9b7b15ee
+    token_hash: 9de8a9c3953e8f3e2f84997b6287b35728b605584042d4330798d4c5b92bb5c5
+    refresh_token_hash: f2542dd40ad0acd6e34e5017570b94db4943ab815cf28ac20090c97a59397b55
+    device_info: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0....
+    ip_address: 86.98.222.62
+    location: NULL
+    issued_at: 2025-12-02T10:24:22.925856+00:00
+    expires_at: 2025-12-02T16:24:22+00:00
+    last_activity_at: 2025-12-02T10:24:22.925856+00:00
+    revoked: True
+    revoked_at: 2025-12-04T13:48:58.009463+00:00
+    revoked_reason: token_refresh
+    created_at: 2025-12-02T10:24:22.925856+00:00
+
+  Row 3:
+    id: b667c955-f86f-4c85-b8c3-8afb38297704
+    user_id: 78471cbf-67ee-48f3-9ab4-b61a285fc989
+    token_hash: 1a7be2fbfe4338b68a3cd848ad713462dc7b34c7e89418e68de7344eeca990fb
+    refresh_token_hash: 6b5528c517cdfd2af2ca605fe1f9bcb8a55753ff8846d16455a8a3a85bebc57a
+    device_info: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Sa...
+    ip_address: 127.0.0.1
+    location: NULL
+    issued_at: 2025-11-25T22:05:05.916414+00:00
+    expires_at: 2025-11-26T04:05:05+00:00
+    last_activity_at: 2025-11-25T22:05:48.183827+00:00
+    revoked: True
+    revoked_at: 2025-11-25T22:05:48.225096+00:00
+    revoked_reason: logout
+    created_at: 2025-11-25T22:05:05.916414+00:00
+
+  Row 4:
+    id: c7b32914-2d4f-4a79-be50-93fb376f17a8
+    user_id: 78471cbf-67ee-48f3-9ab4-b61a285fc989
+    token_hash: 0d716a88bc9d70bbfc98c8a7c03c3666c9c56ea5928c4b3102ece5871216f260
+    refresh_token_hash: f8cff58ae19a8e44b48e56ba8da92b3c95ef0923ab4fa3ad8f1baee1afa04564
+    device_info: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Sa...
+    ip_address: 127.0.0.1
+    location: NULL
+    issued_at: 2025-11-25T22:07:10.672222+00:00
+    expires_at: 2025-11-26T04:07:10+00:00
+    last_activity_at: 2025-11-25T22:07:10.672222+00:00
+    revoked: False
+    revoked_at: NULL
+    revoked_reason: NULL
+    created_at: 2025-11-25T22:07:10.672222+00:00
+
+  Row 5:
+    id: 6ca6c96d-9042-4210-ba32-ccfab039e34e
+    user_id: 7af2913e-ad5f-4ba3-bb62-0729ab40c4b1
+    token_hash: 0f079f7e67aac410181a75a3a84d5237a18b6ae6002fe1160577d5edfada0039
+    refresh_token_hash: ea6d0b9fb7d9fcff87e953cf224bdf517156aa8512cca513775177c15a3a0956
+    device_info: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Sa...
+    ip_address: 127.0.0.1
+    location: NULL
+    issued_at: 2025-11-25T23:30:43.174239+00:00
+    expires_at: 2025-11-26T05:30:10+00:00
+    last_activity_at: 2025-11-25T23:31:05.231254+00:00
+    revoked: True
+    revoked_at: 2025-11-25T23:31:05.348706+00:00
+    revoked_reason: logout
+    created_at: 2025-11-25T23:30:43.174239+00:00
+
+
+--------------------------------------------------------------------------------
+TABLE: subscription_plans
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 3
+Size: 48 kB
+
+COLUMNS:
+  id                             character varying(50) NOT NULL    [PK]
+  name                           character varying(100) NOT NULL   
+  description                    text                 NULL       
+  tier                           character varying(20) NOT NULL   
+  price_cents                    int4                 NOT NULL   DEFAULT 0
+  currency                       character varying(3) NOT NULL   DEFAULT 'INR'::character varying
+  billing_interval               character varying(20) NULL       
+  interval_count                 int4                 NULL       DEFAULT 1
+  trial_days                     int4                 NULL       DEFAULT 0
+  features                       jsonb                NULL       DEFAULT '[]'::jsonb
+  is_active                      bool                 NULL       DEFAULT true
+  sort_order                     int4                 NULL       DEFAULT 0
+  created_at                     timestamptz          NULL       DEFAULT now()
+  updated_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+CHECK CONSTRAINTS:
+  check_billing_interval: CHECK ((((billing_interval)::text = ANY ((ARRAY['month'::character varying, 'year'::character varying, 'lifetime'::character varying])::text[])) OR (billing_interval IS NULL)))
+  check_plan_tier: CHECK (((tier)::text = ANY ((ARRAY['basic'::character varying, 'premium'::character varying])::text[])))
+
+INDEXES:
+  idx_subscription_plans_active (is_active, sort_order) - btree
+    Definition: CREATE INDEX idx_subscription_plans_active ON public.subscription_plans USING btree (is_active, sort_order)
+  [PRIMARY] UNIQUE subscription_plans_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX subscription_plans_pkey ON public.subscription_plans USING btree (id)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: basic
+    name: Basic Free
+    description: Free tier with essential market analysis features
+    tier: basic
+    price_cents: 0
+    currency: INR
+    billing_interval: NULL
+    interval_count: 1
+    trial_days: 0
+    features: [
+    "Home Dashboard",
+    "Stock Browser",
+    "Market Indices",
+    "Basic News",
+    "Market Mood"
+]
+    is_active: True
+    sort_order: 1
+    created_at: 2025-11-27T21:15:39.949741+00:00
+    updated_at: 2025-11-27T21:15:39.949741+00:00
+
+  Row 2:
+    id: premium_monthly
+    name: Premium Monthly
+    description: Full access to all features, billed monthly
+    tier: premium
+    price_cents: 49900
+    currency: INR
+    billing_interval: month
+    interval_count: 1
+    trial_days: 7
+    features: [
+    "Expert Stock Screener",
+    "Strategy Backtesting",
+    "AI Alpha Generation",
+    "Advanced Portfolios",
+    "Priority Support",
+    "All Basic Features"
+]
+    is_active: True
+    sort_order: 2
+    created_at: 2025-11-27T21:15:39.949741+00:00
+    updated_at: 2025-11-27T21:15:39.949741+00:00
+
+  Row 3:
+    id: premium_yearly
+    name: Premium Yearly
+    description: Full access to all features, billed yearly (2 months free)
+    tier: premium
+    price_cents: 499900
+    currency: INR
+    billing_interval: year
+    interval_count: 1
+    trial_days: 7
+    features: [
+    "Expert Stock Screener",
+    "Strategy Backtesting",
+    "AI Alpha Generation",
+    "Advanced Portfolios",
+    "Priority Support",
+    "All Basic Features",
+    "2 Months Free"
+]
+    is_active: True
+    sort_order: 3
+    created_at: 2025-11-27T21:15:39.949741+00:00
+    updated_at: 2025-11-27T21:15:39.949741+00:00
+
+
+--------------------------------------------------------------------------------
+TABLE: system_config
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 26
+Size: 48 kB
+
+COLUMNS:
+  key                            character varying(100) NOT NULL    [PK]
+  value                          jsonb                NOT NULL   
+  description                    text                 NULL       
+  category                       character varying(50) NOT NULL   
+  updated_by                     uuid                 NULL       
+  updated_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (key)
+
+FOREIGN KEYS:
+  updated_by -> users(id)
+
+INDEXES:
+  idx_system_config_category (category) - btree
+    Definition: CREATE INDEX idx_system_config_category ON public.system_config USING btree (category)
+  [PRIMARY] UNIQUE system_config_pkey (key) - btree
+    Definition: CREATE UNIQUE INDEX system_config_pkey ON public.system_config USING btree (key)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    key: saved_screener_limit_basic
+    value: 10
+    description: Max saved screener results for basic tier
+    category: limits
+    updated_by: NULL
+    updated_at: 2025-12-02T17:19:24.578709+00:00
+
+  Row 2:
+    key: saved_screener_limit_premium
+    value: 50
+    description: Max saved screener results for premium tier
+    category: limits
+    updated_by: NULL
+    updated_at: 2025-12-02T17:19:24.578709+00:00
+
+  Row 3:
+    key: retention_page_views
+    value: 0
+    description: Days to keep page view data (0 = forever)
+    category: retention
+    updated_by: NULL
+    updated_at: 2025-12-02T17:19:24.578709+00:00
+
+  Row 4:
+    key: retention_click_events
+    value: 0
+    description: Days to keep click event data (0 = forever)
+    category: retention
+    updated_by: NULL
+    updated_at: 2025-12-02T17:19:24.578709+00:00
+
+  Row 5:
+    key: retention_search_events
+    value: 0
+    description: Days to keep search event data (0 = forever)
+    category: retention
+    updated_by: NULL
+    updated_at: 2025-12-02T17:19:24.578709+00:00
+
+
+--------------------------------------------------------------------------------
+TABLE: system_notifications
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 0
+Size: 64 kB
+
+COLUMNS:
+  id                             uuid                 NOT NULL   DEFAULT gen_random_uuid() [PK]
+  title                          character varying(255) NOT NULL   
+  message                        text                 NOT NULL   
+  type                           character varying(20) NOT NULL   DEFAULT 'info'::character varying
+  target_audience                character varying(20) NULL       DEFAULT 'all'::character varying
+  is_active                      bool                 NULL       DEFAULT true
+  is_dismissible                 bool                 NULL       DEFAULT true
+  show_on_pages                  jsonb                NULL       DEFAULT '["all"]'::jsonb
+  scheduled_start                timestamptz          NULL       
+  scheduled_end                  timestamptz          NULL       
+  created_by                     uuid                 NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+  updated_at                     timestamptz          NULL       DEFAULT now()
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  created_by -> users(id)
+
+CHECK CONSTRAINTS:
+  check_notification_type: CHECK (((type)::text = ANY ((ARRAY['info'::character varying, 'warning'::character varying, 'maintenance'::character varying, 'urgent'::character varying])::text[])))
+  check_target_audience: CHECK (((target_audience)::text = ANY ((ARRAY['all'::character varying, 'basic'::character varying, 'premium'::character varying, 'admin'::character varying])::text[])))
+
+INDEXES:
+  idx_notifications_active (is_active, scheduled_start, scheduled_end) - btree
+    Definition: CREATE INDEX idx_notifications_active ON public.system_notifications USING btree (is_active, scheduled_start, scheduled_end)
+  idx_notifications_type (type) - btree
+    Definition: CREATE INDEX idx_notifications_type ON public.system_notifications USING btree (type)
+  [PRIMARY] UNIQUE system_notifications_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX system_notifications_pkey ON public.system_notifications USING btree (id)
+
+
+--------------------------------------------------------------------------------
+TABLE: users
+--------------------------------------------------------------------------------
+
+Schema: public
+Type: BASE TABLE
+Row Count: 24
+Size: 304 kB
+
+COLUMNS:
+  id                             uuid                 NOT NULL   DEFAULT gen_random_uuid() [PK]
+  email                          character varying(255) NOT NULL   
+  username                       character varying(100) NOT NULL   
+  name                           character varying(255) NULL       
+  avatar_url                     text                 NULL       
+  provider                       character varying(20) NOT NULL   DEFAULT 'password'::character varying
+  password_hash                  text                 NULL       
+  google_id                      character varying(255) NULL       
+  email_verified                 bool                 NULL       DEFAULT false
+  is_active                      bool                 NULL       DEFAULT true
+  tier                           character varying(20) NULL       DEFAULT 'basic'::character varying
+  last_login_at                  timestamptz          NULL       
+  last_login_ip                  character varying(45) NULL       
+  login_count                    int4                 NULL       DEFAULT 0
+  failed_login_attempts          int4                 NULL       DEFAULT 0
+  locked_until                   timestamptz          NULL       
+  created_at                     timestamptz          NULL       DEFAULT now()
+  updated_at                     timestamptz          NULL       DEFAULT now()
+  terms_accepted                 bool                 NULL       DEFAULT false
+  terms_accepted_at              timestamptz          NULL       
+  terms_version                  character varying(10) NULL       DEFAULT '1.0'::character varying
+  subscription_status            character varying(20) NULL       DEFAULT 'none'::character varying
+  subscription_plan_id           character varying(50) NULL       
+  subscription_start             timestamptz          NULL       
+  subscription_end               timestamptz          NULL       
+  trial_end                      timestamptz          NULL       
+  had_trial                      bool                 NULL       DEFAULT false
+  cancelled_at                   timestamptz          NULL       
+  cancel_at_period_end           bool                 NULL       DEFAULT false
+  stripe_customer_id             character varying(255) NULL       
+  role                           character varying(20) NULL       DEFAULT 'user'::character varying
+  tracking_consent               character varying(20) NULL       DEFAULT 'none'::character varying
+  consent_updated_at             timestamptz          NULL       
+  email_verified_at              timestamptz          NULL       
+  country_of_residence           character varying(100) NULL       
+  date_of_birth                  date                 NULL       
+
+PRIMARY KEY: (id)
+
+FOREIGN KEYS:
+  subscription_plan_id -> subscription_plans(id)
+
+UNIQUE CONSTRAINTS:
+  users_email_key: email
+  users_username_key: username
+  users_google_id_key: google_id
+
+CHECK CONSTRAINTS:
+  check_password_or_oauth: CHECK (((((provider)::text = 'password'::text) AND (password_hash IS NOT NULL)) OR (((provider)::text = 'google'::text) AND (google_id IS NOT NULL))))
+  check_provider: CHECK (((provider)::text = ANY ((ARRAY['password'::character varying, 'google'::character varying])::text[])))
+  check_role: CHECK (((role)::text = ANY ((ARRAY['user'::character varying, 'moderator'::character varying, 'admin'::character varying, 'super_admin'::character varying])::text[])))
+  check_subscription_status: CHECK (((subscription_status)::text = ANY ((ARRAY['none'::character varying, 'trialing'::character varying, 'active'::character varying, 'cancelled'::character varying, 'expired'::character varying])::text[])))
+  check_tier: CHECK (((tier)::text = ANY ((ARRAY['basic'::character varying, 'premium'::character varying])::text[])))
+
+INDEXES:
+  idx_users_created_at (created_at) - btree
+    Definition: CREATE INDEX idx_users_created_at ON public.users USING btree (created_at DESC)
+  idx_users_email (email) - btree
+    Definition: CREATE INDEX idx_users_email ON public.users USING btree (email)
+  idx_users_google_id (google_id) - btree
+    Definition: CREATE INDEX idx_users_google_id ON public.users USING btree (google_id) WHERE (google_id IS NOT NULL)
+  idx_users_last_login (last_login_at) - btree
+    Definition: CREATE INDEX idx_users_last_login ON public.users USING btree (last_login_at DESC)
+  idx_users_provider (provider) - btree
+    Definition: CREATE INDEX idx_users_provider ON public.users USING btree (provider)
+  idx_users_role (role) - btree
+    Definition: CREATE INDEX idx_users_role ON public.users USING btree (role)
+  idx_users_stripe_customer (stripe_customer_id) - btree
+    Definition: CREATE INDEX idx_users_stripe_customer ON public.users USING btree (stripe_customer_id) WHERE (stripe_customer_id IS NOT NULL)
+  idx_users_subscription_end (subscription_end) - btree
+    Definition: CREATE INDEX idx_users_subscription_end ON public.users USING btree (subscription_end) WHERE (subscription_end IS NOT NULL)
+  idx_users_subscription_status (subscription_status) - btree
+    Definition: CREATE INDEX idx_users_subscription_status ON public.users USING btree (subscription_status)
+  idx_users_terms_accepted (terms_accepted, terms_accepted_at) - btree
+    Definition: CREATE INDEX idx_users_terms_accepted ON public.users USING btree (terms_accepted, terms_accepted_at)
+  idx_users_tier (tier) - btree
+    Definition: CREATE INDEX idx_users_tier ON public.users USING btree (tier)
+  idx_users_trial_end (trial_end) - btree
+    Definition: CREATE INDEX idx_users_trial_end ON public.users USING btree (trial_end) WHERE (trial_end IS NOT NULL)
+  idx_users_username (username) - btree
+    Definition: CREATE INDEX idx_users_username ON public.users USING btree (username)
+  UNIQUE users_email_key (email) - btree
+    Definition: CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email)
+  UNIQUE users_google_id_key (google_id) - btree
+    Definition: CREATE UNIQUE INDEX users_google_id_key ON public.users USING btree (google_id)
+  [PRIMARY] UNIQUE users_pkey (id) - btree
+    Definition: CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id)
+  UNIQUE users_username_key (username) - btree
+    Definition: CREATE UNIQUE INDEX users_username_key ON public.users USING btree (username)
+
+SAMPLE DATA (first 5 rows):
+
+  Row 1:
+    id: 7508c34b-55fd-487e-a1dd-4abe466b172b
+    email: 21f1000644@ds.study.iitm.ac.in
+    username: 21f1000644
+    name: AVI VIREN SHAH
+    avatar_url: https://lh3.googleusercontent.com/a/ACg8ocIEGdOsYo3jxnLK6tZ9z2gmkFRdtXZdTRjelLzWzEkNAXmjdA=s96-c
+    provider: google
+    password_hash: NULL
+    google_id: 111689543872289857990
+    email_verified: True
+    is_active: True
+    tier: premium
+    last_login_at: NULL
+    last_login_ip: NULL
+    login_count: 0
+    failed_login_attempts: 0
+    locked_until: NULL
+    created_at: 2025-12-02T15:03:03.339649+00:00
+    updated_at: 2025-12-02T15:03:03.339649+00:00
+    terms_accepted: True
+    terms_accepted_at: 2025-12-02T15:03:03.338000+00:00
+    terms_version: 1.0
+    subscription_status: none
+    subscription_plan_id: NULL
+    subscription_start: NULL
+    subscription_end: NULL
+    trial_end: NULL
+    had_trial: False
+    cancelled_at: NULL
+    cancel_at_period_end: False
+    stripe_customer_id: NULL
+    role: user
+    tracking_consent: none
+    consent_updated_at: NULL
+    email_verified_at: NULL
+    country_of_residence: NULL
+    date_of_birth: NULL
+
+  Row 2:
+    id: 78471cbf-67ee-48f3-9ab4-b61a285fc989
+    email: avi.shah.acefincorp@gmail.com
+    username: Avishah69
+    name: Avi Shah
+    avatar_url: https://lh3.googleusercontent.com/a/ACg8ocI40_inAmW9sbsiCtCxK0MF95p_SoF8bX49aMdQ8mMHeWQkxQ=s96-c
+    provider: google
+    password_hash: NULL
+    google_id: 100244676844349708283
+    email_verified: True
+    is_active: True
+    tier: premium
+    last_login_at: 2025-12-17T12:17:20.961275+00:00
+    last_login_ip: 172.69.176.67
+    login_count: 18
+    failed_login_attempts: 0
+    locked_until: NULL
+    created_at: 2025-11-25T22:05:05.870553+00:00
+    updated_at: 2025-12-17T12:17:20.961275+00:00
+    terms_accepted: True
+    terms_accepted_at: 2025-11-25T22:05:05.633000+00:00
+    terms_version: 1.0
+    subscription_status: none
+    subscription_plan_id: NULL
+    subscription_start: NULL
+    subscription_end: NULL
+    trial_end: NULL
+    had_trial: False
+    cancelled_at: NULL
+    cancel_at_period_end: False
+    stripe_customer_id: NULL
+    role: super_admin
+    tracking_consent: all
+    consent_updated_at: 2025-12-05T14:39:09.215434+00:00
+    email_verified_at: NULL
+    country_of_residence: NULL
+    date_of_birth: NULL
+
+  Row 3:
+    id: bbf4fa7c-6201-4c22-a8c2-ecdc9b7b15ee
+    email: pundalika.panduranga@vaults.vc
+    username: pundalikapanduranga
+    name: pundalika panduranga
+    avatar_url: https://lh3.googleusercontent.com/a/ACg8ocLNx1lLBo89gKt-g60V5WpZehAVI4K4dqhsiqt7PnTfjurndQ=s96-c
+    provider: google
+    password_hash: NULL
+    google_id: 106984015615321527516
+    email_verified: True
+    is_active: True
+    tier: premium
+    last_login_at: 2025-12-17T12:21:24.597276+00:00
+    last_login_ip: 172.70.142.129
+    login_count: 18
+    failed_login_attempts: 0
+    locked_until: NULL
+    created_at: 2025-11-28T10:59:27.349739+00:00
+    updated_at: 2025-12-17T12:21:24.597276+00:00
+    terms_accepted: True
+    terms_accepted_at: 2025-11-28T10:59:27.348000+00:00
+    terms_version: 1.0
+    subscription_status: none
+    subscription_plan_id: NULL
+    subscription_start: NULL
+    subscription_end: NULL
+    trial_end: NULL
+    had_trial: False
+    cancelled_at: NULL
+    cancel_at_period_end: False
+    stripe_customer_id: NULL
+    role: admin
+    tracking_consent: all
+    consent_updated_at: 2025-12-08T09:38:05.019011+00:00
+    email_verified_at: NULL
+    country_of_residence: NULL
+    date_of_birth: NULL
+
+  Row 4:
+    id: 4457e6cb-b35d-4fe3-9f2b-b6c216f53f92
+    email: info@tiphub.ai
+    username: Tiphub
+    name: Tech Tiphub
+    avatar_url: https://lh3.googleusercontent.com/a/ACg8ocIrE_peRenvmCsYdxIaISmsj05lDy7Z8DYN-hnlrMBFoA84Qw=s96-c
+    provider: google
+    password_hash: NULL
+    google_id: 114312564215646099472
+    email_verified: True
+    is_active: True
+    tier: premium
+    last_login_at: 2025-12-17T12:21:50.028488+00:00
+    last_login_ip: 172.70.208.138
+    login_count: 6
+    failed_login_attempts: 0
+    locked_until: NULL
+    created_at: 2025-12-11T08:38:46.317350+00:00
+    updated_at: 2025-12-17T12:21:50.028488+00:00
+    terms_accepted: True
+    terms_accepted_at: 2025-12-11T08:38:46.316000+00:00
+    terms_version: 1.0
+    subscription_status: none
+    subscription_plan_id: NULL
+    subscription_start: NULL
+    subscription_end: NULL
+    trial_end: NULL
+    had_trial: False
+    cancelled_at: NULL
+    cancel_at_period_end: False
+    stripe_customer_id: NULL
+    role: super_admin
+    tracking_consent: all
+    consent_updated_at: 2025-12-11T09:14:00.914577+00:00
+    email_verified_at: NULL
+    country_of_residence: India
+    date_of_birth: 1994-12-19
+
+  Row 5:
+    id: a6cdaa44-3bbc-4d41-8eae-234330f624bd
+    email: somchaiphanuphong@gmail.com
+    username: somchai002
+    name: somchai002
+    avatar_url: NULL
+    provider: password
+    password_hash: $2b$12$Ioo0nmIjCKxblENf.ATzHeEmpUxVFcK9W7F6VOa0O.W5YllnOAYOm
+    google_id: NULL
+    email_verified: False
+    is_active: True
+    tier: premium
+    last_login_at: NULL
+    last_login_ip: NULL
+    login_count: 0
+    failed_login_attempts: 0
+    locked_until: NULL
+    created_at: 2025-12-11T09:10:13.103502+00:00
+    updated_at: 2025-12-11T09:10:13.103502+00:00
+    terms_accepted: True
+    terms_accepted_at: 2025-12-11T09:10:12.830000+00:00
+    terms_version: 1.0
+    subscription_status: none
+    subscription_plan_id: NULL
+    subscription_start: NULL
+    subscription_end: NULL
+    trial_end: NULL
+    had_trial: False
+    cancelled_at: NULL
+    cancel_at_period_end: False
+    stripe_customer_id: NULL
+    role: user
+    tracking_consent: none
+    consent_updated_at: NULL
+    email_verified_at: NULL
+    country_of_residence: Thailand
+    date_of_birth: 1987-03-19
+
+
+================================================================================
+TABLE RELATIONSHIPS (Foreign Keys)
+================================================================================
+
+admin_audit_log.admin_user_id -> users.id
+auth_logs.user_id -> users.id
+click_events.user_id -> users.id
+feature_flag_audit.flag_id -> feature_flags.id
+feature_flag_audit.admin_id -> users.id
+feature_flag_overrides.flag_id -> feature_flags.id
+feature_flag_overrides.user_id -> users.id
+feature_flag_overrides.created_by -> users.id
+feature_flags.created_by -> users.id
+feature_usage.user_id -> users.id
+notification_dismissals.notification_id -> system_notifications.id
+notification_dismissals.user_id -> users.id
+oauth_accounts.user_id -> users.id
+otp_codes.user_id -> users.id
+page_views.user_id -> users.id
+privacy_consent.user_id -> users.id
+rate_limit_overrides.user_id -> users.id
+rate_limit_overrides.created_by -> users.id
+rate_limit_violations.user_id -> users.id
+saved_backtest_results.user_id -> users.id
+saved_screener_results.user_id -> users.id
+search_events.user_id -> users.id
+sessions.user_id -> users.id
+system_config.updated_by -> users.id
+system_notifications.created_by -> users.id
+users.subscription_plan_id -> subscription_plans.id
+
+
+================================================================================
+INDEXES SUMMARY
+================================================================================
+
+
+admin_audit_log:
+  - admin_audit_log_pkey (btree)
+  - idx_admin_audit_admin (btree)
+  - idx_admin_audit_created (btree)
+  - idx_admin_audit_target (btree)
+
+analytics_daily_summary:
+  - analytics_daily_summary_date_metric_type_metric_key_key (btree)
+  - analytics_daily_summary_pkey (btree)
+  - idx_analytics_daily_date (btree)
+  - idx_analytics_daily_type (btree)
+
+auth_logs:
+  - auth_logs_pkey (btree)
+  - idx_auth_logs_created_at (btree)
+  - idx_auth_logs_event_type (btree)
+  - idx_auth_logs_failed_logins (btree)
+  - idx_auth_logs_ip (btree)
+  - idx_auth_logs_recent_failures (btree)
+  - idx_auth_logs_subscription_events (btree)
+  - idx_auth_logs_success (btree)
+  - idx_auth_logs_user_id (btree)
+
+click_events:
+  - click_events_pkey (btree)
+  - idx_clicks_created (btree)
+  - idx_clicks_session (btree)
+  - idx_clicks_user (btree)
+
+feature_flag_audit:
+  - feature_flag_audit_pkey (btree)
+  - idx_feature_flag_audit_created (btree)
+  - idx_feature_flag_audit_flag (btree)
+
+feature_flag_overrides:
+  - feature_flag_overrides_pkey (btree)
+  - idx_feature_flag_overrides_expires (btree)
+  - idx_feature_flag_overrides_flag (btree)
+  - idx_feature_flag_overrides_user (btree)
+  - unique_flag_user (btree)
+
+feature_flags:
+  - feature_flags_key_key (btree)
+  - feature_flags_pkey (btree)
+  - idx_feature_flags_category (btree)
+  - idx_feature_flags_enabled (btree)
+  - idx_feature_flags_key (btree)
+
+feature_usage:
+  - feature_usage_pkey (btree)
+  - idx_feature_usage_created (btree)
+  - idx_feature_usage_type (btree)
+  - idx_feature_usage_user (btree)
+
+migration_history:
+  - migration_history_migration_name_key (btree)
+  - migration_history_pkey (btree)
+
+notification_dismissals:
+  - idx_dismissals_user (btree)
+  - notification_dismissals_pkey (btree)
+  - notification_dismissals_user_id_notification_id_key (btree)
+
+oauth_accounts:
+  - idx_oauth_last_used (btree)
+  - idx_oauth_provider (btree)
+  - idx_oauth_user_id (btree)
+  - oauth_accounts_pkey (btree)
+  - unique_provider_user (btree)
+
+otp_codes:
+  - idx_otp_email (btree)
+  - idx_otp_user (btree)
+  - otp_codes_pkey (btree)
+
+page_views:
+  - idx_page_views_created (btree)
+  - idx_page_views_path (btree)
+  - idx_page_views_session (btree)
+  - idx_page_views_user (btree)
+  - page_views_pkey (btree)
+
+privacy_consent:
+  - idx_privacy_consent_session (btree)
+  - idx_privacy_consent_user (btree)
+  - privacy_consent_pkey (btree)
+
+rate_limit_configs:
+  - idx_rate_limit_configs_active (btree)
+  - idx_rate_limit_configs_endpoint (btree)
+  - rate_limit_configs_pkey (btree)
+  - unique_endpoint_tier (btree)
+
+rate_limit_overrides:
+  - idx_rate_limit_overrides_expires (btree)
+  - idx_rate_limit_overrides_user (btree)
+  - rate_limit_overrides_pkey (btree)
+  - unique_user_endpoint (btree)
+
+rate_limit_usage:
+  - idx_rate_limit_usage_identifier (btree)
+  - idx_rate_limit_usage_window (btree)
+  - rate_limit_usage_pkey (btree)
+  - unique_identifier_endpoint_window (btree)
+
+rate_limit_violations:
+  - idx_rate_limit_violations_created (btree)
+  - idx_rate_limit_violations_endpoint (btree)
+  - idx_rate_limit_violations_ip (btree)
+  - idx_rate_limit_violations_user (btree)
+  - rate_limit_violations_pkey (btree)
+
+saved_backtest_results:
+  - idx_saved_backtest_shared (btree)
+  - idx_saved_backtest_ticker (btree)
+  - idx_saved_backtest_user (btree)
+  - saved_backtest_results_pkey (btree)
+  - saved_backtest_results_share_token_key (btree)
+
+saved_screener_results:
+  - idx_saved_screener_shared (btree)
+  - idx_saved_screener_user (btree)
+  - saved_screener_results_pkey (btree)
+  - saved_screener_results_share_token_key (btree)
+
+search_events:
+  - idx_search_created (btree)
+  - idx_search_query (btree)
+  - idx_search_user (btree)
+  - search_events_pkey (btree)
+
+sessions:
+  - idx_sessions_active (btree)
+  - idx_sessions_active_user (btree)
+  - idx_sessions_expires_at (btree)
+  - idx_sessions_last_activity (btree)
+  - idx_sessions_refresh_token_hash (btree)
+  - idx_sessions_token_hash (btree)
+  - idx_sessions_user_id (btree)
+  - idx_sessions_validation (btree)
+  - sessions_pkey (btree)
+  - sessions_refresh_token_hash_key (btree)
+  - sessions_token_hash_key (btree)
+
+subscription_plans:
+  - idx_subscription_plans_active (btree)
+  - subscription_plans_pkey (btree)
+
+system_config:
+  - idx_system_config_category (btree)
+  - system_config_pkey (btree)
+
+system_notifications:
+  - idx_notifications_active (btree)
+  - idx_notifications_type (btree)
+  - system_notifications_pkey (btree)
+
+users:
+  - idx_users_created_at (btree)
+  - idx_users_email (btree)
+  - idx_users_google_id (btree)
+  - idx_users_last_login (btree)
+  - idx_users_provider (btree)
+  - idx_users_role (btree)
+  - idx_users_stripe_customer (btree)
+  - idx_users_subscription_end (btree)
+  - idx_users_subscription_status (btree)
+  - idx_users_terms_accepted (btree)
+  - idx_users_tier (btree)
+  - idx_users_trial_end (btree)
+  - idx_users_username (btree)
+  - users_email_key (btree)
+  - users_google_id_key (btree)
+  - users_pkey (btree)
+  - users_username_key (btree)
+
+
+================================================================================
+CONTINUOUS AGGREGATES (TimescaleDB)
+================================================================================
+
+No continuous aggregates found in the database.
+
+================================================================================
+MATERIALIZED VIEWS (Standard PostgreSQL)
+================================================================================
+
+No standard materialized views found.
+(Note: TimescaleDB continuous aggregates are shown in the previous section)

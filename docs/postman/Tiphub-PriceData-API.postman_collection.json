@@ -1,0 +1,348 @@
+{
+  "info": {
+    "_postman_id": "tiphub-price-data-v1",
+    "name": "Tiphub Price Data API",
+    "description": "# Tiphub Developer API\n\nComplete API collection for the Tiphub financial market analysis platform.\n\n## Getting Started\n\n1. **Set base URL**: Update the `base_url` collection variable (default: `https://tiphub.ai`)\n2. **Create an account**: Run the **Signup** or **Login** request — JWT tokens auto-save to collection variables\n3. **Create an API key**: Run **Developer > Create API Key** — the key auto-saves to `api_key`\n4. **Start exploring**: Most market data endpoints work with just the API key\n\n## Authentication\n\n| Method | Header | Used For |\n|--------|--------|----------|\n| **JWT Bearer** | `Authorization: Bearer <token>` | Web app endpoints (auth, subscription, admin, developer, saved results) |\n| **API Key** | `X-API-Key: <key>` | Data API endpoints (market data, prices, screener, backtest, sentiment) |\n| **None** | — | Public endpoints (health checks, config, subscription plans) |\n\n## Rate Limits\n\n| Tier | Requests/min | Screener/day | Backtest/day |\n|------|-------------|--------------|--------------|\n| Basic (Free) | 30 | 3 | 3 |\n| Premium | 120 | Unlimited | Unlimited |\n\n## Error Codes\n\n| Code | Meaning |\n|------|---------|\n| 400 | Bad Request — invalid parameters |\n| 401 | Unauthorized — missing or invalid token/key |\n| 403 | Forbidden — insufficient tier or permissions |\n| 404 | Not Found — resource doesn't exist |\n| 409 | Conflict — duplicate resource |\n| 429 | Too Many Requests — rate limit exceeded |\n| 500 | Internal Server Error |\n\n## SSE Streaming Endpoints\n\nScreener, Backtest, Sentiment, and Chat endpoints use Server-Sent Events (SSE) for real-time progress.\nUse the **Start** endpoint to get a task/job ID, then connect to the **Stream** endpoint.\nPostman shows raw SSE text; for best results test SSE in browser or with `curl`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://tiphub.ai",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "test_ticker",
+      "value": "RELIANCE",
+      "type": "string"
+    },
+    {
+      "key": "test_task_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Price Data",
+      "item": [
+        {
+          "name": "Stock LTP (Single)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/stock-ltp/{{test_ticker}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stock-ltp",
+                "{{test_ticker}}"
+              ]
+            },
+            "description": "Real-time Last Traded Price with intraday OHLC for a single stock.\n\n**Auth:** API Key (optional)\n**Cache:** 1 minute\n**Source:** `ltp_live` table (cleared EOD)"
+          },
+          "response": [
+            {
+              "name": "200 - LTP Data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/stock-ltp/RELIANCE"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"symbol\": \"RELIANCE\",\n  \"exchange\": \"NSE\",\n  \"token\": \"2885\",\n  \"ltp\": 2520.5,\n  \"open\": 2495,\n  \"high\": 2535.8,\n  \"low\": 2488.25,\n  \"close\": 2520.5,\n  \"prev_close\": 2489.3,\n  \"volume\": 8500000,\n  \"changePercent\": 1.25,\n  \"timestamp\": \"2025-01-15T11:30:00+05:30\"\n}"
+            },
+            {
+              "name": "404 - Ticker Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/stock-ltp/INVALID"
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Ticker INVALID not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Stock LTP (Bulk)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbols\": [\"RELIANCE\", \"TCS\", \"INFY\", \"HDFCBANK\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/stock-ltp/bulk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stock-ltp",
+                "bulk"
+              ]
+            },
+            "description": "Batch fetch LTP for multiple stock symbols in one request.\n\n**Auth:** API Key (optional)\n**Cache:** 1 minute\n**Limit:** Max 100 symbols per request"
+          },
+          "response": [
+            {
+              "name": "200 - Bulk LTP",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/stock-ltp/bulk"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"symbol\": \"RELIANCE\",\n      \"ltp\": 2520.5,\n      \"open\": 2495,\n      \"high\": 2535.8,\n      \"low\": 2488.25,\n      \"prev_close\": 2489.3,\n      \"volume\": 8500000,\n      \"changePercent\": 1.25\n    },\n    {\n      \"symbol\": \"TCS\",\n      \"ltp\": 3890.75,\n      \"open\": 3910,\n      \"high\": 3920.5,\n      \"low\": 3875,\n      \"prev_close\": 3908.4,\n      \"volume\": 3200000,\n      \"changePercent\": -0.45\n    },\n    {\n      \"symbol\": \"INFY\",\n      \"ltp\": 1845.2,\n      \"open\": 1830,\n      \"high\": 1852.9,\n      \"low\": 1825.5,\n      \"prev_close\": 1832.6,\n      \"volume\": 5100000,\n      \"changePercent\": 0.69\n    },\n    {\n      \"symbol\": \"HDFCBANK\",\n      \"ltp\": 1685,\n      \"open\": 1690.5,\n      \"high\": 1698.75,\n      \"low\": 1678.2,\n      \"prev_close\": 1692.3,\n      \"volume\": 6800000,\n      \"changePercent\": -0.43\n    }\n  ],\n  \"count\": 4\n}"
+            }
+          ]
+        },
+        {
+          "name": "Price Chart - Daily",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/price-chart/{{test_ticker}}?timeframe=1day&months=6",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "price-chart",
+                "{{test_ticker}}"
+              ],
+              "query": [
+                {
+                  "key": "timeframe",
+                  "value": "1day"
+                },
+                {
+                  "key": "months",
+                  "value": "6"
+                }
+              ]
+            },
+            "description": "Historical OHLC price data for charting.\n\n**Auth:** API Key (optional)\n**Cache:** 30 minutes\n**Params:**\n- `timeframe`: 1min, 1hour, 1day, 1week, 1month\n- `months`: lookback period (default: 6)"
+          },
+          "response": [
+            {
+              "name": "200 - Daily OHLC",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/price-chart/RELIANCE?timeframe=1day&months=6"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ticker\": \"RELIANCE\",\n  \"timeframe\": \"1day\",\n  \"price_data\": [\n    {\n      \"time\": \"2025-01-13\",\n      \"open\": 2470,\n      \"high\": 2498.5,\n      \"low\": 2458.2,\n      \"close\": 2489.3,\n      \"volume\": 9200000\n    },\n    {\n      \"time\": \"2025-01-14\",\n      \"open\": 2492,\n      \"high\": 2510.75,\n      \"low\": 2480,\n      \"close\": 2501.8,\n      \"volume\": 7800000\n    },\n    {\n      \"time\": \"2025-01-15\",\n      \"open\": 2495,\n      \"high\": 2535.8,\n      \"low\": 2488.25,\n      \"close\": 2520.5,\n      \"volume\": 8500000\n    }\n  ],\n  \"count\": 3\n}"
+            }
+          ]
+        },
+        {
+          "name": "Price Chart - Hourly",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/price-chart/{{test_ticker}}?timeframe=1hour&months=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "price-chart",
+                "{{test_ticker}}"
+              ],
+              "query": [
+                {
+                  "key": "timeframe",
+                  "value": "1hour"
+                },
+                {
+                  "key": "months",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Hourly OHLC data. Best for 1-3 month analysis windows.\n\n**Auth:** API Key (optional)\n**Cache:** 30 minutes"
+          },
+          "response": [
+            {
+              "name": "200 - Hourly OHLC",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/price-chart/RELIANCE?timeframe=1hour&months=1"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"ticker\": \"RELIANCE\",\n  \"timeframe\": \"1hour\",\n  \"price_data\": [\n    {\n      \"time\": \"2025-01-15T09:15:00+05:30\",\n      \"open\": 2495,\n      \"high\": 2510.25,\n      \"low\": 2492.5,\n      \"close\": 2508,\n      \"volume\": 2100000\n    },\n    {\n      \"time\": \"2025-01-15T10:15:00+05:30\",\n      \"open\": 2508.5,\n      \"high\": 2525,\n      \"low\": 2505,\n      \"close\": 2522.75,\n      \"volume\": 1800000\n    }\n  ],\n  \"count\": 2\n}"
+            }
+          ]
+        },
+        {
+          "name": "Bulk Prices by Ticker ID",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ticker_ids\": [1, 2, 3, 4, 5]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/prices/bulk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "prices",
+                "bulk"
+              ]
+            },
+            "description": "Batch fetch current prices by ticker IDs. Used internally by search results to enrich with live prices.\n\n**Auth:** API Key (optional)\n**Cache:** 1 minute\n**Limit:** Max 100 ticker IDs"
+          },
+          "response": [
+            {
+              "name": "200 - Bulk Prices",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/prices/bulk"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"1\": {\n    \"current_price\": 2520.5,\n    \"change_percent\": 1.25,\n    \"prev_close\": 2489.3\n  },\n  \"2\": {\n    \"current_price\": 3890.75,\n    \"change_percent\": -0.45,\n    \"prev_close\": 3908.4\n  },\n  \"3\": {\n    \"current_price\": 1845.2,\n    \"change_percent\": 0.69,\n    \"prev_close\": 1832.6\n  }\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Real-time and historical price data. Single/bulk LTP (Last Traded Price), multi-timeframe OHLC charts (1min to monthly)."
+    }
+  ]
+}
