@@ -7,6 +7,16 @@ import {
   ListFilter,
   ChevronRight,
   Zap,
+  BarChart3,
+  LineChart,
+  Layers,
+  Brain,
+  Newspaper,
+  Globe,
+  Calculator,
+  GitCompare,
+  BookOpen,
+  PieChart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import IndexCard from "@/components/IndexCard";
@@ -136,7 +146,7 @@ export default function Home() {
             {/* Market Mood - wider */}
             <div className="lg:col-span-3">
               <DashboardSection icon={Activity} title="Market Sentiment">
-                <div className="min-h-[320px]">
+                <div className="h-[320px]">
                   <MarketMood />
                 </div>
               </DashboardSection>
@@ -223,6 +233,38 @@ export default function Home() {
                   <NewsSection limit={10} />
                 </div>
               </div>
+            </div>
+          </DashboardSection>
+
+          {/* Feature Previews */}
+          <DashboardSection icon={Layers} title="Explore Tools">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {[
+                { icon: LineChart, name: "Advanced Chart", desc: "TradingView-style OHLC charts", href: "/chart" },
+                { icon: Layers, name: "Option Chain", desc: "Live NSE options with Greeks", href: "/options" },
+                { icon: BarChart3, name: "Options Visualizer", desc: "GEX exposure & IV surface", href: "/options-visualizer" },
+                { icon: Calculator, name: "Black-Scholes", desc: "Options pricing calculator", href: "/black-scholes" },
+                { icon: PieChart, name: "Portfolio Optimizer", desc: "Black-Litterman optimization", href: "/portfolio-optimizer" },
+                { icon: GitCompare, name: "Compare Stocks", desc: "Multi-security overlay charts", href: "/compare" },
+                { icon: Brain, name: "Alpha Generation", desc: "AI strategy backtesting", href: "/alpha-generation" },
+                { icon: Globe, name: "World Indices", desc: "Global market overview", href: "/world-indices" },
+                { icon: Newspaper, name: "Market News", desc: "Live financial news feed", href: "/news" },
+                { icon: BookOpen, name: "Research Reports", desc: "Sector analysis & outlook", href: "/research-reports" },
+              ].map((feature) => (
+                <Link
+                  key={feature.href}
+                  href={feature.href}
+                  className="group flex flex-col gap-2 rounded-lg border border-border/50 bg-card p-3 hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center w-7 h-7 rounded bg-primary/10 border border-primary/20 group-hover:bg-primary/20 transition-colors">
+                      <feature.icon className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    <span className="text-xs font-semibold text-foreground truncate">{feature.name}</span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground leading-tight">{feature.desc}</span>
+                </Link>
+              ))}
             </div>
           </DashboardSection>
 
