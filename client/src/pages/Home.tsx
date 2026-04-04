@@ -136,7 +136,9 @@ export default function Home() {
             {/* Market Mood - wider */}
             <div className="lg:col-span-3">
               <DashboardSection icon={Activity} title="Market Sentiment">
-                <MarketMood />
+                <div className="min-h-[320px]">
+                  <MarketMood />
+                </div>
               </DashboardSection>
             </div>
 

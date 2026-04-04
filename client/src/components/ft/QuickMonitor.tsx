@@ -299,6 +299,7 @@ export function QuickMonitor() {
   }>({
     queryKey: ['/api/fear-greed'],
     refetchInterval: 300000,
+    select: (raw: any) => raw?.data ?? raw,
   });
 
   // Fetch market movers from API
