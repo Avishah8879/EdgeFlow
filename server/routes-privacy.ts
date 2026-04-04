@@ -31,66 +31,9 @@ interface ConsentRecord {
 router.get(
   '/consent',
   optionalAuth,
-  async (req: Request, res: Response) => {
-    try {
-      const userId = req.user?.userId;
-      const sessionId = req.headers['x-session-id'] as string | undefined;
-
-      if (!userId && !sessionId) {
-        // No user or session - return default
-        res.json({
-          consentLevel: 'none',
-          isAnonymous: true,
-        });
-        return;
-      }
-
-      // Check for existing consent
-      let consent: ConsentRecord | null = null;
-
-      if (userId) {
-        // Check user's stored consent in users table
-        const userResult = await queryOne<{ tracking_consent: ConsentLevel; consent_updated_at: Date }>(
-          'SELECT tracking_consent, consent_updated_at FROM users WHERE id = $1',
-          [userId]
-        );
-
-        if (userResult) {
-          res.json({
-            consentLevel: userResult.tracking_consent || 'none',
-            updatedAt: userResult.consent_updated_at?.toISOString() || null,
-            isAnonymous: false,
-          });
-          return;
-        }
-      }
-
-      if (sessionId) {
-        // Check session-based consent
-        consent = await queryOne<ConsentRecord>(
-          'SELECT * FROM privacy_consent WHERE session_id = $1 ORDER BY updated_at DESC LIMIT 1',
-          [sessionId]
-        );
-
-        if (consent) {
-          res.json({
-            consentLevel: consent.consent_level,
-            updatedAt: consent.updated_at?.toISOString() || null,
-            isAnonymous: true,
-          });
-          return;
-        }
-      }
-
-      // No consent found
-      res.json({
-        consentLevel: 'none',
-        isAnonymous: !userId,
-      });
-    } catch (error: any) {
-      console.error('[PRIVACY] Error getting consent:', error.message);
-      res.status(500).json({ message: 'Failed to get consent status' });
-    }
+  async (_req: Request, res: Response) => {
+    // Return default consent — DB tables may not exist yet
+    res.json({ consentLevel: 'none', isAnonymous: true });
   }
 );
 

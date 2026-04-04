@@ -1,0 +1,44 @@
+EdgeFlow - Setup & Run Commands
+================================
+
+Prerequisites:
+- Node.js v18+
+- Python 3.11+ with uv package manager
+- Redis (for caching, Celery broker)
+
+Install Dependencies:
+---------------------
+npm install
+uv sync
+
+Run the Project (3 terminals):
+------------------------------
+
+Terminal 1 - Frontend + Express (port 5000):
+  npm run dev
+
+Terminal 2 - Python Backend (port 8100):
+  npm run dev:python
+
+Terminal 3 - Celery Worker (optional, for async jobs):
+  celery -A celery_app worker --pool=solo --loglevel=info
+
+Open in browser:
+  http://localhost:5000
+
+Notes:
+------
+- Terminal 1 & 2 are required. Terminal 3 is optional.
+- Without Celery, portfolio optimizer runs synchronously (~5-10s).
+- With Celery, portfolio optimizer and screener run as background jobs.
+- Redis must be running for caching and Celery to work.
+- The Python backend auto-reloads on file changes (--reload flag).
+- Press Ctrl+C in each terminal to stop the servers.
+
+If port 5000 is busy:
+  powershell -Command "Stop-Process -Id (Get-NetTCPConnection -LocalPort 5000 -State Listen).OwningProcess -Force"
+
+Production Build:
+-----------------
+npm run build
+npm run start

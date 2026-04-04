@@ -9123,13 +9123,7 @@ async def ft_submit_async_screener(payload: AsyncScreenerRequest):
 
 @fastapi_app.post("/api/portfolio/optimize")
 async def ft_submit_portfolio_optimization(payload: PortfolioOptimizeRequest):
-    """Submit a portfolio optimization job to run in the background."""
-    if not _FT_CELERY_AVAILABLE:
-        raise HTTPException(
-            status_code=503,
-            detail={"success": False, "message": "Background job processing not available."}
-        )
-
+    """Run portfolio optimization (synchronous fallback when Celery unavailable)."""
     try:
         if not payload.holdings:
             raise HTTPException(
@@ -9150,27 +9144,41 @@ async def ft_submit_portfolio_optimization(payload: PortfolioOptimizeRequest):
                 detail={"success": False, "message": "At least 2 holdings with valid quantities required for optimization"}
             )
 
-        task = _ft_celery_optimize_portfolio.delay(
-            holdings=cleaned_holdings,
-            risk_free_rate=payload.risk_free_rate,
-            max_weight=payload.max_weight,
-            rebalance_frequency=payload.rebalance_frequency,
-            lookback_period=payload.lookback_period,
-        )
-
-        return _ft_api_response({
-            "job_id": task.id,
-            "status": "submitted",
-            "holdings_count": len(cleaned_holdings),
-            "submitted_at": datetime.utcnow().isoformat() + "Z",
-        }, "Portfolio optimization job submitted successfully")
+        if _FT_CELERY_AVAILABLE:
+            # Async via Celery
+            task = _ft_celery_optimize_portfolio.delay(
+                holdings=cleaned_holdings,
+                risk_free_rate=payload.risk_free_rate,
+                max_weight=payload.max_weight,
+                rebalance_frequency=payload.rebalance_frequency,
+                lookback_period=payload.lookback_period,
+            )
+            return _ft_api_response({
+                "job_id": task.id,
+                "status": "submitted",
+                "holdings_count": len(cleaned_holdings),
+                "submitted_at": datetime.utcnow().isoformat() + "Z",
+            }, "Portfolio optimization job submitted successfully")
+        else:
+            # Synchronous fallback — run directly
+            from portfolio_optimizer import run_full_optimization
+            job_id = str(uuid.uuid4())
+            result = await run_full_optimization(None, cleaned_holdings)
+            return _ft_api_response({
+                "job_id": job_id,
+                "status": "completed",
+                "result": result,
+                "holdings_count": len(cleaned_holdings),
+                "computed_at": datetime.utcnow().isoformat() + "Z",
+            }, "Portfolio optimization completed")
 
     except HTTPException:
         raise
     except Exception as exc:
+        logger.exception(f"Portfolio optimization failed: {exc}")
         raise HTTPException(
             status_code=500,
-            detail={"success": False, "message": f"Failed to submit job: {str(exc)}"}
+            detail={"success": False, "message": f"Optimization failed: {str(exc)}"}
         )
 
 

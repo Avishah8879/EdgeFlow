@@ -53,6 +53,20 @@ export function TopNewsPanel() {
     queryKey: ['/api/news/top'],
     refetchInterval: autoRefresh ? 5 * 60 * 1000 : false, // 5 minute auto-refresh
     staleTime: 2 * 60 * 1000, // Data considered fresh for 2 minutes
+    select: (raw: any): NewsArticle[] => {
+      const arr = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+      return arr.map((item: any, i: number): NewsArticle => ({
+        id: item.id ?? String(i),
+        headline: item.headline ?? item.title ?? '',
+        summary: item.summary ?? item.description ?? '',
+        source: item.source ?? item.source_name ?? 'Unknown',
+        timestamp: item.timestamp ?? item.published_at ?? item.date ?? new Date().toISOString(),
+        tickers: item.tickers ?? [],
+        sentiment: item.sentiment ?? 'neutral',
+        category: item.category ?? 'general',
+        importance: item.importance ?? 'medium',
+      }));
+    },
   });
 
   // Manual refresh handler

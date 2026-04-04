@@ -380,4 +380,7 @@ async def run_full_optimization(
     }
 
     logger.info("Optimization complete")
-    return result
+
+    # Convert numpy types to native Python for JSON serialization
+    import json
+    return json.loads(json.dumps(result, default=lambda o: float(o) if hasattr(o, 'item') else str(o)))

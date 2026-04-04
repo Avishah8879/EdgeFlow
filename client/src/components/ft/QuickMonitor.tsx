@@ -306,6 +306,31 @@ export function QuickMonitor() {
     queryKey: ['/api/market-movers'],
     staleTime: 60000,
     refetchInterval: 60000,
+    select: (raw: any): MoversResponse => {
+      // If already in {gainers, losers} shape, use as-is
+      if (raw?.gainers || raw?.losers) return raw as MoversResponse;
+      // Python returns {data: [...]} flat array with category field
+      const arr = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+      const gainers: MarketMover[] = [];
+      const losers: MarketMover[] = [];
+      for (const item of arr) {
+        const mover: MarketMover = {
+          symbol: item.symbol ?? '',
+          trading_symbol: item.trading_symbol,
+          price: Number(item.ltp ?? item.price ?? 0),
+          change: Number(item.change ?? 0),
+          changePercent: Number(item.change_pct ?? item.change_percent ?? item.changePercent ?? 0),
+          volume: Number(item.volume ?? 0),
+          rank: item.rank,
+        };
+        if (item.category === 'LOSER' || mover.changePercent < 0) {
+          losers.push(mover);
+        } else {
+          gainers.push(mover);
+        }
+      }
+      return { gainers, losers, fetchedAt: raw?.meta?.fetched_at };
+    },
   });
 
   const fearGreedValue = typeof fearGreedData?.value === 'number' ? fearGreedData.value : null;

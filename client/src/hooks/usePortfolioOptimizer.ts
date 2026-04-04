@@ -138,11 +138,19 @@ export function usePortfolioOptimizer() {
   // Submit mutation
   const submitMutation = useMutation({
     mutationFn: submitOptimization,
-    onSuccess: (data) => {
-      setJobId(data.job_id);
-      setIsPolling(true);
-      setResult(null);
+    onSuccess: (data: any) => {
       setError(null);
+      // Synchronous mode: result already in response
+      if (data.status === "completed" && data.result) {
+        setResult(data.result);
+        setJobId(null);
+        setIsPolling(false);
+      } else {
+        // Async mode: start polling
+        setJobId(data.job_id);
+        setIsPolling(true);
+        setResult(null);
+      }
     },
     onError: (err) => {
       setError(err instanceof Error ? err.message : "Submission failed");

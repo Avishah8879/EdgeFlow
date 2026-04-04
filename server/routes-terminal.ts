@@ -285,10 +285,41 @@ export function registerTerminalRoutes(app: Express): void {
   // ── Market data passthrough routes ─────────────────────────────────────
 
   app.get("/api/quote/:symbol", async (req, res) => {
+    const sym = req.params.symbol.toUpperCase();
     try {
-      const result = await proxyToPython(`/api/quote/${req.params.symbol.toUpperCase()}`, buildPythonOptions(req));
+      const result = await proxyToPython(`/api/quote/${sym}`, buildPythonOptions(req));
+      // If Python returned a 404-style error, try indices endpoint as fallback
+      if (result && (result as any)?.error) throw new Error('not found');
       return res.json(result);
-    } catch (error) {
+    } catch {
+      // Fallback: try to find this symbol in the indices list
+      try {
+        const indices = await proxyToPython('/api/indices', buildPythonOptions(req));
+        const arr = Array.isArray(indices) ? indices : Array.isArray((indices as any)?.data) ? (indices as any).data : [];
+        const match = arr.find((idx: any) => {
+          const idxSym = (idx.symbol ?? idx.name ?? '').toUpperCase();
+          return idxSym === sym || idxSym.includes(sym) || sym.includes(idxSym);
+        });
+        if (match) {
+          return res.json({
+            data: {
+              symbol: match.symbol ?? sym,
+              name: match.name ?? sym,
+              ohlc: {
+                open: Number(match.open ?? match.ltp ?? 0),
+                high: Number(match.high ?? match.ltp ?? 0),
+                low: Number(match.low ?? match.ltp ?? 0),
+                close: Number(match.close ?? match.ltp ?? 0),
+                volume: Number(match.volume ?? 0),
+              },
+              ltp: Number(match.ltp ?? match.value ?? match.last_price ?? 0),
+              change: Number(match.change ?? 0),
+              change_percent: Number(match.change_pct ?? match.change_percent ?? 0),
+              timestamp: match.updated_at ?? new Date().toISOString(),
+            },
+          });
+        }
+      } catch { /* indices fallback failed */ }
       return sendDataUnavailable(res, 'Quote data unavailable');
     }
   });
@@ -350,6 +381,7 @@ export function registerTerminalRoutes(app: Express): void {
   app.get("/api/futures", unavailable('Futures data unavailable - API integration pending'));
   app.get("/api/bonds", unavailable('Bond yields unavailable - API integration pending'));
   app.get("/api/sectors", unavailable('Sector data unavailable - API integration pending'));
+  app.get("/api/pattern-search", unavailable('Pattern search unavailable - API integration pending'));
   app.get("/api/most-active", async (req, res) => {
     try {
       // Fetch gainers and losers from Python and return combined as most-active
@@ -415,6 +447,19 @@ export function registerTerminalRoutes(app: Express): void {
   app.get("/api/financial-results/:symbol", unavailable('Financial results unavailable - API integration pending'));
   app.get("/api/sec-filings", unavailable('SEC filings unavailable - API integration pending'));
   app.get("/api/ipos", unavailable('IPO data unavailable - API integration pending'));
+
+  // ── News (proxy to Python /api/news) ──────────────────────────────────
+  app.get("/api/news/top", async (req, res) => {
+    try {
+      const limit = req.query.limit ? Number(req.query.limit) : 20;
+      const result = await proxyToPython(`/api/news?limit=${limit}&page=1`, buildPythonOptions(req));
+      const envelope = result as any;
+      const articles = Array.isArray(envelope?.data) ? envelope.data : Array.isArray(envelope) ? envelope : [];
+      return res.json(articles);
+    } catch {
+      return sendDataUnavailable(res, 'News data unavailable');
+    }
+  });
 
   // ── Watchlist (FinTerminal user data) ──────────────────────────────────
 

@@ -65,6 +65,10 @@ export function GraphComparisonPanel() {
   const { data: comparisonData, isLoading, refetch } = useQuery<ChartData[]>({
     queryKey: [`/api/chart/compare?symbols=${symbols.join(',')}&range=${timeRange}`],
     enabled: symbols.length > 0,
+    select: (raw: any): ChartData[] => {
+      const arr = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+      return arr;
+    },
   });
 
   useEffect(() => {
