@@ -10666,6 +10666,73 @@ async def ft_get_batch_sectors(symbols: str = Query(..., min_length=1)):
         return _ft_api_response([], f"Batch sectors unavailable: {str(e)}")
 
 
+# =============================================================================
+# Pattern Search Endpoint
+# =============================================================================
+
+@fastapi_app.get("/api/pattern-search", tags=["Technical Analysis"])
+async def pattern_search_api(
+    pattern: str = Query("all"),
+    timeframe: str = Query("1M"),
+    confidence: int = Query(70, ge=50, le=100),
+):
+    """
+    Scan top stocks for chart patterns (Head & Shoulders, Double Top/Bottom, Triangles, etc.).
+
+    Returns a plain JSON array (no envelope) because the frontend useQuery expects Pattern[] directly.
+    """
+    from server.pattern_detector import scan_patterns
+
+    cache_key = f"pattern_search:{pattern}:{timeframe}:{confidence}"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    pool = get_db_pool()
+    conn = pool.getconn()
+    try:
+        patterns = scan_patterns(conn, pattern, timeframe, confidence)
+    finally:
+        pool.putconn(conn)
+
+    set_cached(cache_key, patterns, 900)  # 15 min TTL
+    return patterns
+
+
+# =============================================================================
+# Seasonality Analysis Endpoint
+# =============================================================================
+
+@fastapi_app.get("/api/seasonality/{ticker}", tags=["Technical Analysis"])
+async def seasonality_api(ticker: str):
+    """
+    Calculate weekly seasonality analysis for a stock using all available daily data.
+
+    Returns weekly stats (avg return, win rate per ISO week), monthly stats, and yearly heatmap data.
+    """
+    from server.seasonality import calculate_seasonality
+
+    ticker = unquote(ticker).upper()
+
+    cache_key = f"seasonality:{ticker}"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return {"data": cached}
+
+    pool = get_db_pool()
+    conn = pool.getconn()
+    try:
+        result = calculate_seasonality(conn, ticker)
+    finally:
+        pool.putconn(conn)
+
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"No data found for ticker {ticker}")
+
+    set_cached(cache_key, result, 3600)  # 1 hour TTL
+    return {"data": result}
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PYTHON_PORT", "7860"))
     is_dev = os.getenv("NODE_ENV", "development").lower() == "development"

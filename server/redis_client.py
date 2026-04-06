@@ -337,6 +337,8 @@ LOCK_TTL_SECTOR_MEDIANS = 30        # 30 sec lock for sector median query
 TTL_SHAREHOLDING = 21600            # 6 hours (shareholding data changes quarterly)
 TTL_QUOTE = 60                      # 1 minute (matches LTP freshness)
 TTL_QUOTE_HISTORICAL = 300          # 5 minutes (candles change less frequently)
+TTL_PATTERN_SEARCH = 900            # 15 minutes (pattern scan is expensive, results stable)
+TTL_SEASONALITY = 3600              # 1 hour (historical seasonality changes slowly)
 
 
 def make_indicator_key(ticker: str, timeframe: str = "1hour") -> str:

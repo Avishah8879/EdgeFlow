@@ -93,6 +93,7 @@ const navSections: NavSection[] = [
       { label: "Alpha Generation", href: "/alpha-generation", icon: Rocket },
       { label: "Pattern Search", href: "/pattern-search", icon: Eye },
       { label: "Systematic Patterns", href: "/systematic-patterns", icon: Brain },
+      { label: "Seasonality", href: "/seasonality", icon: Calendar },
       { label: "TipTease AI", href: "/tip-tease", icon: MessageSquare },
     ],
   },

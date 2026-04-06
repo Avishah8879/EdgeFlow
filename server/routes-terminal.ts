@@ -381,7 +381,37 @@ export function registerTerminalRoutes(app: Express): void {
   app.get("/api/futures", unavailable('Futures data unavailable - API integration pending'));
   app.get("/api/bonds", unavailable('Bond yields unavailable - API integration pending'));
   app.get("/api/sectors", unavailable('Sector data unavailable - API integration pending'));
-  app.get("/api/pattern-search", unavailable('Pattern search unavailable - API integration pending'));
+  app.get("/api/pattern-search", async (req, res) => {
+    try {
+      const params = new URLSearchParams();
+      if (typeof req.query.pattern === 'string') params.set('pattern', req.query.pattern);
+      if (typeof req.query.timeframe === 'string') params.set('timeframe', req.query.timeframe);
+      if (typeof req.query.confidence === 'string') params.set('confidence', req.query.confidence);
+      const result = await proxyToPython(
+        `/api/pattern-search?${params.toString()}`,
+        buildPythonOptions(req, { timeout: 60000 })
+      );
+      // Frontend expects a plain array (no envelope)
+      const patterns = Array.isArray(result) ? result : (result as any)?.data ?? [];
+      return res.json(patterns);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Pattern search unavailable');
+    }
+  });
+
+  app.get("/api/seasonality/:ticker", async (req, res) => {
+    try {
+      const { ticker } = req.params;
+      const result = await proxyToPython(
+        `/api/seasonality/${encodeURIComponent(ticker.toUpperCase())}`,
+        buildPythonOptions(req, { timeout: 30000 })
+      );
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Seasonality data unavailable');
+    }
+  });
+
   app.get("/api/most-active", async (req, res) => {
     try {
       // Fetch gainers and losers from Python and return combined as most-active

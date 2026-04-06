@@ -80,6 +80,7 @@ const Forum = lazy(() => import("@/pages/ft/Forum"));
 const Notes = lazy(() => import("@/pages/ft/Notes"));
 const Changelog = lazy(() => import("@/pages/ft/Changelog"));
 const Help = lazy(() => import("@/pages/ft/Help"));
+const Seasonality = lazy(() => import("@/pages/Seasonality"));
 
 // ── Admin pages (lazy) ────────────────────────────────────────────────────
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
@@ -167,6 +168,7 @@ function AppRoutes() {
         <Route path="/equity-screener" component={EquityScreener} />
         <Route path="/pattern-search" component={PatternSearch} />
         <Route path="/systematic-patterns" component={SystematicPatterns} />
+        <Route path="/seasonality" component={Seasonality} />
         <Route path="/compare" component={Compare} />
         <Route path="/portfolio-optimizer" component={PortfolioOptimizer} />
         <Route path="/calculator" component={FinancialCalculatorPage} />
