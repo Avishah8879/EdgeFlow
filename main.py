@@ -10740,6 +10740,70 @@ async def seasonality_api(ticker: str):
 
 
 # =============================================================================
+# Fyers Token Management Endpoint
+# =============================================================================
+
+class FyersTokenRequest(BaseModel):
+    access_token: str
+    generated_at: Optional[str] = None
+    expiry: Optional[str] = None
+
+@fastapi_app.post("/api/admin/fyers-token", tags=["Admin"])
+async def update_fyers_token(request: FyersTokenRequest):
+    """Update Fyers access token from the admin UI. Writes to FYERS_TOKEN_PATH."""
+    import json as _json
+    from datetime import datetime as _dt
+
+    token_path = os.getenv("FYERS_TOKEN_PATH", "./fyers_token.json")
+
+    if not request.access_token or not request.access_token.strip():
+        raise HTTPException(status_code=400, detail="access_token is required")
+
+    payload = {
+        "access_token": request.access_token.strip(),
+        "generated_at": request.generated_at or _dt.now().isoformat(),
+        "expiry": request.expiry or "",
+    }
+
+    try:
+        with open(token_path, "w") as f:
+            _json.dump(payload, f, indent=2)
+        logging.info(f"[FyersToken] Token updated successfully, expires: {payload['expiry']}")
+        return success_response({"message": "Token updated", "expiry": payload["expiry"]})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to write token: {str(e)}")
+
+@fastapi_app.get("/api/admin/fyers-token", tags=["Admin"])
+async def get_fyers_token_status():
+    """Get current Fyers token status (expiry only, not the token itself)."""
+    import json as _json
+    from datetime import datetime as _dt
+
+    token_path = os.getenv("FYERS_TOKEN_PATH", "./fyers_token.json")
+
+    try:
+        if not os.path.exists(token_path):
+            return success_response({"status": "missing", "expiry": None})
+        with open(token_path, "r") as f:
+            data = _json.load(f)
+        expiry_str = data.get("expiry", "")
+        is_valid = False
+        if expiry_str:
+            try:
+                expiry = _dt.fromisoformat(expiry_str)
+                is_valid = expiry > _dt.now()
+            except Exception:
+                pass
+        return success_response({
+            "status": "valid" if is_valid else "expired",
+            "expiry": expiry_str,
+            "generated_at": data.get("generated_at", ""),
+        })
+    except Exception as e:
+        return success_response({"status": "error", "error": str(e), "expiry": None})
+
+
+# =============================================================================
 # Fundamental Screener Endpoints
 # =============================================================================
 

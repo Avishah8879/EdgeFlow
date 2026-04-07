@@ -10,6 +10,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { decode } from '@msgpack/msgpack';
+import { getApiBaseUrl } from '@/lib/api-config';
 
 // Depth data structure matching Python serialization
 export interface DepthData {
@@ -107,9 +108,11 @@ interface UseDepthWebSocketReturn {
 
 // WebSocket URL helper
 function getWebSocketUrl(symbol: string): string {
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = window.location.host;
-  return `${protocol}//${host}/ws/depth/${encodeURIComponent(symbol)}`;
+  // Connect directly to Python FastAPI which hosts the depth WebSocket handler.
+  // Mirrors how REST API calls use getApiBaseUrl() to reach Python (port 8100).
+  const httpBase = getApiBaseUrl() || window.location.origin;
+  const wsBase = httpBase.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
+  return `${wsBase}/ws/depth/${encodeURIComponent(symbol)}`;
 }
 
 // Global connection registry to prevent duplicate connections across component remounts

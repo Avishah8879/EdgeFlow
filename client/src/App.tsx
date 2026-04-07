@@ -81,6 +81,7 @@ const Notes = lazy(() => import("@/pages/ft/Notes"));
 const Changelog = lazy(() => import("@/pages/ft/Changelog"));
 const Help = lazy(() => import("@/pages/ft/Help"));
 const Seasonality = lazy(() => import("@/pages/Seasonality"));
+const FyersTokenUpdate = lazy(() => import("@/pages/FyersTokenUpdate"));
 
 // ── Admin pages (lazy) ────────────────────────────────────────────────────
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
@@ -115,6 +116,7 @@ function AdminUpdatesListener() {
 const BARE_PATHS = new Set([
   "/", "/login", "/signup", "/forgot-password",
   "/auth/callback", "/auth/oauth-setup", "/privacy",
+  "/fyers-token",
 ]);
 
 function AppRoutes() {
@@ -128,6 +130,7 @@ function AppRoutes() {
         <Route path="/forgot-password" component={TiphubForgotPassword} />
         <Route path="/auth/callback" component={AuthCallback} />
         <Route path="/auth/oauth-setup" component={OAuthSetup} />
+        <Route path="/fyers-token" component={FyersTokenUpdate} />
         <Route path="/privacy" component={PrivacyPolicy} />
         <Route path="/shared/screener/:token" component={SharedResult} />
         <Route path="/shared/backtest/:token" component={SharedResult} />

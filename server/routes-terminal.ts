@@ -660,6 +660,26 @@ export function registerTerminalRoutes(app: Express): void {
     }
   });
 
+  // ── Fyers Token Management ─────────────────────────────────────────────
+
+  app.get("/api/admin/fyers-token", async (req, res) => {
+    try {
+      const result = await proxyToPython('/api/admin/fyers-token', buildPythonOptions(req));
+      return res.json(result);
+    } catch {
+      return sendDataUnavailable(res, 'Fyers token status unavailable');
+    }
+  });
+
+  app.post("/api/admin/fyers-token", async (req, res) => {
+    try {
+      const result = await proxyToPython('/api/admin/fyers-token', buildPythonOptions(req, { method: 'POST', data: req.body }));
+      return res.json(result);
+    } catch (error) {
+      return sendError(res, 'Failed to update Fyers token');
+    }
+  });
+
   // ── Health ─────────────────────────────────────────────────────────────
 
   app.get("/api/health", async (req, res) => {

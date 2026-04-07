@@ -193,6 +193,28 @@ app.use((req, res, next) => {
   initAdminBroadcast(server);
   log('[WS] Admin broadcast WebSocket initialized at /ws/admin-updates');
 
+  // Proxy WebSocket upgrade requests for /ws/depth/* to Python FastAPI backend
+  const { default: httpProxy } = await import('http-proxy');
+  const PYTHON_WS_PORT = parseInt(process.env.PYTHON_PORT || '8100', 10);
+  const pythonTarget = `http://localhost:${PYTHON_WS_PORT}`;
+
+  const wsProxy = httpProxy.createProxyServer({ target: pythonTarget, ws: true, changeOrigin: true });
+  wsProxy.on('error', (err, _req, res) => {
+    log(`[WS-PROXY] Error: ${err.message}`);
+    if (res && 'writeHead' in res) {
+      (res as any).writeHead?.(502);
+      (res as any).end?.('WebSocket proxy error');
+    }
+  });
+
+  server.on('upgrade', (req, socket, head) => {
+    const url = req.url || '';
+    if (!url.startsWith('/ws/depth/')) return;
+    wsProxy.ws(req, socket, head);
+  });
+
+  log(`[WS-PROXY] Depth WebSocket proxy active → ws://localhost:${PYTHON_WS_PORT}/ws/depth/*`);
+
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";

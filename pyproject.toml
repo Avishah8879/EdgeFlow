@@ -108,6 +108,7 @@ dependencies = [
     "redis>=5.2.1",
     "scipy>=1.17.1",
     "asyncpg>=0.31.0",
+    "fyers-apiv3",
 ]
 
 [dependency-groups]

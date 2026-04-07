@@ -89,7 +89,7 @@ const navSections: NavSection[] = [
     title: "ANALYSIS",
     items: [
       { label: "Expert Screener", href: "/screener", icon: Search },
-      { label: "Equity Screener", href: "/equity-screener", icon: ListChecks },
+      { label: "Fundamental Scanner", href: "/equity-screener", icon: ListChecks },
       { label: "Alpha Generation", href: "/alpha-generation", icon: Rocket },
       { label: "Pattern Search", href: "/pattern-search", icon: Eye },
       { label: "Systematic Patterns", href: "/systematic-patterns", icon: Brain },
