@@ -1,30 +1,30 @@
 import logoSvg from "@/assets/logo.svg";
 import iconSvg from "@/assets/icon.svg";
 
-type TiphubLogoProps = {
+type EquityProLogoProps = {
   className?: string;
   size?: "sm" | "md" | "lg";
   /** Use icon-only variant (no text) */
   iconOnly?: boolean;
 };
 
-const LOGO_HEIGHTS: Record<NonNullable<TiphubLogoProps["size"]>, number> = {
+const LOGO_HEIGHTS: Record<NonNullable<EquityProLogoProps["size"]>, number> = {
   sm: 24,
   md: 32,
   lg: 40,
 };
 
-const ICON_HEIGHTS: Record<NonNullable<TiphubLogoProps["size"]>, number> = {
+const ICON_HEIGHTS: Record<NonNullable<EquityProLogoProps["size"]>, number> = {
   sm: 16,
   md: 20,
   lg: 24,
 };
 
-export function TiphubLogo({
+export function EquityProLogo({
   className = "",
   size = "md",
   iconOnly = false,
-}: TiphubLogoProps) {
+}: EquityProLogoProps) {
   const height = iconOnly
     ? ICON_HEIGHTS[size] ?? ICON_HEIGHTS.md
     : LOGO_HEIGHTS[size] ?? LOGO_HEIGHTS.md;
@@ -34,7 +34,7 @@ export function TiphubLogo({
   return (
     <img
       src={src}
-      alt="Tiphub"
+      alt="EquityPro"
       height={height}
       className={className}
       style={{ height: `${height}px`, width: "auto" }}

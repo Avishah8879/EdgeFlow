@@ -1,5 +1,5 @@
 /**
- * JSON-LD Schema Generators for Tiphub
+ * JSON-LD Schema Generators for EquityPro
  * Structured data for SEO, GEO, and AEO optimization
  */
 
@@ -29,13 +29,13 @@ export function generateOrganizationSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Tiphub',
+    name: 'EquityPro',
     url: SEO_CONFIG.siteUrl,
     logo: `${SEO_CONFIG.siteUrl}/favicon.svg`,
     description: 'AI-powered stock analysis platform & TradingView alternative for Indian investors. Free AI sentiment analysis, expert screener with pine script-like expressions, and strategy bots.',
     foundingDate: '2024',
     knowsAbout: [
-      'Tiphub Stock Analysis',
+      'EquityPro Stock Analysis',
       'Stock Screener',
       'Strategy Bots',
       'Pine Script Alternative',
@@ -61,7 +61,7 @@ export function generateWebSiteSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Tiphub - AI Stock Analysis',
+    name: 'EquityPro - AI Stock Analysis',
     url: SEO_CONFIG.siteUrl,
     description: 'Free AI-powered stock analysis for Indian investors',
     potentialAction: {
@@ -121,7 +121,7 @@ export function generateFAQSchema(faqs: FAQItem[]) {
 
 /**
  * SoftwareApplication Schema - For tool pages
- * Describes Tiphub as a software application
+ * Describes EquityPro as a software application
  */
 export function generateSoftwareApplicationSchema(
   name: string,
@@ -224,7 +224,7 @@ export function generateWebPageSchema(
     url: url.startsWith('http') ? url : `${SEO_CONFIG.siteUrl}${url}`,
     isPartOf: {
       '@type': 'WebSite',
-      name: 'Tiphub',
+      name: 'EquityPro',
       url: SEO_CONFIG.siteUrl,
     },
   };
@@ -233,43 +233,43 @@ export function generateWebPageSchema(
 // Pre-defined FAQ content for reuse across pages
 export const LANDING_FAQS: FAQItem[] = [
   {
-    question: 'What is Tiphub?',
-    answer: 'Tiphub is a free AI-powered stock analysis platform and TradingView alternative for Indian investors. It provides AI sentiment analysis using FinBERT, an expert screener with pine script-like boolean expressions, and strategy bots with genetic algorithm optimization for 3000+ NSE stocks.',
+    question: 'What is EquityPro?',
+    answer: 'EquityPro is a free AI-powered stock analysis platform and TradingView alternative for Indian investors. It provides AI sentiment analysis using FinBERT, an expert screener with pine script-like boolean expressions, and strategy bots with genetic algorithm optimization for 3000+ NSE stocks.',
   },
   {
-    question: 'Is Tiphub a good TradingView alternative for India?',
-    answer: 'Yes, Tiphub is designed as a free TradingView alternative specifically for Indian NSE stocks. While TradingView uses Pine Script, Tiphub offers pine script-like boolean expressions for screening and AI-powered strategy bots for backtesting - all completely free for Indian investors.',
+    question: 'Is EquityPro a good TradingView alternative for India?',
+    answer: 'Yes, EquityPro is designed as a free TradingView alternative specifically for Indian NSE stocks. While TradingView uses Pine Script, EquityPro offers pine script-like boolean expressions for screening and AI-powered strategy bots for backtesting - all completely free for Indian investors.',
   },
   {
     question: 'How does AI sentiment analysis work?',
-    answer: 'Tiphub uses FinBERT, a financial domain-specific AI model, to analyze news articles and determine market sentiment (Bullish, Bearish, or Neutral) for any stock. The AI processes recent news and provides an overall sentiment score.',
+    answer: 'EquityPro uses FinBERT, a financial domain-specific AI model, to analyze news articles and determine market sentiment (Bullish, Bearish, or Neutral) for any stock. The AI processes recent news and provides an overall sentiment score.',
   },
   {
-    question: 'Is Tiphub free to use?',
-    answer: 'Yes, Tiphub offers a free tier with access to stock analysis, AI sentiment, and basic screener functionality. Premium features include unlimited screener runs and advanced strategy bot backtesting options.',
+    question: 'Is EquityPro free to use?',
+    answer: 'Yes, EquityPro offers a free tier with access to stock analysis, AI sentiment, and basic screener functionality. Premium features include unlimited screener runs and advanced strategy bot backtesting options.',
   },
   {
-    question: 'What stocks does Tiphub cover?',
-    answer: 'Tiphub covers over 3000 stocks listed on the National Stock Exchange (NSE) of India, including all Nifty 50, Nifty 500, and sectoral index constituents.',
+    question: 'What stocks does EquityPro cover?',
+    answer: 'EquityPro covers over 3000 stocks listed on the National Stock Exchange (NSE) of India, including all Nifty 50, Nifty 500, and sectoral index constituents.',
   },
   {
-    question: 'What are strategy bots in Tiphub?',
-    answer: 'Strategy bots in Tiphub are AI-powered backtesting tools that use genetic algorithms to optimize trading strategies. Unlike Pine Script in TradingView, Tiphub automatically evolves and tests thousands of rule combinations to find optimal entry/exit conditions with metrics like Calmar ratio and max drawdown.',
+    question: 'What are strategy bots in EquityPro?',
+    answer: 'Strategy bots in EquityPro are AI-powered backtesting tools that use genetic algorithms to optimize trading strategies. Unlike Pine Script in TradingView, EquityPro automatically evolves and tests thousands of rule combinations to find optimal entry/exit conditions with metrics like Calmar ratio and max drawdown.',
   },
 ];
 
 export const SCREENER_FAQS: FAQItem[] = [
   {
     question: 'How do I screen stocks by technical indicators?',
-    answer: "Enter a pine script-like boolean expression such as 'rsi_14 < 30 and sma_50 > sma_200' to find stocks matching your criteria. Tiphub screener supports 24+ indicators including SMA, EMA, RSI, MACD, Bollinger Bands, and more.",
+    answer: "Enter a pine script-like boolean expression such as 'rsi_14 < 30 and sma_50 > sma_200' to find stocks matching your criteria. EquityPro screener supports 24+ indicators including SMA, EMA, RSI, MACD, Bollinger Bands, and more.",
   },
   {
-    question: 'Is Tiphub screener similar to TradingView Pine Script?',
-    answer: "Yes, Tiphub offers pine script-like boolean expressions for stock screening. While TradingView's Pine Script is more complex, Tiphub provides a simpler syntax like 'rsi_14 < 30 and volume > volume_sma_20' that's easier to learn while being equally powerful for NSE stocks.",
+    question: 'Is EquityPro screener similar to TradingView Pine Script?',
+    answer: "Yes, EquityPro offers pine script-like boolean expressions for stock screening. While TradingView's Pine Script is more complex, EquityPro provides a simpler syntax like 'rsi_14 < 30 and volume > volume_sma_20' that's easier to learn while being equally powerful for NSE stocks.",
   },
   {
-    question: 'What indicators are available in the Tiphub screener?',
-    answer: 'The Tiphub screener supports SMA (any period), EMA (any period), RSI, MACD (line, signal, histogram), ATR, Supertrend, Bollinger Bands (upper, middle, lower), Volume SMA, 52-week high, and OHLC values - similar to TradingView indicators.',
+    question: 'What indicators are available in the EquityPro screener?',
+    answer: 'The EquityPro screener supports SMA (any period), EMA (any period), RSI, MACD (line, signal, histogram), ATR, Supertrend, Bollinger Bands (upper, middle, lower), Volume SMA, 52-week high, and OHLC values - similar to TradingView indicators.',
   },
   {
     question: 'How to find oversold stocks using RSI?',
@@ -283,16 +283,16 @@ export const SCREENER_FAQS: FAQItem[] = [
 
 export const BACKTESTING_FAQS: FAQItem[] = [
   {
-    question: 'What are strategy bots in Tiphub?',
-    answer: 'Strategy bots are AI-powered trading automation tools that use genetic algorithms to optimize strategies. Unlike Pine Script in TradingView which requires manual coding, Tiphub strategy bots automatically evolve and test thousands of rule combinations to find optimal entry/exit conditions.',
+    question: 'What are strategy bots in EquityPro?',
+    answer: 'Strategy bots are AI-powered trading automation tools that use genetic algorithms to optimize strategies. Unlike Pine Script in TradingView which requires manual coding, EquityPro strategy bots automatically evolve and test thousands of rule combinations to find optimal entry/exit conditions.',
   },
   {
-    question: 'Is Tiphub backtesting better than TradingView Pine Script?',
-    answer: 'Tiphub offers a different approach - while TradingView requires writing Pine Script code, Tiphub strategy bots use AI genetic algorithms to automatically discover optimal strategies. This makes it easier for beginners while still being powerful for advanced traders on NSE stocks.',
+    question: 'Is EquityPro backtesting better than TradingView Pine Script?',
+    answer: 'EquityPro offers a different approach - while TradingView requires writing Pine Script code, EquityPro strategy bots use AI genetic algorithms to automatically discover optimal strategies. This makes it easier for beginners while still being powerful for advanced traders on NSE stocks.',
   },
   {
     question: 'What is a genetic algorithm in trading?',
-    answer: 'A genetic algorithm is an AI optimization technique inspired by natural selection. Tiphub uses it in strategy bots to evolve trading rules over multiple generations, finding optimal entry/exit conditions that maximize returns while minimizing risk.',
+    answer: 'A genetic algorithm is an AI optimization technique inspired by natural selection. EquityPro uses it in strategy bots to evolve trading rules over multiple generations, finding optimal entry/exit conditions that maximize returns while minimizing risk.',
   },
   {
     question: 'How to interpret Calmar ratio?',
@@ -304,22 +304,22 @@ export const BACKTESTING_FAQS: FAQItem[] = [
   },
   {
     question: 'What is TPSL mode in strategy bots?',
-    answer: 'TPSL (Take Profit/Stop Loss) mode in Tiphub strategy bots optimizes both the trading strategy and the optimal take-profit and stop-loss percentages. This helps find the best risk management parameters for each strategy.',
+    answer: 'TPSL (Take Profit/Stop Loss) mode in EquityPro strategy bots optimizes both the trading strategy and the optimal take-profit and stop-loss percentages. This helps find the best risk management parameters for each strategy.',
   },
 ];
 
 export const INDICES_FAQS: FAQItem[] = [
   {
     question: 'What is Nifty 50?',
-    answer: 'Nifty 50 is the flagship index of the National Stock Exchange (NSE), comprising 50 of the largest and most liquid Indian companies across 13 sectors. It represents about 65% of the free-float market capitalization of stocks listed on NSE. Track Nifty 50 live on Tiphub.',
+    answer: 'Nifty 50 is the flagship index of the National Stock Exchange (NSE), comprising 50 of the largest and most liquid Indian companies across 13 sectors. It represents about 65% of the free-float market capitalization of stocks listed on NSE. Track Nifty 50 live on EquityPro.',
   },
   {
     question: 'How are index values calculated?',
     answer: 'Indian market indices like Nifty 50 use free-float market capitalization weighted methodology. This means companies with higher market cap have more influence on the index value, adjusted for the freely tradable shares.',
   },
   {
-    question: 'Can I track Indian indices on Tiphub like TradingView?',
-    answer: 'Yes, Tiphub provides real-time tracking for 57 Indian market indices including Nifty 50, Bank Nifty, Nifty IT, and sectoral indices. While TradingView covers global indices, Tiphub specializes in NSE indices with AI-powered market mood analysis.',
+    question: 'Can I track Indian indices on EquityPro like TradingView?',
+    answer: 'Yes, EquityPro provides real-time tracking for 57 Indian market indices including Nifty 50, Bank Nifty, Nifty IT, and sectoral indices. While TradingView covers global indices, EquityPro specializes in NSE indices with AI-powered market mood analysis.',
   },
 ];
 
@@ -327,11 +327,11 @@ export const INDICES_FAQS: FAQItem[] = [
 export const SCREENER_HOWTO: HowToStep[] = [
   {
     name: 'Enter your pine script-like screening expression',
-    text: "Type a boolean expression using technical indicators in Tiphub's pine script-like syntax. For example: 'rsi_14 < 30 and sma_50 > sma_200' to find oversold stocks in an uptrend.",
+    text: "Type a boolean expression using technical indicators in EquityPro's pine script-like syntax. For example: 'rsi_14 < 30 and sma_50 > sma_200' to find oversold stocks in an uptrend.",
   },
   {
-    name: 'Run the Tiphub screener',
-    text: "Click 'Run Screener' to start the AI-powered scan. The Tiphub screener processes all 3000+ NSE stocks in real-time - faster than TradingView's manual screening.",
+    name: 'Run the EquityPro screener',
+    text: "Click 'Run Screener' to start the AI-powered scan. The EquityPro screener processes all 3000+ NSE stocks in real-time - faster than TradingView's manual screening.",
   },
   {
     name: 'View streaming results',
@@ -342,7 +342,7 @@ export const SCREENER_HOWTO: HowToStep[] = [
 export const BACKTESTING_HOWTO: HowToStep[] = [
   {
     name: 'Select a stock for strategy bot',
-    text: 'Choose a stock from the dropdown or search by symbol/company name. The Tiphub strategy bot will use 5+ years of historical NSE data.',
+    text: 'Choose a stock from the dropdown or search by symbol/company name. The EquityPro strategy bot will use 5+ years of historical NSE data.',
   },
   {
     name: 'Choose strategy bot mode',

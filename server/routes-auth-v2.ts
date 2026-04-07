@@ -1277,7 +1277,7 @@ router.get('/v2/export-my-data', requireAuth, async (req: Request, res: Response
     };
 
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename="tiphub-data-export-${userId}.json"`);
+    res.setHeader('Content-Disposition', `attachment; filename="equitypro-data-export-${userId}.json"`);
     return res.json(exportData);
   } catch (error: any) {
     console.error('[AUTH_V2] Export data error:', error.message);

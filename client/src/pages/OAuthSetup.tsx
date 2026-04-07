@@ -21,7 +21,7 @@ import {
 import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { COUNTRIES } from "@/lib/countries";
-import { TiphubLogo } from "@/components/TiphubLogo";
+import { EquityProLogo } from "@/components/TiphubLogo";
 import { HalvorsenAttractor } from "@/components/HalvorsenAttractor";
 import { cn } from "@/lib/utils";
 
@@ -190,7 +190,7 @@ export default function OAuthSetup() {
       <div className="relative z-10 flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10 pointer-events-none">
         <div className="flex w-full max-w-sm flex-col gap-6 pointer-events-auto">
           <Link href="/" className="flex items-center gap-2 self-center">
-            <TiphubLogo size="md" />
+            <EquityProLogo size="md" />
           </Link>
           <div className="flex flex-col gap-6">
             <Card className="bg-card/95 backdrop-blur-sm border-border/50">

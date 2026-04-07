@@ -1,6 +1,6 @@
 /**
  * routes-terminal.ts
- * FinTerminal-specific Express routes:
+ * EquityPro-specific Express routes:
  * - Market data proxy routes (options, chart, screener, streaming, etc.)
  * - User data CRUD routes (watchlist, window layouts, forum)
  */
@@ -325,7 +325,7 @@ export function registerTerminalRoutes(app: Express): void {
   });
 
   app.get("/api/search-ft", async (req, res) => {
-    // /api/search is already claimed by Tiphub — this is an alias for FinTerminal components
+    // /api/search is already claimed — this is an alias for EquityPro terminal components
     try {
       const q = typeof req.query.q === 'string' ? req.query.q : '';
       if (!q) return sendSuccess(res, []);
@@ -412,6 +412,46 @@ export function registerTerminalRoutes(app: Express): void {
     }
   });
 
+  // ── Fundamental Screener (SSE streaming) ────────────────────────────
+  app.post("/api/fundamental-screener/start", async (req, res) => {
+    try {
+      const result = await proxyToPython(
+        '/api/fundamental-screener/start',
+        buildPythonOptions(req, { method: 'POST', data: req.body, timeout: 30000 })
+      );
+      return res.json(result);
+    } catch (error) {
+      return sendError(res, 'Fundamental screener unavailable');
+    }
+  });
+
+  // Note: /api/fundamental-screener/stream/:jobId is SSE — frontend connects directly to Python backend
+
+  app.post("/api/fundamental-screener/cancel/:jobId", async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const result = await proxyToPython(
+        `/api/fundamental-screener/cancel/${jobId}`,
+        buildPythonOptions(req, { method: 'POST', timeout: 10000 })
+      );
+      return res.json(result);
+    } catch (error) {
+      return sendError(res, 'Failed to cancel fundamental screener');
+    }
+  });
+
+  app.get("/api/fundamental-screener/variables", async (req, res) => {
+    try {
+      const result = await proxyToPython(
+        '/api/fundamental-screener/variables',
+        buildPythonOptions(req)
+      );
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Fundamental screener variables unavailable');
+    }
+  });
+
   app.get("/api/most-active", async (req, res) => {
     try {
       // Fetch gainers and losers from Python and return combined as most-active
@@ -491,7 +531,7 @@ export function registerTerminalRoutes(app: Express): void {
     }
   });
 
-  // ── Watchlist (FinTerminal user data) ──────────────────────────────────
+  // ── Watchlist (EquityPro user data) ──────────────────────────────────
 
   app.get("/api/ft/watchlist", async (req, res) => {
     try {

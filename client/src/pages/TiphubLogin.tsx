@@ -13,7 +13,7 @@ import { Loader2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { SEO } from "@/components/SEO";
-import { TiphubLogo } from "@/components/TiphubLogo";
+import { EquityProLogo } from "@/components/TiphubLogo";
 import { HalvorsenAttractor } from "@/components/HalvorsenAttractor";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +22,7 @@ type FormState = {
   password: string;
 };
 
-export default function TiphubLogin() {
+export default function EquityProLogin() {
   const {
     loginWithCredentials,
     status,
@@ -86,8 +86,8 @@ export default function TiphubLogin() {
   return (
     <>
       <SEO
-        title="Sign In - Tiphub"
-        description="Sign in to your Tiphub account to access AI-powered stock analysis, expert screener, and strategy backtesting tools."
+        title="Sign In - EquityPro"
+        description="Sign in to your EquityPro account to access AI-powered stock analysis, expert screener, and strategy backtesting tools."
         noIndex={true}
       />
       <div className="relative min-h-svh overflow-hidden">
@@ -98,14 +98,14 @@ export default function TiphubLogin() {
         <div className="relative z-10 flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10 pointer-events-none">
           <div className="flex w-full max-w-sm flex-col gap-6 pointer-events-auto">
             <Link href="/" className="flex items-center gap-2 self-center">
-              <TiphubLogo size="md" />
+              <EquityProLogo size="md" />
             </Link>
             <div className="flex flex-col gap-6">
               <Card className="bg-card/95 backdrop-blur-sm border-border/50">
                 <CardHeader className="text-center">
                   <CardTitle className="text-xl">Welcome back</CardTitle>
                   <CardDescription>
-                    Login to your Tiphub account
+                    Login to your EquityPro account
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

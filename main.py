@@ -3013,7 +3013,7 @@ class AllowFrameMiddleware(BaseHTTPMiddleware):
 
 
 fastapi_app = FastAPI(
-    title="Tiphub Developer API",
+    title="EquityPro Developer API",
     description=(
         "Financial market data, technical analysis, and AI-powered insights for Indian markets (NSE).\n\n"
         "## Authentication\n"
@@ -3297,7 +3297,7 @@ def apply_screener_condition(field: str, operator: str, value: Optional[float], 
 @fastapi_app.get("/")
 async def root():
     return {
-        "message": "Tiphub API",
+        "message": "EquityPro API",
         "version": "1.0.0",
         "endpoints": {
             "sentiment_analysis": "/api/sentiment-analysis",
@@ -8001,8 +8001,8 @@ def _openrouter_streaming_sync(messages, queue):
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://tiphub.app",
-        "X-Title": "TipHub AI"
+        "HTTP-Referer": "https://your-domain.com",
+        "X-Title": "EquityPro AI"
     }
     payload = {
         "model": OPENROUTER_MODEL,
@@ -8061,7 +8061,7 @@ async def call_openrouter_streaming(
     messages = []
 
     # System prompt for financial assistant
-    system_prompt = """You are TipHub AI, an AI-powered financial assistant for Indian stock markets.
+    system_prompt = """You are EquityPro AI, an AI-powered financial assistant for Indian stock markets.
 You help users understand stocks, market trends, and investment concepts.
 
 Guidelines:
@@ -8117,14 +8117,14 @@ Guidelines:
 @fastapi_app.post("/api/tip-tease/chat/start", tags=["AI Chat"])
 async def start_tiptease_chat(request: TipTeaseChatRequest):
     """
-    Start a new TipHub chat stream.
+    Start a new EquityPro chat stream.
 
     Returns a stream_id that can be used with the SSE endpoint.
     """
     if not OPENROUTER_API_KEY:
         raise HTTPException(
             status_code=503,
-            detail="TipHub AI is not configured. Please set OPENROUTER_API_KEY."
+            detail="EquityPro AI is not configured. Please set OPENROUTER_API_KEY."
         )
 
     stream_id = str(uuid.uuid4())
@@ -8159,7 +8159,7 @@ async def start_tiptease_chat(request: TipTeaseChatRequest):
 @fastapi_app.get("/api/tip-tease/stream/{stream_id}", tags=["AI Chat"])
 async def stream_tiptease_response(stream_id: str):
     """
-    SSE endpoint for streaming TipHub AI response.
+    SSE endpoint for streaming EquityPro AI response.
 
     Events:
         - connected: Initial connection confirmation
@@ -8249,7 +8249,7 @@ async def stream_tiptease_response(stream_id: str):
 
 @fastapi_app.post("/api/tip-tease/cancel/{stream_id}", tags=["AI Chat"])
 async def cancel_tiptease_stream(stream_id: str):
-    """Cancel a running TipHub stream."""
+    """Cancel a running EquityPro stream."""
     # Mark as cancelled
     update_tiptease_stream(stream_id, {"status": "cancelled"})
 
@@ -8268,7 +8268,7 @@ async def cancel_tiptease_stream(stream_id: str):
 @fastapi_app.get("/api/tip-tease/summary", tags=["AI Chat"])
 async def get_tiptease_summary():
     """
-    Get today's market summary and contextual hint for TipHub.
+    Get today's market summary and contextual hint for EquityPro.
 
     Returns:
         - summary: Brief market overview
@@ -8925,7 +8925,10 @@ async def ft_get_options_exposure(symbol: str, expiry: str = Query(None)):
         exposure_data = _ft_compute_exposures(chain, spot)
 
         now = datetime.now(_FT_IST)
-        asyncio.create_task(_ft_append_atm_gxoi(normalized, now, exposure_data["atm_gxoi"]))
+        try:
+            asyncio.ensure_future(_ft_append_atm_gxoi(normalized, now, exposure_data["atm_gxoi"]))
+        except Exception as e:
+            logging.warning(f"Failed to append ATM GxOI: {e}")
 
         await _ft_cache_exposure_data(normalized, exposure_data)
 
@@ -9019,7 +9022,10 @@ async def ft_get_options_surface(
         await _ft_cache_surface_data(normalized, surface_data)
 
         now = datetime.now(_FT_IST)
-        asyncio.create_task(_ft_append_surface_snapshot(normalized, now, surface_data))
+        try:
+            asyncio.ensure_future(_ft_append_surface_snapshot(normalized, now, surface_data))
+        except Exception as e:
+            logging.warning(f"Failed to append surface snapshot: {e}")
 
         if include_history:
             history = await _ft_get_surface_history(normalized)
@@ -10733,11 +10739,108 @@ async def seasonality_api(ticker: str):
     return {"data": result}
 
 
+# =============================================================================
+# Fundamental Screener Endpoints
+# =============================================================================
+
+class FundamentalScreenerRequest(BaseModel):
+    expression: str
+
+@fastapi_app.post("/api/fundamental-screener/start", tags=["Technical Analysis"])
+async def start_fundamental_screener(request: Request, body: FundamentalScreenerRequest):
+    """Start a fundamental screener job and return job_id for SSE streaming."""
+    user_id = get_task_user_id(request)
+    tier = get_task_tier(request)
+    if not check_task_limit(user_id, tier):
+        raise HTTPException(status_code=429, detail="Too many concurrent tasks. Please wait.")
+
+    expression = body.expression.strip()
+    if not expression:
+        raise HTTPException(status_code=400, detail="Expression is required")
+
+    try:
+        ConditionEvaluator(expression)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid expression: {str(e)}")
+
+    job_id = str(uuid.uuid4())
+    increment_task_count(user_id)
+
+    if not create_screener_task(job_id):
+        raise HTTPException(status_code=500, detail="Failed to create task")
+
+    _task_user_id = user_id
+
+    def run_task():
+        from server.fundamental_screener import run_fundamental_screener
+
+        if not get_screener_task(job_id):
+            decrement_task_count(_task_user_id)
+            return
+
+        def progress_cb(processed, total, matches):
+            update_screener_task(job_id, {"processed": processed, "total": total, "matches": matches})
+
+        def result_cb(result):
+            append_screener_result(job_id, result)
+
+        def abort_check():
+            return is_screener_cancelled(job_id)
+
+        try:
+            pool = get_db_pool()
+            conn = pool.getconn()
+            try:
+                summary = run_fundamental_screener(conn, expression, progress_cb, result_cb, abort_check)
+            finally:
+                pool.putconn(conn)
+
+            update_screener_task(job_id, {
+                "status": "complete",
+                "summary": summary,
+                "completed_at": time.time()
+            })
+        except Exception as e:
+            logging.exception(f"Fundamental screener task {job_id} failed")
+            update_screener_task(job_id, {
+                "status": "error",
+                "error": str(e),
+                "completed_at": time.time()
+            })
+        finally:
+            decrement_task_count(_task_user_id)
+
+    threading.Thread(target=run_task, daemon=True).start()
+    return success_response({"job_id": job_id})
+
+
+@fastapi_app.get("/api/fundamental-screener/stream/{job_id}", tags=["Technical Analysis"])
+async def stream_fundamental_screener(job_id: str):
+    """SSE stream for fundamental screener progress — reuses expert screener stream logic."""
+    return await stream_expert_screener(job_id)
+
+
+@fastapi_app.post("/api/fundamental-screener/cancel/{job_id}", tags=["Technical Analysis"])
+async def cancel_fundamental_screener(job_id: str):
+    """Cancel a running fundamental screener job."""
+    if not get_screener_task(job_id):
+        raise HTTPException(status_code=404, detail="Task not found")
+    update_screener_task(job_id, {"status": "cancelled", "completed_at": time.time()})
+    return success_response({"status": "cancelled"})
+
+
+@fastapi_app.get("/api/fundamental-screener/variables", tags=["Technical Analysis"])
+async def get_fundamental_variables():
+    """Return available fundamental variables for the screener."""
+    from server.fundamental_screener import FUNDAMENTAL_VARIABLES
+    return success_response(FUNDAMENTAL_VARIABLES)
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PYTHON_PORT", "7860"))
     is_dev = os.getenv("NODE_ENV", "development").lower() == "development"
 
-    logging.info(f"Starting Tiphub API server on port {port}")
+    logging.info(f"Starting EquityPro API server on port {port}")
     logging.info(f"Environment: {'development' if is_dev else 'production'}")
     logging.info(f"Auto-reload: {'enabled' if is_dev else 'disabled'}")
 

@@ -1,7 +1,7 @@
 /**
  * Privacy Policy Page
  *
- * Comprehensive TipHub.AI Privacy Policy with GDPR and international compliance.
+ * Comprehensive EquityPro Privacy Policy with GDPR and international compliance.
  * Covers data collection, usage, disclosure, retention, and user rights.
  */
 
@@ -29,7 +29,7 @@ export default function PrivacyPolicy() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <Shield className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">TipHub.AI Privacy Policy</h1>
+            <h1 className="text-3xl font-bold">EquityPro Privacy Policy</h1>
           </div>
           <p className="text-muted-foreground">
             Last updated: {lastUpdated}
@@ -40,7 +40,7 @@ export default function PrivacyPolicy() {
         <Card className="mb-6">
           <CardContent className="pt-6 space-y-4">
             <p className="text-muted-foreground leading-relaxed">
-              This Privacy Policy explains how TipHub.AI ("TipHub," "we," "us," or "our") collects, uses, discloses, retains, and protects Personal Information when you access our websites, applications, and related services (collectively, the "Platform"). This Policy applies to visitors ("Users") and registered customers ("Clients"), together "you" or "your."
+              This Privacy Policy explains how EquityPro ("EquityPro," "we," "us," or "our") collects, uses, discloses, retains, and protects Personal Information when you access our websites, applications, and related services (collectively, the "Platform"). This Policy applies to visitors ("Users") and registered customers ("Clients"), together "you" or "your."
             </p>
             <p className="text-muted-foreground leading-relaxed">
               By accessing or using the Platform, you acknowledge you have read and understood this Privacy Policy. If you do not agree, do not use the Platform.
@@ -72,7 +72,7 @@ export default function PrivacyPolicy() {
                 <li>account registration and administration;</li>
                 <li>communications and support;</li>
                 <li>security, fraud prevention, and compliance operations; and</li>
-                <li>any other interaction you have with TipHub through the Platform.</li>
+                <li>any other interaction you have with EquityPro through the Platform.</li>
               </ul>
               <p className="text-sm text-muted-foreground mt-3">
                 This Policy does not cover third-party websites, applications, or services you may access through links on the Platform. Their privacy practices are governed by their own policies.
@@ -358,7 +358,7 @@ export default function PrivacyPolicy() {
                 <li><strong>Market data providers:</strong> typically non-personal data; may receive limited usage signals.</li>
               </ul>
               <p className="text-sm text-muted-foreground mt-2">
-                Service providers are contractually required to protect Personal Information and use it only to provide services to TipHub.
+                Service providers are contractually required to protect Personal Information and use it only to provide services to EquityPro.
               </p>
             </div>
 
@@ -373,7 +373,7 @@ export default function PrivacyPolicy() {
                 <li>to comply with applicable law, regulation, legal process, or governmental request;</li>
                 <li>to regulators, law enforcement, or competent authorities as required;</li>
                 <li>to detect, investigate, prevent, or address fraud, security, or technical issues; and/or</li>
-                <li>to protect the rights, property, or safety of TipHub, our users, and others.</li>
+                <li>to protect the rights, property, or safety of EquityPro, our users, and others.</li>
               </ul>
             </div>
 
@@ -382,7 +382,7 @@ export default function PrivacyPolicy() {
             <div>
               <h3 className="font-semibold mb-2">5.3 Business Transfers</h3>
               <p className="text-sm text-muted-foreground">
-                If TipHub is involved in a merger, acquisition, financing, reorganization, bankruptcy, or sale of assets, Personal Information may be transferred as part of that transaction, subject to confidentiality protections and applicable law.
+                If EquityPro is involved in a merger, acquisition, financing, reorganization, bankruptcy, or sale of assets, Personal Information may be transferred as part of that transaction, subject to confidentiality protections and applicable law.
               </p>
             </div>
 
@@ -477,7 +477,7 @@ export default function PrivacyPolicy() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground text-sm">
-              The Platform is not directed to children and is not intended for use by individuals under the age of 18 (or such higher age as required by applicable law). We do not knowingly collect Personal Information from children. If you believe a child has provided Personal Information to us, contact <a href="mailto:privacy@tiphub.ai" className="text-primary hover:underline">privacy@tiphub.ai</a>.
+              The Platform is not directed to children and is not intended for use by individuals under the age of 18 (or such higher age as required by applicable law). We do not knowingly collect Personal Information from children. If you believe a child has provided Personal Information to us, contact <a href="mailto:privacy@your-domain.com" className="text-primary hover:underline">privacy@your-domain.com</a>.
             </p>
           </CardContent>
         </Card>
@@ -510,7 +510,7 @@ export default function PrivacyPolicy() {
             <div>
               <h3 className="font-semibold mb-2">10.1 How to Exercise Rights</h3>
               <p className="text-sm text-muted-foreground">
-                Email us at <a href="mailto:privacy@tiphub.ai" className="text-primary hover:underline">privacy@tiphub.ai</a>. We may request information to verify your identity and authority. We will respond within the timeframe required by applicable law.
+                Email us at <a href="mailto:privacy@your-domain.com" className="text-primary hover:underline">privacy@your-domain.com</a>. We may request information to verify your identity and authority. We will respond within the timeframe required by applicable law.
               </p>
             </div>
 
@@ -524,7 +524,7 @@ export default function PrivacyPolicy() {
               <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 ml-2">
                 <li>using unsubscribe links in emails;</li>
                 <li>adjusting account preferences (if available); or</li>
-                <li>contacting us at <a href="mailto:privacy@tiphub.ai" className="text-primary hover:underline">privacy@tiphub.ai</a>.</li>
+                <li>contacting us at <a href="mailto:privacy@your-domain.com" className="text-primary hover:underline">privacy@your-domain.com</a>.</li>
               </ul>
               <p className="text-sm text-muted-foreground mt-2">
                 Even if you opt out of marketing, we may still send non-marketing service communications (e.g., security alerts and account notices).
@@ -545,7 +545,7 @@ export default function PrivacyPolicy() {
             <div>
               <h3 className="font-semibold mb-2">10.4 Appeals (Where Applicable)</h3>
               <p className="text-sm text-muted-foreground">
-                If we deny your request, you may have the right to appeal our decision, where required by law. To appeal, contact <a href="mailto:privacy@tiphub.ai" className="text-primary hover:underline">privacy@tiphub.ai</a> with "Privacy Rights Appeal" in the subject line.
+                If we deny your request, you may have the right to appeal our decision, where required by law. To appeal, contact <a href="mailto:privacy@your-domain.com" className="text-primary hover:underline">privacy@your-domain.com</a> with "Privacy Rights Appeal" in the subject line.
               </p>
             </div>
           </CardContent>
@@ -572,10 +572,10 @@ export default function PrivacyPolicy() {
             <div>
               <h3 className="font-semibold mb-2">11.2 United States (State Privacy Laws, Where Applicable)</h3>
               <p className="text-sm text-muted-foreground mb-2">
-                Depending on your state of residence, you may have additional rights, such as the right to opt out of certain "sales" or "sharing" of Personal Information for targeted advertising. To the extent applicable, TipHub will provide required notices and opt-out mechanisms.
+                Depending on your state of residence, you may have additional rights, such as the right to opt out of certain "sales" or "sharing" of Personal Information for targeted advertising. To the extent applicable, EquityPro will provide required notices and opt-out mechanisms.
               </p>
               <p className="text-sm text-muted-foreground">
-                <strong>Note:</strong> TipHub does not knowingly "sell" Personal Information in the traditional sense for monetary consideration; however, certain analytics/advertising relationships may be considered "sharing" under some state laws depending on implementation.
+                <strong>Note:</strong> EquityPro does not knowingly "sell" Personal Information in the traditional sense for monetary consideration; however, certain analytics/advertising relationships may be considered "sharing" under some state laws depending on implementation.
               </p>
             </div>
           </CardContent>
@@ -618,8 +618,8 @@ export default function PrivacyPolicy() {
             </p>
             <p className="mt-3">
               <strong className="text-foreground">Email:</strong>{' '}
-              <a href="mailto:privacy@tiphub.ai" className="text-primary hover:underline">
-                privacy@tiphub.ai
+              <a href="mailto:privacy@your-domain.com" className="text-primary hover:underline">
+                privacy@your-domain.com
               </a>
             </p>
           </CardContent>

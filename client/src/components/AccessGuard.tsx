@@ -32,7 +32,7 @@ export default function AccessGuard({
           <CardContent className="space-y-4 text-center text-muted-foreground">
             <p>
               This workspace requires an authenticated session. Log in or create
-              an account to continue exploring TipHub.
+              an account to continue exploring EquityPro.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Button asChild>
@@ -79,7 +79,7 @@ export default function AccessGuard({
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Button asChild>
-              <a href="mailto:sales@tiphub.example.com?subject=Premium%20Access">
+              <a href="mailto:sales@your-domain.com?subject=Premium%20Access">
                 <Sparkles className="h-4 w-4 mr-2" />
                 Contact sales
               </a>

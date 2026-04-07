@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { TiphubLogo } from "@/components/TiphubLogo";
+import { EquityProLogo } from "@/components/TiphubLogo";
 
 export default function Footer() {
   const footerSections = [
@@ -45,7 +45,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
           <div className="col-span-2 md:col-span-4 lg:col-span-1">
             <Link href="/">
-              <TiphubLogo size="lg" className="cursor-pointer" />
+              <EquityProLogo size="lg" className="cursor-pointer" />
             </Link>
             <p className="text-sm text-muted-foreground mt-4">
               For the people.
@@ -74,7 +74,7 @@ export default function Footer() {
 
         <div className="border-t border-border mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © 2026 Tiphub. All rights reserved.
+            © 2026 EquityPro. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <Link href="#">

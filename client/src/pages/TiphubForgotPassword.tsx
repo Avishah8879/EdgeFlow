@@ -20,7 +20,7 @@ import { Link, useLocation } from "wouter";
 import { useRequestPasswordReset, useResetPassword } from "@/hooks/use-password-reset";
 import { toast } from "sonner";
 import { SEO } from "@/components/SEO";
-import { TiphubLogo } from "@/components/TiphubLogo";
+import { EquityProLogo } from "@/components/TiphubLogo";
 import { HalvorsenAttractor } from "@/components/HalvorsenAttractor";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +34,7 @@ type FieldErrors = {
 
 const RESEND_SECONDS = 30;
 
-export default function TiphubForgotPassword() {
+export default function EquityProForgotPassword() {
   const [, setLocation] = useLocation();
   const [step, setStep] = useState<Step>(1);
   const [email, setEmail] = useState("");
@@ -154,8 +154,8 @@ export default function TiphubForgotPassword() {
   return (
     <>
       <SEO
-        title="Reset Password - Tiphub"
-        description="Reset your Tiphub password securely."
+        title="Reset Password - EquityPro"
+        description="Reset your EquityPro password securely."
         noIndex={true}
       />
       <div className="relative min-h-svh overflow-hidden">
@@ -166,7 +166,7 @@ export default function TiphubForgotPassword() {
         <div className="relative z-10 flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10 pointer-events-none">
           <div className="flex w-full max-w-sm flex-col gap-6 pointer-events-auto">
             <Link href="/" className="flex items-center gap-2 self-center">
-              <TiphubLogo size="md" />
+              <EquityProLogo size="md" />
             </Link>
             <div className="flex flex-col gap-6">
               {/* Step 1: Email */}

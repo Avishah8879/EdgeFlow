@@ -1,13 +1,23 @@
 /**
- * PlotlyChart - Wrapper for react-plotly.js using bundled plotly.js
+ * PlotlyChart - Wrapper for react-plotly.js that works with CDN-loaded Plotly
  *
- * Uses the bundled plotly.js npm package rather than CDN loading,
- * which is more reliable and avoids window.Plotly undefined crashes.
+ * Uses window.Plotly (loaded from CDN in index.html) via the factory pattern.
+ * This avoids bundling plotly.js which has Node.js stream dependencies
+ * that cannot be polyfilled in Vite browser builds.
  */
-import Plotly from 'plotly.js';
-import createPlotlyComponent from 'react-plotly.js/factory';
+import _createPlotlyComponent from 'react-plotly.js/factory';
 
-// Create the Plot component using the bundled Plotly instance
-const PlotlyChart = createPlotlyComponent(Plotly as any);
+// Declare the global Plotly type from CDN
+declare global {
+  interface Window {
+    Plotly: typeof import('plotly.js');
+  }
+}
+
+// react-plotly.js/factory is CommonJS — Vite may wrap it, so unwrap .default if needed
+const createPlotlyComponent: typeof _createPlotlyComponent =
+  (_createPlotlyComponent as any).default ?? _createPlotlyComponent;
+
+const PlotlyChart = createPlotlyComponent(window.Plotly);
 
 export default PlotlyChart;

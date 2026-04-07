@@ -14,14 +14,14 @@ export function CodeExamples({ apiKey }: CodeExamplesProps) {
 
   const examples = {
     curl: `curl -H "X-API-Key: ${placeholder}" \\
-  https://tiphub.ai/v1/api/stocks?limit=5`,
+  https://your-domain.com/v1/api/stocks?limit=5`,
     python: `import requests
 
 headers = {"X-API-Key": "${placeholder}"}
 
 # Fetch stocks
 response = requests.get(
-    "https://tiphub.ai/v1/api/stocks",
+    "https://your-domain.com/v1/api/stocks",
     headers=headers,
     params={"limit": 5}
 )
@@ -31,14 +31,14 @@ print(data["meta"])  # Pagination info`,
     javascript: `const API_KEY = "${placeholder}";
 
 const response = await fetch(
-  "https://tiphub.ai/v1/api/stocks?limit=5",
+  "https://your-domain.com/v1/api/stocks?limit=5",
   { headers: { "X-API-Key": API_KEY } }
 );
 const { data, meta } = await response.json();
 console.log(data);  // List of stocks
 console.log(meta);  // Pagination info`,
     sse: `// SSE streams (e.g. screener) — pass key as query param
-const url = "https://tiphub.ai/v1/api/expert-screener/stream/JOB_ID"
+const url = "https://your-domain.com/v1/api/expert-screener/stream/JOB_ID"
   + "?api_key=${placeholder}";
 const source = new EventSource(url);
 

@@ -338,7 +338,7 @@ export default function Screener() {
         jsonLd={[
           generateFAQSchema(SCREENER_FAQS),
           generateSoftwareApplicationSchema(
-            'Tiphub Expert Screener - AI Stock Screening Tool',
+            'EquityPro Expert Screener - AI Stock Screening Tool',
             'Free AI-powered expert screener for Indian stocks. Screen NSE stocks using technical indicators like SMA, EMA, RSI, MACD with boolean expressions.',
             ['Technical Screener', 'Stock Filter', 'NSE Screener', 'AI Stock Analysis', 'Boolean Expression Screener']
           ),

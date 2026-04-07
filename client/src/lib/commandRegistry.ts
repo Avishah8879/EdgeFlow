@@ -267,7 +267,7 @@ export const commands: Command[] = [
   {
     id: 'alpha-generation',
     title: 'Alpha Generation',
-    description: 'Open Tiphub Alpha Generation Lab in a new tab',
+    description: 'Open EquityPro Alpha Generation Lab in a new tab',
     shortcut: 'ALPHA',
     aliases: ['ALPHA', 'GEN', 'ALPHAGEN'],
     keywords: ['alpha', 'generation', 'strategy', 'diffusion', 'ga'],
@@ -275,7 +275,7 @@ export const commands: Command[] = [
     icon: Brain,
     iconColor: 'text-primary',
     action: () => {
-      window.open('https://tiphub.ai/alpha-generation', '_blank');
+      window.open('https://your-domain.com/alpha-generation', '_blank');
     }
   },
   {

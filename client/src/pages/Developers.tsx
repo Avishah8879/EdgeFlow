@@ -65,8 +65,8 @@ export default function Developers() {
   return (
     <>
       <SEO
-        title="Developer API - Tiphub"
-        description="Access Tiphub market data programmatically. Manage API keys, view usage, and explore code examples."
+        title="Developer API - EquityPro"
+        description="Access EquityPro market data programmatically. Manage API keys, view usage, and explore code examples."
         noIndex
       />
 
@@ -77,7 +77,7 @@ export default function Developers() {
             <div>
               <h1 className="text-3xl font-bold">Developer API</h1>
               <p className="text-muted-foreground mt-1">
-                Access Tiphub market data, screener, and analytics
+                Access EquityPro market data, screener, and analytics
                 programmatically.
               </p>
             </div>
@@ -147,7 +147,7 @@ export default function Developers() {
                     <Key className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
                     <h3 className="font-medium mb-1">No API keys yet</h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Create your first API key to start using the Tiphub API.
+                      Create your first API key to start using the EquityPro API.
                     </p>
                     <CreateKeyDialog
                       onCreate={handleCreate}
@@ -175,7 +175,7 @@ export default function Developers() {
                     <div className="space-y-1">
                       <p className="text-sm font-medium">Base URL</p>
                       <code className="text-sm font-mono bg-muted px-2 py-1 rounded block">
-                        https://tiphub.ai/v1/api/
+                        https://your-domain.com/v1/api/
                       </code>
                     </div>
                     <div className="space-y-1">

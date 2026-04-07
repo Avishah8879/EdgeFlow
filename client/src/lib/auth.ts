@@ -1,4 +1,4 @@
-const STORAGE_KEY = "tiphub.auth.session";
+const STORAGE_KEY = "equitypro.auth.session";
 
 export type UserTier = "basic" | "premium";
 export type SubscriptionStatus = "none" | "trialing" | "active" | "cancelled" | "expired";

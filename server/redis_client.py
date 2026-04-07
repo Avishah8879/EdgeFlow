@@ -339,6 +339,7 @@ TTL_QUOTE = 60                      # 1 minute (matches LTP freshness)
 TTL_QUOTE_HISTORICAL = 300          # 5 minutes (candles change less frequently)
 TTL_PATTERN_SEARCH = 900            # 15 minutes (pattern scan is expensive, results stable)
 TTL_SEASONALITY = 3600              # 1 hour (historical seasonality changes slowly)
+TTL_FUNDAMENTAL_SCREENER = 600      # 10 minutes (fundamentals update infrequently)
 
 
 def make_indicator_key(ticker: str, timeframe: str = "1hour") -> str:

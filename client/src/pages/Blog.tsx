@@ -18,7 +18,7 @@ const blogPosts: BlogPost[] = [
   {
     slug: "advanced-strategies",
     title: "The Search for Alpha: A Complete Guide to Strategy Development",
-    description: "Learn how institutional traders generate alpha and how you can apply the same quantitative approach using Tiphub's strategy backtesting engine.",
+    description: "Learn how institutional traders generate alpha and how you can apply the same quantitative approach using EquityPro's strategy backtesting engine.",
     date: "2025-01-15",
     readTime: "8 min read",
     category: "Strategy",

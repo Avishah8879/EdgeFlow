@@ -181,10 +181,10 @@ app.use((req, res, next) => {
     log('[AUTH] ⚠️  WARNING: Authentication database connection failed. V2 auth may not work.');
   }
 
-  // Mount FinTerminal-specific routes (chart, options, streaming, watchlist, layouts, forum)
+  // Mount EquityPro-specific routes (chart, options, streaming, watchlist, layouts, forum)
   const { registerTerminalRoutes } = await import('./routes-terminal.js');
   registerTerminalRoutes(app);
-  log('[TERMINAL] FinTerminal routes mounted');
+  log('[TERMINAL] EquityPro routes mounted');
 
   const server = await registerRoutes(app);
 

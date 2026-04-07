@@ -89,7 +89,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
       </div>
 
       {/* Plotly Charts */}
-      <div className="flex-1 min-h-0 rounded border border-border overflow-hidden">
+      <div className="flex-1 min-h-[500px] rounded border border-border overflow-hidden">
         <Plot
           data={[
             // Trace 0: GxOI (Net CE - PE) - Row 1

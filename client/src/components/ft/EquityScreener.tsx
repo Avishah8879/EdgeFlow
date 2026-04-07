@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   X,
   Search,
+  BarChart3,
+  TrendingUp,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -21,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { StockChart } from "@/components/ft/StockChart";
+import { FundamentalScreenerTab } from "@/components/ft/FundamentalScreenerTab";
 
 interface ScreenerRow {
   symbol: string;
@@ -153,6 +156,7 @@ const csvEscape = (value: unknown) => {
 };
 
 export function EquityScreener() {
+  const [activeTab, setActiveTab] = useState<"technical" | "fundamental">("technical");
   const [expression, setExpression] = useState(defaultExpression);
   const [customSymbolsInput, setCustomSymbolsInput] = useState("");
   const [visibleMetrics, setVisibleMetrics] = useState<string[]>([]);
@@ -301,6 +305,39 @@ export function EquityScreener() {
   return (
     <ScrollArea className="h-full">
       <div className="flex min-h-full flex-col gap-4 pr-4">
+
+      {/* Tab Toggle: Technical / Fundamental */}
+      <div className="flex gap-1 rounded-lg border border-[#1f1f1f] bg-black/40 p-1">
+        <button
+          onClick={() => setActiveTab("technical")}
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-4 py-2 text-xs font-medium transition-colors",
+            activeTab === "technical"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+          )}
+        >
+          <TrendingUp className="w-3.5 h-3.5" />
+          Technical
+        </button>
+        <button
+          onClick={() => setActiveTab("fundamental")}
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-4 py-2 text-xs font-medium transition-colors",
+            activeTab === "fundamental"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+          )}
+        >
+          <BarChart3 className="w-3.5 h-3.5" />
+          Fundamental
+        </button>
+      </div>
+
+      {activeTab === "fundamental" ? (
+        <FundamentalScreenerTab />
+      ) : (
+      <>
       <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
         <div className="rounded-lg border border-[#1f1f1f] bg-black/40 p-4 shadow-lg shadow-black/30">
           <div className="mb-3 flex items-center justify-between">
@@ -711,6 +748,8 @@ export function EquityScreener() {
             </ScrollArea>
           </div>
         </div>
+      )}
+      </>
       )}
       </div>
     </ScrollArea>

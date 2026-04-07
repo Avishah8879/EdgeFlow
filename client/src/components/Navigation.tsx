@@ -27,7 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { TiphubLogo } from "@/components/TiphubLogo";
+import { EquityProLogo } from "@/components/TiphubLogo";
 import MarketStatusBadge from "@/components/MarketStatusBadge";
 import { SearchBar } from "@/components/search";
 import { cn } from "@/lib/utils";
@@ -97,15 +97,15 @@ export default function Navigation() {
       pageKey: "backtest",
     },
     {
-      label: "TipHub AI",
+      label: "EquityPro AI",
       path: "/tip-tease",
       icon: Bot,
       requiredTier: "premium",
       pageKey: "tip-tease",
     },
     {
-      label: "FinTerminal",
-      href: import.meta.env.VITE_FINTERMINAL_URL || "https://finterminal.ai/",
+      label: "EquityPro Terminal",
+      href: import.meta.env.VITE_FINTERMINAL_URL || "https://your-domain.com/",
       external: true,
       icon: Monitor,
     },
@@ -142,7 +142,7 @@ export default function Navigation() {
               asChild
             >
               <div data-testid="link-home">
-                <TiphubLogo size="lg" />
+                <EquityProLogo size="lg" />
               </div>
             </Button>
           </Link>
@@ -358,7 +358,7 @@ export default function Navigation() {
                 href="/login"
                 className="login-button"
                 data-testid="button-login"
-                aria-label="TipHub Login"
+                aria-label="EquityPro Login"
               >
                 <span className="login-button-inner">
                   <LogIn />
