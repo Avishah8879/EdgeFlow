@@ -71,7 +71,7 @@ export default defineConfig({
       deny: ["**/.*"],
     },
     hmr: {
-      port: 5000,
+      port: 3000,
     },
   },
 });
