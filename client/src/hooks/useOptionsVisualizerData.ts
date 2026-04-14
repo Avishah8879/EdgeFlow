@@ -12,6 +12,12 @@ export interface StrikeExposure {
   ce_gex: number;
   pe_gex: number;
   net_gex: number;
+  ce_vxoi: number;
+  pe_vxoi: number;
+  net_vxoi: number;
+  ce_vex: number;
+  pe_vex: number;
+  net_vex: number;
   ce_oi: number;
   pe_oi: number;
   ce_iv: number;

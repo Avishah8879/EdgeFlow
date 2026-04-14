@@ -58,6 +58,8 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
   const strikes = filteredExposure.map((item) => item.strike);
   const gxoiValues = filteredExposure.map((item) => item.net_gxoi);
   const gexValues = filteredExposure.map((item) => item.net_gex);
+  const vxoiValues = filteredExposure.map((item) => item.net_vxoi);
+  const vexValues = filteredExposure.map((item) => item.net_vex);
 
   return (
     <div className="h-full flex flex-col gap-2 p-2 overflow-hidden">
@@ -89,7 +91,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
       </div>
 
       {/* Plotly Charts */}
-      <div className="flex-1 min-h-[500px] rounded border border-border overflow-hidden">
+      <div className="flex-1 min-h-[700px] rounded border border-border overflow-hidden">
         <Plot
           data={[
             // Trace 0: GxOI (Net CE - PE) - Row 1
@@ -116,7 +118,19 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               xaxis: 'x2',
               yaxis: 'y2',
             },
-            // Trace 2: ATM GxOI Time Series - Row 3
+            // Trace 2: VxOI (Vega Exposure) - Row 3
+            {
+              type: 'scatter' as const,
+              x: strikes,
+              y: vxoiValues,
+              fill: 'tozeroy',
+              fillcolor: 'rgba(147, 51, 234, 0.4)',
+              line: { color: '#a855f7', width: 2 },
+              name: 'VxOI',
+              xaxis: 'x3',
+              yaxis: 'y3',
+            },
+            // Trace 3: ATM GxOI Time Series - Row 4
             {
               type: 'scatter' as const,
               x: formattedTimeSeries.times,
@@ -125,8 +139,8 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               line: { color: 'white', width: 2 },
               marker: { color: 'white', size: 4 },
               name: 'ATM GxOI',
-              xaxis: 'x3',
-              yaxis: 'y3',
+              xaxis: 'x4',
+              yaxis: 'y4',
             },
           ]}
           layout={{
@@ -137,15 +151,15 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
             font: { color: '#38bdf8', family: 'monospace', size: 10 },
             showlegend: false,
 
-            // Grid layout: 3 rows
+            // Grid layout: 4 rows
             grid: {
-              rows: 3,
+              rows: 4,
               columns: 1,
               pattern: 'independent' as const,
               roworder: 'top to bottom' as const,
             },
 
-            // Row 1: GxOI
+            // Row 1: GxOI (top 25%)
             xaxis: {
               domain: [0, 1],
               anchor: 'y',
@@ -155,7 +169,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               zerolinecolor: 'rgba(128, 128, 128, 0.5)',
             },
             yaxis: {
-              domain: [0.72, 1],
+              domain: [0.78, 1],
               anchor: 'x',
               title: { text: 'GxOI (Net CE - PE)', font: { color: '#38bdf8', size: 10 } },
               tickfont: { color: '#38bdf8', size: 9 },
@@ -173,7 +187,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               zerolinecolor: 'rgba(128, 128, 128, 0.5)',
             },
             yaxis2: {
-              domain: [0.38, 0.66],
+              domain: [0.53, 0.74],
               anchor: 'x2',
               title: { text: 'GEX (Rs)', font: { color: '#38bdf8', size: 10 } },
               tickfont: { color: '#38bdf8', size: 9 },
@@ -181,25 +195,43 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               zerolinecolor: 'rgba(128, 128, 128, 0.5)',
             },
 
-            // Row 3: Time Series
+            // Row 3: VxOI (Vega Exposure)
             xaxis3: {
-              type: 'date',
               domain: [0, 1],
               anchor: 'y3',
+              title: { text: 'Strike Price', font: { color: '#38bdf8', size: 10 } },
+              tickfont: { color: '#38bdf8', size: 9 },
+              gridcolor: 'rgba(128, 128, 128, 0.3)',
+              zerolinecolor: 'rgba(128, 128, 128, 0.5)',
+            },
+            yaxis3: {
+              domain: [0.28, 0.49],
+              anchor: 'x3',
+              title: { text: 'VxOI (Net CE - PE)', font: { color: '#a855f7', size: 10 } },
+              tickfont: { color: '#a855f7', size: 9 },
+              gridcolor: 'rgba(128, 128, 128, 0.3)',
+              zerolinecolor: 'rgba(128, 128, 128, 0.5)',
+            },
+
+            // Row 4: Time Series
+            xaxis4: {
+              type: 'date',
+              domain: [0, 1],
+              anchor: 'y4',
               title: { text: 'Time', font: { color: '#38bdf8', size: 10 } },
               tickfont: { color: '#38bdf8', size: 9 },
               tickformat: '%H:%M\n%b %d',
               gridcolor: 'rgba(128, 128, 128, 0.3)',
             },
-            yaxis3: {
-              domain: [0, 0.30],
-              anchor: 'x3',
+            yaxis4: {
+              domain: [0, 0.22],
+              anchor: 'x4',
               title: { text: 'ATM GxOI', font: { color: '#38bdf8', size: 10 } },
               tickfont: { color: '#38bdf8', size: 9 },
               gridcolor: 'rgba(128, 128, 128, 0.3)',
             },
 
-            // Vertical spot price lines on charts 1 and 2
+            // Vertical spot price lines on charts 1, 2, and 3
             shapes: [
               {
                 type: 'line',
@@ -207,7 +239,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
                 yref: 'paper',
                 x0: spot,
                 x1: spot,
-                y0: 0.72,
+                y0: 0.78,
                 y1: 1,
                 line: { color: 'yellow', dash: 'dot', width: 1 },
               },
@@ -217,8 +249,18 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
                 yref: 'paper',
                 x0: spot,
                 x1: spot,
-                y0: 0.38,
-                y1: 0.66,
+                y0: 0.53,
+                y1: 0.74,
+                line: { color: 'yellow', dash: 'dot', width: 1 },
+              },
+              {
+                type: 'line',
+                xref: 'x3',
+                yref: 'paper',
+                x0: spot,
+                x1: spot,
+                y0: 0.28,
+                y1: 0.49,
                 line: { color: 'yellow', dash: 'dot', width: 1 },
               },
             ],
@@ -241,7 +283,17 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
                 showarrow: false,
                 x: 0.5,
                 xref: 'paper',
-                y: 0.68,
+                y: 0.76,
+                yref: 'paper',
+                xanchor: 'center',
+              },
+              {
+                text: 'Vega Exposure (VxOI)',
+                font: { color: '#a855f7', size: 11 },
+                showarrow: false,
+                x: 0.5,
+                xref: 'paper',
+                y: 0.51,
                 yref: 'paper',
                 xanchor: 'center',
               },
@@ -251,7 +303,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
                 showarrow: false,
                 x: 0.5,
                 xref: 'paper',
-                y: 0.32,
+                y: 0.24,
                 yref: 'paper',
                 xanchor: 'center',
               },

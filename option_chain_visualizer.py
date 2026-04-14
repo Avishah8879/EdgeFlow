@@ -142,6 +142,31 @@ def bs_gamma(S: float, K: float, T: float, r: float, sigma: float) -> float:
         return 0.0
 
 
+def bs_vega(S: float, K: float, T: float, r: float, sigma: float) -> float:
+    """
+    Calculate Black-Scholes vega (sensitivity of option price to volatility).
+
+    Args:
+        S: Spot price
+        K: Strike price
+        T: Time to expiry in years
+        r: Risk-free rate (decimal)
+        sigma: Implied volatility (decimal, e.g., 0.20 for 20%)
+
+    Returns:
+        Vega value (change in option price per 1% change in IV)
+    """
+    if S <= 0 or K <= 0 or sigma <= 0 or T <= 0:
+        return 0.0
+
+    try:
+        d1 = (math.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * math.sqrt(T))
+        vega = S * norm.pdf(d1) * math.sqrt(T) / 100  # Per 1% IV change
+        return vega
+    except (ValueError, ZeroDivisionError):
+        return 0.0
+
+
 def time_to_expiry_years(expiry_str: str) -> float:
     """
     Calculate time to expiry in years.
@@ -229,9 +254,17 @@ def compute_exposures(chain_data: Dict[str, Any], spot: float) -> Dict[str, Any]
         ce_gamma = bs_gamma(spot, strike, T, RISK_FREE_RATE, ce_iv) if ce_iv > 0.001 else 0
         pe_gamma = bs_gamma(spot, strike, T, RISK_FREE_RATE, pe_iv) if pe_iv > 0.001 else 0
 
+        # Calculate vegas
+        ce_vega = bs_vega(spot, strike, T, RISK_FREE_RATE, ce_iv) if ce_iv > 0.001 else 0
+        pe_vega = bs_vega(spot, strike, T, RISK_FREE_RATE, pe_iv) if pe_iv > 0.001 else 0
+
         # GxOI = Gamma * OI (raw gamma exposure)
         ce_gxoi = ce_gamma * ce_oi
         pe_gxoi = pe_gamma * pe_oi
+
+        # VxOI = Vega * OI (raw vega exposure)
+        ce_vxoi = ce_vega * ce_oi
+        pe_vxoi = pe_vega * pe_oi
 
         # GEX (SqueezeMetrics formula):
         # Dealers are typically short options, so:
@@ -240,8 +273,14 @@ def compute_exposures(chain_data: Dict[str, Any], spot: float) -> Dict[str, Any]
         ce_gex = ce_gxoi * spot * 100  # Scale by spot and contract size
         pe_gex = -pe_gxoi * spot * 100  # Negative for puts
 
+        # VEX (Vega Exposure): same dealer-short logic
+        ce_vex = ce_vxoi * 100   # Scale by contract size
+        pe_vex = -pe_vxoi * 100  # Negative for puts
+
         net_gxoi = ce_gxoi - pe_gxoi
         net_gex = ce_gex + pe_gex
+        net_vxoi = ce_vxoi - pe_vxoi
+        net_vex = ce_vex + pe_vex
         total_gex += net_gex
 
         exposures.append({
@@ -252,6 +291,12 @@ def compute_exposures(chain_data: Dict[str, Any], spot: float) -> Dict[str, Any]
             "ce_gex": round(ce_gex, 2),
             "pe_gex": round(pe_gex, 2),
             "net_gex": round(net_gex, 2),
+            "ce_vxoi": round(ce_vxoi, 4),
+            "pe_vxoi": round(pe_vxoi, 4),
+            "net_vxoi": round(net_vxoi, 4),
+            "ce_vex": round(ce_vex, 2),
+            "pe_vex": round(pe_vex, 2),
+            "net_vex": round(net_vex, 2),
             "ce_oi": ce_oi,
             "pe_oi": pe_oi,
             "ce_iv": round(ce_iv * 100, 2),
