@@ -742,6 +742,10 @@ export function GraphComparisonPanel() {
                           stroke="#9ca3af"
                           tick={{ fontSize: 10 }}
                           tickFormatter={(value) => `${value}%`}
+                          domain={residualStdDev > 0 ? [
+                            (dataMin: number) => Math.min(dataMin, -2.5 * residualStdDev),
+                            (dataMax: number) => Math.max(dataMax, 2.5 * residualStdDev),
+                          ] : ['auto', 'auto']}
                         />
                         <Tooltip
                           contentStyle={{
