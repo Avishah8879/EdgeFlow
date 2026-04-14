@@ -283,6 +283,14 @@ export function GraphComparisonPanel() {
     }));
   }, [pairScatterData, effectiveBeta]);
 
+  const residualStdDev = useMemo(() => {
+    if (residualsData.length < 2) return 0;
+    const values = residualsData.map((d) => d.residual);
+    const mean = values.reduce((a, b) => a + b, 0) / values.length;
+    const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / (values.length - 1);
+    return Math.sqrt(variance);
+  }, [residualsData]);
+
   const calculateStats = useCallback(() => {
     if (!normalizedData || normalizedData.length === 0) return {};
 
@@ -744,6 +752,24 @@ export function GraphComparisonPanel() {
                           formatter={(value: any) => `${value}%`}
                         />
                         <ReferenceLine y={0} stroke="#4b5563" strokeDasharray="4 2" />
+                        {residualStdDev > 0 && (
+                          <ReferenceLine
+                            y={parseFloat((2 * residualStdDev).toFixed(4))}
+                            stroke="#22c55e"
+                            strokeDasharray="6 3"
+                            strokeWidth={1}
+                            label={{ value: `+2σ (${(2 * residualStdDev).toFixed(2)}%)`, position: 'right', fill: '#22c55e', fontSize: 9 }}
+                          />
+                        )}
+                        {residualStdDev > 0 && (
+                          <ReferenceLine
+                            y={parseFloat((-2 * residualStdDev).toFixed(4))}
+                            stroke="#ef4444"
+                            strokeDasharray="6 3"
+                            strokeWidth={1}
+                            label={{ value: `-2σ (${(-2 * residualStdDev).toFixed(2)}%)`, position: 'right', fill: '#ef4444', fontSize: 9 }}
+                          />
+                        )}
                         <Line
                           type="monotone"
                           dataKey="residual"
