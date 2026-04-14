@@ -62,7 +62,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
   const vexValues = filteredExposure.map((item) => item.net_vex);
 
   return (
-    <div className="h-full flex flex-col gap-2 p-2 overflow-hidden">
+    <div className="flex flex-col gap-2 p-2 overflow-auto">
       {/* Header with key metrics */}
       <div className="flex items-center justify-between px-2 py-1 bg-sidebar rounded border border-border">
         <div className="flex gap-4 text-[10px] font-mono uppercase">
@@ -91,7 +91,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
       </div>
 
       {/* Plotly Charts */}
-      <div className="flex-1 min-h-[700px] rounded border border-border overflow-hidden">
+      <div className="h-[900px] rounded border border-border overflow-hidden">
         <Plot
           data={[
             // Trace 0: GxOI (Net CE - PE) - Row 1
