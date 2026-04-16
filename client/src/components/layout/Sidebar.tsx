@@ -90,11 +90,9 @@ const navSections: NavSection[] = [
     items: [
       { label: "Expert Screener", href: "/screener", icon: Search },
       { label: "Fundamental Scanner", href: "/equity-screener", icon: ListChecks },
-      { label: "Alpha Generation", href: "/alpha-generation", icon: Rocket },
       { label: "Pattern Search", href: "/pattern-search", icon: Eye },
       { label: "Systematic Patterns", href: "/systematic-patterns", icon: Brain },
       { label: "Seasonality", href: "/seasonality", icon: Calendar },
-      { label: "TipTease AI", href: "/tip-tease", icon: MessageSquare },
     ],
   },
   {
@@ -105,13 +103,11 @@ const navSections: NavSection[] = [
       { label: "Calculator", href: "/calculator", icon: Calculator },
       { label: "Notes", href: "/notes", icon: StickyNote },
       { label: "Saved Results", href: "/saved-results", icon: Bookmark },
-      { label: "Developer API", href: "/developers", icon: Code },
     ],
   },
   {
     title: "COMMUNITY",
     items: [
-      { label: "Forum", href: "/forum", icon: MessageSquare },
       { label: "Blog", href: "/blog", icon: FileText },
       { label: "Market Reports", href: "/market-reports", icon: FileText },
     ],
@@ -119,7 +115,6 @@ const navSections: NavSection[] = [
   {
     title: "ADMIN",
     items: [
-      { label: "Admin Dashboard", href: "/admin", icon: Shield },
     ],
   },
   {

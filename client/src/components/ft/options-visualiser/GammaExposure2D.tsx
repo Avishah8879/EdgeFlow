@@ -126,7 +126,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               fill: 'tozeroy',
               fillcolor: 'rgba(147, 51, 234, 0.4)',
               line: { color: '#a855f7', width: 2 },
-              name: 'VxOI',
+              name: 'Vega',
               xaxis: 'x3',
               yaxis: 'y3',
             },
@@ -207,7 +207,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
             yaxis3: {
               domain: [0.28, 0.49],
               anchor: 'x3',
-              title: { text: 'VxOI (Net CE - PE)', font: { color: '#a855f7', size: 10 } },
+              title: { text: 'Vega (Net CE - PE)', font: { color: '#a855f7', size: 10 } },
               tickfont: { color: '#a855f7', size: 9 },
               gridcolor: 'rgba(128, 128, 128, 0.3)',
               zerolinecolor: 'rgba(128, 128, 128, 0.5)',
@@ -288,7 +288,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
                 xanchor: 'center',
               },
               {
-                text: 'Vega Exposure (VxOI)',
+                text: 'Vega',
                 font: { color: '#a855f7', size: 11 },
                 showarrow: false,
                 x: 0.5,
