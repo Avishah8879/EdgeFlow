@@ -58,8 +58,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
   const strikes = filteredExposure.map((item) => item.strike);
   const gxoiValues = filteredExposure.map((item) => item.net_gxoi);
   const gexValues = filteredExposure.map((item) => item.net_gex);
-  const vxoiValues = filteredExposure.map((item) => item.net_vxoi);
-  const vexValues = filteredExposure.map((item) => item.net_vex);
+  const vegaValues = filteredExposure.map((item) => item.net_vega);
 
   return (
     <div className="flex flex-col gap-2 p-2 overflow-auto">
@@ -118,11 +117,11 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               xaxis: 'x2',
               yaxis: 'y2',
             },
-            // Trace 2: VxOI (Vega Exposure) - Row 3
+            // Trace 2: Raw Vega (CE - PE) - Row 3
             {
               type: 'scatter' as const,
               x: strikes,
-              y: vxoiValues,
+              y: vegaValues,
               fill: 'tozeroy',
               fillcolor: 'rgba(147, 51, 234, 0.4)',
               line: { color: '#a855f7', width: 2 },
@@ -207,7 +206,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
             yaxis3: {
               domain: [0.28, 0.49],
               anchor: 'x3',
-              title: { text: 'Vega (Net CE - PE)', font: { color: '#a855f7', size: 10 } },
+              title: { text: 'Vega (CE - PE)', font: { color: '#a855f7', size: 10 } },
               tickfont: { color: '#a855f7', size: 9 },
               gridcolor: 'rgba(128, 128, 128, 0.3)',
               zerolinecolor: 'rgba(128, 128, 128, 0.5)',
