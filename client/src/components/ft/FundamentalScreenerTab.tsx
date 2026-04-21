@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Loader2, PlayCircle, X, Info, Sparkles } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,11 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useFundamentalScreener } from "@/hooks/use-fundamental-screener";
 import type { FundamentalResult } from "@/hooks/use-fundamental-screener";
+import { ModeToggle, type ScreenerMode } from "@/components/screener/ModeToggle";
+import { ConditionBuilder } from "@/components/screener/ConditionBuilder";
+import { compile, isEmpty } from "@/lib/screener/compile";
+import { parse } from "@/lib/screener/parse";
+import type { BuilderTree } from "@/lib/screener/types";
 
 const fundamentalPresets = [
   {
@@ -89,6 +94,68 @@ function friendlyName(key: string): string {
 
 export function FundamentalScreenerTab() {
   const [expression, setExpression] = useState(fundamentalPresets[0].value);
+  const [mode, setMode] = useState<ScreenerMode>("builder");
+  const [builderTree, setBuilderTree] = useState<BuilderTree>({
+    kind: "group",
+    id: "root",
+    children: [],
+  });
+  const [unparseableReason, setUnparseableReason] = useState<string | undefined>();
+  const lastBuilderCompiledRef = useRef<string>("");
+
+  // Hydrate builder from current expression on mount
+  useEffect(() => {
+    const result = parse(expression, "fundamental");
+    if (result.ok) {
+      setBuilderTree(result.tree);
+      setUnparseableReason(undefined);
+      lastBuilderCompiledRef.current = expression;
+    } else {
+      setUnparseableReason(result.reason);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // When builder tree changes, recompile and update expression
+  const handleBuilderChange = (tree: BuilderTree) => {
+    setBuilderTree(tree);
+    if (isEmpty(tree)) {
+      setExpression("");
+      lastBuilderCompiledRef.current = "";
+      return;
+    }
+    const compiled = compile(tree);
+    setExpression(compiled);
+    lastBuilderCompiledRef.current = compiled;
+  };
+
+  // On mode switch to builder, attempt to parse the current expression
+  const handleModeChange = (next: ScreenerMode) => {
+    if (next === "builder" && expression !== lastBuilderCompiledRef.current) {
+      const result = parse(expression, "fundamental");
+      if (result.ok) {
+        setBuilderTree(result.tree);
+        setUnparseableReason(undefined);
+        lastBuilderCompiledRef.current = expression;
+      } else {
+        setUnparseableReason(result.reason);
+      }
+    }
+    setMode(next);
+  };
+
+  const loadPresetIntoBuilder = (exprStr: string) => {
+    setExpression(exprStr);
+    const result = parse(exprStr, "fundamental");
+    if (result.ok) {
+      setBuilderTree(result.tree);
+      setUnparseableReason(undefined);
+      lastBuilderCompiledRef.current = exprStr;
+    } else {
+      setUnparseableReason(result.reason);
+    }
+  };
+
   const {
     progress,
     results,
@@ -134,22 +201,35 @@ export function FundamentalScreenerTab() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Mode toggle (standalone row above card) */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-white">Fundamental Screener</h2>
+          <p className="text-xs text-[#9f9f9f]">
+            Filter stocks by fundamental metrics like P/E, ROE, Market Cap, Debt/Equity, etc.
+          </p>
+        </div>
+        <ModeToggle mode={mode} onChange={handleModeChange} />
+      </div>
+
       {/* Expression input + presets */}
       <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
         <div className="rounded-lg border border-[#1f1f1f] bg-black/40 p-4 shadow-lg shadow-black/30">
-          <div className="mb-3">
-            <h2 className="text-lg font-semibold text-white">Fundamental Screener</h2>
-            <p className="text-xs text-[#9f9f9f]">
-              Filter stocks by fundamental metrics like P/E, ROE, Market Cap, Debt/Equity, etc.
-            </p>
-          </div>
-
-          <Textarea
-            value={expression}
-            onChange={(e) => setExpression(e.target.value)}
-            placeholder="trailing_pe < 20 and return_on_equity > 15 and debt_to_equity < 1"
-            className="min-h-[80px] bg-black/60 font-mono text-sm text-white border-[#2a2a2a]"
-          />
+          {mode === "builder" ? (
+            <ConditionBuilder
+              variant="fundamental"
+              tree={builderTree}
+              onTreeChange={handleBuilderChange}
+              unparseableReason={unparseableReason}
+            />
+          ) : (
+            <Textarea
+              value={expression}
+              onChange={(e) => setExpression(e.target.value)}
+              placeholder="trailing_pe < 20 and return_on_equity > 15 and debt_to_equity < 1"
+              className="min-h-[80px] bg-black/60 font-mono text-sm text-white border-[#2a2a2a]"
+            />
+          )}
 
           {/* Presets */}
           <div className="mt-3 flex flex-wrap gap-1.5">
@@ -159,7 +239,7 @@ export function FundamentalScreenerTab() {
                 variant="outline"
                 size="sm"
                 className="h-7 text-[10px]"
-                onClick={() => setExpression(preset.value)}
+                onClick={() => loadPresetIntoBuilder(preset.value)}
               >
                 <Sparkles className="w-3 h-3 mr-1" />
                 {preset.label}

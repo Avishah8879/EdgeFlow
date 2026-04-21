@@ -42,3 +42,6 @@ Thumbs.db
 *.tar.gz
 vite.config.ts.*
 
+# Credentials
+fyers_token.json
+

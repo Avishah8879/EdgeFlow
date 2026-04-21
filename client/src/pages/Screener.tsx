@@ -20,6 +20,11 @@ import ExpressionBuilder from "@/components/expert-screener/ExpressionBuilder";
 import SampleTemplates from "@/components/expert-screener/SampleTemplates";
 import ProgressIndicator from "@/components/expert-screener/ProgressIndicator";
 import ResultsTable from "@/components/expert-screener/ResultsTable";
+import { ModeToggle, type ScreenerMode } from "@/components/screener/ModeToggle";
+import { ConditionBuilder } from "@/components/screener/ConditionBuilder";
+import { compile, isEmpty } from "@/lib/screener/compile";
+import { parse } from "@/lib/screener/parse";
+import type { BuilderTree } from "@/lib/screener/types";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +56,14 @@ export default function Screener() {
   const [location] = useLocation();
   const [expression, setExpression] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Visual builder state
+  const [mode, setMode] = useState<ScreenerMode>("builder");
+  const [builderTree, setBuilderTree] = useState<BuilderTree>({ kind: "group", id: "root", children: [] });
+  const [unparseableReason, setUnparseableReason] = useState<string | undefined>();
+  // Tracks whether the current expression was last set by the builder (so we
+  // don't re-parse our own output and cause a round-trip loop).
+  const lastBuilderCompiledRef = useRef<string>("");
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveName, setSaveName] = useState("");
 
@@ -101,6 +114,22 @@ export default function Screener() {
     }, 500);
     return () => clearTimeout(timer);
   }, [expression, syncToUrl]);
+
+  // Hydrate builder from expression on mount (for URL-shared expressions)
+  const builderHydratedRef = useRef(false);
+  useEffect(() => {
+    if (builderHydratedRef.current) return;
+    const trimmed = expression.trim();
+    if (!trimmed) return;
+    builderHydratedRef.current = true;
+    const r = parse(trimmed, "expert");
+    if (r.ok) {
+      setBuilderTree(r.tree);
+      lastBuilderCompiledRef.current = compile(r.tree);
+    } else {
+      setUnparseableReason(r.reason);
+    }
+  }, [expression]);
 
   // History state key for screener results
   const HISTORY_KEY = "screenerResultKey";
@@ -202,6 +231,15 @@ export default function Screener() {
   const handleTemplateSelect = (templateExpression: string) => {
     setExpression(templateExpression);
     setValidationError(null);
+    // Also hydrate the builder so switching to Builder mode shows the template
+    const r = parse(templateExpression, "expert");
+    if (r.ok) {
+      setBuilderTree(r.tree);
+      lastBuilderCompiledRef.current = compile(r.tree);
+      setUnparseableReason(undefined);
+    } else {
+      setUnparseableReason(r.reason);
+    }
   };
 
   const handleExpressionChange = (newExpression: string) => {
@@ -389,8 +427,86 @@ export default function Screener() {
           />
         </div>
 
+        {/* Mode toggle */}
+        <div className="mb-3 flex items-center justify-between">
+          <ModeToggle
+            mode={mode}
+            onChange={(next) => {
+              if (next === mode) return;
+              if (next === "builder") {
+                // Expression → Builder: parse current expression
+                const trimmed = expression.trim();
+                if (!trimmed) {
+                  setBuilderTree({ kind: "group", id: "root", children: [] });
+                  setUnparseableReason(undefined);
+                } else if (trimmed === lastBuilderCompiledRef.current) {
+                  // Expression was set by builder — keep the tree
+                  setUnparseableReason(undefined);
+                } else {
+                  const r = parse(trimmed, "expert");
+                  if (r.ok) {
+                    setBuilderTree(r.tree);
+                    setUnparseableReason(undefined);
+                  } else {
+                    setBuilderTree({ kind: "group", id: "root", children: [] });
+                    setUnparseableReason(r.reason);
+                  }
+                }
+              }
+              setMode(next);
+            }}
+          />
+          <p className="text-xs text-muted-foreground">
+            {mode === "builder" ? "Visual condition builder" : "Python-style free-text expression"}
+          </p>
+        </div>
+
         {/* Expression Builder */}
         <div className="mb-8">
+          {mode === "builder" ? (
+            <div className="rounded-lg border border-border bg-card p-4">
+              <ConditionBuilder
+                variant="expert"
+                tree={builderTree}
+                onTreeChange={(next) => {
+                  setBuilderTree(next);
+                  // Build → Expression sync: always keep expression state in sync
+                  if (!isEmpty(next)) {
+                    const compiled = compile(next);
+                    lastBuilderCompiledRef.current = compiled;
+                    handleExpressionChange(compiled);
+                    setUnparseableReason(undefined);
+                  } else {
+                    lastBuilderCompiledRef.current = "";
+                    handleExpressionChange("");
+                  }
+                }}
+                unparseableReason={unparseableReason}
+              />
+              {/* Run/Cancel buttons (reuse existing handlers) */}
+              <div className="mt-4 flex gap-3">
+                {!isRunning ? (
+                  <button
+                    type="button"
+                    className="run-button"
+                    onClick={handleRun}
+                    disabled={!expression.trim() || Boolean(validationError)}
+                  >
+                    <span className="run-button-content">
+                      Run Expert Screener
+                    </span>
+                  </button>
+                ) : (
+                  <Button onClick={handleCancel} variant="destructive">
+                    Cancel Screening
+                  </Button>
+                )}
+              </div>
+              {validationError && (
+                <div className="mt-2 text-sm text-destructive">{validationError}</div>
+              )}
+            </div>
+          ) : (
           <ExpressionBuilder
             expression={expression}
             onExpressionChange={handleExpressionChange}
@@ -399,6 +515,7 @@ export default function Screener() {
             isRunning={isRunning}
             validationError={validationError || error || undefined}
           />
+          )}
         </div>
 
         {/* Progress Indicator */}
