@@ -356,6 +356,47 @@ export function registerTerminalRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/pair-trading/groups", async (req, res) => {
+    try {
+      const result = await proxyToPython("/api/pair-trading/groups", buildPythonOptions(req));
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Pair-trading groups unavailable');
+    }
+  });
+
+  app.get("/api/pair-trading/matrix", async (req, res) => {
+    try {
+      const params = new URLSearchParams();
+      if (typeof req.query.group_type === 'string') params.set('group_type', req.query.group_type);
+      if (typeof req.query.group === 'string') params.set('group', req.query.group);
+      if (typeof req.query.method === 'string') params.set('method', req.query.method);
+      if (typeof req.query.lookback_days === 'string') params.set('lookback_days', req.query.lookback_days);
+      const result = await proxyToPython(
+        `/api/pair-trading/matrix?${params.toString()}`,
+        buildPythonOptions(req, { timeout: 60000 }),
+      );
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Pair-trading matrix unavailable');
+    }
+  });
+
+  app.get("/api/pair-trading/pair-series", async (req, res) => {
+    try {
+      const params = new URLSearchParams();
+      if (typeof req.query.symbols === 'string') params.set('symbols', req.query.symbols);
+      if (typeof req.query.lookback_days === 'string') params.set('lookback_days', req.query.lookback_days);
+      const result = await proxyToPython(
+        `/api/pair-trading/pair-series?${params.toString()}`,
+        buildPythonOptions(req),
+      );
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Pair series unavailable');
+    }
+  });
+
   app.get("/api/fear-greed", simplePythonProxy("/api/fear-greed", 20000));
   app.get("/api/research-reports/list", simplePythonProxy("/api/research-reports/list"));
   app.get("/api/research-reports/:symbol", async (req, res) => {

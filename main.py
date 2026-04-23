@@ -10673,6 +10673,327 @@ async def ft_get_batch_sectors(symbols: str = Query(..., min_length=1)):
 
 
 # =============================================================================
+# Pair Trading Feasibility Endpoints
+# =============================================================================
+
+def _pair_trading_fetch_groups_sync() -> Dict[str, List[str]]:
+    """Sync DB worker for /api/pair-trading/groups (runs inside asyncio.to_thread)."""
+    with get_db_cursor() as cur:
+        cur.execute("""
+            SELECT DISTINCT TRIM(s) AS g FROM (
+                SELECT sector AS s FROM stock_fundamentals WHERE sector IS NOT NULL AND TRIM(sector) <> ''
+                UNION
+                SELECT sector AS s FROM tickers WHERE sector IS NOT NULL AND TRIM(sector) <> ''
+            ) u
+            WHERE TRIM(s) <> ''
+            ORDER BY g ASC
+        """)
+        sectors = [row["g"] for row in cur.fetchall() if row.get("g")]
+        cur.execute("""
+            SELECT DISTINCT TRIM(s) AS g FROM (
+                SELECT industry AS s FROM stock_fundamentals WHERE industry IS NOT NULL AND TRIM(industry) <> ''
+                UNION
+                SELECT industry AS s FROM tickers WHERE industry IS NOT NULL AND TRIM(industry) <> ''
+            ) u
+            WHERE TRIM(s) <> ''
+            ORDER BY g ASC
+        """)
+        industries = [row["g"] for row in cur.fetchall() if row.get("g")]
+    return {"sectors": sectors, "industries": industries}
+
+
+@fastapi_app.get("/api/pair-trading/groups")
+async def ft_pair_trading_groups():
+    """Return sorted lists of distinct sectors and industries for the group dropdown."""
+    cache_key = "pair_trading:groups:v4"
+    cached = get_cached(cache_key)
+    if cached and (cached.get("sectors") or cached.get("industries")):
+        logging.info(
+            f"[PairTrading] groups served from cache: sectors={len(cached.get('sectors', []))}, "
+            f"industries={len(cached.get('industries', []))}"
+        )
+        return _ft_api_response(cached)
+
+    try:
+        data = await asyncio.to_thread(_pair_trading_fetch_groups_sync)
+        logging.info(
+            f"[PairTrading] groups computed: sectors={len(data['sectors'])}, "
+            f"industries={len(data['industries'])}"
+        )
+        set_cached(cache_key, data, 3600)
+        return _ft_api_response(data)
+
+    except Exception as e:
+        logging.exception(f"[PairTrading] groups error: {e}")
+        return _ft_api_response({"sectors": [], "industries": []}, f"Groups unavailable: {str(e)}")
+
+
+_PAIR_MATRIX_SYMBOL_CAP = 30
+_PAIR_MATRIX_MIN_COVERAGE = 0.8
+
+
+def _pair_trading_fetch_matrix_data_sync(
+    group_type: str,
+    group: str,
+    lookback_days: int,
+) -> Optional[Dict[str, Any]]:
+    """Sync DB worker that returns { ticker_rows, ohlc_rows, truncated } or None if no tickers."""
+    col = "sector" if group_type == "sector" else "industry"
+    with get_db_cursor() as cur:
+        cur.execute(
+            f"""
+            SELECT DISTINCT t.id AS id, t.symbol AS symbol
+            FROM tickers t
+            LEFT JOIN stock_fundamentals sf ON sf.ticker_id = t.id
+            WHERE COALESCE(t.is_active, true) = true
+              AND (TRIM(t.{col}) = %s OR TRIM(sf.{col}) = %s)
+            ORDER BY t.symbol ASC
+            """,
+            (group, group),
+        )
+        ticker_rows = cur.fetchall()
+        if not ticker_rows:
+            return None
+
+        truncated = len(ticker_rows) > _PAIR_MATRIX_SYMBOL_CAP
+        if truncated:
+            ticker_rows = ticker_rows[:_PAIR_MATRIX_SYMBOL_CAP]
+
+        ticker_ids = [r["id"] for r in ticker_rows]
+
+        cur.execute(
+            """
+            SELECT ticker_id, day, close FROM (
+                SELECT ticker_id, day, close,
+                       ROW_NUMBER() OVER (PARTITION BY ticker_id ORDER BY day DESC) AS rn
+                FROM ohlc_daily
+                WHERE ticker_id = ANY(%s)
+            ) t
+            WHERE rn <= %s
+            ORDER BY ticker_id, day ASC
+            """,
+            (ticker_ids, lookback_days),
+        )
+        ohlc_rows = cur.fetchall()
+
+    return {
+        "ticker_rows": [{"id": r["id"], "symbol": r["symbol"]} for r in ticker_rows],
+        "ohlc_rows": [{"ticker_id": r["ticker_id"], "day": r["day"], "close": r["close"]} for r in ohlc_rows],
+        "truncated": truncated,
+    }
+
+
+@fastapi_app.get("/api/pair-trading/matrix")
+async def ft_pair_trading_matrix(
+    group_type: str = Query(..., pattern="^(sector|industry)$"),
+    group: str = Query(..., min_length=1),
+    method: str = Query("correlation", pattern="^(correlation|cointegration)$"),
+    lookback_days: int = Query(40, ge=10, le=500),
+):
+    """Compute an N×N correlation or cointegration matrix for all stocks in a sector/industry."""
+    cache_key = f"pair_trading:matrix:v4:{group_type}:{group}:{method}:{lookback_days}"
+    cached = get_cached(cache_key)
+    if cached:
+        return _ft_api_response(cached)
+
+    try:
+        fetched = await asyncio.to_thread(
+            _pair_trading_fetch_matrix_data_sync, group_type, group, lookback_days
+        )
+
+        if fetched is None:
+            return _ft_api_response(None, f"No stocks found for {group_type} '{group}'")
+
+        ticker_rows = fetched["ticker_rows"]
+        ohlc_rows = fetched["ohlc_rows"]
+        truncated = fetched["truncated"]
+
+        id_to_symbol = {row["id"]: row["symbol"].upper() for row in ticker_rows}
+
+        if not ohlc_rows:
+            return _ft_api_response(None, "No OHLC data for the selected lookback window")
+
+        per_symbol: Dict[str, Dict[str, float]] = {}
+        for row in ohlc_rows:
+            sym = id_to_symbol.get(row["ticker_id"])
+            if not sym:
+                continue
+            day_key = row["day"].strftime("%Y-%m-%d")
+            per_symbol.setdefault(sym, {})[day_key] = float(row["close"])
+
+        min_required = int(lookback_days * _PAIR_MATRIX_MIN_COVERAGE)
+        symbols: List[str] = []
+        series_map: Dict[str, pd.Series] = {}
+        for sym, closes in per_symbol.items():
+            if len(closes) < min_required:
+                continue
+            series = pd.Series(closes).sort_index()
+            symbols.append(sym)
+            series_map[sym] = series
+
+        symbols.sort()
+
+        if len(symbols) < 2:
+            return _ft_api_response(
+                None,
+                f"Not enough symbols with sufficient data (need ≥2, got {len(symbols)})",
+            )
+
+        close_df = pd.DataFrame({s: series_map[s] for s in symbols}).sort_index()
+        close_df = close_df.dropna(how="all")
+
+        as_of = close_df.index.max() if len(close_df) else None
+        n = len(symbols)
+        matrix: List[List[Optional[float]]] = [[None] * n for _ in range(n)]
+        pvalues: Optional[List[List[Optional[float]]]] = None
+
+        if method == "correlation":
+            aligned = close_df.dropna(how="any")
+            log_returns = np.log(aligned / aligned.shift(1)).dropna(how="any")
+            if len(log_returns) < 2:
+                return _ft_api_response(None, "Not enough overlapping data to compute correlation")
+
+            corr = log_returns.corr(method="pearson")
+            for i, sym_i in enumerate(symbols):
+                for j, sym_j in enumerate(symbols):
+                    if i == j:
+                        matrix[i][j] = 100.0
+                    else:
+                        val = corr.loc[sym_i, sym_j]
+                        if pd.isna(val):
+                            matrix[i][j] = None
+                        else:
+                            matrix[i][j] = round(float(val) * 100.0, 2)
+        else:
+            try:
+                from statsmodels.tsa.stattools import coint
+            except ImportError as e:
+                return _ft_api_response(
+                    None,
+                    f"Cointegration unavailable (statsmodels not installed): {str(e)}",
+                )
+
+            pvalues = [[None] * n for _ in range(n)]
+
+            for i in range(n):
+                matrix[i][i] = 100.0
+                pvalues[i][i] = 0.0
+                for j in range(i + 1, n):
+                    sym_i, sym_j = symbols[i], symbols[j]
+                    pair = close_df[[sym_i, sym_j]].dropna(how="any")
+                    if len(pair) < max(20, min_required // 2):
+                        continue
+                    try:
+                        _stat, pvalue, _crit = coint(pair[sym_i].values, pair[sym_j].values)
+                        score = round(float((1.0 - pvalue) * 100.0), 2)
+                        pval_rounded = round(float(pvalue), 4)
+                    except Exception:
+                        continue
+                    matrix[i][j] = score
+                    matrix[j][i] = score
+                    pvalues[i][j] = pval_rounded
+                    pvalues[j][i] = pval_rounded
+
+        payload: Dict[str, Any] = {
+            "symbols": symbols,
+            "matrix": matrix,
+            "method": method,
+            "lookback_days": lookback_days,
+            "group_type": group_type,
+            "group": group,
+            "truncated": truncated,
+            "symbol_cap": _PAIR_MATRIX_SYMBOL_CAP,
+            "as_of": str(as_of) if as_of is not None else None,
+        }
+        if pvalues is not None:
+            payload["pvalues"] = pvalues
+
+        set_cached(cache_key, payload, 900)
+        return _ft_api_response(payload)
+
+    except Exception as e:
+        logging.exception(f"[PairTrading] matrix error: {e}")
+        return _ft_api_response(None, f"Matrix unavailable: {str(e)}")
+
+
+def _pair_trading_fetch_pair_series_sync(symbols: List[str], lookback_days: int) -> List[Dict[str, Any]]:
+    """Fetch last N daily closes for each symbol from ohlc_daily (independent of calendar date)."""
+    with get_db_cursor() as cur:
+        cur.execute(
+            "SELECT id, symbol FROM tickers WHERE UPPER(symbol) = ANY(%s)",
+            ([s.upper() for s in symbols],),
+        )
+        ticker_rows = cur.fetchall()
+        if not ticker_rows:
+            return []
+
+        id_to_symbol = {r["id"]: r["symbol"].upper() for r in ticker_rows}
+        ticker_ids = list(id_to_symbol.keys())
+
+        cur.execute(
+            """
+            SELECT ticker_id, day, open, high, low, close, volume FROM (
+                SELECT ticker_id, day, open, high, low, close, volume,
+                       ROW_NUMBER() OVER (PARTITION BY ticker_id ORDER BY day DESC) AS rn
+                FROM ohlc_daily
+                WHERE ticker_id = ANY(%s)
+            ) t
+            WHERE rn <= %s
+            ORDER BY ticker_id, day ASC
+            """,
+            (ticker_ids, lookback_days),
+        )
+        ohlc_rows = cur.fetchall()
+
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    for row in ohlc_rows:
+        sym = id_to_symbol.get(row["ticker_id"])
+        if not sym:
+            continue
+        grouped.setdefault(sym, []).append({
+            "date": row["day"].strftime("%Y-%m-%d"),
+            "open": float(row["open"]) if row["open"] is not None else 0.0,
+            "high": float(row["high"]) if row["high"] is not None else 0.0,
+            "low": float(row["low"]) if row["low"] is not None else 0.0,
+            "close": float(row["close"]) if row["close"] is not None else 0.0,
+            "volume": int(row["volume"]) if row["volume"] else 0,
+        })
+
+    return [{"symbol": sym, "data": grouped.get(sym, [])} for sym in [s.upper() for s in symbols]]
+
+
+@fastapi_app.get("/api/pair-trading/pair-series")
+async def ft_pair_trading_pair_series(
+    symbols: str = Query(..., min_length=1),
+    lookback_days: int = Query(40, ge=10, le=1000),
+):
+    """Return the last N daily OHLC bars for each symbol in the pair.
+
+    Independent of the calendar date (uses ORDER BY day DESC LIMIT N),
+    so it works even if the DB isn't updated to today.
+    """
+    symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+    if not symbol_list:
+        return _ft_api_response([], "No symbols provided")
+    symbol_list = symbol_list[:5]
+
+    cache_key = f"pair_trading:pair_series:v1:{','.join(symbol_list)}:{lookback_days}"
+    cached = get_cached(cache_key)
+    if cached:
+        return _ft_api_response(cached)
+
+    try:
+        data = await asyncio.to_thread(
+            _pair_trading_fetch_pair_series_sync, symbol_list, lookback_days
+        )
+        set_cached(cache_key, data, 600)
+        return _ft_api_response(data)
+    except Exception as e:
+        logging.exception(f"[PairTrading] pair-series error: {e}")
+        return _ft_api_response([], f"Pair series unavailable: {str(e)}")
+
+
+# =============================================================================
 # Pattern Search Endpoint
 # =============================================================================
 
@@ -10689,7 +11010,7 @@ async def pattern_search_api(
     """
     from server.pattern_detector import scan_patterns
 
-    cache_key = f"pattern_search:{pattern}:{timeframe}:{confidence}"
+    cache_key = f"pattern_search:v2:{pattern}:{timeframe}:{confidence}"
     cached = get_cached(cache_key)
     if cached is not None:
         return cached
