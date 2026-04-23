@@ -27,7 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { EquityProLogo } from "@/components/TiphubLogo";
+import { EquityProLogo } from "@/components/EquityProLogo";
 import MarketStatusBadge from "@/components/MarketStatusBadge";
 import { SearchBar } from "@/components/search";
 import { cn } from "@/lib/utils";

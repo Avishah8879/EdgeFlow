@@ -386,8 +386,8 @@ export default function Profile() {
   return (
     <>
       <SEO
-        title="Profile - Tiphub"
-        description="Manage your Tiphub account settings, subscription, and security preferences."
+        title="Profile - Equity Pro"
+        description="Manage your Equity Pro account settings, subscription, and security preferences."
         noIndex={true}
       />
       <div className="min-h-screen bg-background">

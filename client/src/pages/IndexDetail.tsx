@@ -212,7 +212,7 @@ export default function IndexDetail() {
     <>
       {/* Dynamic SEO for Index Detail */}
       <SEO
-        title={`${symbol} - ${indexName} | Tiphub`}
+        title={`${symbol} - ${indexName} | Equity Pro`}
         description={`Track ${indexName} (${symbol}) index performance. Current value: ${currentValue?.toLocaleString('en-IN')}, 52-week range, technical indicators, and interactive price charts.`}
         canonical={`/index/${encodeURIComponent(symbol)}`}
       />

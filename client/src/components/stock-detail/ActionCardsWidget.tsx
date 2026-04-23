@@ -40,7 +40,7 @@ export default function ActionCardsWidget({ ticker }: ActionCardsWidgetProps) {
         </div>
       </Link>
 
-      {/* TipHub AI Card */}
+      {/* Equity Pro AI Card */}
       <Link
         href={`/tip-tease?context=${encodeURIComponent(ticker)}`}
         className="action-card"
@@ -49,14 +49,14 @@ export default function ActionCardsWidget({ ticker }: ActionCardsWidgetProps) {
           <div className="action-card-icon">
             <Bot className="w-4 h-4" />
           </div>
-          <span className="action-card-title">TipHub AI</span>
+          <span className="action-card-title">Equity Pro AI</span>
         </div>
         <div className="action-card-content">
           <p className="action-card-description">
             Ask AI about {ticker} stock, fundamentals, and market outlook.
           </p>
           <Button size="sm" className="action-card-button gap-1">
-            Ask TipHub
+            Ask Equity Pro
             <ArrowRight className="w-3 h-3" />
           </Button>
         </div>

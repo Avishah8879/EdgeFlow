@@ -795,7 +795,7 @@ export default function StrategyBacktesting() {
         jsonLd={[
           generateFAQSchema(BACKTESTING_FAQS),
           generateSoftwareApplicationSchema(
-            'Tiphub Alpha Generation - AI Strategy Backtesting',
+            'Equity Pro Alpha Generation - AI Strategy Backtesting',
             'Free AI-powered strategy backtesting for Indian stocks. Optimize trading strategies using genetic algorithms with technical indicators on NSE stocks.',
             ['Strategy Backtesting', 'Alpha Generation', 'Genetic Algorithm', 'Trading Strategy', 'NSE Backtest']
           ),

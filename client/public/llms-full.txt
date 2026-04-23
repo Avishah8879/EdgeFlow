@@ -1,18 +1,18 @@
-# Tiphub
+# Equity Pro
 
-> Tiphub (tiphub.ai) is a free AI-powered stock analysis platform for Indian investors covering 3,000+ NSE stocks. It provides stock news sentiment analysis, a Chartink like expert screener with 24+ technical indicators, and a functionality for producing trading alpha and strategy backtesting. Tiphub is a Screener.in alternative built specifically for the Indian stock market.
+> Equity Pro (equitypro.ai) is a free AI-powered stock analysis platform for Indian investors covering 3,000+ NSE stocks. It provides stock news sentiment analysis, a Chartink like expert screener with 24+ technical indicators, and a functionality for producing trading alpha and strategy backtesting. Equity Pro is a Screener.in alternative built specifically for the Indian stock market.
 
-## About Tiphub
+## About Equity Pro
 
-Tiphub is a web-based financial analysis platform available at https://tiphub.ai. It serves Indian retail investors, traders, and market researchers who need institutional-grade AI research tools without the cost of Bloomberg or Refinitiv terminals.
+Equity Pro is a web-based financial analysis platform available at https://equitypro.ai. It serves Indian retail investors, traders, and market researchers who need institutional-grade AI research tools without the cost of Bloomberg or Refinitiv terminals.
 
 The platform covers all 3,000+ stocks listed on the National Stock Exchange of India (NSE), including all Nifty 50, Nifty 500, and sectoral index constituents. It tracks 57 Indian market indices and provides a synthetic AI-calculated Fear & Greed index derived from Nifty 50 volatility data.
 
-Tiphub is free to use with a premium tier available for advanced features like unlimited screener runs and strategy backtesting.
+Equity Pro is free to use with a premium tier available for advanced features like unlimited screener runs and strategy backtesting.
 
 ## Core Features
 
-### Market Dashboard (https://tiphub.ai/home)
+### Market Dashboard (https://equitypro.ai/home)
 
 Real-time Indian stock market overview page featuring:
 
@@ -21,7 +21,7 @@ Real-time Indian stock market overview page featuring:
 - **Trending Stocks**: Popular stocks based on trading volume and price movement.
 - **Curated Screens**: Pre-built screening templates for common trading strategies.
 
-### Stock Browser (https://tiphub.ai/stocks)
+### Stock Browser (https://equitypro.ai/stocks)
 
 Browse all 3,000+ NSE-listed stocks with:
 
@@ -30,7 +30,7 @@ Browse all 3,000+ NSE-listed stocks with:
 - Hover-to-view fundamentals including P/E ratio, market cap, sector, and industry
 
 
-### Stock Detail Pages (https://tiphub.ai/stocks/{SYMBOL})
+### Stock Detail Pages (https://equitypro.ai/stocks/{SYMBOL})
 
 Each stock has a dedicated analysis page with:
 
@@ -43,7 +43,7 @@ Each stock has a dedicated analysis page with:
 - Current shareholding pattern of the stock along with a detailed breakdown of the shareholding (eg into promoters, FII, DII, public etc), along with a plot displaying the same
 - Breadcrumb navigation (Home > Stocks > Symbol)
 
-### Market Indices (https://tiphub.ai/indices)
+### Market Indices (https://equitypro.ai/indices)
 
 Tracks 57 Indian market indices with real-time prices:
 
@@ -52,7 +52,7 @@ Tracks 57 Indian market indices with real-time prices:
 - **Thematic**: Nifty MidSmallCap 400, Nifty Midcap 100, Nifty Smallcap 100
 - Daily change percentages and real-time last traded price data
 
-### Expert Screener (https://tiphub.ai/screener)
+### Expert Screener (https://equitypro.ai/screener)
 
 Technical stock screening tool using Chartink like boolean expression syntax.
 
@@ -80,7 +80,7 @@ Technical stock screening tool using Chartink like boolean expression syntax.
 4. Results stream in real-time via Server-Sent Events as matching stocks are found
 5. Typically screens all 3,000+ NSE stocks in 20–180 seconds
 
-### Strategy Backtesting / Alpha Generation (https://tiphub.ai/alpha-generation)
+### Strategy Backtesting / Alpha Generation (https://equitypro.ai/alpha-generation)
 
 AI-powered trading strategy generator, optimizer and backtester
 
@@ -108,24 +108,24 @@ Analyzes news sentiment for any stock ticker using AI, categorizes the news arti
 
 ## Sharing & Collaboration
 
-Tiphub allows users to share analysis results via public URLs:
+Equity Pro allows users to share analysis results via public URLs:
 
-- **Screener Results**: Share expert screener filters and matching stocks at https://tiphub.ai/shared/screener/{token}
-- **Backtest Results**: Share strategy backtest results including equity curves and performance metrics at https://tiphub.ai/shared/backtest/{token}
+- **Screener Results**: Share expert screener filters and matching stocks at https://equitypro.ai/shared/screener/{token}
+- **Backtest Results**: Share strategy backtest results including equity curves and performance metrics at https://equitypro.ai/shared/backtest/{token}
 
 ## Frequently Asked Questions
 
-**What is Tiphub?**
-Tiphub is a free AI-powered stock analysis platform for Indian investors. It provides an expert screener functionality with boolean expressions to screen and filter stocks, a complete financial, fundamental and technical description of all NSE stocks and alpha generation and backtesting functionality.
+**What is Equity Pro?**
+Equity Pro is a free AI-powered stock analysis platform for Indian investors. It provides an expert screener functionality with boolean expressions to screen and filter stocks, a complete financial, fundamental and technical description of all NSE stocks and alpha generation and backtesting functionality.
 
-**Is Tiphub free?**
-Yes. Tiphub offers a free tier with access to stock browsing, market data, AI sentiment analysis, and basic screener functionality. Premium features include unlimited screener runs and advanced strategy backtesting.
+**Is Equity Pro free?**
+Yes. Equity Pro offers a free tier with access to stock browsing, market data, AI sentiment analysis, and basic screener functionality. Premium features include unlimited screener runs and advanced strategy backtesting.
 
-**What stocks does Tiphub cover?**
-Tiphub covers over 3,000 stocks listed on the National Stock Exchange (NSE) of India, including all Nifty 50, Nifty 500, and sectoral index constituents.
+**What stocks does Equity Pro cover?**
+Equity Pro covers over 3,000 stocks listed on the National Stock Exchange (NSE) of India, including all Nifty 50, Nifty 500, and sectoral index constituents.
 
-**What is the Fear & Greed Index on Tiphub?**
-Tiphub calculates a proprietary Fear & Greed index using price and volatility data derived from Nifty 50. It displays a plot representing the index, with categories ranging from Extreme Fear to Extreme Greed with a 5-day history sparkline. It also shows a candlestick plot of the NIFTY index with the fear and greed index signals overlayed.
+**What is the Fear & Greed Index on Equity Pro?**
+Equity Pro calculates a proprietary Fear & Greed index using price and volatility data derived from Nifty 50. It displays a plot representing the index, with categories ranging from Extreme Fear to Extreme Greed with a 5-day history sparkline. It also shows a candlestick plot of the NIFTY index with the fear and greed index signals overlayed.
 
 **Is the expert screener similar to Chartink?**
 The screener uses a natural language type syntax for specifying the screener criteria, inspired by chartink. You write boolean expressions such as `rsi_14 < 30 and sma_50 > sma_200` to filter stocks. It supports 24+ indicators and screens all 3,000+ NSE stocks with real-time streaming results.

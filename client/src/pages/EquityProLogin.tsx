@@ -13,7 +13,7 @@ import { Loader2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { SEO } from "@/components/SEO";
-import { EquityProLogo } from "@/components/TiphubLogo";
+import { EquityProLogo } from "@/components/EquityProLogo";
 import { HalvorsenAttractor } from "@/components/HalvorsenAttractor";
 import { cn } from "@/lib/utils";
 

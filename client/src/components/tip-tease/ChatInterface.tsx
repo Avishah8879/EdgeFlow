@@ -47,7 +47,7 @@ export default function ChatInterface({
             <Sparkles className="w-6 h-6 text-primary" />
           </div>
           <SectionHeader
-            title="TipHub AI"
+            title="Equity Pro AI"
             description="AI-powered financial insights"
             size="lg"
           />
@@ -94,7 +94,7 @@ export default function ChatInterface({
         {status === "connecting" && (
           <div className="px-6 pb-2">
             <p className="text-sm text-muted-foreground animate-pulse">
-              Connecting to TipHub AI...
+              Connecting to Equity Pro AI...
             </p>
           </div>
         )}
@@ -110,7 +110,7 @@ export default function ChatInterface({
             autoFocus
           />
           <p className="text-xs text-muted-foreground mt-3 text-center">
-            TipHub provides general information, not financial advice.
+            Equity Pro provides general information, not financial advice.
           </p>
         </div>
       </Card>

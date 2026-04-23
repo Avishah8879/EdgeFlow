@@ -44,7 +44,7 @@ export default function AuthCallback() {
         completeOAuthLogin(payload);
         setState({
           status: "success",
-          message: "You are now signed in. Redirecting to TipHub...",
+          message: "You are now signed in. Redirecting to Equity Pro...",
         });
         setTimeout(() => navigate("/home"), 1200);
       } catch (err) {

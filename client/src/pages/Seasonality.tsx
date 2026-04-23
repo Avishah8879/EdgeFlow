@@ -290,7 +290,7 @@ export default function Seasonality() {
   return (
     <>
       <SEO
-        title="Seasonality Analysis - Tiphub"
+        title="Seasonality Analysis - Equity Pro"
         description="Analyze weekly and monthly seasonal return patterns for Indian stocks. Identify recurring trends using up to 10 years of historical data."
         canonical="/seasonality"
       />

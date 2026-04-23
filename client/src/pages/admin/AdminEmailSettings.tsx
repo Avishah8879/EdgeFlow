@@ -376,7 +376,7 @@ function SettingsTab() {
               <Input
                 value={formData.from_name || ""}
                 onChange={(e) => handleChange("from_name", e.target.value)}
-                placeholder="Tiphub Notifications"
+                placeholder="Equity Pro Notifications"
               />
             </div>
           </div>

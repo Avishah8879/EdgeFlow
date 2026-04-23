@@ -32,7 +32,7 @@ function PremiumUpgradePrompt() {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
         <SectionHeader
-          title="TipHub AI"
+          title="Equity Pro AI"
           description="AI-powered financial insights for Indian markets"
           size="lg"
         />
@@ -47,7 +47,7 @@ function PremiumUpgradePrompt() {
             </CardHeader>
             <CardContent className="space-y-6">
               <p className="text-muted-foreground">
-                TipHub AI is available exclusively for Premium subscribers.
+                Equity Pro AI is available exclusively for Premium subscribers.
                 Get AI-powered financial insights with unlimited access.
               </p>
 
@@ -155,7 +155,7 @@ export default function TipTease() {
     return (
       <>
         <SEO
-          title="TipHub AI - AI-Powered Financial Insights"
+          title="Equity Pro AI - AI-Powered Financial Insights"
           description="Get AI-powered financial insights for Indian stock markets. Ask about stocks, market trends, and investment concepts."
         />
         <TipTeaseLoading />
@@ -168,8 +168,8 @@ export default function TipTease() {
     return (
       <>
         <SEO
-          title="TipHub AI - Premium Feature"
-          description="TipHub AI is a premium feature. Upgrade to get AI-powered financial insights."
+          title="Equity Pro AI - Premium Feature"
+          description="Equity Pro AI is a premium feature. Upgrade to get AI-powered financial insights."
         />
         <PremiumUpgradePrompt />
       </>
@@ -179,7 +179,7 @@ export default function TipTease() {
   return (
     <>
       <SEO
-        title="TipHub AI - AI-Powered Financial Insights"
+        title="Equity Pro AI - AI-Powered Financial Insights"
         description="Get AI-powered financial insights for Indian stock markets. Ask about stocks, market trends, and investment concepts."
       />
 

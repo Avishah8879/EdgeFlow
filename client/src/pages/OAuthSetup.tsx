@@ -21,7 +21,7 @@ import {
 import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { COUNTRIES } from "@/lib/countries";
-import { EquityProLogo } from "@/components/TiphubLogo";
+import { EquityProLogo } from "@/components/EquityProLogo";
 import { HalvorsenAttractor } from "@/components/HalvorsenAttractor";
 import { cn } from "@/lib/utils";
 

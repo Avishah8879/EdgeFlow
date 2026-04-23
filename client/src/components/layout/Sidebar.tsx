@@ -72,6 +72,7 @@ const navSections: NavSection[] = [
     items: [
       { label: "Advanced Chart", href: "/chart", icon: LineChart },
       { label: "Compare", href: "/compare", icon: GitCompare },
+      { label: "Pair Trading", href: "/pair-trading", icon: Activity },
       { label: "News", href: "/news", icon: Newspaper },
       { label: "Research Reports", href: "/research-reports", icon: FileText },
     ],

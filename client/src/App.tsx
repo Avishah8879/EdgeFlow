@@ -24,7 +24,7 @@ import Landing from "@/pages/Landing";
 import NotFound from "@/pages/not-found";
 import AuthCallback from "@/pages/AuthCallback";
 
-// ── Tiphub core pages (lazy) ───────────────────────────────────────────────
+// ── Equity Pro core pages (lazy) ───────────────────────────────────────────
 const Home = lazy(() => import("@/pages/Home"));
 const StockDetail = lazy(() => import("@/pages/StockDetail"));
 const Stocks = lazy(() => import("@/pages/Stocks"));
@@ -48,9 +48,9 @@ const HealthcareSector = lazy(() => import("@/pages/market-reports/HealthcareSec
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 
 // ── Auth pages (deferred — placeholders for now) ───────────────────────────
-const TiphubLogin = lazy(() => import("@/pages/TiphubLogin"));
-const TiphubSignup = lazy(() => import("@/pages/TiphubSignup"));
-const TiphubForgotPassword = lazy(() => import("@/pages/TiphubForgotPassword"));
+const EquityProLogin = lazy(() => import("@/pages/EquityProLogin"));
+const EquityProSignup = lazy(() => import("@/pages/EquityProSignup"));
+const EquityProForgotPassword = lazy(() => import("@/pages/EquityProForgotPassword"));
 const OAuthSetup = lazy(() => import("@/pages/OAuthSetup"));
 
 // ── FinTerminal pages (lazy) ───────────────────────────────────────────────
@@ -69,6 +69,7 @@ const EquityScreener = lazy(() => import("@/pages/ft/EquityScreener"));
 const PatternSearch = lazy(() => import("@/pages/ft/PatternSearch"));
 const SystematicPatterns = lazy(() => import("@/pages/ft/SystematicPatterns"));
 const Compare = lazy(() => import("@/pages/ft/Compare"));
+const PairTrading = lazy(() => import("@/pages/ft/PairTrading"));
 const PortfolioOptimizer = lazy(() => import("@/pages/ft/PortfolioOptimizer"));
 const FinancialCalculatorPage = lazy(() => import("@/pages/ft/FinancialCalculatorPage"));
 const ResearchReports = lazy(() => import("@/pages/ft/ResearchReports"));
@@ -125,9 +126,9 @@ function AppRoutes() {
       <Switch>
         {/* ── Public/bare routes ──────────────────────────── */}
         <Route path="/" component={Landing} />
-        <Route path="/login" component={TiphubLogin} />
-        <Route path="/signup" component={TiphubSignup} />
-        <Route path="/forgot-password" component={TiphubForgotPassword} />
+        <Route path="/login" component={EquityProLogin} />
+        <Route path="/signup" component={EquityProSignup} />
+        <Route path="/forgot-password" component={EquityProForgotPassword} />
         <Route path="/auth/callback" component={AuthCallback} />
         <Route path="/auth/oauth-setup" component={OAuthSetup} />
         <Route path="/fyers-token" component={FyersTokenUpdate} />
@@ -135,7 +136,7 @@ function AppRoutes() {
         <Route path="/shared/screener/:token" component={SharedResult} />
         <Route path="/shared/backtest/:token" component={SharedResult} />
 
-        {/* ── Tiphub core pages ────────────────────────────── */}
+        {/* ── Equity Pro core pages ────────────────────────── */}
         <Route path="/home" component={Home} />
         <Route path="/stocks" component={Stocks} />
         <Route path="/stocks/:ticker" component={StockDetail} />
@@ -173,6 +174,7 @@ function AppRoutes() {
         <Route path="/systematic-patterns" component={SystematicPatterns} />
         <Route path="/seasonality" component={Seasonality} />
         <Route path="/compare" component={Compare} />
+        <Route path="/pair-trading" component={PairTrading} />
         <Route path="/portfolio-optimizer" component={PortfolioOptimizer} />
         <Route path="/calculator" component={FinancialCalculatorPage} />
         <Route path="/research-reports" component={ResearchReports} />

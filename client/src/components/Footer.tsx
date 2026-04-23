@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { EquityProLogo } from "@/components/TiphubLogo";
+import { EquityProLogo } from "@/components/EquityProLogo";
 
 export default function Footer() {
   const footerSections = [

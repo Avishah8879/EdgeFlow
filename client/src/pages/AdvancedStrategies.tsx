@@ -40,7 +40,7 @@ export default function AdvancedStrategies() {
         {/* Top Disclaimer */}
         <Card className="p-3 bg-amber-500/10 border-l-4 border-l-amber-500 mb-6">
           <p className="text-xs text-muted-foreground italic">
-            This content is for educational and research purposes only. Tiphub.ai does not provide buy/sell recommendations. Users must conduct independent analysis and consult qualified professionals before any trading decisions.
+            This content is for educational and research purposes only. Equity Pro does not provide buy/sell recommendations. Users must conduct independent analysis and consult qualified professionals before any trading decisions.
           </p>
         </Card>
 
@@ -103,11 +103,11 @@ export default function AdvancedStrategies() {
             </p>
           </section>
 
-          {/* Section 3: Tiphub Platform */}
+          {/* Section 3: Equity Pro Platform */}
           <section className="mb-12">
             <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
               <Target className="h-6 w-6 text-primary" />
-              Tiphub: Democratizing Market Research
+              Equity Pro: Democratizing Market Research
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               Retail trading has never had a shortage of indicators—RSI, MACD,
@@ -118,7 +118,7 @@ export default function AdvancedStrategies() {
               , and doing it in a way that avoids endless manual tinkering.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              That's exactly what Tiphub is built for: you choose the instrument
+              That's exactly what Equity Pro is built for: you choose the instrument
               (script), choose the indicators you trust, and our generative AI
               framework designs <strong>symbolic alpha expressions</strong>{" "}
               (i.e., interpretable trading signals), <strong>backtests</strong>{" "}
@@ -128,7 +128,7 @@ export default function AdvancedStrategies() {
               for TradingView.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              The Tiphub workflow is exactly how quants in Wall Street funds
+              The Equity Pro workflow is exactly how quants in Wall Street funds
               generate alpha for their firms; it is built by a team of cracked
               researchers and traders with solid experience of working in
               high-frequency trading firms and top investment banks, with one
@@ -385,7 +385,7 @@ export default function AdvancedStrategies() {
         {/* Bottom Disclaimer */}
         <Card className="p-3 bg-amber-500/10 border-l-4 border-l-amber-500 mt-8">
           <p className="text-xs text-muted-foreground italic">
-            This content is for educational and research purposes only. Tiphub.ai does not provide buy/sell recommendations. Users must conduct independent analysis and consult qualified professionals before any trading decisions.
+            This content is for educational and research purposes only. Equity Pro does not provide buy/sell recommendations. Users must conduct independent analysis and consult qualified professionals before any trading decisions.
           </p>
         </Card>
 

@@ -31,7 +31,7 @@ interface UseTipTeaseChatReturn {
 }
 
 /**
- * Hook for TipHub AI chat with SSE streaming support.
+ * Hook for Equity Pro AI chat with SSE streaming support.
  *
  * Features:
  * - Real-time streaming responses (typewriter effect)
@@ -62,7 +62,7 @@ export function useTipTeaseChat(): UseTipTeaseChatReturn {
         setSummary(envelope.data ?? envelope);
       }
     } catch (err) {
-      console.error("[TipHub] Failed to fetch summary:", err);
+      console.error("[Equity Pro] Failed to fetch summary:", err);
     }
   }, [baseUrl]);
 
@@ -90,7 +90,7 @@ export function useTipTeaseChat(): UseTipTeaseChatReturn {
           method: "POST",
         });
       } catch (err) {
-        console.error("[TipHub] Failed to cancel stream:", err);
+        console.error("[Equity Pro] Failed to cancel stream:", err);
       }
     }
     cleanup();
@@ -220,7 +220,7 @@ export function useTipTeaseChat(): UseTipTeaseChatReturn {
                 break;
             }
           } catch (parseError) {
-            console.error("[TipHub] Failed to parse SSE event:", parseError);
+            console.error("[Equity Pro] Failed to parse SSE event:", parseError);
           }
         };
 
@@ -245,7 +245,7 @@ export function useTipTeaseChat(): UseTipTeaseChatReturn {
         setError(errorMessage);
         setStatus("error");
         setIsStreaming(false);
-        console.error("[TipHub] Send message error:", err);
+        console.error("[Equity Pro] Send message error:", err);
       }
     },
     [baseUrl, messages, cleanup]

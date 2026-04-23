@@ -20,7 +20,7 @@ import { Link, useLocation } from "wouter";
 import { useRequestPasswordReset, useResetPassword } from "@/hooks/use-password-reset";
 import { toast } from "sonner";
 import { SEO } from "@/components/SEO";
-import { EquityProLogo } from "@/components/TiphubLogo";
+import { EquityProLogo } from "@/components/EquityProLogo";
 import { HalvorsenAttractor } from "@/components/HalvorsenAttractor";
 import { cn } from "@/lib/utils";
 
