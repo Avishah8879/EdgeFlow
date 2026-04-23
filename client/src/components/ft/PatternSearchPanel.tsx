@@ -9,7 +9,14 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { Search, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { Search, TrendingUp, TrendingDown, Activity, ChevronDown } from 'lucide-react';
+import { PatternChartExpansion } from '@/components/ft/pattern-search/PatternChartExpansion';
+
+interface KeyPoint {
+  ts: string;
+  price: number;
+  label: string;
+}
 
 interface Pattern {
   id: string;
@@ -22,6 +29,7 @@ interface Pattern {
   breakoutDirection: 'bullish' | 'bearish' | 'neutral';
   successRate: number;
   description: string;
+  keyPoints?: KeyPoint[];
 }
 
 const patternTypes = [
@@ -50,7 +58,7 @@ export function PatternSearchPanel() {
   const [timeframe, setTimeframe] = useState('1M');
   const [minConfidence, setMinConfidence] = useState([70]);
   const [symbolFilter, setSymbolFilter] = useState('');
-  const [selectedPattern, setSelectedPattern] = useState<Pattern | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Fetch pattern search results
   const { data: patterns = [], isLoading, refetch } = useQuery<Pattern[]>({
@@ -83,67 +91,6 @@ export function PatternSearchPanel() {
     if (confidence >= 85) return 'text-green-500';
     if (confidence >= 70) return 'text-yellow-500';
     return 'text-red-500';
-  };
-
-  const renderPatternPreview = (pattern: Pattern) => {
-    // Simple ASCII art representations of patterns
-    const patternArt: Record<string, string[]> = {
-      'Head and Shoulders': [
-        '      ∧',
-        '     / \\',
-        '    /   \\    ∧',
-        '   /     \\  / \\',
-        '  /       \\/   \\___',
-      ],
-      'Double Top': [
-        '    ∧     ∧',
-        '   / \\   / \\',
-        '  /   \\ /   \\',
-        ' /     V     \\___',
-      ],
-      'Double Bottom': [
-        ' ___     ___',
-        '    \\   /   /',
-        '     \\ /   /',
-        '      V   /',
-        '         /',
-      ],
-      'Ascending Triangle': [
-        '    _____',
-        '   /|',
-        '  / |',
-        ' /  |',
-        '/___|',
-      ],
-      'Cup and Handle': [
-        '\\             /‾\\',
-        ' \\           /  |',
-        '  \\         /   |',
-        '   \\_______/    |',
-      ],
-      'Flag': [
-        '      /',
-        '     /═══',
-        '    /════',
-        '   /═════',
-        '  /',
-      ],
-    };
-
-    const art = patternArt[pattern.patternType] || [
-      '  ?',
-      ' /?\\',
-      '  |',
-      '  Pattern',
-    ];
-
-    return (
-      <div className="font-mono text-xs text-primary/60 leading-tight">
-        {art.map((line, i) => (
-          <div key={i}>{line}</div>
-        ))}
-      </div>
-    );
   };
 
   return (
@@ -223,27 +170,30 @@ export function PatternSearchPanel() {
 
       {/* Results */}
       <Card className="flex-1 p-4 bg-card/50 border-primary/20 overflow-hidden">
-        <div className="h-full flex gap-4">
-          {/* Pattern List */}
-          <div className="flex-1">
-            <div className="mb-2 text-sm text-muted-foreground">
-              Found {filteredPatterns.length} patterns
-            </div>
-            <ScrollArea className="h-[calc(100%-2rem)]">
-              {isLoading ? (
-                <div className="text-center py-4 text-muted-foreground">Searching for patterns...</div>
-              ) : filteredPatterns.length === 0 ? (
-                <div className="text-center py-4 text-muted-foreground">No patterns found</div>
-              ) : (
-                <div className="space-y-2">
-                  {filteredPatterns.map((pattern) => (
-                    <Card
-                      key={pattern.id}
-                      data-testid={`pattern-${pattern.id}`}
-                      className={`p-3 cursor-pointer transition-colors ${
-                        selectedPattern?.id === pattern.id ? 'bg-primary/10 border-primary' : 'hover:bg-primary/5'
-                      }`}
-                      onClick={() => setSelectedPattern(pattern)}
+        <div className="mb-2 text-sm text-muted-foreground">
+          Found {filteredPatterns.length} patterns
+        </div>
+        <ScrollArea className="h-[calc(100%-2rem)]">
+          {isLoading ? (
+            <div className="text-center py-4 text-muted-foreground">Searching for patterns...</div>
+          ) : filteredPatterns.length === 0 ? (
+            <div className="text-center py-4 text-muted-foreground">No patterns found</div>
+          ) : (
+            <div className="space-y-2 pr-2">
+              {filteredPatterns.map((pattern) => {
+                const isExpanded = expandedId === pattern.id;
+                return (
+                  <Card
+                    key={pattern.id}
+                    data-testid={`pattern-${pattern.id}`}
+                    className={`transition-colors ${
+                      isExpanded ? 'bg-primary/5 border-primary' : 'hover:bg-primary/5'
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      className="w-full text-left p-3 cursor-pointer"
+                      onClick={() => setExpandedId(isExpanded ? null : pattern.id)}
                     >
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
@@ -253,7 +203,14 @@ export function PatternSearchPanel() {
                               {pattern.patternType}
                             </Badge>
                           </div>
-                          {getDirectionIcon(pattern.breakoutDirection)}
+                          <div className="flex items-center gap-2">
+                            {getDirectionIcon(pattern.breakoutDirection)}
+                            <ChevronDown
+                              className={`w-4 h-4 text-muted-foreground transition-transform ${
+                                isExpanded ? 'rotate-180' : ''
+                              }`}
+                            />
+                          </div>
                         </div>
                         <div className="text-xs text-muted-foreground">{pattern.companyName}</div>
                         <div className="flex items-center justify-between text-xs">
@@ -264,70 +221,27 @@ export function PatternSearchPanel() {
                             <span className="text-muted-foreground">
                               Success rate: {pattern.successRate}%
                             </span>
+                            <span className="text-muted-foreground font-mono">
+                              {pattern.startDate} → {pattern.endDate}
+                            </span>
                           </div>
                         </div>
                         <Progress value={pattern.confidence} className="h-1" />
                       </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </div>
-
-          {/* Pattern Details */}
-          {selectedPattern && (
-            <Card className="w-80 p-4 bg-black/50 border-primary/30">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-bold text-lg text-primary">
-                    {selectedPattern.symbol} - {selectedPattern.patternType}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{selectedPattern.companyName}</p>
-                </div>
-
-                {/* Pattern Visualization */}
-                <div className="p-4 bg-background rounded border border-primary/20">
-                  {renderPatternPreview(selectedPattern)}
-                </div>
-
-                {/* Pattern Info */}
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Confidence:</span>
-                    <span className={`font-mono ${getConfidenceColor(selectedPattern.confidence)}`}>
-                      {selectedPattern.confidence}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Period:</span>
-                    <span className="font-mono">
-                      {selectedPattern.startDate} to {selectedPattern.endDate}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Direction:</span>
-                    <div className="flex items-center gap-1">
-                      {getDirectionIcon(selectedPattern.breakoutDirection)}
-                      <span className="capitalize">{selectedPattern.breakoutDirection}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Historical Success:</span>
-                    <span className="font-mono">{selectedPattern.successRate}%</span>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div className="pt-2 border-t border-primary/30">
-                  <p className="text-sm text-muted-foreground">
-                    {selectedPattern.description}
-                  </p>
-                </div>
-              </div>
-            </Card>
+                    </button>
+                    {isExpanded && (
+                      <div className="px-3 pb-3 border-t border-primary/20">
+                        <div className="pt-3">
+                          <PatternChartExpansion pattern={pattern} />
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
           )}
-        </div>
+        </ScrollArea>
       </Card>
     </div>
   );

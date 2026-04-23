@@ -194,6 +194,16 @@ def _format_date(ts_str: str) -> str:
         return str(ts_str)[:10]
 
 
+def _kp(idx: int, close: np.ndarray, timestamps: List[str], label: str, price: Optional[float] = None) -> Dict:
+    """Build a key-point dict {ts, price, label} used by the frontend to draw pattern shapes."""
+    i = int(idx)
+    return {
+        'ts': _format_date(timestamps[i]),
+        'price': float(price if price is not None else close[i]),
+        'label': label,
+    }
+
+
 # =============================================================================
 # Pattern detectors
 # =============================================================================
@@ -261,6 +271,13 @@ def _detect_head_and_shoulders(
                 'endDate': _format_date(timestamps[right_idx]),
                 'breakoutDirection': 'bearish',
                 'description': f'Head and Shoulders detected. Head prominence: {head_prominence:.1%}. Shoulder symmetry: {symmetry:.0%}.',
+                'keyPoints': [
+                    _kp(left_idx, close, timestamps, 'Left Shoulder'),
+                    _kp(head_idx, close, timestamps, 'Head'),
+                    _kp(right_idx, close, timestamps, 'Right Shoulder'),
+                    _kp(troughs_between[0], close, timestamps, 'Neckline L'),
+                    _kp(troughs_between[-1], close, timestamps, 'Neckline R'),
+                ],
             }
 
     return best
@@ -322,6 +339,11 @@ def _detect_double_top(
                 'endDate': _format_date(timestamps[p2_idx]),
                 'breakoutDirection': 'bearish',
                 'description': f'Double Top with {price_diff:.1%} price difference between peaks. Trough depth: {depth:.1%}.',
+                'keyPoints': [
+                    _kp(p1_idx, close, timestamps, 'Peak 1'),
+                    _kp(troughs_between[0], close, timestamps, 'Trough'),
+                    _kp(p2_idx, close, timestamps, 'Peak 2'),
+                ],
             }
 
     return best
@@ -377,6 +399,11 @@ def _detect_double_bottom(
                 'endDate': _format_date(timestamps[t2_idx]),
                 'breakoutDirection': 'bullish',
                 'description': f'Double Bottom with {price_diff:.1%} price difference between troughs. Peak height: {height:.1%}.',
+                'keyPoints': [
+                    _kp(t1_idx, close, timestamps, 'Bottom 1'),
+                    _kp(peaks_between[0], close, timestamps, 'Peak'),
+                    _kp(t2_idx, close, timestamps, 'Bottom 2'),
+                ],
             }
 
     return best
@@ -394,8 +421,10 @@ def _detect_ascending_triangle(
         return None
 
     # Use the last few pivots
-    recent_highs = close[highs_idx[-4:]] if len(highs_idx) >= 4 else close[highs_idx]
-    recent_lows = close[lows_idx[-4:]] if len(lows_idx) >= 4 else close[lows_idx]
+    recent_high_indices = highs_idx[-4:] if len(highs_idx) >= 4 else highs_idx
+    recent_low_indices = lows_idx[-4:] if len(lows_idx) >= 4 else lows_idx
+    recent_highs = close[recent_high_indices]
+    recent_lows = close[recent_low_indices]
 
     high_slope = _linear_slope(recent_highs)
     low_slope = _linear_slope(recent_lows)
@@ -428,6 +457,12 @@ def _detect_ascending_triangle(
         'endDate': _format_date(timestamps[end_i]),
         'breakoutDirection': 'bullish',
         'description': f'Ascending Triangle with flat resistance and rising support. Low slope: {low_slope:.4f}.',
+        'keyPoints': [
+            _kp(recent_high_indices[0], close, timestamps, 'Upper Start'),
+            _kp(recent_high_indices[-1], close, timestamps, 'Upper End'),
+            _kp(recent_low_indices[0], close, timestamps, 'Lower Start'),
+            _kp(recent_low_indices[-1], close, timestamps, 'Lower End'),
+        ],
     }
 
 
@@ -442,8 +477,10 @@ def _detect_descending_triangle(
     if len(highs_idx) < 3 or len(lows_idx) < 3:
         return None
 
-    recent_highs = close[highs_idx[-4:]] if len(highs_idx) >= 4 else close[highs_idx]
-    recent_lows = close[lows_idx[-4:]] if len(lows_idx) >= 4 else close[lows_idx]
+    recent_high_indices = highs_idx[-4:] if len(highs_idx) >= 4 else highs_idx
+    recent_low_indices = lows_idx[-4:] if len(lows_idx) >= 4 else lows_idx
+    recent_highs = close[recent_high_indices]
+    recent_lows = close[recent_low_indices]
 
     high_slope = _linear_slope(recent_highs)
     low_slope = _linear_slope(recent_lows)
@@ -468,6 +505,12 @@ def _detect_descending_triangle(
         'endDate': _format_date(timestamps[end_i]),
         'breakoutDirection': 'bearish',
         'description': f'Descending Triangle with falling resistance and flat support. High slope: {high_slope:.4f}.',
+        'keyPoints': [
+            _kp(recent_high_indices[0], close, timestamps, 'Upper Start'),
+            _kp(recent_high_indices[-1], close, timestamps, 'Upper End'),
+            _kp(recent_low_indices[0], close, timestamps, 'Lower Start'),
+            _kp(recent_low_indices[-1], close, timestamps, 'Lower End'),
+        ],
     }
 
 
@@ -482,8 +525,10 @@ def _detect_symmetric_triangle(
     if len(highs_idx) < 3 or len(lows_idx) < 3:
         return None
 
-    recent_highs = close[highs_idx[-4:]] if len(highs_idx) >= 4 else close[highs_idx]
-    recent_lows = close[lows_idx[-4:]] if len(lows_idx) >= 4 else close[lows_idx]
+    recent_high_indices = highs_idx[-4:] if len(highs_idx) >= 4 else highs_idx
+    recent_low_indices = lows_idx[-4:] if len(lows_idx) >= 4 else lows_idx
+    recent_highs = close[recent_high_indices]
+    recent_lows = close[recent_low_indices]
 
     high_slope = _linear_slope(recent_highs)
     low_slope = _linear_slope(recent_lows)
@@ -511,6 +556,12 @@ def _detect_symmetric_triangle(
         'endDate': _format_date(timestamps[end_i]),
         'breakoutDirection': 'neutral',
         'description': f'Symmetric Triangle with converging trendlines. Symmetry: {symmetry:.0%}.',
+        'keyPoints': [
+            _kp(recent_high_indices[0], close, timestamps, 'Upper Start'),
+            _kp(recent_high_indices[-1], close, timestamps, 'Upper End'),
+            _kp(recent_low_indices[0], close, timestamps, 'Lower Start'),
+            _kp(recent_low_indices[-1], close, timestamps, 'Lower End'),
+        ],
     }
 
 
@@ -564,6 +615,9 @@ def _detect_flag(
 
     direction = 'bullish' if bullish_pole else 'bearish'
 
+    flag_hi_price = float(np.max(flag_section))
+    flag_lo_price = float(np.min(flag_section))
+
     return {
         'patternType': 'Flag',
         'confidence': confidence,
@@ -571,6 +625,14 @@ def _detect_flag(
         'endDate': _format_date(timestamps[flag_end]),
         'breakoutDirection': direction,
         'description': f'{"Bullish" if bullish_pole else "Bearish"} Flag pattern. Pole return: {pole_return:.1%}. Channel range: {flag_range:.1%}.',
+        'keyPoints': [
+            _kp(0, close, timestamps, 'Pole Start'),
+            _kp(pole_end, close, timestamps, 'Pole End'),
+            _kp(flag_start, close, timestamps, 'Flag Top Start', price=flag_hi_price),
+            _kp(flag_end, close, timestamps, 'Flag Top End', price=flag_hi_price),
+            _kp(flag_start, close, timestamps, 'Flag Bottom Start', price=flag_lo_price),
+            _kp(flag_end, close, timestamps, 'Flag Bottom End', price=flag_lo_price),
+        ],
     }
 
 
@@ -622,6 +684,14 @@ def _detect_pennant(
         'endDate': _format_date(timestamps[-1]),
         'breakoutDirection': direction,
         'description': f'{"Bullish" if bullish_pole else "Bearish"} Pennant after {pole_return:.1%} pole move.',
+        'keyPoints': [
+            _kp(0, close, timestamps, 'Pole Start'),
+            _kp(pole_end, close, timestamps, 'Pole End'),
+            _kp(pennant_highs[0], close, timestamps, 'Upper Start'),
+            _kp(pennant_highs[-1], close, timestamps, 'Upper End'),
+            _kp(pennant_lows[0], close, timestamps, 'Lower Start'),
+            _kp(pennant_lows[-1], close, timestamps, 'Lower End'),
+        ],
     }
 
 
@@ -687,6 +757,9 @@ def _detect_cup_and_handle(
     confidence = int(depth_symmetry * 25 + u_shape_score * 30 + handle_score * 25 + 20)
     confidence = max(50, min(98, confidence))
 
+    handle_low_idx = int(cup_end + int(np.argmin(handle_section)))
+    cup_end_idx = max(0, cup_end - 1)
+
     return {
         'patternType': 'Cup and Handle',
         'confidence': confidence,
@@ -694,6 +767,14 @@ def _detect_cup_and_handle(
         'endDate': _format_date(timestamps[-1]),
         'breakoutDirection': 'bullish',
         'description': f'Cup and Handle pattern. Cup depth: {left_depth:.1%}. Depth symmetry: {depth_symmetry:.0%}.',
+        'keyPoints': [
+            _kp(0, close, timestamps, 'Cup Start'),
+            _kp(int(cup_min_idx), close, timestamps, 'Cup Bottom'),
+            _kp(cup_end_idx, close, timestamps, 'Cup End'),
+            _kp(cup_end, close, timestamps, 'Handle Start'),
+            _kp(handle_low_idx, close, timestamps, 'Handle Low'),
+            _kp(n - 1, close, timestamps, 'Handle End'),
+        ],
     }
 
 
@@ -708,8 +789,10 @@ def _detect_wedge(
     if len(highs_idx) < 3 or len(lows_idx) < 3:
         return None
 
-    recent_highs = close[highs_idx[-4:]] if len(highs_idx) >= 4 else close[highs_idx]
-    recent_lows = close[lows_idx[-4:]] if len(lows_idx) >= 4 else close[lows_idx]
+    recent_high_indices = highs_idx[-4:] if len(highs_idx) >= 4 else highs_idx
+    recent_low_indices = lows_idx[-4:] if len(lows_idx) >= 4 else lows_idx
+    recent_highs = close[recent_high_indices]
+    recent_lows = close[recent_low_indices]
 
     high_slope = _linear_slope(recent_highs)
     low_slope = _linear_slope(recent_lows)
@@ -755,6 +838,12 @@ def _detect_wedge(
         'endDate': _format_date(timestamps[end_i]),
         'breakoutDirection': direction,
         'description': f'{wedge_type} Wedge pattern. Convergence rate: {slope_diff:.4f}.',
+        'keyPoints': [
+            _kp(recent_high_indices[0], close, timestamps, 'Upper Start'),
+            _kp(recent_high_indices[-1], close, timestamps, 'Upper End'),
+            _kp(recent_low_indices[0], close, timestamps, 'Lower Start'),
+            _kp(recent_low_indices[-1], close, timestamps, 'Lower End'),
+        ],
     }
 
 
