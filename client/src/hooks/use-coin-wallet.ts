@@ -87,6 +87,182 @@ export function useCoinPacks() {
   });
 }
 
+// ─── Admin hooks ─────────────────────────────────────────────────────────────
+
+export interface FeatureCost {
+  feature_key: string;
+  cost: number;
+  description: string | null;
+  is_active: boolean;
+}
+
+export interface AdminCoinPack {
+  id: string;
+  name: string;
+  coin_amount: number;
+  bonus_coins: number;
+  price_inr_paise: number;
+  is_active: boolean;
+  sort_order: number;
+}
+
+const ADMIN_PACKS_KEY    = ["admin", "coin-packs"];
+const ADMIN_FEATURES_KEY = ["admin", "feature-costs"];
+const ADMIN_STATS_KEY    = ["admin", "coin-stats"];
+
+export function useAdminCoinPacks() {
+  const { token } = useAuth();
+  const baseUrl = getAuthBaseUrl();
+  return useQuery<{ data: AdminCoinPack[] }>({
+    queryKey: ADMIN_PACKS_KEY,
+    queryFn: async () => {
+      const r = await fetch(`${baseUrl}/api/admin/coins/packs`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!r.ok) throw new Error("Failed to load packs");
+      return r.json();
+    },
+    enabled: !!token,
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateCoinPack() {
+  const { token } = useAuth();
+  const baseUrl = getAuthBaseUrl();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      name: string; coin_amount: number; bonus_coins: number;
+      price_inr_paise: number; sort_order: number;
+    }) => {
+      const r = await fetch(`${baseUrl}/api/admin/coins/packs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(input),
+      });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        throw new Error(e.message || "Failed to create pack");
+      }
+      return r.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ADMIN_PACKS_KEY }),
+  });
+}
+
+export function useUpdateCoinPack() {
+  const { token } = useAuth();
+  const baseUrl = getAuthBaseUrl();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Partial<{
+      name: string; coin_amount: number; bonus_coins: number;
+      price_inr_paise: number; sort_order: number; is_active: boolean;
+    }> }) => {
+      const r = await fetch(`${baseUrl}/api/admin/coins/packs/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(patch),
+      });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        throw new Error(e.message || "Failed to update pack");
+      }
+      return r.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ADMIN_PACKS_KEY }),
+  });
+}
+
+export function useDeleteCoinPack() {
+  const { token } = useAuth();
+  const baseUrl = getAuthBaseUrl();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const r = await fetch(`${baseUrl}/api/admin/coins/packs/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        throw new Error(e.message || "Failed to delete pack");
+      }
+      return r.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ADMIN_PACKS_KEY }),
+  });
+}
+
+export function useFeatureCosts() {
+  const { token } = useAuth();
+  const baseUrl = getAuthBaseUrl();
+  return useQuery<{ data: FeatureCost[] }>({
+    queryKey: ADMIN_FEATURES_KEY,
+    queryFn: async () => {
+      const r = await fetch(`${baseUrl}/api/admin/coins/feature-costs`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!r.ok) throw new Error("Failed to load feature costs");
+      return r.json();
+    },
+    enabled: !!token,
+    staleTime: 30_000,
+  });
+}
+
+export function useUpdateFeatureCost() {
+  const { token } = useAuth();
+  const baseUrl = getAuthBaseUrl();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ key, cost, description }: { key: string; cost: number; description?: string }) => {
+      const r = await fetch(`${baseUrl}/api/admin/coins/feature-costs/${encodeURIComponent(key)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ cost, description }),
+      });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        throw new Error(e.message || "Failed to update");
+      }
+      return r.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ADMIN_FEATURES_KEY }),
+  });
+}
+
+export interface CoinStats {
+  coins_issued_24h: number;
+  coins_spent_24h: number;
+  txns_24h: number;
+  active_users_24h: number;
+  pending_intents: number;
+  paid_24h: number;
+  revenue_paise_24h: number;
+  active_platforms: number;
+  total_platforms: number;
+}
+
+export function useAdminCoinStats() {
+  const { token } = useAuth();
+  const baseUrl = getAuthBaseUrl();
+  return useQuery<{ data: CoinStats }>({
+    queryKey: ADMIN_STATS_KEY,
+    queryFn: async () => {
+      const r = await fetch(`${baseUrl}/api/admin/coins/stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!r.ok) throw new Error("Failed to load stats");
+      return r.json();
+    },
+    enabled: !!token,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  });
+}
+
 /** Used by admin pages to grant coins to a user. */
 export function useAdminGrantCoins() {
   const { token } = useAuth();

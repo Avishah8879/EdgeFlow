@@ -99,6 +99,9 @@ const AdminEmailSettings = lazy(() => import("@/pages/admin/AdminEmailSettings")
 const AdminApiKeys = lazy(() => import("@/pages/admin/AdminApiKeys"));
 const AdminPlatforms = lazy(() => import("@/pages/admin/AdminPlatforms"));
 const AdminCoinTransactions = lazy(() => import("@/pages/admin/AdminCoinTransactions"));
+const AdminCoinPacks = lazy(() => import("@/pages/admin/AdminCoinPacks"));
+const AdminFeatureCosts = lazy(() => import("@/pages/admin/AdminFeatureCosts"));
+const AdminPayments = lazy(() => import("@/pages/admin/AdminPayments"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
 
 function PageLoader() {
@@ -214,6 +217,9 @@ function AppRoutes() {
         <Route path="/admin/api-keys" component={AdminApiKeys} />
         <Route path="/admin/platforms" component={AdminPlatforms} />
         <Route path="/admin/coins" component={AdminCoinTransactions} />
+        <Route path="/admin/coin-packs" component={AdminCoinPacks} />
+        <Route path="/admin/feature-costs" component={AdminFeatureCosts} />
+        <Route path="/admin/payments" component={AdminPayments} />
         <Route path="/pricing" component={Pricing} />
 
         {/* ── 404 ───────────────────────────────────────────── */}

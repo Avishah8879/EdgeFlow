@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/admin";
 import { useAdminStats } from "@/hooks/use-admin-stats";
+import { useAdminCoinStats } from "@/hooks/use-coin-wallet";
 import {
   Users,
   UserCheck,
@@ -15,6 +16,10 @@ import {
   XCircle,
   TrendingUp,
   LogIn,
+  Coins,
+  Layers,
+  CreditCard,
+  TrendingDown,
 } from "lucide-react";
 
 function StatCard({
@@ -116,6 +121,8 @@ function LoadingSkeleton() {
 
 export default function AdminDashboard() {
   const { data: stats, isLoading, error } = useAdminStats();
+  const { data: coinStats } = useAdminCoinStats();
+  const cs = coinStats?.data;
 
   return (
     <AdminLayout>
@@ -170,6 +177,34 @@ export default function AdminDashboard() {
                 value={stats.activity.loginsToday}
                 description={`${stats.activity.failedLoginsToday} failed attempts`}
                 icon={LogIn}
+              />
+            </div>
+
+            {/* Monetization Stats Grid */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatCard
+                title="Coins Issued (24h)"
+                value={cs?.coins_issued_24h ?? 0}
+                description={`${cs?.active_users_24h ?? 0} active users`}
+                icon={Coins}
+              />
+              <StatCard
+                title="Coins Spent (24h)"
+                value={cs?.coins_spent_24h ?? 0}
+                description={`${cs?.txns_24h ?? 0} ledger entries`}
+                icon={TrendingDown}
+              />
+              <StatCard
+                title="Revenue (24h)"
+                value={cs ? `₹${(cs.revenue_paise_24h / 100).toLocaleString("en-IN")}` : "₹0"}
+                description={`${cs?.paid_24h ?? 0} paid · ${cs?.pending_intents ?? 0} pending`}
+                icon={CreditCard}
+              />
+              <StatCard
+                title="Active Platforms"
+                value={cs?.active_platforms ?? 0}
+                description={`${cs?.total_platforms ?? 0} total registered`}
+                icon={Layers}
               />
             </div>
 

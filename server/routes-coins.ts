@@ -30,6 +30,10 @@ import {
   countTransactionsForUser,
   listAllTransactions,
   listActivePacks,
+  listAllPacks,
+  createPack,
+  updatePack,
+  deletePack,
   listFeatureCosts,
   upsertFeatureCost,
   getOrCreateBalance,
@@ -218,6 +222,88 @@ router.patch('/api/admin/coins/feature-costs/:key', requireAuth, requireAdmin, a
     res.json({ message: 'Feature cost updated' });
   } catch (err: any) {
     res.status(500).json({ message: 'Failed to update feature cost' });
+  }
+});
+
+// ─── Admin: coin pack CRUD ───────────────────────────────────────────────────
+
+const packCreateSchema = z.object({
+  name:            z.string().min(1).max(120),
+  coin_amount:     z.number().int().positive(),
+  bonus_coins:     z.number().int().min(0).default(0),
+  price_inr_paise: z.number().int().positive(),
+  sort_order:      z.number().int().min(0).default(0),
+});
+
+const packPatchSchema = z.object({
+  name:            z.string().min(1).max(120).optional(),
+  coin_amount:     z.number().int().positive().optional(),
+  bonus_coins:     z.number().int().min(0).optional(),
+  price_inr_paise: z.number().int().positive().optional(),
+  sort_order:      z.number().int().min(0).optional(),
+  is_active:       z.boolean().optional(),
+});
+
+router.get('/api/admin/coins/packs', requireAuth, requireAdmin, async (_req, res: Response) => {
+  try {
+    const packs = await listAllPacks();
+    res.json({ data: packs });
+  } catch (err: any) {
+    res.status(500).json({ message: 'Failed to list packs' });
+  }
+});
+
+router.post('/api/admin/coins/packs', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  const parsed = packCreateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ message: 'Invalid input', errors: parsed.error.flatten() });
+    return;
+  }
+  try {
+    const pack = await createPack({
+      name:           parsed.data.name,
+      coinAmount:     parsed.data.coin_amount,
+      bonusCoins:     parsed.data.bonus_coins,
+      priceInrPaise:  parsed.data.price_inr_paise,
+      sortOrder:      parsed.data.sort_order,
+    });
+    res.status(201).json({ data: pack });
+  } catch (err: any) {
+    res.status(500).json({ message: 'Failed to create pack' });
+  }
+});
+
+router.patch('/api/admin/coins/packs/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  const parsed = packPatchSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ message: 'Invalid input', errors: parsed.error.flatten() });
+    return;
+  }
+  try {
+    const updated = await updatePack(req.params.id, {
+      name:           parsed.data.name,
+      coinAmount:     parsed.data.coin_amount,
+      bonusCoins:     parsed.data.bonus_coins,
+      priceInrPaise:  parsed.data.price_inr_paise,
+      sortOrder:      parsed.data.sort_order,
+      isActive:       parsed.data.is_active,
+    });
+    if (!updated) {
+      res.status(404).json({ message: 'Pack not found' });
+      return;
+    }
+    res.json({ data: updated });
+  } catch (err: any) {
+    res.status(500).json({ message: 'Failed to update pack' });
+  }
+});
+
+router.delete('/api/admin/coins/packs/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    await deletePack(req.params.id);
+    res.json({ message: 'Pack deleted' });
+  } catch (err: any) {
+    res.status(500).json({ message: 'Failed to delete pack' });
   }
 });
 

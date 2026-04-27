@@ -9,7 +9,8 @@
 
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { requireAuth } from './middleware/auth';
+import { requireAuth, requireAdmin } from './middleware/auth';
+import { query } from './db/auth-connection';
 import {
   createCashfreeOrder,
   verifyWebhookSignature,
@@ -211,6 +212,93 @@ router.get('/api/payments/history', requireAuth, async (req: Request, res: Respo
     res.json({ data: intents });
   } catch (err: any) {
     res.status(500).json({ message: 'Failed to fetch payment history' });
+  }
+});
+
+// ─── Admin: payment intents explorer ─────────────────────────────────────────
+
+router.get('/api/admin/payments', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const limit  = Math.min(parseInt(req.query.limit as string) || 50, 200);
+    const offset = parseInt(req.query.offset as string) || 0;
+    const status = req.query.status as string | undefined;
+    const kind   = req.query.kind as string | undefined;
+    const userId = req.query.user_id as string | undefined;
+
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let i = 1;
+    if (status && ['pending','paid','failed','expired','refunded'].includes(status)) {
+      conditions.push(`p.status = $${i++}::payment_intent_status`); params.push(status);
+    }
+    if (kind && ['plan','coin_pack'].includes(kind)) {
+      conditions.push(`p.kind = $${i++}::payment_kind`); params.push(kind);
+    }
+    if (userId) {
+      conditions.push(`p.user_id = $${i++}`); params.push(userId);
+    }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    params.push(limit); params.push(offset);
+
+    const r = await query(
+      `SELECT p.*, u.email AS user_email, u.username AS user_username
+       FROM payment_intents p
+       LEFT JOIN users u ON u.id = p.user_id
+       ${where}
+       ORDER BY p.created_at DESC
+       LIMIT $${i} OFFSET $${i + 1}`,
+      params,
+    );
+    res.json({ data: r.rows });
+  } catch (err: any) {
+    console.error('[PAYMENTS] admin list error:', err.message);
+    res.status(500).json({ message: 'Failed to list payments' });
+  }
+});
+
+// ─── Admin: dashboard stats (coins + payments today) ────────────────────────
+
+router.get('/api/admin/coins/stats', requireAuth, requireAdmin, async (_req, res: Response) => {
+  try {
+    const r = await query<any>(
+      `SELECT
+         COALESCE(SUM(CASE WHEN type IN ('purchase','admin_grant','monthly_top_up','refund')
+                            AND created_at >= NOW() - INTERVAL '24 hours'
+                       THEN amount ELSE 0 END), 0) AS coins_issued_24h,
+         COALESCE(SUM(CASE WHEN type = 'debit'
+                            AND created_at >= NOW() - INTERVAL '24 hours'
+                       THEN -amount ELSE 0 END), 0) AS coins_spent_24h,
+         COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours') AS txns_24h,
+         COUNT(DISTINCT user_id) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours') AS active_users_24h
+       FROM coin_transactions`,
+    );
+    const p = await query<any>(
+      `SELECT
+         COUNT(*) FILTER (WHERE status = 'pending') AS pending_intents,
+         COUNT(*) FILTER (WHERE status = 'paid' AND fulfilled_at >= NOW() - INTERVAL '24 hours') AS paid_24h,
+         COALESCE(SUM(amount_paise) FILTER (WHERE status = 'paid' AND fulfilled_at >= NOW() - INTERVAL '24 hours'), 0) AS revenue_paise_24h
+       FROM payment_intents`,
+    );
+    const pl = await query<any>(
+      `SELECT COUNT(*) FILTER (WHERE is_active = TRUE) AS active_platforms,
+              COUNT(*) AS total_platforms FROM platforms`,
+    );
+    res.json({
+      data: {
+        coins_issued_24h:  parseInt(r.rows[0].coins_issued_24h),
+        coins_spent_24h:   parseInt(r.rows[0].coins_spent_24h),
+        txns_24h:          parseInt(r.rows[0].txns_24h),
+        active_users_24h:  parseInt(r.rows[0].active_users_24h),
+        pending_intents:   parseInt(p.rows[0].pending_intents),
+        paid_24h:          parseInt(p.rows[0].paid_24h),
+        revenue_paise_24h: parseInt(p.rows[0].revenue_paise_24h),
+        active_platforms:  parseInt(pl.rows[0].active_platforms),
+        total_platforms:   parseInt(pl.rows[0].total_platforms),
+      },
+    });
+  } catch (err: any) {
+    console.error('[COINS] stats error:', err.message);
+    res.status(500).json({ message: 'Failed to fetch stats' });
   }
 });
 

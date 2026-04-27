@@ -230,11 +230,58 @@ export async function listActivePacks(): Promise<CoinPack[]> {
   return r.rows;
 }
 
+export async function listAllPacks(): Promise<CoinPack[]> {
+  const r = await query<CoinPack>(
+    `SELECT id, name, coin_amount, bonus_coins, price_inr_paise, is_active, sort_order
+     FROM coin_packs ORDER BY sort_order, created_at`,
+  );
+  return r.rows;
+}
+
 export async function getPackById(id: string): Promise<CoinPack | null> {
   return queryOne<CoinPack>(
     'SELECT * FROM coin_packs WHERE id = $1',
     [id],
   );
+}
+
+export async function createPack(input: {
+  name: string;
+  coinAmount: number;
+  bonusCoins: number;
+  priceInrPaise: number;
+  sortOrder?: number;
+}): Promise<CoinPack> {
+  const r = await query<CoinPack>(
+    `INSERT INTO coin_packs (name, coin_amount, bonus_coins, price_inr_paise, sort_order)
+     VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+    [input.name, input.coinAmount, input.bonusCoins, input.priceInrPaise, input.sortOrder ?? 0],
+  );
+  return r.rows[0];
+}
+
+export async function updatePack(
+  id: string,
+  patch: { name?: string; coinAmount?: number; bonusCoins?: number; priceInrPaise?: number; sortOrder?: number; isActive?: boolean },
+): Promise<CoinPack | null> {
+  const sets: string[] = []; const params: any[] = []; let i = 1;
+  if (patch.name           !== undefined) { sets.push(`name = $${i++}`);            params.push(patch.name); }
+  if (patch.coinAmount     !== undefined) { sets.push(`coin_amount = $${i++}`);     params.push(patch.coinAmount); }
+  if (patch.bonusCoins     !== undefined) { sets.push(`bonus_coins = $${i++}`);     params.push(patch.bonusCoins); }
+  if (patch.priceInrPaise  !== undefined) { sets.push(`price_inr_paise = $${i++}`); params.push(patch.priceInrPaise); }
+  if (patch.sortOrder      !== undefined) { sets.push(`sort_order = $${i++}`);      params.push(patch.sortOrder); }
+  if (patch.isActive       !== undefined) { sets.push(`is_active = $${i++}`);       params.push(patch.isActive); }
+  if (sets.length === 0) return getPackById(id);
+  params.push(id);
+  const r = await query<CoinPack>(
+    `UPDATE coin_packs SET ${sets.join(', ')} WHERE id = $${i} RETURNING *`,
+    params,
+  );
+  return r.rows[0] ?? null;
+}
+
+export async function deletePack(id: string): Promise<void> {
+  await query('DELETE FROM coin_packs WHERE id = $1', [id]);
 }
 
 // ─── Feature costs ───────────────────────────────────────────────────────────

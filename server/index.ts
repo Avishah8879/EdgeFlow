@@ -106,6 +106,7 @@ app.use((req, res, next) => {
   // (Dynamic import to avoid ES6 hoisting issues)
   const { default: passport } = await import('./auth/oauth-google.js');
   const { default: authV2Routes } = await import('./routes-auth-v2.js');
+  const { default: authV3Routes } = await import('./routes-auth-v3.js');
   const { default: oauthGoogleRoutes } = await import('./routes-oauth-google.js');
   const { default: subscriptionRoutes } = await import('./routes-subscription.js');
   const { default: adminRoutes } = await import('./routes-admin.js');
@@ -128,6 +129,7 @@ app.use((req, res, next) => {
 
   // Mount new V2 authentication routes
   app.use('/auth', authV2Routes);
+  app.use('/auth', authV3Routes);
   app.use('/auth', oauthGoogleRoutes);
 
   // Mount subscription routes
