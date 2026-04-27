@@ -1,4 +1,7 @@
 import { useState, useCallback } from "react";
+import { useAdminGrantCoins } from "@/hooks/use-coin-wallet";
+import { Label } from "@/components/ui/label";
+import { Coins } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -103,6 +106,57 @@ function TierBadge({ tier }: { tier: UserTier }) {
   );
   return (
     <Badge variant="secondary">Free</Badge>
+  );
+}
+
+function GrantCoinsSection({ userId }: { userId: string }) {
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
+  const grant = useAdminGrantCoins();
+
+  const onGrant = async () => {
+    const n = parseInt(amount, 10);
+    if (!n || n <= 0) return;
+    try {
+      await grant.mutateAsync({ userId, amount: n, reason: reason.trim() || undefined });
+      toast.success(`Granted ${n} coins`);
+      setAmount("");
+      setReason("");
+    } catch (err: any) {
+      toast.error(err?.message ?? "Failed to grant coins");
+    }
+  };
+
+  return (
+    <div className="pt-4 border-t space-y-3">
+      <div className="flex items-center gap-2">
+        <Coins className="h-4 w-4 text-primary" />
+        <Label className="text-sm font-medium">Grant coins</Label>
+      </div>
+      <div className="flex gap-2">
+        <Input
+          type="number"
+          min={1}
+          placeholder="Amount"
+          className="w-24"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+        <Input
+          placeholder="Reason (optional)"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          className="flex-1"
+        />
+        <Button
+          size="sm"
+          onClick={onGrant}
+          disabled={!amount || parseInt(amount) <= 0 || grant.isPending}
+        >
+          {grant.isPending ? "…" : "Grant"}
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -227,6 +281,9 @@ function UserDetailModal({
               )}
             </div>
           </div>
+
+          {/* Grant Coins */}
+          <GrantCoinsSection userId={user.id} />
 
           {/* User ID */}
           <div className="pt-4 border-t">

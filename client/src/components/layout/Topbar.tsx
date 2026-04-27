@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { ModeToggle } from "@/components/ModeToggle";
 import { SearchBar } from "@/components/search/SearchBar";
 import MarketStatusBadge from "@/components/MarketStatusBadge";
+import { CoinBalanceBadge } from "@/components/CoinBalanceBadge";
 import { Zap } from "lucide-react";
 
 export default function Topbar() {
@@ -27,6 +28,7 @@ export default function Topbar() {
         {/* Right section */}
         <div className="flex items-center gap-3 shrink-0">
           <MarketStatusBadge />
+          <CoinBalanceBadge />
           <ModeToggle />
         </div>
       </div>

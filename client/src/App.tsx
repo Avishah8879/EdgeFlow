@@ -98,6 +98,7 @@ const AdminFeatureFlags = lazy(() => import("@/pages/admin/AdminFeatureFlags"));
 const AdminEmailSettings = lazy(() => import("@/pages/admin/AdminEmailSettings"));
 const AdminApiKeys = lazy(() => import("@/pages/admin/AdminApiKeys"));
 const AdminPlatforms = lazy(() => import("@/pages/admin/AdminPlatforms"));
+const AdminCoinTransactions = lazy(() => import("@/pages/admin/AdminCoinTransactions"));
 
 function PageLoader() {
   return (
@@ -211,6 +212,7 @@ function AppRoutes() {
         <Route path="/admin/email-settings" component={AdminEmailSettings} />
         <Route path="/admin/api-keys" component={AdminApiKeys} />
         <Route path="/admin/platforms" component={AdminPlatforms} />
+        <Route path="/admin/coins" component={AdminCoinTransactions} />
 
         {/* ── 404 ───────────────────────────────────────────── */}
         <Route component={NotFound} />
