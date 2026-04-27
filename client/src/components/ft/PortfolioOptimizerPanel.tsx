@@ -34,22 +34,22 @@ import {
 
 const COLORS = {
   primary: "#00FF00",
-  secondary: "#00BFFF",
+  secondary: "#FF6B47",
   accent: "#FFD700",
   buy: "#00FF00",
   sell: "#FF4444",
   hold: "#888888",
-  frontier: "#00BFFF",
+  frontier: "#FF6B47",
   current: "#FFD700",
   tangency: "#00FF00",
   cml: "#FF6B35",
-  equity: "#00BFFF",
+  equity: "#FF6B47",
 };
 
 // Colors for rolling weights stacked area chart
 const ROLLING_WEIGHT_COLORS = [
   "#00FF00", // Matrix Green
-  "#00BFFF", // Electric Blue
+  "#FF6B47", // Coral
   "#FFD700", // Gold
   "#FF6B35", // Orange
   "#E040FB", // Purple

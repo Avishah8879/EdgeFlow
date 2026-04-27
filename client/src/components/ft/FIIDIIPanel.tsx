@@ -158,9 +158,9 @@ export function FIIDIIPanel() {
             <Line 
               type="monotone" 
               dataKey="FII" 
-              stroke="#00BFFF" 
+              stroke="#FF6B47" 
               strokeWidth={2}
-              dot={{ fill: '#00BFFF', r: 3 }}
+              dot={{ fill: '#FF6B47', r: 3 }}
               activeDot={{ r: 5 }}
             />
             <Line 

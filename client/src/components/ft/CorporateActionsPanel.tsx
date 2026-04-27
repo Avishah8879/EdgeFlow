@@ -28,7 +28,7 @@ export function CorporateActionsPanel() {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'DIVIDEND': return 'bg-[#00FF00]/20 text-[#00FF00] border-[#00FF00]/50';
-      case 'SPLIT': return 'bg-[#00BFFF]/20 text-[#00BFFF] border-[#00BFFF]/50';
+      case 'SPLIT': return 'bg-[#FF6B47]/20 text-[#FF6B47] border-[#FF6B47]/50';
       case 'BONUS': return 'bg-[#FFD700]/20 text-[#FFD700] border-[#FFD700]/50';
       case 'RIGHTS': return 'bg-[#FF6B35]/20 text-[#FF6B35] border-[#FF6B35]/50';
       default: return 'bg-[#888888]/20 text-[#888888] border-[#888888]/50';
@@ -128,7 +128,7 @@ export function CorporateActionsPanel() {
                 <div className="col-span-2 text-[11px] text-[#FFFFFF]" data-testid={`text-purpose-${index}`}>
                   {action.purpose}
                 </div>
-                <div className="text-[11px] text-[#00BFFF] font-mono" data-testid={`text-ex-date-${index}`}>
+                <div className="text-[11px] text-[#FF6B47] font-mono" data-testid={`text-ex-date-${index}`}>
                   {formatDate(action.exDate)}
                 </div>
                 <div className="text-[11px] text-[#888888] font-mono" data-testid={`text-record-date-${index}`}>

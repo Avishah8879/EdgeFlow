@@ -450,7 +450,7 @@ export function StockChart({ symbol, initialTimeframe = '1m', hideToolbar = fals
       acc.push({
         time,
         value: point.volume || 0,
-        color: point.close >= point.open ? '#00BFFF33' : '#FF6B3533',
+        color: point.close >= point.open ? '#16A34A33' : '#FF6B3533',
       });
       return acc;
     }, []);
@@ -530,9 +530,9 @@ export function StockChart({ symbol, initialTimeframe = '1m', hideToolbar = fals
       switch (chartType) {
         case 'area': {
           const areaSeries = chart.addSeries(AreaSeries, {
-            lineColor: '#00BFFF',
-            topColor: 'rgba(0, 191, 255, 0.3)',
-            bottomColor: 'rgba(0, 191, 255, 0.05)',
+            lineColor: '#FF6B47',
+            topColor: 'rgba(255, 107, 71, 0.3)',
+            bottomColor: 'rgba(255, 107, 71, 0.05)',
             priceLineVisible: false,
           });
           areaSeries.setData(closingPriceData);
@@ -540,7 +540,7 @@ export function StockChart({ symbol, initialTimeframe = '1m', hideToolbar = fals
         }
         case 'line': {
           const lineSeries = chart.addSeries(LineSeries, {
-            color: '#00BFFF',
+            color: '#FF6B47',
             lineWidth: 2,
           });
           lineSeries.setData(closingPriceData);
@@ -548,7 +548,7 @@ export function StockChart({ symbol, initialTimeframe = '1m', hideToolbar = fals
         }
         case 'bar': {
           const barSeries = chart.addSeries(BarSeries, {
-            upColor: '#00BFFF',
+            upColor: '#16A34A',
             downColor: '#FF6B35',
             thinBars: false,
           });
@@ -557,11 +557,11 @@ export function StockChart({ symbol, initialTimeframe = '1m', hideToolbar = fals
         }
         default: {
           const candlestickSeries = chart.addSeries(CandlestickSeries, {
-            upColor: '#00BFFF',
+            upColor: '#16A34A',
             downColor: '#FF6B35',
-            borderUpColor: '#00BFFF',
+            borderUpColor: '#16A34A',
             borderDownColor: '#FF6B35',
-            wickUpColor: '#00BFFF',
+            wickUpColor: '#16A34A',
             wickDownColor: '#FF6B35',
           });
           candlestickSeries.setData(transformedData);
@@ -911,10 +911,10 @@ export function StockChart({ symbol, initialTimeframe = '1m', hideToolbar = fals
             <span className="text-[10px] text-muted-foreground uppercase">Compare (% change):</span>
             <Badge
               variant="outline"
-              className="text-[9px] px-1.5 py-0.5 border-[#00BFFF] text-[#00BFFF] flex items-center gap-1"
+              className="text-[9px] px-1.5 py-0.5 border-[#FF6B47] text-[#FF6B47] flex items-center gap-1"
             >
               <span className="font-bold">{symbol}</span>
-              <span className="text-[#00BFFF]/70">₹{currentPrice.toFixed(2)}</span>
+              <span className="text-[#FF6B47]/70">₹{currentPrice.toFixed(2)}</span>
               {normalizedCompareData && 'mainNormalized' in normalizedCompareData && normalizedCompareData.mainNormalized.length > 0 && (
                 <span className={cn(
                   "ml-1",

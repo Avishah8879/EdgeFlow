@@ -1,224 +1,132 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
-import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search } from "lucide-react";
-import { SectionHeader } from "@/components/SectionHeader";
-import TabsSection from "@/components/TabsSection";
-import { DataTable } from "@/components/ui/data-table";
 import { useStocks } from "@/hooks/use-stocks";
 import { useBulkLTP } from "@/hooks/use-bulk-ltp";
 import type { CapType } from "@/lib/types";
 import { useSmartLoader } from "@/hooks/use-smart-loader";
-import { AnimatePresence, motion } from "framer-motion";
-import { formatFinancialValue, getValueColorClass } from "@/lib/theme-utils";
+import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SEO } from "@/components/SEO";
 import { PAGE_SEO } from "@/lib/seo-config";
+import { cn } from "@/lib/utils";
+import { fadeInUp, easeOut } from "@/lib/motion";
 
-interface StockRow {
-  id: number;
+const CAP_TABS: { id: CapType | "all"; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "large", label: "Large Cap" },
+  { id: "mid", label: "Mid Cap" },
+  { id: "small", label: "Small Cap" },
+];
+
+function tickerInitials(symbol: string) {
+  const cleaned = symbol.replace(/[^A-Z0-9]/gi, "");
+  return cleaned.slice(0, 2).toUpperCase();
+}
+
+function StockListItem({
+  symbol,
+  name,
+  longName,
+  price,
+  changePercent,
+  sector,
+  onClick,
+}: {
   symbol: string;
   name: string;
-  long_name: string | null;
-  current_price: number | null;
-  price_change: number | null;
-  price_change_percent: number | null;
-  market_cap: number | null;
-  trailing_pe: number | null;
-  forward_pe: number | null;
-  price_to_book: number | null;
-  fifty_two_week_high: number | null;
-  fifty_two_week_low: number | null;
-  exchange: string | null;
+  longName: string | null;
+  price: number | null;
+  changePercent: number | null;
   sector: string | null;
-  industry: string | null;
+  onClick: () => void;
+}) {
+  const isPositive = changePercent != null && changePercent >= 0;
+  const display = longName || name || symbol;
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-4 px-4 md:px-5 py-4 rounded-2xl bg-card border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-colors text-left group"
+      data-testid={`row-stock-${symbol}`}
+    >
+      {/* Avatar */}
+      <div className="shrink-0 w-11 h-11 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-mono text-xs font-semibold text-primary">
+        {tickerInitials(symbol)}
+      </div>
+
+      {/* Symbol + name */}
+      <div className="flex-1 min-w-0 space-y-0.5">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-mono text-sm font-semibold text-foreground">{symbol}</span>
+          {sector && (
+            <Badge variant="secondary" className="text-[10px] h-4 px-1.5 rounded-full">
+              {sector}
+            </Badge>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground truncate">{display}</p>
+      </div>
+
+      {/* Price + change */}
+      <div className="shrink-0 text-right">
+        <div className="font-mono text-sm font-semibold text-foreground tabular-nums">
+          {price != null ? `₹${price.toFixed(2)}` : "—"}
+        </div>
+        {changePercent != null && (
+          <div
+            className={cn(
+              "text-xs font-medium tabular-nums",
+              isPositive ? "text-positive" : "text-negative",
+            )}
+          >
+            {isPositive ? "+" : ""}{changePercent.toFixed(2)}%
+          </div>
+        )}
+      </div>
+    </button>
+  );
 }
 
 export default function Stocks() {
   const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeCapType, setActiveCapType] = useState<CapType>("large");
+  const [activeCapType, setActiveCapType] = useState<CapType | "all">("large");
   const [currentPage, setCurrentPage] = useState(1);
-  const [isMobile, setIsMobile] = useState(false);
 
-  // Detect mobile screen size
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const capTabs = [
-    { id: 'all', label: 'All Stocks' },
-    { id: 'large', label: 'Large Cap' },
-    { id: 'mid', label: 'Mid Cap' },
-    { id: 'small', label: 'Small Cap' },
-  ];
-
-  // Reset page to 1 when filters or search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [activeCapType, searchTerm]);
 
-  // Fetch stocks with current filters
   const { data, isLoading, error } = useStocks({
-    capType: activeCapType,
+    capType: activeCapType as CapType,
     searchTerm,
     page: currentPage,
     limit: 30,
   });
 
-  // Extract symbols for bulk LTP fetch
-  const symbols = useMemo(() => {
-    return data?.data.map(stock => stock.symbol) ?? [];
-  }, [data]);
-
-  // Fetch bulk LTP data for all stocks on current page
+  const symbols = useMemo(() => data?.data.map((s) => s.symbol) ?? [], [data]);
   const { data: ltpData } = useBulkLTP(symbols.length > 0 ? symbols : undefined);
 
-  // Merge LTP data with fundamentals
   const stocksWithLTP = useMemo(() => {
     if (!data?.data) return [];
-
-    return data.data.map(stock => {
+    return data.data.map((stock) => {
       const ltp = ltpData?.[stock.symbol];
       return {
         ...stock,
-        // Override with LTP data if available
         current_price: ltp?.ltp ?? stock.current_price,
         price_change_percent: ltp?.percent_change ?? stock.price_change_percent,
-        price_change: ltp?.ltp && ltp?.percent_change !== null
-          ? (ltp.ltp * ltp.percent_change) / 100
-          : stock.price_change,
       };
     });
   }, [data, ltpData]);
 
-  // Column definitions
-  const columns: ColumnDef<StockRow>[] = useMemo(() => [
-    {
-      accessorKey: "symbol",
-      header: "Symbol",
-      cell: ({ row }) => (
-        <div className="space-y-0.5">
-          <div className="font-semibold font-mono">{row.original.symbol}</div>
-          {/* Show truncated company name on mobile only */}
-          {isMobile && (
-            <div className="text-xs text-muted-foreground truncate max-w-[120px]">
-              {row.original.long_name || row.original.name || "-"}
-            </div>
-          )}
-        </div>
-      ),
-    },
-    ...(!isMobile ? [{
-      accessorKey: "long_name",
-      header: "Company Name",
-      cell: ({ row }: { row: any }) => (
-        <div className="text-sm text-muted-foreground truncate max-w-[200px]">
-          {row.original.long_name || row.original.name || "-"}
-        </div>
-      ),
-    }] : []),
-    {
-      accessorKey: "current_price",
-      header: "Price",
-      cell: ({ row }) => (
-        <div className="font-mono font-semibold">
-          {row.original.current_price
-            ? `₹${row.original.current_price.toFixed(2)}`
-            : "-"}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "price_change_percent",
-      header: "Change",
-      cell: ({ row }) => {
-        const change = row.original.price_change;
-        const changePercent = row.original.price_change_percent;
-        if (change === null || changePercent === null) {
-          return <span className="text-muted-foreground">-</span>;
-        }
-        const isPositive = change >= 0;
-        return (
-          <div className={`font-mono font-semibold ${getValueColorClass(change)}`}>
-            <div>{isPositive ? "+" : ""}{changePercent.toFixed(2)}%</div>
-            <div className="text-xs">
-              {isPositive ? "+" : ""}{change.toFixed(2)}
-            </div>
-          </div>
-        );
-      },
-    },
-    ...(!isMobile ? [{
-      accessorKey: "sector",
-      header: "Sector / Industry",
-      cell: ({ row }: { row: any }) => {
-        const sector = row.original.sector;
-        const industry = row.original.industry;
-        if (!sector && !industry) {
-          return <span className="text-muted-foreground">-</span>;
-        }
-        return (
-          <div className="space-y-0.5 max-w-[180px]">
-            {sector && (
-              <Badge variant="secondary" className="text-xs">
-                {sector}
-              </Badge>
-            )}
-            {industry && (
-              <div className="text-xs text-muted-foreground truncate">
-                {industry}
-              </div>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "market_cap",
-      header: "Market Cap",
-      cell: ({ row }: { row: any }) => (
-        <div className="font-mono text-sm">
-          {row.original.market_cap
-            ? formatFinancialValue(row.original.market_cap, { compact: true })
-            : "-"}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "trailing_pe",
-      header: "P/E",
-      cell: ({ row }: { row: any }) => (
-        <div className="font-mono text-sm">
-          {row.original.trailing_pe?.toFixed(2) ?? "-"}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "price_to_book",
-      header: "P/B",
-      cell: ({ row }: { row: any }) => (
-        <div className="font-mono text-sm">
-          {row.original.price_to_book?.toFixed(2) ?? "-"}
-        </div>
-      ),
-    }] : []),
-  ], [isMobile]);
-
   const totalPages = data?.meta?.total ? Math.ceil(data.meta.total / 30) : 0;
-
-  // Smart loader: show skeleton only if loading takes > 300ms
   const { showSkeleton } = useSmartLoader(isLoading);
 
   return (
     <>
-      {/* SEO Meta Tags */}
       <SEO
         title={PAGE_SEO.stocks.title}
         description={PAGE_SEO.stocks.description}
@@ -226,102 +134,121 @@ export default function Stocks() {
       />
 
       <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-8">
-          <SectionHeader
-            title="Stocks"
-            description="Explore and analyze Indian stocks with real-time data"
-            size="lg"
-          />
+        <div className="max-w-3xl mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-12 space-y-8">
 
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          {/* Hero label + heading */}
+          <motion.div
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            transition={easeOut}
+            className="space-y-2"
+          >
+            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Stocks</p>
+            <h1 className="text-3xl md:text-5xl font-serif italic font-light tracking-tight text-foreground">
+              Browse the market
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-md">
+              {data?.meta?.total ? `${data.meta.total.toLocaleString("en-IN")} stocks` : "Explore Indian equities"} with real-time prices, fundamentals, and AI insights.
+            </p>
+          </motion.div>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
               type="search"
-              placeholder="Search stocks by symbol or name..."
-              className="pl-9"
+              placeholder="Search by symbol or company name…"
+              className="pl-11 h-12 rounded-full bg-card border-border/50 text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               data-testid="input-search-stocks"
             />
           </div>
-        </div>
 
-        <TabsSection
-          tabs={capTabs}
-          defaultTab="large"
-          onTabChange={(tabId) => setActiveCapType(tabId as CapType)}
-        >
-          {() => (
-            <div className="space-y-4 mt-4">
-              <AnimatePresence mode="wait">
-                {showSkeleton ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-10 w-full" />
-                    {[...Array(10)].map((_, i) => (
-                      <Skeleton key={i} className="h-16 w-full" />
-                    ))}
-                  </div>
-                ) : error ? (
-                  <div className="flex flex-col items-center justify-center py-16 px-4">
-                    <p className="text-destructive font-medium mb-2">Failed to load stocks</p>
-                    <p className="text-sm text-muted-foreground">{error.message}</p>
-                  </div>
-                ) : data && data.data.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 px-4">
-                    <p className="text-muted-foreground font-medium mb-2">No stocks found</p>
-                    <p className="text-sm text-muted-foreground">
-                      {searchTerm
-                        ? "Try adjusting your search term"
-                        : "No stocks available for this category"}
-                    </p>
-                  </div>
-                ) : stocksWithLTP.length > 0 ? (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <DataTable
-                      columns={columns}
-                      data={stocksWithLTP}
-                      pageSize={30}
-                      onRowClick={(row) => navigate(`/stocks/${row.symbol}`)}
-                    />
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
+          {/* Cap-type pill chips */}
+          <div className="flex gap-2 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-1">
+            {CAP_TABS.map((tab) => {
+              const active = activeCapType === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveCapType(tab.id)}
+                  className={cn(
+                    "shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-colors border",
+                    active
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-muted-foreground border-border/50 hover:border-primary/40 hover:text-foreground",
+                  )}
+                  data-testid={`tab-cap-${tab.id}`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
 
-              {/* Server-side pagination controls */}
-              {!isLoading && !error && data && data.data.length > 0 && totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-3">
-                  <div className="text-sm text-muted-foreground">
-                    Page {currentPage} of {totalPages} ({data.meta?.total ?? 0} total stocks)
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={currentPage === totalPages}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
+          {/* List */}
+          <div className="space-y-2">
+            {showSkeleton ? (
+              [...Array(8)].map((_, i) => <Skeleton key={i} className="h-[76px] w-full rounded-2xl" />)
+            ) : error ? (
+              <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-12 text-center">
+                <p className="text-destructive font-medium mb-1">Failed to load stocks</p>
+                <p className="text-sm text-destructive/70">{error.message}</p>
+              </div>
+            ) : data && data.data.length === 0 ? (
+              <div className="rounded-2xl border border-border/50 bg-card px-4 py-12 text-center">
+                <p className="text-muted-foreground font-medium mb-1">No stocks found</p>
+                <p className="text-sm text-muted-foreground">
+                  {searchTerm ? "Try a different search term." : "No stocks in this category."}
+                </p>
+              </div>
+            ) : (
+              stocksWithLTP.map((stock) => (
+                <StockListItem
+                  key={stock.id}
+                  symbol={stock.symbol}
+                  name={stock.name}
+                  longName={stock.long_name}
+                  price={stock.current_price}
+                  changePercent={stock.price_change_percent}
+                  sector={stock.sector}
+                  onClick={() => navigate(`/stocks/${stock.symbol}`)}
+                />
+              ))
+            )}
+          </div>
+
+          {/* Pagination */}
+          {!isLoading && !error && data && data.data.length > 0 && totalPages > 1 && (
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-xs text-muted-foreground">
+                Page {currentPage} of {totalPages}
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="rounded-full"
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="rounded-full"
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           )}
-        </TabsSection>
+
         </div>
       </div>
     </>

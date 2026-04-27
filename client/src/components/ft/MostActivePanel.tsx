@@ -89,7 +89,7 @@ export function MostActivePanel() {
               data-testid={`row-active-${stock.symbol}`}
             >
               <div className="flex items-center gap-1">
-                <span className="text-[#00BFFF] font-mono text-sm financial-ticker" data-testid={`text-symbol-${stock.symbol}`}>
+                <span className="text-[#FF6B47] font-mono text-sm financial-ticker" data-testid={`text-symbol-${stock.symbol}`}>
                   {stock.symbol}
                 </span>
                 <span className="text-[10px] text-[#888888]" data-testid={`text-rank-${index + 1}`}>

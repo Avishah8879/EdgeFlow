@@ -11,7 +11,7 @@ export const SEO_CONFIG = {
   defaultOgImage: '/favicon.svg',
   twitterHandle: '@equitypro',
   locale: 'en_IN',
-  themeColor: '#ffa31a',
+  themeColor: '#FF6B47',
 
   // Primary keywords for SEO, GEO, and AEO
   keywords: [

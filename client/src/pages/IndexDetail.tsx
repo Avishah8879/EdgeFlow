@@ -1,179 +1,78 @@
 import { useParams, Redirect, Link } from "wouter";
 import { useState } from "react";
-import { useIndexDetail, IndexDetailData } from "@/hooks/use-index-detail";
+import { useIndexDetail } from "@/hooks/use-index-detail";
 import { useStockLTP } from "@/hooks/use-stock-ltp";
 import { SEO } from "@/components/SEO";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { AlertCircle, TrendingUp, TrendingDown, ChevronUp, ChevronDown, Home, BarChart3 } from "lucide-react";
+import { AlertCircle, Home, ChevronRight, ChevronDown } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
+import { HeroNumber } from "@/components/HeroNumber";
 import PriceChartSection from "@/components/stock-detail/PriceChartSection";
 import TechnicalIndicatorsTable from "@/components/stock-detail/TechnicalIndicatorsTable";
-import ActionCardsWidget from "@/components/stock-detail/ActionCardsWidget";
-import { getValueColorClass, formatFinancialValue } from "@/lib/theme-utils";
+import { formatFinancialValue } from "@/lib/theme-utils";
+import { cn } from "@/lib/utils";
+import { fadeInUp, easeOut } from "@/lib/motion";
 
-// Index Header with breadcrumbs and price display
-function IndexHeader({ data, ltpData }: { data: IndexDetailData; ltpData?: any }) {
-  // Use LTP data if available, otherwise fallback to API data
-  const currentValue = ltpData?.ltp ?? data.price_data.current_value;
-  const changePercent = ltpData?.changePercent ?? data.price_data.change_percent;
-  const change = ltpData?.ltp && data.price_data.previous_close
-    ? ltpData.ltp - data.price_data.previous_close
-    : data.price_data.change;
-
-  const isPositive = change >= 0;
-
+function MetricPill({ label, value }: { label: string; value: string }) {
   return (
-    <div className="space-y-4">
-      {/* Breadcrumbs */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/">
-                <Home className="w-4 h-4" />
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/indices">Indices</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{data.basic_info.symbol}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      {/* Index Info & Value - Row layout on desktop, stacked on mobile */}
-      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-        {/* Left: Index Name & Meta */}
-        <div className="flex-1">
-          <h1 className="text-3xl font-semibold mb-2">
-            {data.basic_info.name}
-          </h1>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <Badge variant="outline">{data.basic_info.symbol}</Badge>
-            <span>•</span>
-            <span>{data.basic_info.exchange}</span>
-            <span>•</span>
-            <Badge className="text-xs bg-purple-500/20 text-purple-400">
-              <BarChart3 className="w-3 h-3 mr-1" />
-              Index
-            </Badge>
-          </div>
-        </div>
-
-        {/* Right: Value Display (stacked - value on top, change below) */}
-        <div className="flex flex-col items-start lg:items-end">
-          <div className="text-3xl sm:text-4xl font-semibold font-mono">
-            {currentValue?.toLocaleString('en-IN', { maximumFractionDigits: 2 }) || "N/A"}
-          </div>
-          {change !== null && changePercent !== null && (
-            <div className={`flex items-center gap-1.5 text-base font-semibold ${getValueColorClass(change)}`}>
-              {isPositive ? (
-                <TrendingUp className="w-4 h-4" />
-              ) : (
-                <TrendingDown className="w-4 h-4" />
-              )}
-              <span>
-                {isPositive ? "+" : ""}
-                {change.toFixed(2)} ({isPositive ? "+" : ""}
-                {changePercent.toFixed(2)}%)
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
+    <div className="flex flex-col gap-1 shrink-0 snap-start min-w-[120px] rounded-2xl border border-border/50 bg-card px-4 py-3">
+      <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-medium">{label}</span>
+      <span className="text-sm font-mono font-semibold text-foreground">{value}</span>
     </div>
   );
 }
 
-// Horizontal Key Metrics Bar for Index (day range, 52W range, volume)
-function IndexKeyMetricsBar({ data }: { data: IndexDetailData }) {
-  const metrics = [
-    { label: "Open", value: data.price_data.open, display: data.price_data.open?.toLocaleString('en-IN', { maximumFractionDigits: 2 }) },
-    { label: "Day High", value: data.price_data.day_high, display: data.price_data.day_high?.toLocaleString('en-IN', { maximumFractionDigits: 2 }) },
-    { label: "Day Low", value: data.price_data.day_low, display: data.price_data.day_low?.toLocaleString('en-IN', { maximumFractionDigits: 2 }) },
-    { label: "Prev Close", value: data.price_data.previous_close, display: data.price_data.previous_close?.toLocaleString('en-IN', { maximumFractionDigits: 2 }) },
-    { label: "52W High", value: data.range_52w.high, display: data.range_52w.high?.toLocaleString('en-IN', { maximumFractionDigits: 2 }) },
-    { label: "52W Low", value: data.range_52w.low, display: data.range_52w.low?.toLocaleString('en-IN', { maximumFractionDigits: 2 }) },
-    { label: "Volume", value: data.price_data.volume, display: formatFinancialValue(data.price_data.volume, { compact: true }) },
-  ];
-
-  // Filter out metrics with null/undefined values
-  const validMetrics = metrics.filter(m => m.value != null && m.display != null && m.display !== "—");
-
+function AccordionSection({
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="overflow-x-auto">
-          <div className="flex gap-6 min-w-max">
-            {validMetrics.map((metric, idx) => (
-              <div key={idx} className="flex flex-col space-y-1">
-                <span className="text-xs text-muted-foreground uppercase tracking-wide">
-                  {metric.label}
-                </span>
-                <span className="text-sm font-semibold font-mono">
-                  {metric.display}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <Collapsible open={open} onOpenChange={setOpen} className="border-b border-border/50">
+      <CollapsibleTrigger className="w-full flex items-center justify-between py-5 group">
+        <span className="text-base md:text-lg font-medium text-foreground group-hover:text-primary transition-colors">
+          {title}
+        </span>
+        <ChevronDown
+          className={cn(
+            "w-5 h-5 text-muted-foreground transition-transform duration-300",
+            open && "rotate-180",
+          )}
+        />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+        <div className="pb-8 pt-2">{children}</div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
 function LoadingState() {
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-8">
-      {/* Breadcrumb skeleton */}
+    <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-12 space-y-8">
       <Skeleton className="h-4 w-48" />
-
-      {/* Header skeleton */}
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-2/3" />
-        <Skeleton className="h-6 w-1/3" />
-        <Skeleton className="h-12 w-64" />
-      </div>
-
-      {/* Key Metrics Bar skeleton */}
-      <Skeleton className="h-20 w-full" />
-
-      {/* Chart section skeleton */}
-      <Skeleton className="h-[500px] w-full" />
-
-      {/* Technical indicators skeleton */}
-      <Skeleton className="h-16 w-full" />
+      <Skeleton className="h-8 w-1/2" />
+      <Skeleton className="h-24 w-2/3 rounded-xl" />
+      <Skeleton className="h-20 w-full rounded-2xl" />
+      <Skeleton className="h-96 w-full rounded-2xl" />
     </div>
   );
 }
 
 function ErrorState({ error }: { error: Error }) {
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16">
+    <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-16">
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Failed to load index details: {error.message}
-        </AlertDescription>
+        <AlertDescription>Failed to load index details: {error.message}</AlertDescription>
       </Alert>
     </div>
   );
@@ -181,116 +80,111 @@ function ErrorState({ error }: { error: Error }) {
 
 export default function IndexDetail() {
   const { symbol: rawSymbol } = useParams<{ symbol: string }>();
-  // Decode URL-encoded characters
   const symbol = rawSymbol ? decodeURIComponent(rawSymbol) : undefined;
-  const [showTechnicals, setShowTechnicals] = useState(false);
 
-  // Redirect if no symbol provided
-  if (!symbol) {
-    return <Redirect to="/indices" />;
-  }
+  if (!symbol) return <Redirect to="/indices" />;
 
-  // API calls in parallel
   const { data, isLoading, error } = useIndexDetail(symbol);
-  const { data: ltpData } = useStockLTP(symbol); // Works for indices too
+  const { data: ltpData } = useStockLTP(symbol);
 
-  // Show error state only for critical failures
-  if (error && !isLoading) {
-    return <ErrorState error={error as Error} />;
-  }
+  if (error && !isLoading) return <ErrorState error={error as Error} />;
+  if (isLoading || !data) return <LoadingState />;
 
-  // Single loading state at page level
-  if (isLoading || !data) {
-    return <LoadingState />;
-  }
-
-  // Extract SEO data
-  const indexName = data.basic_info.name;
   const currentValue = ltpData?.ltp ?? data.price_data.current_value;
+  const changePercent = ltpData?.percent_change ?? data.price_data.change_percent;
+  const change = ltpData?.ltp && data.price_data.previous_close
+    ? ltpData.ltp - data.price_data.previous_close
+    : data.price_data.change;
+  const isPositive = change != null && change >= 0;
+
+  const indexName = data.basic_info.name;
+
+  const keyMetrics = [
+    { label: "Open", value: data.price_data.open?.toLocaleString("en-IN", { maximumFractionDigits: 2 }) },
+    { label: "Day High", value: data.price_data.day_high?.toLocaleString("en-IN", { maximumFractionDigits: 2 }) },
+    { label: "Day Low", value: data.price_data.day_low?.toLocaleString("en-IN", { maximumFractionDigits: 2 }) },
+    { label: "Prev Close", value: data.price_data.previous_close?.toLocaleString("en-IN", { maximumFractionDigits: 2 }) },
+    { label: "52W High", value: data.range_52w.high?.toLocaleString("en-IN", { maximumFractionDigits: 2 }) },
+    { label: "52W Low", value: data.range_52w.low?.toLocaleString("en-IN", { maximumFractionDigits: 2 }) },
+    { label: "Volume", value: data.price_data.volume != null ? formatFinancialValue(data.price_data.volume, { compact: true }) : null },
+  ].filter((m): m is { label: string; value: string } => m.value != null && m.value !== "—");
 
   return (
     <>
-      {/* Dynamic SEO for Index Detail */}
       <SEO
         title={`${symbol} - ${indexName} | Equity Pro`}
-        description={`Track ${indexName} (${symbol}) index performance. Current value: ${currentValue?.toLocaleString('en-IN')}, 52-week range, technical indicators, and interactive price charts.`}
+        description={`Track ${indexName} (${symbol}) index performance. Current value: ${currentValue?.toLocaleString("en-IN")}, 52-week range, technical indicators, and interactive price charts.`}
         canonical={`/index/${encodeURIComponent(symbol)}`}
       />
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-8">
-        {/* Header with Breadcrumbs - Progressive rendering with animation */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+      <div className="min-h-screen bg-background">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-12 space-y-12">
+
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Link href="/" className="hover:text-foreground transition-colors flex items-center gap-1">
+              <Home className="w-3 h-3" /> Home
+            </Link>
+            <ChevronRight className="w-3 h-3 opacity-40" />
+            <Link href="/indices" className="hover:text-foreground transition-colors">Indices</Link>
+            <ChevronRight className="w-3 h-3 opacity-40" />
+            <span className="text-foreground font-medium">{symbol}</span>
+          </nav>
+
+          {/* HERO */}
+          <motion.section
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            transition={easeOut}
+            className="space-y-3"
           >
-            <IndexHeader data={data} ltpData={ltpData} />
-          </motion.div>
-        </AnimatePresence>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-mono text-xs font-semibold px-2 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">
+                {symbol}
+              </span>
+              <span className="text-xs text-muted-foreground">{data.basic_info.exchange}</span>
+              <Badge variant="secondary" className="text-[11px] h-5 rounded-full">Index</Badge>
+            </div>
+            <h1 className="text-xl md:text-2xl font-medium text-muted-foreground">{indexName}</h1>
+            <div className="leading-none">
+              <HeroNumber
+                value={currentValue ?? 0}
+                decimals={2}
+                className="text-6xl md:text-8xl text-foreground"
+              />
+            </div>
+            {change != null && changePercent != null && (
+              <div className={cn(
+                "text-xl md:text-2xl font-medium tabular-nums",
+                isPositive ? "text-positive" : "text-negative",
+              )}>
+                {isPositive ? "+" : ""}{change.toFixed(2)} ({isPositive ? "+" : ""}{changePercent.toFixed(2)}%)
+              </div>
+            )}
+          </motion.section>
 
-        {/* Horizontal Key Metrics Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-        >
-          <IndexKeyMetricsBar data={data} />
-        </motion.div>
+          {/* KEY METRICS — horizontal scroll rail */}
+          {keyMetrics.length > 0 && (
+            <section>
+              <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+                {keyMetrics.map((m) => <MetricPill key={m.label} label={m.label} value={m.value} />)}
+              </div>
+            </section>
+          )}
 
-        {/* Action Cards + Price Chart - Grid layout */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch"
-        >
-          {/* Left column: Action Cards */}
-          <div className="lg:col-span-3 flex flex-col gap-4 min-h-[500px]">
-            <ActionCardsWidget ticker={symbol} />
+          {/* Accordion sections */}
+          <div>
+            <AccordionSection title="Chart" defaultOpen>
+              <PriceChartSection key={symbol} ticker={symbol} />
+            </AccordionSection>
+
+            <AccordionSection title="Technical Indicators">
+              <TechnicalIndicatorsTable ticker={symbol} ltp={ltpData?.ltp ?? null} />
+            </AccordionSection>
           </div>
-          {/* Right column: Price Chart */}
-          <div className="lg:col-span-9">
-            <PriceChartSection key={symbol} ticker={symbol} />
-          </div>
-        </motion.div>
 
-        {/* Technical Indicators - Collapsible */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-        >
-          <Collapsible open={showTechnicals} onOpenChange={setShowTechnicals}>
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Technical Indicators</CardTitle>
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      {showTechnicals ? (
-                        <>
-                          <ChevronUp className="w-4 h-4 mr-2" />
-                          Hide
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown className="w-4 h-4 mr-2" />
-                          Show
-                        </>
-                      )}
-                    </Button>
-                  </CollapsibleTrigger>
-                </div>
-              </CardHeader>
-              <CollapsibleContent>
-                <CardContent className="pt-0">
-                  <TechnicalIndicatorsTable ticker={symbol} ltp={ltpData?.ltp ?? null} />
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-        </motion.div>
+        </div>
       </div>
     </>
   );

@@ -103,7 +103,7 @@ export function IPOPanel() {
   const getStatusColor = (status: IPO['status']): string => {
     switch (status) {
       case 'Trading': return 'text-[#00FF00]';
-      case 'Priced': return 'text-[#00BFFF]';
+      case 'Priced': return 'text-[#FF6B47]';
       case 'Filed': return 'text-[#FFFFFF]';
       case 'Postponed': return 'text-[#FFA500]';
       case 'Withdrawn': return 'text-[#FF6B35]';
@@ -166,7 +166,7 @@ export function IPOPanel() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[#00BFFF] font-mono text-sm font-semibold" data-testid={`text-ticker-${ipo.ticker}`}>
+                      <span className="text-[#FF6B47] font-mono text-sm font-semibold" data-testid={`text-ticker-${ipo.ticker}`}>
                         {ipo.ticker}
                       </span>
                       <Badge 

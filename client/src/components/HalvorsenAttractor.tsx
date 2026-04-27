@@ -40,15 +40,15 @@ const themeConfigs: Record<string, ThemeConfig> = {
     fogColor: 0x1b1b1b,
     fogDensity: 0.008,
     particleOpacity: 0.9,
-    gradientStart: 'rgba(255, 163, 26, 1)',    // #ffa31a
-    gradientEnd: 'rgba(255, 120, 0, 0.6)',     // brighter orange
+    gradientStart: 'rgba(255, 107, 71, 1)',    // #FF6B47 coral
+    gradientEnd: 'rgba(255, 80, 40, 0.6)',     // deeper coral
   },
   light: {
     fogColor: 0xffffff,
     fogDensity: 0.012,
     particleOpacity: 0.5,
-    gradientStart: 'rgba(255, 163, 26, 1)',    // #ffa31a
-    gradientEnd: 'rgba(255, 140, 0, 0.6)',     // slightly brighter
+    gradientStart: 'rgba(255, 107, 71, 1)',    // #FF6B47 coral
+    gradientEnd: 'rgba(255, 80, 40, 0.6)',     // deeper coral
   },
 };
 

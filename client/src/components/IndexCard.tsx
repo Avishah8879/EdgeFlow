@@ -1,7 +1,6 @@
-import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
 import { memo } from "react";
-import { ChangeIndicator, ChangeText } from "@/components/ChangeIndicator";
+import { cn } from "@/lib/utils";
 
 interface IndexCardProps {
   name: string;
@@ -12,28 +11,37 @@ interface IndexCardProps {
   href?: string;
 }
 
-const IndexCard = memo(function IndexCard({ name, symbol, value, change, changePercent, href = "#" }: IndexCardProps) {
+const IndexCard = memo(function IndexCard({
+  name,
+  symbol,
+  value,
+  change,
+  changePercent,
+  href,
+}: IndexCardProps) {
+  const isPositive = changePercent >= 0;
+  const linkHref = href ?? `/index/${encodeURIComponent(symbol)}`;
+
   return (
-    <Link href={href}>
-      <div className="gradient-glow-card">
-        <Card className="gradient-glow-card-inner p-4 cursor-pointer border-0" data-testid={`card-index-${symbol}`}>
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">
-                {name}
-              </h3>
-              <p className="text-lg font-bold mt-1 font-mono">{value.toLocaleString('en-IN')}</p>
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <div className="flex items-center gap-1 text-sm font-medium">
-                <ChangeIndicator value={changePercent} />
-              </div>
-              <div className="text-xs">
-                <ChangeText value={change} showSign decimals={2} showPercent={false} />
-              </div>
-            </div>
-          </div>
-        </Card>
+    <Link href={linkHref}>
+      <div
+        className="group rounded-2xl border border-border/50 bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors p-4 cursor-pointer h-full flex flex-col gap-2"
+        data-testid={`card-index-${symbol}`}
+      >
+        <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-medium truncate">
+          {name}
+        </p>
+        <p className="font-serif italic font-light text-2xl md:text-3xl tabular-nums leading-none text-foreground">
+          {value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </p>
+        <div
+          className={cn(
+            "text-xs font-medium tabular-nums",
+            isPositive ? "text-positive" : "text-negative",
+          )}
+        >
+          {isPositive ? "+" : ""}{change.toFixed(2)} ({isPositive ? "+" : ""}{changePercent.toFixed(2)}%)
+        </div>
       </div>
     </Link>
   );

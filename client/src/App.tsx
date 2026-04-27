@@ -5,6 +5,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PageVisibilityProvider } from "@/contexts/PageVisibilityContext";
@@ -121,8 +122,17 @@ const BARE_PATHS = new Set([
 ]);
 
 function AppRoutes() {
+  const [location] = useLocation();
   return (
     <Suspense fallback={<PageLoader />}>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={location}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+        >
       <Switch>
         {/* ── Public/bare routes ──────────────────────────── */}
         <Route path="/" component={Landing} />
@@ -203,6 +213,8 @@ function AppRoutes() {
         {/* ── 404 ───────────────────────────────────────────── */}
         <Route component={NotFound} />
       </Switch>
+        </motion.div>
+      </AnimatePresence>
     </Suspense>
   );
 }
@@ -250,7 +262,7 @@ function App() {
       <AuthProvider>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           enableSystem={false}
           disableTransitionOnChange={false}
         >

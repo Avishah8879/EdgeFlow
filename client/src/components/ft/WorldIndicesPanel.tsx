@@ -135,7 +135,7 @@ export function WorldIndicesPanel() {
       <div className="p-3 border-b border-[#1a1a1a]">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-[#00BFFF]" />
+            <Globe className="h-4 w-4 text-[#FF6B47]" />
             <span className="text-[10px] uppercase tracking-wider text-[#888888]">World Indices</span>
             <span className="text-[10px] text-[#888888]" data-testid="text-last-update">
               Last: {lastRefresh.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -188,7 +188,7 @@ export function WorldIndicesPanel() {
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-[#00BFFF] font-mono text-sm font-semibold" data-testid={`text-symbol-${index.symbol}`}>
+                          <span className="text-[#FF6B47] font-mono text-sm font-semibold" data-testid={`text-symbol-${index.symbol}`}>
                             {index.symbol}
                           </span>
                           <span className="text-[#FFFFFF] text-sm" data-testid={`text-name-${index.symbol}`}>
