@@ -1,18 +1,17 @@
 import { useParams, Redirect, Link } from "wouter";
 import { useStockDetail } from "@/hooks/use-stock-detail";
 import { useStockLTP } from "@/hooks/use-stock-ltp";
+import { useShareholding } from "@/hooks/use-shareholding";
 import { SEO } from "@/components/SEO";
 import { PAGE_SEO } from "@/lib/seo-config";
 import { generateStockBreadcrumbSchema, generateFinancialProductSchema } from "@/lib/json-ld";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Globe, ExternalLink, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { AlertCircle, Globe, ExternalLink } from "lucide-react";
 import PriceChartSection from "@/components/stock-detail/PriceChartSection";
 import SentimentGauge from "@/components/stock-detail/SentimentGauge";
 import SentimentMetrics from "@/components/stock-detail/SentimentMetrics";
 import SentimentNewsSection from "@/components/stock-detail/SentimentNewsSection";
-import ShareholdingPanel from "@/components/stock-detail/ShareholdingPanel";
 import { SentimentProvider } from "@/contexts/SentimentContext";
 import { cn } from "@/lib/utils";
 
@@ -99,33 +98,18 @@ function SectionCard({
 }
 
 // ─── financial table — used by Quarterly Results, P&L, Balance Sheet, Cash Flows, Ratios ──
-//
-// `subRowsFor` maps a parent field name → list of candidate child field names to look up
-// in the same period object. If any candidates exist in the data, the parent row gets a
-// chevron + button; clicking expands the candidate rows underneath, indented.
 
 function FinancialTable({
   data,
   fieldOrder,
   boldRows = [],
-  subRowsFor,
   emptyMessage,
 }: {
   data: Record<string, any> | null | undefined;
   fieldOrder?: string[];
   boldRows?: string[];
-  subRowsFor?: Record<string, string[]>;
   emptyMessage: string;
 }) {
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const toggle = (f: string) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(f)) next.delete(f);
-      else next.add(f);
-      return next;
-    });
-
   if (!data || Object.keys(data).length === 0) {
     return <div className="text-sm text-muted-foreground py-6 text-center">{emptyMessage}</div>;
   }
@@ -137,17 +121,17 @@ function FinancialTable({
     if (row && typeof row === "object") Object.keys(row).forEach((f) => allFields.add(f));
   });
 
-  const fields: string[] = fieldOrder && fieldOrder.length > 0
-    ? fieldOrder.filter((f) => allFields.has(f))
-    : Array.from(allFields).sort();
+  // Order fields: explicit fieldOrder first, then alphabetical
+  let fields: string[];
+  if (fieldOrder && fieldOrder.length > 0) {
+    const explicit = fieldOrder.filter((f) => allFields.has(f));
+    const remaining = Array.from(allFields).filter((f) => !explicit.includes(f)).sort();
+    fields = [...explicit, ...remaining];
+  } else {
+    fields = Array.from(allFields).sort();
+  }
 
   const boldSet = new Set(boldRows);
-
-  // Resolve which children actually exist in the data for a given parent
-  const getChildrenFor = (parent: string): string[] => {
-    const candidates = subRowsFor?.[parent] ?? [];
-    return candidates.filter((c) => allFields.has(c));
-  };
 
   return (
     <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
@@ -165,80 +149,36 @@ function FinancialTable({
         <tbody>
           {fields.map((field, idx) => {
             const bold = boldSet.has(field);
-            const children = getChildrenFor(field);
-            const canExpand = children.length > 0;
-            const isOpen = expanded.has(field);
-            const stripe = idx % 2 === 1;
             return (
-              <>
-                <tr
-                  key={field}
+              <tr
+                key={field}
+                className={cn(
+                  "border-b border-border/30 last:border-b-0 transition-colors",
+                  idx % 2 === 1 && "bg-muted/20",
+                  "hover:bg-muted/40",
+                )}
+              >
+                <td
                   className={cn(
-                    "border-b border-border/30 transition-colors",
-                    stripe && "bg-muted/20",
-                    "hover:bg-muted/40",
+                    "py-2 pr-3 sticky left-0 whitespace-nowrap text-foreground",
+                    idx % 2 === 1 ? "bg-muted/20" : "bg-card",
+                    bold && "font-semibold",
                   )}
                 >
+                  {field}
+                </td>
+                {periods.map((p) => (
                   <td
+                    key={p}
                     className={cn(
-                      "py-2 pr-3 sticky left-0 whitespace-nowrap text-foreground",
-                      stripe ? "bg-muted/20" : "bg-card",
+                      "text-right py-2 px-3 font-mono tabular-nums whitespace-nowrap",
                       bold && "font-semibold",
                     )}
                   >
-                    {canExpand ? (
-                      <button
-                        type="button"
-                        onClick={() => toggle(field)}
-                        className="flex items-center gap-1.5 hover:text-primary transition-colors"
-                        data-testid={`expand-${field}`}
-                      >
-                        <ChevronRight
-                          className={cn(
-                            "w-3 h-3 text-muted-foreground transition-transform",
-                            isOpen && "rotate-90",
-                          )}
-                        />
-                        {field}
-                        <span className="text-muted-foreground/60 text-xs">+</span>
-                      </button>
-                    ) : (
-                      field
-                    )}
+                    {formatTableCell(data[p]?.[field], field)}
                   </td>
-                  {periods.map((p) => (
-                    <td
-                      key={p}
-                      className={cn(
-                        "text-right py-2 px-3 font-mono tabular-nums whitespace-nowrap",
-                        bold && "font-semibold",
-                      )}
-                    >
-                      {formatTableCell(data[p]?.[field], field)}
-                    </td>
-                  ))}
-                </tr>
-
-                {/* Expanded child rows */}
-                {canExpand && isOpen && children.map((child) => (
-                  <tr
-                    key={`${field}-${child}`}
-                    className="border-b border-border/20 bg-muted/10 hover:bg-muted/30 transition-colors"
-                  >
-                    <td className="py-1.5 pr-3 pl-9 sticky left-0 bg-muted/10 whitespace-nowrap text-xs text-muted-foreground">
-                      {child}
-                    </td>
-                    {periods.map((p) => (
-                      <td
-                        key={p}
-                        className="text-right py-1.5 px-3 font-mono tabular-nums whitespace-nowrap text-xs text-muted-foreground"
-                      >
-                        {formatTableCell(data[p]?.[child], child)}
-                      </td>
-                    ))}
-                  </tr>
                 ))}
-              </>
+              </tr>
             );
           })}
         </tbody>
@@ -372,6 +312,7 @@ export default function StockDetail() {
 
   const { data, isLoading, error } = useStockDetail(ticker);
   const { data: ltpData } = useStockLTP(ticker);
+  const { data: shareholding } = useShareholding(ticker, "quarterly");
 
   if (error && !isLoading) return <ErrorState error={error as Error} />;
   if (isLoading || !data) return <LoadingState />;
@@ -412,44 +353,10 @@ export default function StockDetail() {
   const cons = deriveCons(f);
 
   // Field ordering for tables (most important rows first)
-  const incomeOrder = ["Sales", "Revenue", "Total Revenue", "Expenses", "Operating Profit", "OPM %", "Other Income", "Interest", "Depreciation", "Profit before tax", "Tax %", "Net Profit", "EPS in Rs", "Dividend Payout %"];
+  const incomeOrder = ["Sales", "Revenue", "Total Revenue", "Expenses", "Operating Profit", "OPM %", "Other Income", "Interest", "Depreciation", "Profit before tax", "Tax %", "Net Profit", "EPS in Rs"];
   const balanceOrder = ["Equity Capital", "Reserves", "Borrowings", "Other Liabilities", "Total Liabilities", "Fixed Assets", "CWIP", "Investments", "Other Assets", "Total Assets"];
   const cashflowOrder = ["Cash from Operating Activity", "Cash from Investing Activity", "Cash from Financing Activity", "Net Cash Flow"];
   const ratiosOrder = ["Debtor Days", "Inventory Days", "Days Payable", "Cash Conversion Cycle", "Working Capital Days", "ROCE %"];
-
-  // Sub-row mappings: parent field → child field candidates. Children only render if they
-  // actually exist in the JSONB; otherwise the chevron won't appear. Field names are
-  // best-guesses against common yfinance / screener.in shapes — refine as needed once
-  // the canonical schema is confirmed.
-  const incomeSubRows: Record<string, string[]> = {
-    Sales: ["Product Revenue", "Service Revenue", "Other Revenue", "Sales Growth"],
-    Revenue: ["Product Revenue", "Service Revenue", "Other Revenue"],
-    "Total Revenue": ["Product Revenue", "Service Revenue", "Other Revenue"],
-    Expenses: [
-      "Cost of Revenue", "Cost Of Revenue", "Material Cost", "Manufacturing Cost",
-      "Employee Cost", "Selling Cost", "Administrative Cost",
-      "Operating Expenses", "Research and Development",
-      "Selling General and Administrative", "Other Operating Expenses",
-    ],
-    "Other Income": ["Interest Income", "Investment Income", "Other Non-Operating Income"],
-    "Net Profit": ["Minority Interest", "Discontinued Operations", "Net Income from Continuing Ops"],
-  };
-  const balanceSubRows: Record<string, string[]> = {
-    Borrowings: ["Long Term Debt", "Short Term Debt", "Long Term Borrowings", "Short Term Borrowings"],
-    "Other Liabilities": [
-      "Other Current Liabilities", "Other Non-Current Liabilities",
-      "Deferred Tax Liabilities", "Provisions", "Trade Payables",
-    ],
-    "Other Assets": [
-      "Other Current Assets", "Other Non-Current Assets",
-      "Deferred Tax Assets", "Goodwill", "Trade Receivables", "Inventories",
-    ],
-  };
-  const cashflowSubRows: Record<string, string[]> = {
-    "Cash from Operating Activity": ["Depreciation", "Working Capital Changes", "Tax Paid", "Interest Paid"],
-    "Cash from Investing Activity": ["Capital Expenditure", "Investments Made", "Investments Sold", "Acquisitions"],
-    "Cash from Financing Activity": ["Dividends Paid", "Borrowings Raised", "Borrowings Repaid", "Equity Issued", "Buyback"],
-  };
 
   const announcements = data.external_analyst?.announcements ?? [];
 
@@ -598,7 +505,6 @@ export default function StockDetail() {
               data={data.financials.quarterly_financials}
               fieldOrder={incomeOrder}
               boldRows={["Operating Profit", "Profit before tax", "Net Profit"]}
-              subRowsFor={incomeSubRows}
               emptyMessage="Quarterly results not available."
             />
           </SectionCard>
@@ -609,7 +515,6 @@ export default function StockDetail() {
               data={data.financials.income_statement}
               fieldOrder={incomeOrder}
               boldRows={["Operating Profit", "Profit before tax", "Net Profit"]}
-              subRowsFor={incomeSubRows}
               emptyMessage="Profit & loss data not available."
             />
             {/* Compounded growth */}
@@ -659,7 +564,6 @@ export default function StockDetail() {
               data={data.financials.balance_sheet}
               fieldOrder={balanceOrder}
               boldRows={["Total Liabilities", "Total Assets"]}
-              subRowsFor={balanceSubRows}
               emptyMessage="Balance sheet data not available."
             />
           </SectionCard>
@@ -670,7 +574,6 @@ export default function StockDetail() {
               data={data.financials.cash_flow}
               fieldOrder={cashflowOrder}
               boldRows={["Net Cash Flow"]}
-              subRowsFor={cashflowSubRows}
               emptyMessage="Cash flow data not available."
             />
           </SectionCard>
@@ -716,7 +619,58 @@ export default function StockDetail() {
           </SectionCard>
 
           {/* SHAREHOLDING PATTERN */}
-          <ShareholdingPanel ticker={ticker} />
+          <SectionCard
+            title="Shareholding Pattern"
+            subtitle="Numbers in percentages"
+          >
+            {!shareholding ? (
+              <div className="text-sm text-muted-foreground py-6 text-center">Loading shareholding…</div>
+            ) : shareholding.data.length === 0 ? (
+              <div className="text-sm text-muted-foreground py-6 text-center">Shareholding data not available.</div>
+            ) : (
+              <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b border-border/70">
+                      <th className="text-left py-2.5 pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap" />
+                      {shareholding.quarters.map((q) => (
+                        <th key={q} className="text-right py-2.5 px-3 font-medium text-muted-foreground whitespace-nowrap">
+                          {q}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shareholding.data.map((row, idx) => (
+                      <tr
+                        key={row.category}
+                        className={cn(
+                          "border-b border-border/30 last:border-b-0 transition-colors",
+                          idx % 2 === 1 && "bg-muted/20",
+                          "hover:bg-muted/40",
+                        )}
+                      >
+                        <td className={cn(
+                          "py-2 pr-3 sticky left-0 whitespace-nowrap text-foreground",
+                          idx % 2 === 1 ? "bg-muted/20" : "bg-card",
+                        )}>
+                          {row.category}
+                        </td>
+                        {row.values.map((v, i) => (
+                          <td key={i} className="text-right py-2 px-3 font-mono tabular-nums">
+                            {v == null ? "—" : `${v.toFixed(2)}%`}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="text-xs text-muted-foreground mt-3">
+                  * Classifications may have changed across quarters.
+                </p>
+              </div>
+            )}
+          </SectionCard>
 
           {/* DOCUMENTS / ANNOUNCEMENTS */}
           {announcements.length > 0 && (
