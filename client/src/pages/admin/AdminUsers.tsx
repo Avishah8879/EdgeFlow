@@ -91,13 +91,18 @@ function RoleBadge({ role }: { role: UserRole }) {
 }
 
 function TierBadge({ tier }: { tier: UserTier }) {
-  return tier === "premium" ? (
+  if (tier === "pro") return (
     <Badge variant="default" className="bg-amber-500 text-white">
-      <Crown className="h-3 w-3 mr-1" />
-      Premium
+      <Crown className="h-3 w-3 mr-1" /> Pro
     </Badge>
-  ) : (
-    <Badge variant="secondary">Basic</Badge>
+  );
+  if (tier === "semi") return (
+    <Badge variant="default" className="bg-primary/80 text-white">
+      <Crown className="h-3 w-3 mr-1" /> Semi
+    </Badge>
+  );
+  return (
+    <Badge variant="secondary">Free</Badge>
   );
 }
 
@@ -360,7 +365,7 @@ function UserRow({
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() =>
-                      onUpdateTier(user.id, user.tier === "premium" ? "basic" : "premium")
+                      onUpdateTier(user.id, user.tier === "free" ? "semi" : "free")
                     }
                   >
                     <Crown className="h-4 w-4 mr-2" />
@@ -673,8 +678,9 @@ export default function AdminUsers() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Tiers</SelectItem>
-                    <SelectItem value="basic">Basic</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="semi">Semi</SelectItem>
+                    <SelectItem value="pro">Pro</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -740,13 +746,17 @@ export default function AdminUsers() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => handleBulkTierChange("premium")}>
+                      <DropdownMenuItem onClick={() => handleBulkTierChange("pro")}>
                         <Crown className="h-4 w-4 mr-2 text-amber-500" />
-                        Upgrade to Premium
+                        Set to Pro
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleBulkTierChange("basic")}>
+                      <DropdownMenuItem onClick={() => handleBulkTierChange("semi")}>
+                        <Crown className="h-4 w-4 mr-2 text-primary" />
+                        Set to Semi
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleBulkTierChange("free")}>
                         <Crown className="h-4 w-4 mr-2" />
-                        Downgrade to Basic
+                        Set to Free
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

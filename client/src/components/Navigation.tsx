@@ -66,7 +66,7 @@ export default function Navigation() {
   const { isPremium, isTrialing, trialEndsAt, canStartTrial } =
     useSubscriptionStatus();
   const { isPageVisible } = usePageVisibility();
-  const userTier: UserTier = user?.tier ?? "basic";
+  const userTier: UserTier = user?.tier ?? "free";
   const userInitial =
     (user?.name || user?.email || "?").trim().charAt(0).toUpperCase() || "U";
   const isAdmin = hasAdminAccess(user?.role);
@@ -86,21 +86,21 @@ export default function Navigation() {
       label: "Expert Screener",
       path: "/screener",
       icon: Search,
-      requiredTier: "premium",
+      requiredTier: "semi",
       pageKey: "screener",
     },
     {
       label: "Alpha Generation",
       path: "/alpha-generation",
       icon: LineChart,
-      requiredTier: "premium",
+      requiredTier: "semi",
       pageKey: "backtest",
     },
     {
       label: "EquityPro AI",
       path: "/tip-tease",
       icon: Bot,
-      requiredTier: "premium",
+      requiredTier: "semi",
       pageKey: "tip-tease",
     },
     {
@@ -164,7 +164,7 @@ export default function Navigation() {
                   size="sm"
                   className={cn(
                     "gap-2",
-                    item.requiredTier === "premium" &&
+                    item.requiredTier === "semi" && userTier === "free" &&
                       !isPremium &&
                       "text-muted-foreground"
                   )}
@@ -172,10 +172,10 @@ export default function Navigation() {
                     .toLowerCase()
                     .replace(/\s+/g, "-")}`}
                   aria-disabled={Boolean(
-                    item.requiredTier === "premium" && !isPremium
+                    item.requiredTier === "semi" && userTier === "free" && !isPremium
                   )}
                   title={
-                    item.requiredTier === "premium" && !isPremium
+                    item.requiredTier === "semi" && userTier === "free" && !isPremium
                       ? "Premium workspace"
                       : undefined
                   }
@@ -183,7 +183,7 @@ export default function Navigation() {
                   <item.icon className="h-4 w-4" />
                   <span className="flex items-center gap-1">
                     {item.label}
-                    {item.requiredTier === "premium" && !isPremium && (
+                    {item.requiredTier === "semi" && userTier === "free" && !isPremium && (
                       <span className="rounded-full border border-primary/50 px-1.5 text-[0.6rem] uppercase tracking-widest text-primary">
                         Pro
                       </span>
@@ -231,7 +231,7 @@ export default function Navigation() {
                           <item.icon className="h-4 w-4" />
                           <span className="flex items-center gap-1">
                             {item.label}
-                            {item.requiredTier === "premium" && !isPremium && (
+                            {item.requiredTier === "semi" && userTier === "free" && !isPremium && (
                               <span className="rounded-full border border-primary/50 px-1.5 text-[0.6rem] uppercase tracking-widest text-primary">
                                 Pro
                               </span>

@@ -10,9 +10,10 @@ declare global {
       userId: string;
       email: string;
       username: string;
-      tier: 'basic' | 'premium';
+      tier: 'free' | 'semi' | 'pro';
       provider: 'password' | 'google';
       role?: 'user' | 'moderator' | 'admin' | 'super_admin';
+      platformId?: string;
       type: 'access';
       iat?: number;
       exp?: number;

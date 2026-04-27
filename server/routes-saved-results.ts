@@ -137,10 +137,10 @@ router.post(
 
       // Check limit based on user tier
       const userTier = req.user!.tier;
-      const limitKey = userTier === 'premium'
+      const limitKey = userTier === 'pro' || userTier === 'semi'
         ? 'saved_screener_limit_premium'
         : 'saved_screener_limit_basic';
-      const defaultLimit = userTier === 'premium' ? '50' : '10';
+      const defaultLimit = userTier === 'pro' || userTier === 'semi' ? '50' : '10';
 
       const configResult = await queryOne<{ value: string }>(
         `SELECT value FROM system_config WHERE key = $1`,
@@ -394,10 +394,10 @@ router.post(
 
       // Check limit based on user tier
       const userTier = req.user!.tier;
-      const limitKey = userTier === 'premium'
+      const limitKey = userTier === 'pro' || userTier === 'semi'
         ? 'saved_backtest_limit_premium'
         : 'saved_backtest_limit_basic';
-      const defaultLimit = userTier === 'premium' ? '25' : '5';
+      const defaultLimit = userTier === 'pro' || userTier === 'semi' ? '25' : '5';
 
       const configResult = await queryOne<{ value: string }>(
         `SELECT value FROM system_config WHERE key = $1`,

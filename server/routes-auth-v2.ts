@@ -124,7 +124,7 @@ router.post('/v2/signup', signupRateLimiter, async (req: Request, res: Response)
       username,
       password,
       name: name || username,
-      tier: 'premium', // Default all users to premium until payment is implemented
+      tier: 'free', // New users start on the free tier
       countryOfResidence: countryOfResidence.trim(),
       dateOfBirth: dateOfBirth, // ISO format: YYYY-MM-DD
       phoneNumber: normalizedPhone,
@@ -566,7 +566,7 @@ router.post('/v2/complete-oauth-signup', async (req: Request, res: Response) => 
       return res.status(400).json({ error: 'Username must be at least 3 characters' });
     }
 
-    if (!['basic', 'premium'].includes(tier)) {
+    if (!['free', 'semi', 'pro'].includes(tier)) {
       return res.status(400).json({ error: 'Invalid tier selection' });
     }
 
@@ -1403,8 +1403,8 @@ router.get('/v2/usage-limits', requireAuth, async (req: Request, res: Response) 
 
     // Build limits (defaults < tier config < override)
     const defaultLimits: Record<string, { maxRequests: number; windowMs: number }> = {
-      api_screener: { maxRequests: userTier === 'premium' ? 50 : 3, windowMs: 3600000 },
-      api_backtest: { maxRequests: userTier === 'premium' ? 20 : 2, windowMs: 3600000 }
+      api_screener: { maxRequests: userTier === 'pro' ? 100 : userTier === 'semi' ? 20 : 3, windowMs: 3600000 },
+      api_backtest: { maxRequests: userTier === 'pro' ? 50 : userTier === 'semi' ? 10 : 2, windowMs: 3600000 }
     };
 
     const configs: Record<string, { maxRequests: number; windowMs: number }> = { ...defaultLimits };

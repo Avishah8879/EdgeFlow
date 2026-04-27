@@ -115,6 +115,7 @@ app.use((req, res, next) => {
   const { default: savedResultsRoutes } = await import('./routes-saved-results.js');
   const { default: trackingRoutes } = await import('./routes-tracking.js');
   const { default: developerRoutes } = await import('./routes-developer.js');
+  const { default: platformsRoutes } = await import('./routes-platforms.js');
   const { default: apiKeyAuthRouter } = await import('./middleware/api-key-auth.js');
   const { testAuthDbConnection } = await import('./db/auth-connection.js');
   const { initSubscriptionCronJobs, stopSubscriptionCronJobs } = await import('./cron/subscription-tasks.js');
@@ -132,6 +133,9 @@ app.use((req, res, next) => {
 
   // Mount admin routes (requires admin role)
   app.use('/api/admin', adminRoutes);
+
+  // Mount admin platforms routes (sub-resource under /api/admin)
+  app.use('/api/admin/platforms', platformsRoutes);
 
   // Mount privacy consent routes
   app.use('/api/privacy', privacyRoutes);

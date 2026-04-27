@@ -160,7 +160,7 @@ export async function optionalAuth(
  *   }
  * );
  */
-export function requireTier(allowedTiers: ('basic' | 'premium')[]) {
+export function requireTier(allowedTiers: ('free' | 'semi' | 'pro')[]) {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({ message: 'Authentication required' });

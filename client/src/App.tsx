@@ -97,6 +97,7 @@ const AdminRateLimits = lazy(() => import("@/pages/admin/AdminRateLimits"));
 const AdminFeatureFlags = lazy(() => import("@/pages/admin/AdminFeatureFlags"));
 const AdminEmailSettings = lazy(() => import("@/pages/admin/AdminEmailSettings"));
 const AdminApiKeys = lazy(() => import("@/pages/admin/AdminApiKeys"));
+const AdminPlatforms = lazy(() => import("@/pages/admin/AdminPlatforms"));
 
 function PageLoader() {
   return (
@@ -209,6 +210,7 @@ function AppRoutes() {
         <Route path="/admin/feature-flags" component={AdminFeatureFlags} />
         <Route path="/admin/email-settings" component={AdminEmailSettings} />
         <Route path="/admin/api-keys" component={AdminApiKeys} />
+        <Route path="/admin/platforms" component={AdminPlatforms} />
 
         {/* ── 404 ───────────────────────────────────────────── */}
         <Route component={NotFound} />

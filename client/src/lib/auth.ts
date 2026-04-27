@@ -1,6 +1,6 @@
 const STORAGE_KEY = "equitypro.auth.session";
 
-export type UserTier = "basic" | "premium";
+export type UserTier = "free" | "semi" | "pro";
 export type SubscriptionStatus = "none" | "trialing" | "active" | "cancelled" | "expired";
 export type UserRole = "user" | "moderator" | "admin" | "super_admin";
 
@@ -53,7 +53,7 @@ export function readStoredSession(): AuthSession | null {
       return null;
     }
     if (!parsed.user.tier) {
-      parsed.user.tier = "basic";
+      parsed.user.tier = "free";
     }
     return parsed;
   } catch {

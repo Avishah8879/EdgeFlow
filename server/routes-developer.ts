@@ -60,7 +60,7 @@ router.post('/keys', requireAuth, async (req: Request, res: Response) => {
     const { fullKey, record } = await createApiKey({
       userId: req.user.userId,
       name: name.trim(),
-      tier: req.user.tier || 'basic',
+      tier: req.user.tier === 'pro' ? 'premium' : 'basic',
       allowedOrigins: origins,
     });
 

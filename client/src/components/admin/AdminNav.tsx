@@ -12,6 +12,7 @@ import {
   Flag,
   Key,
   Mail,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ const navItems: AdminNavItem[] = [
   { label: "Notifications", path: "/admin/notifications", icon: Bell },
   { label: "Audit Logs", path: "/admin/audit", icon: FileText },
   { label: "API Keys", path: "/admin/api-keys", icon: Key, requiredRole: "admin" },
+  { label: "Platforms", path: "/admin/platforms", icon: Layers, requiredRole: "admin" },
   { label: "Rate Limits", path: "/admin/rate-limits", icon: Gauge, requiredRole: "admin" },
   { label: "Feature Flags", path: "/admin/feature-flags", icon: Flag, requiredRole: "admin" },
   { label: "Email Settings", path: "/admin/email-settings", icon: Mail, requiredRole: "admin" },

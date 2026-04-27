@@ -103,8 +103,8 @@ const normalizeSession = (maybeRaw: any): AuthSession | null => {
     tier:
       rawUser.tier ||
       raw.tier ||
-      (rawUser.role === "premium" ? "premium" : undefined) ||
-      "basic",
+      undefined ||
+      "free",
     emailVerified: rawUser.emailVerified ?? rawUser.email_verified ?? false,
     // Role for admin access (must persist across page refresh)
     role: rawUser.role || raw.role || undefined,
@@ -142,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const applySession = useCallback((next: AuthSession) => {
     if (!next.user.tier) {
-      next.user.tier = "basic";
+      next.user.tier = "free";
     }
     persistSession(next);
     updateAuthFetchToken(next.token, next.refreshToken);
@@ -212,7 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("Unable to parse auth response.");
       }
       if (!normalized.user.tier) {
-        normalized.user.tier = "basic";
+        normalized.user.tier = "free";
       }
       applySession(normalized);
     },

@@ -14,7 +14,7 @@ type AccessGuardProps = {
 const BASIC_ALLOWED_PAGES = ["Home", "Stocks", "News", "Learn"];
 
 export default function AccessGuard({
-  allowedTiers = ["basic", "premium"],
+  allowedTiers = ["free", "semi", "pro"],
   children,
 }: AccessGuardProps) {
   const { isAuthenticated, user } = useAuth();
@@ -54,7 +54,7 @@ export default function AccessGuard({
     );
   }
 
-  const userTier: UserTier = user?.tier || "basic";
+  const userTier: UserTier = user?.tier || "free";
   if (allowedTiers.includes(userTier)) {
     return <>{children}</>;
   }

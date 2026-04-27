@@ -84,7 +84,7 @@ export function MobileNav({
             // Internal link
             const isActive = location === item.path
             const isRestricted =
-              item.requiredTier === "premium" && !isPremium
+              item.requiredTier === "semi" && !isPremium
 
             return (
               <Link key={item.path} href={item.path}>

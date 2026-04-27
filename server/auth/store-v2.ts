@@ -12,7 +12,7 @@
 import crypto from 'crypto';
 import { query, queryOne, transaction } from '../db/auth-connection';
 import { hashPasswordBcrypt, verifyPasswordBcrypt } from './password-bcrypt';
-import type { UserRole } from './jwt';
+import type { UserRole, UserTier } from './jwt';
 
 /**
  * Subscription Status Type
@@ -33,7 +33,7 @@ export interface DbUser {
   google_id: string | null;
   email_verified: boolean;
   is_active: boolean;
-  tier: 'basic' | 'premium';
+  tier: UserTier;
   role: UserRole;
   last_login_at: Date | null;
   last_login_ip: string | null;
@@ -57,6 +57,8 @@ export interface DbUser {
   cancelled_at: Date | null;
   cancel_at_period_end: boolean;
   stripe_customer_id: string | null;
+  // Multi-platform (added in migration 024)
+  primary_platform_id: string | null;
 }
 
 /**
@@ -69,7 +71,7 @@ export interface PublicUserProfileV2 {
   name: string | null;
   avatarUrl: string | null;
   provider: 'password' | 'google';
-  tier: 'basic' | 'premium';
+  tier: UserTier;
   role: UserRole;
   emailVerified: boolean;
   createdAt: string;
@@ -201,7 +203,7 @@ export async function createPasswordUserV2(payload: {
   username: string;
   password: string;
   name?: string;
-  tier?: 'basic' | 'premium';
+  tier?: UserTier;
   countryOfResidence: string;
   dateOfBirth: string; // ISO format: YYYY-MM-DD
   phoneNumber: string;
@@ -271,7 +273,7 @@ export async function createOAuthUserV2(payload: {
   name?: string;
   googleId: string;
   avatarUrl?: string;
-  tier?: 'basic' | 'premium';
+  tier?: UserTier;
   countryOfResidence: string;
   dateOfBirth: string; // ISO format: YYYY-MM-DD
   phoneNumber: string;

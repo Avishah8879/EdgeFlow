@@ -511,7 +511,7 @@ router.get(
       const offset = (page - 1) * limit;
       const search = (req.query.search as string) || '';
       const role = req.query.role as UserRole | undefined;
-      const tier = req.query.tier as 'basic' | 'premium' | undefined;
+      const tier = req.query.tier as 'free' | 'semi' | 'pro' | undefined;
       const provider = req.query.provider as 'password' | 'google' | undefined;
       const sortBy = (req.query.sortBy as string) || 'created_at';
       const sortOrder = (req.query.sortOrder as string) === 'asc' ? 'ASC' : 'DESC';
@@ -794,12 +794,12 @@ router.patch(
   logAdminAction('update_user_tier'),
   async (req: Request, res: Response) => {
     try {
-      const { tier } = req.body as { tier: 'basic' | 'premium' };
+      const { tier } = req.body as { tier: 'free' | 'semi' | 'pro' };
       const targetUserId = req.params.id;
       const adminUserId = req.user!.userId;
 
-      if (!tier || !['basic', 'premium'].includes(tier)) {
-        res.status(400).json({ message: 'Invalid tier' });
+      if (!tier || !['free', 'semi', 'pro'].includes(tier)) {
+        res.status(400).json({ message: 'Invalid tier. Must be free, semi, or pro.' });
         return;
       }
 
