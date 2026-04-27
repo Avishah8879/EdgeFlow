@@ -66,6 +66,7 @@ import { useTracking } from "@/contexts/TrackingContext";
 import { useMutation } from "@tanstack/react-query";
 import type { BacktestResult } from "../../../shared/schema";
 import { toast } from "sonner";
+import { CoinGateAlert } from "@/components/CoinGateAlert";
 import { UsageLimitBadge } from "@/components/UsageLimitBadge";
 import { useUsageLimits, getTimeUntilReset } from "@/hooks/use-usage-limits";
 import { getApiBaseUrl } from "@/lib/api-config";
@@ -970,6 +971,11 @@ export default function StrategyBacktesting() {
             </div>
           </div>
         </Card>
+
+        {/* Coin gate 402 alert */}
+        {asyncBacktest.coinError && (
+          <CoinGateAlert coinError={asyncBacktest.coinError} className="mb-4" />
+        )}
 
         {/* Progress indicator for async backtests */}
         {asyncBacktest.isRunning && (

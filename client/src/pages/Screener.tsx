@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/dialog";
 import { Bookmark, FolderOpen, Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { CoinGateAlert } from "@/components/CoinGateAlert";
 import { UsageLimitBadge } from "@/components/UsageLimitBadge";
 import { useUsageLimits, getTimeUntilReset } from "@/hooks/use-usage-limits";
 import { SEO } from "@/components/SEO";
@@ -91,6 +92,7 @@ export default function Screener() {
     results,
     summary,
     error,
+    coinError,
     isRunning,
     runScreener,
     cancelScreener,
@@ -560,6 +562,10 @@ export default function Screener() {
               Pre-fetching OHLC data for screening (max 30s)
             </p>
           </div>
+        )}
+
+        {coinError && (
+          <CoinGateAlert coinError={coinError} className="mb-8" />
         )}
 
         {status === "error" && error && (

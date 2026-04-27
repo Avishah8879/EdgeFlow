@@ -21,7 +21,7 @@ const PYTHON_API_URL = process.env.PYTHON_API_URL || "http://localhost:8100";
  * This handles all FastAPI endpoints (market-status, search, stocks, indices, etc.)
  * that are not explicitly registered in Express routes above.
  */
-async function pythonCatchAllProxy(req: Request, res: Response): Promise<void> {
+export async function pythonCatchAllProxy(req: Request, res: Response): Promise<void> {
   try {
     const targetUrl = `${PYTHON_API_URL}${req.originalUrl}`;
     const response = await axios({

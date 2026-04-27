@@ -116,7 +116,8 @@ app.use((req, res, next) => {
   const { default: trackingRoutes } = await import('./routes-tracking.js');
   const { default: developerRoutes } = await import('./routes-developer.js');
   const { default: platformsRoutes } = await import('./routes-platforms.js');
-  const { default: coinsRoutes } = await import('./routes-coins.js');
+  const { default: coinsRoutes }    = await import('./routes-coins.js');
+  const { default: paymentsRoutes } = await import('./routes-payments.js');
   const { default: apiKeyAuthRouter } = await import('./middleware/api-key-auth.js');
   const { testAuthDbConnection } = await import('./db/auth-connection.js');
   const { initSubscriptionCronJobs, stopSubscriptionCronJobs } = await import('./cron/subscription-tasks.js');
@@ -140,6 +141,9 @@ app.use((req, res, next) => {
 
   // Mount coin wallet routes (balance, packs, debit/refund, admin grant)
   app.use('/', coinsRoutes);
+
+  // Mount payment routes (Cashfree checkout + webhook)
+  app.use('/', paymentsRoutes);
 
   // Mount privacy consent routes
   app.use('/api/privacy', privacyRoutes);
@@ -193,6 +197,20 @@ app.use((req, res, next) => {
   const { registerTerminalRoutes } = await import('./routes-terminal.js');
   registerTerminalRoutes(app);
   log('[TERMINAL] EquityPro routes mounted');
+
+  // ── Coin-gated feature interceptors ─────────────────────────────────────
+  // These MUST be registered before registerRoutes() which mounts the
+  // Python catch-all at the end. Specific routes always match before catch-all.
+  const { coinGate } = await import('./middleware/coin-gate.js');
+  const { pythonCatchAllProxy } = await import('./routes.js');
+  const { requireAuth: requireAuthMW } = await import('./middleware/auth.js');
+
+  app.post('/api/strategy-backtest/start',        requireAuthMW, coinGate('backtest.run'),      pythonCatchAllProxy);
+  app.post('/api/strategy-backtest/hybrid/start', requireAuthMW, coinGate('backtest.run'),      pythonCatchAllProxy);
+  app.post('/api/expert-screener/start',          requireAuthMW, coinGate('screener.run'),      pythonCatchAllProxy);
+  app.post('/api/sentiment-analysis/start',       requireAuthMW, coinGate('sentiment.analyze'), pythonCatchAllProxy);
+  log('[COIN_GATE] Coin-gated interceptors mounted for backtest / screener / sentiment');
+  // ────────────────────────────────────────────────────────────────────────
 
   const server = await registerRoutes(app);
 

@@ -2,6 +2,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { PersistedScreenerState } from "@/lib/result-storage";
 import { getApiBaseUrl } from "@/lib/api-config";
+import { parseCoinError, type CoinError } from "@/lib/coin-error";
 
 export interface ExpertScreenerResult {
   symbol: string;
@@ -87,6 +88,7 @@ export function useExpertScreener() {
   const [results, setResults] = useState<ExpertScreenerResult[]>([]);
   const [summary, setSummary] = useState<ExpertScreenerSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [coinError, setCoinError] = useState<CoinError | null>(null);
   const [isRunning, setIsRunning] = useState(false);
 
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -116,6 +118,13 @@ export function useExpertScreener() {
 
         if (!startResponse.ok) {
           const errorData = await startResponse.json().catch(() => ({ detail: "Unknown error" }));
+          const coinErr = parseCoinError(startResponse.status, errorData);
+          if (coinErr) {
+            setCoinError(coinErr);
+            setStatus("idle");
+            setIsRunning(false);
+            return;
+          }
           throw new Error(errorData.detail || `Failed to start screener: ${startResponse.status}`);
         }
 
@@ -275,6 +284,7 @@ export function useExpertScreener() {
     setResults([]);
     setSummary(null);
     setError(null);
+    setCoinError(null);
     setIsRunning(false);
   }, []);
 
@@ -285,6 +295,7 @@ export function useExpertScreener() {
     results,
     summary,
     error,
+    coinError,
     isRunning,
     runScreener,
     cancelScreener,

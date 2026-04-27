@@ -99,6 +99,7 @@ const AdminEmailSettings = lazy(() => import("@/pages/admin/AdminEmailSettings")
 const AdminApiKeys = lazy(() => import("@/pages/admin/AdminApiKeys"));
 const AdminPlatforms = lazy(() => import("@/pages/admin/AdminPlatforms"));
 const AdminCoinTransactions = lazy(() => import("@/pages/admin/AdminCoinTransactions"));
+const Pricing = lazy(() => import("@/pages/Pricing"));
 
 function PageLoader() {
   return (
@@ -120,7 +121,7 @@ function AdminUpdatesListener() {
 const BARE_PATHS = new Set([
   "/", "/login", "/signup", "/forgot-password",
   "/auth/callback", "/auth/oauth-setup", "/privacy",
-  "/fyers-token",
+  "/fyers-token", "/pricing",
 ]);
 
 function AppRoutes() {
@@ -213,6 +214,7 @@ function AppRoutes() {
         <Route path="/admin/api-keys" component={AdminApiKeys} />
         <Route path="/admin/platforms" component={AdminPlatforms} />
         <Route path="/admin/coins" component={AdminCoinTransactions} />
+        <Route path="/pricing" component={Pricing} />
 
         {/* ── 404 ───────────────────────────────────────────── */}
         <Route component={NotFound} />

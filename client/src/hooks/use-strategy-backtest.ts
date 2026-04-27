@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getApiBaseUrl } from "@/lib/api-config";
+import { parseCoinError, type CoinError } from "@/lib/coin-error";
 
 export interface BacktestProgress {
   phase: "fetching_data" | "computing_indicators" | "merging_indicators" | "optimizing";
@@ -68,6 +69,7 @@ export function useStrategyBacktest() {
   const [progress, setProgress] = useState<BacktestProgress | null>(null);
   const [result, setResult] = useState<BacktestResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [coinError, setCoinError] = useState<CoinError | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [duration, setDuration] = useState<number | null>(null);
 
@@ -113,6 +115,12 @@ export function useStrategyBacktest() {
 
         if (!startResponse.ok) {
           const errorData = await startResponse.json().catch(() => ({ detail: "Unknown error" }));
+          const coinErr = parseCoinError(startResponse.status, errorData);
+          if (coinErr) {
+            setCoinError(coinErr);
+            setIsRunning(false);
+            return;
+          }
           throw new Error(errorData.detail || `Failed to start backtest: ${startResponse.status}`);
         }
 
@@ -270,6 +278,7 @@ export function useStrategyBacktest() {
     progress,
     result,
     error,
+    coinError,
     isRunning,
     duration,
     runBacktest,
