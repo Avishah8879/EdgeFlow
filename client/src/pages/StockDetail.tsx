@@ -9,6 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Globe, ExternalLink } from "lucide-react";
 import PriceChartSection from "@/components/stock-detail/PriceChartSection";
+import SentimentGauge from "@/components/stock-detail/SentimentGauge";
+import SentimentMetrics from "@/components/stock-detail/SentimentMetrics";
+import SentimentNewsSection from "@/components/stock-detail/SentimentNewsSection";
+import { SentimentProvider } from "@/contexts/SentimentContext";
 import { cn } from "@/lib/utils";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -35,15 +39,26 @@ function formatRupees(value: number | null | undefined): string {
   return `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 }
 
-// Format JSONB cell values: heuristically choose Cr formatting for large numbers, plain otherwise
-function formatTableCell(value: any): string {
+// Format JSONB cell values per the field's intent:
+//   "OPM %", "Tax %", "Dividend Payout %"  → integer percent
+//   "EPS in Rs", anything containing "EPS" → 2 decimals
+//   Anything else                          → integer with thousand separators
+//   Very large numbers (>=1e9)             → assumed raw rupees, divided to crores
+function formatTableCell(value: any, field: string): string {
   if (value == null) return "—";
   const num = typeof value === "number" ? value : parseFloat(value);
   if (!Number.isFinite(num)) return typeof value === "string" ? value : "—";
-  // If the field is a percentage (small absolute value), show as plain
-  if (Math.abs(num) < 1000) return num.toLocaleString("en-IN", { maximumFractionDigits: 2 });
-  // Larger numbers — assume rupees, show in crores
-  return `${(num / 1e7).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+
+  if (field.trim().endsWith("%")) {
+    return `${Math.round(num)}%`;
+  }
+  if (/eps/i.test(field)) {
+    return num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // If the value is huge (>= 1B), assume the JSONB stores raw rupees → convert to crores
+  const display = Math.abs(num) >= 1e9 ? num / 1e7 : num;
+  return display.toLocaleString("en-IN", { maximumFractionDigits: 0 });
 }
 
 // ─── small UI primitives ────────────────────────────────────────────────────
@@ -57,12 +72,28 @@ function MetricRow({ label, value, accent = false }: { label: string; value: str
   );
 }
 
-function SectionHeader({ title, action }: { title: string; action?: React.ReactNode }) {
+function SectionCard({
+  title,
+  subtitle,
+  action,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-xl font-semibold tracking-tight text-foreground">{title}</h2>
-      {action}
-    </div>
+    <section className="rounded-xl border border-border/50 bg-card p-5 md:p-6">
+      <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">{title}</h2>
+          {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
   );
 }
 
@@ -71,10 +102,12 @@ function SectionHeader({ title, action }: { title: string; action?: React.ReactN
 function FinancialTable({
   data,
   fieldOrder,
+  boldRows = [],
   emptyMessage,
 }: {
   data: Record<string, any> | null | undefined;
   fieldOrder?: string[];
+  boldRows?: string[];
   emptyMessage: string;
 }) {
   if (!data || Object.keys(data).length === 0) {
@@ -98,14 +131,14 @@ function FinancialTable({
     fields = Array.from(allFields).sort();
   }
 
+  const boldSet = new Set(boldRows);
+
   return (
     <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
-      <table className="w-full text-sm">
+      <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="border-b border-border/70">
-            <th className="text-left py-2.5 pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap">
-              Metric
-            </th>
+            <th className="text-left py-2.5 pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap" />
             {periods.map((p) => (
               <th key={p} className="text-right py-2.5 px-3 font-medium text-muted-foreground whitespace-nowrap">
                 {p}
@@ -114,16 +147,40 @@ function FinancialTable({
           </tr>
         </thead>
         <tbody>
-          {fields.map((field) => (
-            <tr key={field} className="border-b border-border/30 last:border-b-0 hover:bg-muted/30 transition-colors">
-              <td className="py-2 pr-3 sticky left-0 bg-card whitespace-nowrap text-foreground">{field}</td>
-              {periods.map((p) => (
-                <td key={p} className="text-right py-2 px-3 font-mono tabular-nums whitespace-nowrap">
-                  {formatTableCell(data[p]?.[field])}
+          {fields.map((field, idx) => {
+            const bold = boldSet.has(field);
+            return (
+              <tr
+                key={field}
+                className={cn(
+                  "border-b border-border/30 last:border-b-0 transition-colors",
+                  idx % 2 === 1 && "bg-muted/20",
+                  "hover:bg-muted/40",
+                )}
+              >
+                <td
+                  className={cn(
+                    "py-2 pr-3 sticky left-0 whitespace-nowrap text-foreground",
+                    idx % 2 === 1 ? "bg-muted/20" : "bg-card",
+                    bold && "font-semibold",
+                  )}
+                >
+                  {field}
                 </td>
-              ))}
-            </tr>
-          ))}
+                {periods.map((p) => (
+                  <td
+                    key={p}
+                    className={cn(
+                      "text-right py-2 px-3 font-mono tabular-nums whitespace-nowrap",
+                      bold && "font-semibold",
+                    )}
+                  >
+                    {formatTableCell(data[p]?.[field], field)}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -443,21 +500,21 @@ export default function StockDetail() {
           <p className="text-xs text-muted-foreground -mt-4">* Pros and cons are derived from current fundamentals.</p>
 
           {/* QUARTERLY RESULTS */}
-          <section className="rounded-xl border border-border/50 bg-card p-5">
-            <SectionHeader title="Quarterly Results" />
+          <SectionCard title="Quarterly Results" subtitle="Consolidated figures in Rs. Crores">
             <FinancialTable
               data={data.financials.quarterly_financials}
               fieldOrder={incomeOrder}
+              boldRows={["Operating Profit", "Profit before tax", "Net Profit"]}
               emptyMessage="Quarterly results not available."
             />
-          </section>
+          </SectionCard>
 
           {/* PROFIT & LOSS */}
-          <section className="rounded-xl border border-border/50 bg-card p-5">
-            <SectionHeader title="Profit & Loss" />
+          <SectionCard title="Profit & Loss" subtitle="Consolidated figures in Rs. Crores">
             <FinancialTable
               data={data.financials.income_statement}
               fieldOrder={incomeOrder}
+              boldRows={["Operating Profit", "Profit before tax", "Net Profit"]}
               emptyMessage="Profit & loss data not available."
             />
             {/* Compounded growth */}
@@ -499,71 +556,83 @@ export default function StockDetail() {
                 ]}
               />
             </div>
-          </section>
+          </SectionCard>
 
           {/* BALANCE SHEET */}
-          <section className="rounded-xl border border-border/50 bg-card p-5">
-            <SectionHeader title="Balance Sheet" />
+          <SectionCard title="Balance Sheet" subtitle="Consolidated figures in Rs. Crores">
             <FinancialTable
               data={data.financials.balance_sheet}
               fieldOrder={balanceOrder}
+              boldRows={["Total Liabilities", "Total Assets"]}
               emptyMessage="Balance sheet data not available."
             />
-          </section>
+          </SectionCard>
 
           {/* CASH FLOWS */}
-          <section className="rounded-xl border border-border/50 bg-card p-5">
-            <SectionHeader title="Cash Flows" />
+          <SectionCard title="Cash Flows" subtitle="Consolidated figures in Rs. Crores">
             <FinancialTable
               data={data.financials.cash_flow}
               fieldOrder={cashflowOrder}
+              boldRows={["Net Cash Flow"]}
               emptyMessage="Cash flow data not available."
             />
-          </section>
+          </SectionCard>
 
           {/* RATIOS */}
-          <section className="rounded-xl border border-border/50 bg-card p-5">
-            <SectionHeader title="Ratios" />
+          <SectionCard title="Ratios" subtitle="Consolidated figures">
             <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-border/70">
-                    <th className="text-left py-2.5 pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap">Metric</th>
+                    <th className="text-left py-2.5 pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap" />
                     <th className="text-right py-2.5 px-3 font-medium text-muted-foreground whitespace-nowrap">Latest</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {ratiosOrder.map((label) => {
+                  {ratiosOrder.map((label, idx) => {
                     let value = "—";
-                    if (label === "ROCE %" && f.return_on_assets != null) value = formatPct(f.return_on_assets * 100);
+                    if (label === "ROCE %" && f.return_on_assets != null) value = `${Math.round(f.return_on_assets * 100)}%`;
+                    const bold = label === "Cash Conversion Cycle" || label === "ROCE %" || label === "Days Payable";
                     return (
-                      <tr key={label} className="border-b border-border/30 last:border-b-0 hover:bg-muted/30 transition-colors">
-                        <td className="py-2 pr-3 sticky left-0 bg-card whitespace-nowrap text-foreground">{label}</td>
-                        <td className="text-right py-2 px-3 font-mono tabular-nums">{value}</td>
+                      <tr
+                        key={label}
+                        className={cn(
+                          "border-b border-border/30 last:border-b-0 transition-colors",
+                          idx % 2 === 1 && "bg-muted/20",
+                          "hover:bg-muted/40",
+                        )}
+                      >
+                        <td className={cn(
+                          "py-2 pr-3 sticky left-0 whitespace-nowrap text-foreground",
+                          idx % 2 === 1 ? "bg-muted/20" : "bg-card",
+                          bold && "font-semibold",
+                        )}>
+                          {label}
+                        </td>
+                        <td className={cn("text-right py-2 px-3 font-mono tabular-nums", bold && "font-semibold")}>{value}</td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
             </div>
-          </section>
+          </SectionCard>
 
           {/* SHAREHOLDING PATTERN */}
-          <section className="rounded-xl border border-border/50 bg-card p-5">
-            <SectionHeader title="Shareholding Pattern" />
+          <SectionCard
+            title="Shareholding Pattern"
+            subtitle="Numbers in percentages"
+          >
             {!shareholding ? (
               <div className="text-sm text-muted-foreground py-6 text-center">Loading shareholding…</div>
             ) : shareholding.data.length === 0 ? (
               <div className="text-sm text-muted-foreground py-6 text-center">Shareholding data not available.</div>
             ) : (
               <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
-                <p className="text-xs text-muted-foreground mb-3">Numbers in percentages</p>
-                <table className="w-full text-sm">
+                <table className="w-full text-sm border-collapse">
                   <thead>
                     <tr className="border-b border-border/70">
-                      <th className="text-left py-2.5 pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap">
-                        Category
-                      </th>
+                      <th className="text-left py-2.5 pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap" />
                       {shareholding.quarters.map((q) => (
                         <th key={q} className="text-right py-2.5 px-3 font-medium text-muted-foreground whitespace-nowrap">
                           {q}
@@ -572,9 +641,21 @@ export default function StockDetail() {
                     </tr>
                   </thead>
                   <tbody>
-                    {shareholding.data.map((row) => (
-                      <tr key={row.category} className="border-b border-border/30 last:border-b-0 hover:bg-muted/30 transition-colors">
-                        <td className="py-2 pr-3 sticky left-0 bg-card whitespace-nowrap text-foreground">{row.category}</td>
+                    {shareholding.data.map((row, idx) => (
+                      <tr
+                        key={row.category}
+                        className={cn(
+                          "border-b border-border/30 last:border-b-0 transition-colors",
+                          idx % 2 === 1 && "bg-muted/20",
+                          "hover:bg-muted/40",
+                        )}
+                      >
+                        <td className={cn(
+                          "py-2 pr-3 sticky left-0 whitespace-nowrap text-foreground",
+                          idx % 2 === 1 ? "bg-muted/20" : "bg-card",
+                        )}>
+                          {row.category}
+                        </td>
                         {row.values.map((v, i) => (
                           <td key={i} className="text-right py-2 px-3 font-mono tabular-nums">
                             {v == null ? "—" : `${v.toFixed(2)}%`}
@@ -584,14 +665,16 @@ export default function StockDetail() {
                     ))}
                   </tbody>
                 </table>
+                <p className="text-xs text-muted-foreground mt-3">
+                  * Classifications may have changed across quarters.
+                </p>
               </div>
             )}
-          </section>
+          </SectionCard>
 
           {/* DOCUMENTS / ANNOUNCEMENTS */}
           {announcements.length > 0 && (
-            <section className="rounded-xl border border-border/50 bg-card p-5">
-              <SectionHeader title="Documents" />
+            <SectionCard title="Documents">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {announcements.slice(0, 8).map((a, i) => (
                   <a
@@ -613,8 +696,22 @@ export default function StockDetail() {
                   </a>
                 ))}
               </div>
-            </section>
+            </SectionCard>
           )}
+
+          {/* SENTIMENT + NEWS (re-added per user request) */}
+          <SentimentProvider ticker={ticker}>
+            <SectionCard title="AI Sentiment">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <SentimentGauge />
+                <SentimentMetrics />
+              </div>
+            </SectionCard>
+
+            <SectionCard title="News">
+              <SentimentNewsSection />
+            </SectionCard>
+          </SentimentProvider>
 
           {/* Footer link back */}
           <div className="pt-2 pb-8">
