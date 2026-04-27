@@ -1,101 +1,244 @@
 import { useParams, Redirect, Link } from "wouter";
-import { useState } from "react";
 import { useStockDetail } from "@/hooks/use-stock-detail";
 import { useStockLTP } from "@/hooks/use-stock-ltp";
+import { useShareholding } from "@/hooks/use-shareholding";
 import { SEO } from "@/components/SEO";
 import { PAGE_SEO } from "@/lib/seo-config";
 import { generateStockBreadcrumbSchema, generateFinancialProductSchema } from "@/lib/json-ld";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AlertCircle, Home, ChevronRight, ChevronDown, Bookmark, Brain, GitCompare, Zap } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { motion } from "framer-motion";
-import { HeroNumber } from "@/components/HeroNumber";
-import StockScorecard from "@/components/stock-detail/StockScorecard";
-import AnalystRecommendationCard from "@/components/stock-detail/AnalystRecommendationCard";
+import { AlertCircle, Globe, ExternalLink } from "lucide-react";
 import PriceChartSection from "@/components/stock-detail/PriceChartSection";
-import SentimentGauge from "@/components/stock-detail/SentimentGauge";
-import SentimentMetrics from "@/components/stock-detail/SentimentMetrics";
-import FundamentalsTable from "@/components/stock-detail/FundamentalsTable";
-import ShareholdingPattern from "@/components/stock-detail/ShareholdingPattern";
-import TechnicalIndicatorsTable from "@/components/stock-detail/TechnicalIndicatorsTable";
-import ReverseDCFCard from "@/components/stock-detail/ReverseDCFCard";
-import FinancialStatementsSection from "@/components/stock-detail/FinancialStatementsSection";
-import SentimentNewsSection from "@/components/stock-detail/SentimentNewsSection";
-import { SentimentProvider } from "@/contexts/SentimentContext";
-import { formatFinancialValue } from "@/lib/theme-utils";
 import { cn } from "@/lib/utils";
-import { fadeInUp, easeOut } from "@/lib/motion";
 
-function getSuffixConfig(suffix: string | null): { label: string; variant: "default" | "secondary" | "outline" } | null {
-  if (!suffix || suffix === "-EQ") return null;
-  const config: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
-    "-SM":    { label: "SME",            variant: "outline" },
-    "-BE":    { label: "T2T",            variant: "outline" },
-    "-ST":    { label: "Surveillance",   variant: "outline" },
-    "-INDEX": { label: "Index",          variant: "secondary" },
-    "-NAV":   { label: "NAV",            variant: "secondary" },
-  };
-  return config[suffix] || null;
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+function formatCrore(value: number | null | undefined): string {
+  if (value == null || !Number.isFinite(value)) return "—";
+  const cr = value / 1e7;
+  if (Math.abs(cr) >= 100000) return `${(cr / 100000).toFixed(2).replace(/\.00$/, "")} L Cr`;
+  return `${cr.toLocaleString("en-IN", { maximumFractionDigits: 0 })} Cr`;
 }
 
-function AccordionSection({
-  title,
-  children,
-  defaultOpen = false,
-}: {
-  title: string;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <Collapsible open={open} onOpenChange={setOpen} className="border-b border-border/50">
-      <CollapsibleTrigger className="w-full flex items-center justify-between py-5 group" data-testid={`accordion-${title.toLowerCase().replace(/\s+/g, "-")}`}>
-        <span className="text-base md:text-lg font-medium text-foreground group-hover:text-primary transition-colors">
-          {title}
-        </span>
-        <ChevronDown
-          className={cn(
-            "w-5 h-5 text-muted-foreground transition-transform duration-300",
-            open && "rotate-180",
-          )}
-        />
-      </CollapsibleTrigger>
-      <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-        <div className="pb-8 pt-2">{children}</div>
-      </CollapsibleContent>
-    </Collapsible>
-  );
+function formatNumber(value: number | null | undefined, decimals = 2): string {
+  if (value == null || !Number.isFinite(value)) return "—";
+  return value.toLocaleString("en-IN", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
-function MetricPill({ label, value }: { label: string; value: string }) {
+function formatPct(value: number | null | undefined, decimals = 2): string {
+  if (value == null || !Number.isFinite(value)) return "—";
+  return `${value.toFixed(decimals)}%`;
+}
+
+function formatRupees(value: number | null | undefined): string {
+  if (value == null || !Number.isFinite(value)) return "—";
+  return `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+}
+
+// Format JSONB cell values: heuristically choose Cr formatting for large numbers, plain otherwise
+function formatTableCell(value: any): string {
+  if (value == null) return "—";
+  const num = typeof value === "number" ? value : parseFloat(value);
+  if (!Number.isFinite(num)) return typeof value === "string" ? value : "—";
+  // If the field is a percentage (small absolute value), show as plain
+  if (Math.abs(num) < 1000) return num.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  // Larger numbers — assume rupees, show in crores
+  return `${(num / 1e7).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+}
+
+// ─── small UI primitives ────────────────────────────────────────────────────
+
+function MetricRow({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className="flex flex-col gap-1 shrink-0 snap-start min-w-[120px] rounded-2xl border border-border/50 bg-card px-4 py-3">
-      <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-medium">{label}</span>
-      <span className="text-sm font-mono font-semibold text-foreground">{value}</span>
+    <div className="flex items-center justify-between gap-3 py-2 border-b border-border/50 last:border-b-0">
+      <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className={cn("text-sm font-mono font-semibold tabular-nums", accent && "text-primary")}>{value}</span>
     </div>
   );
 }
 
+function SectionHeader({ title, action }: { title: string; action?: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between mb-4">
+      <h2 className="text-xl font-semibold tracking-tight text-foreground">{title}</h2>
+      {action}
+    </div>
+  );
+}
+
+// ─── financial table — used by Quarterly Results, P&L, Balance Sheet, Cash Flows, Ratios ──
+
+function FinancialTable({
+  data,
+  fieldOrder,
+  emptyMessage,
+}: {
+  data: Record<string, any> | null | undefined;
+  fieldOrder?: string[];
+  emptyMessage: string;
+}) {
+  if (!data || Object.keys(data).length === 0) {
+    return <div className="text-sm text-muted-foreground py-6 text-center">{emptyMessage}</div>;
+  }
+
+  const periods = Object.keys(data).sort();
+  const allFields = new Set<string>();
+  periods.forEach((p) => {
+    const row = data[p];
+    if (row && typeof row === "object") Object.keys(row).forEach((f) => allFields.add(f));
+  });
+
+  // Order fields: explicit fieldOrder first, then alphabetical
+  let fields: string[];
+  if (fieldOrder && fieldOrder.length > 0) {
+    const explicit = fieldOrder.filter((f) => allFields.has(f));
+    const remaining = Array.from(allFields).filter((f) => !explicit.includes(f)).sort();
+    fields = [...explicit, ...remaining];
+  } else {
+    fields = Array.from(allFields).sort();
+  }
+
+  return (
+    <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-border/70">
+            <th className="text-left py-2.5 pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap">
+              Metric
+            </th>
+            {periods.map((p) => (
+              <th key={p} className="text-right py-2.5 px-3 font-medium text-muted-foreground whitespace-nowrap">
+                {p}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {fields.map((field) => (
+            <tr key={field} className="border-b border-border/30 last:border-b-0 hover:bg-muted/30 transition-colors">
+              <td className="py-2 pr-3 sticky left-0 bg-card whitespace-nowrap text-foreground">{field}</td>
+              {periods.map((p) => (
+                <td key={p} className="text-right py-2 px-3 font-mono tabular-nums whitespace-nowrap">
+                  {formatTableCell(data[p]?.[field])}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ─── compounded growth grid card ────────────────────────────────────────────
+
+function GrowthCard({ title, periods }: { title: string; periods: { label: string; value: string }[] }) {
+  return (
+    <div className="rounded-xl border border-border/50 bg-card p-5">
+      <h3 className="text-sm font-semibold text-foreground mb-3">{title}</h3>
+      <div className="space-y-1.5">
+        {periods.map((p) => (
+          <div key={p.label} className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{p.label}:</span>
+            <span className="font-mono font-semibold text-foreground tabular-nums">{p.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Compute compounded annual growth from a year-keyed data object
+function computeCagr(data: Record<string, any> | null | undefined, fieldCandidates: string[], yearsBack: number): number | null {
+  if (!data) return null;
+  const periods = Object.keys(data).sort();
+  if (periods.length < 2) return null;
+
+  const firstField = (period: string): number | null => {
+    const row = data[period];
+    if (!row) return null;
+    for (const f of fieldCandidates) {
+      if (typeof row[f] === "number" && Number.isFinite(row[f])) return row[f];
+    }
+    return null;
+  };
+
+  const latest = firstField(periods[periods.length - 1]);
+  const earliestIdx = Math.max(0, periods.length - 1 - yearsBack);
+  if (earliestIdx === periods.length - 1) return null;
+  const earliest = firstField(periods[earliestIdx]);
+  if (latest == null || earliest == null || earliest <= 0) return null;
+  const years = periods.length - 1 - earliestIdx;
+  return (Math.pow(latest / earliest, 1 / years) - 1) * 100;
+}
+
+// ─── pros / cons derived from fundamentals ──────────────────────────────────
+
+function derivePros(f: any): string[] {
+  const pros: string[] = [];
+  if (f.return_on_equity != null && f.return_on_equity * 100 >= 15) {
+    pros.push(`Company has a healthy return on equity of ${(f.return_on_equity * 100).toFixed(2)}%.`);
+  }
+  if (f.profit_margin != null && f.profit_margin * 100 >= 15) {
+    pros.push(`Company has good profit margins of ${(f.profit_margin * 100).toFixed(2)}%.`);
+  }
+  if (f.dividend_yield != null && f.dividend_yield * 100 >= 2) {
+    pros.push(`Stock pays a healthy dividend yield of ${(f.dividend_yield * 100).toFixed(2)}%.`);
+  }
+  if (f.debt_to_equity != null && f.debt_to_equity < 0.3) {
+    pros.push(`Company is almost debt free.`);
+  }
+  if (f.revenue_growth != null && f.revenue_growth * 100 >= 15) {
+    pros.push(`Company has delivered good revenue growth of ${(f.revenue_growth * 100).toFixed(2)}%.`);
+  }
+  if (f.earnings_growth != null && f.earnings_growth * 100 >= 15) {
+    pros.push(`Company has delivered good earnings growth of ${(f.earnings_growth * 100).toFixed(2)}%.`);
+  }
+  if (f.current_ratio != null && f.current_ratio >= 1.5) {
+    pros.push(`Company has a strong liquidity position with current ratio of ${f.current_ratio.toFixed(2)}.`);
+  }
+  return pros;
+}
+
+function deriveCons(f: any): string[] {
+  const cons: string[] = [];
+  if (f.return_on_equity != null && f.return_on_equity * 100 < 10) {
+    cons.push(`Company has a low return on equity of ${(f.return_on_equity * 100).toFixed(2)}%.`);
+  }
+  if (f.profit_margin != null && f.profit_margin * 100 < 5) {
+    cons.push(`Company has low profit margins of ${(f.profit_margin * 100).toFixed(2)}%.`);
+  }
+  if (f.payout_ratio != null && f.payout_ratio * 100 < 10 && f.dividend_yield != null && f.dividend_yield > 0) {
+    cons.push(`Dividend payout has been low at ${(f.payout_ratio * 100).toFixed(2)}% of profits.`);
+  }
+  if (f.debt_to_equity != null && f.debt_to_equity > 1) {
+    cons.push(`Company has a high debt to equity ratio of ${f.debt_to_equity.toFixed(2)}.`);
+  }
+  if (f.trailing_pe != null && f.trailing_pe > 50) {
+    cons.push(`Stock is trading at a high P/E of ${f.trailing_pe.toFixed(2)}.`);
+  }
+  if (f.price_to_book != null && f.price_to_book > 5) {
+    cons.push(`Stock is trading at ${f.price_to_book.toFixed(2)} times its book value.`);
+  }
+  return cons;
+}
+
+// ─── main page ──────────────────────────────────────────────────────────────
+
 function LoadingState() {
   return (
-    <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-12 space-y-8">
-      <Skeleton className="h-4 w-48" />
-      <Skeleton className="h-8 w-1/3" />
-      <Skeleton className="h-24 w-2/3 rounded-xl" />
-      <Skeleton className="h-12 w-full rounded-full" />
-      <Skeleton className="h-20 w-full rounded-2xl" />
-      <Skeleton className="h-96 w-full rounded-2xl" />
+    <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-6">
+      <Skeleton className="h-12 w-2/3" />
+      <Skeleton className="h-48 w-full" />
+      <Skeleton className="h-96 w-full" />
+      <Skeleton className="h-32 w-full" />
     </div>
   );
 }
 
 function ErrorState({ error }: { error: Error }) {
   return (
-    <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-16">
+    <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-16">
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>Failed to load stock details: {error.message}</AlertDescription>
@@ -112,19 +255,17 @@ export default function StockDetail() {
 
   const { data, isLoading, error } = useStockDetail(ticker);
   const { data: ltpData } = useStockLTP(ticker);
+  const { data: shareholding } = useShareholding(ticker, "quarterly");
 
   if (error && !isLoading) return <ErrorState error={error as Error} />;
   if (isLoading || !data) return <LoadingState />;
 
-  const fundamentals = data.fundamentals;
+  const f = data.fundamentals;
   const basic = data.basic_info;
 
-  const currentPrice = ltpData?.ltp ?? fundamentals.current_price;
-  const priceChangePercent = ltpData?.percent_change ?? fundamentals.price_change_percent;
-  const priceChange = currentPrice && priceChangePercent != null
-    ? (currentPrice * priceChangePercent) / 100
-    : fundamentals.price_change;
-  const isPositive = priceChange != null && priceChange >= 0;
+  const currentPrice = ltpData?.ltp ?? f.current_price;
+  const priceChangePercent = ltpData?.percent_change ?? f.price_change_percent;
+  const isPositive = priceChangePercent != null && priceChangePercent >= 0;
 
   const companyName = (() => {
     const longName = basic.long_name;
@@ -132,16 +273,35 @@ export default function StockDetail() {
     return isValid ? longName : basic.name;
   })();
 
-  const suffixConfig = getSuffixConfig(basic.suffix);
+  // Compounded growth — try common revenue/profit field names
+  const revenueFields = ["Sales", "Revenue", "Total Revenue", "Net Sales", "Total Income"];
+  const profitFields = ["Net Profit", "Net Income", "Profit", "Profit After Tax", "PAT"];
 
-  const keyMetrics = [
-    { label: "Mkt Cap", value: formatFinancialValue(fundamentals.market_cap, { compact: true }) },
-    { label: "P/E", value: fundamentals.trailing_pe?.toFixed(2) ?? "—" },
-    { label: "Volume", value: formatFinancialValue(fundamentals.volume, { compact: true }) },
-    { label: "52W High", value: fundamentals.fifty_two_week_high ? `₹${fundamentals.fifty_two_week_high.toFixed(2)}` : "—" },
-    { label: "52W Low", value: fundamentals.fifty_two_week_low ? `₹${fundamentals.fifty_two_week_low.toFixed(2)}` : "—" },
-    { label: "Div Yield", value: fundamentals.dividend_yield ? `${fundamentals.dividend_yield.toFixed(2)}%` : "—" },
-  ].filter((m) => m.value !== "—");
+  const salesGrowth = {
+    "10 Years": computeCagr(data.financials.income_statement, revenueFields, 10),
+    "5 Years": computeCagr(data.financials.income_statement, revenueFields, 5),
+    "3 Years": computeCagr(data.financials.income_statement, revenueFields, 3),
+    "TTM": null as number | null,
+  };
+  const profitGrowth = {
+    "10 Years": computeCagr(data.financials.income_statement, profitFields, 10),
+    "5 Years": computeCagr(data.financials.income_statement, profitFields, 5),
+    "3 Years": computeCagr(data.financials.income_statement, profitFields, 3),
+    "TTM": null as number | null,
+  };
+
+  const fmtGrowth = (v: number | null) => (v == null ? "—" : `${v.toFixed(0)}%`);
+
+  const pros = derivePros(f);
+  const cons = deriveCons(f);
+
+  // Field ordering for tables (most important rows first)
+  const incomeOrder = ["Sales", "Revenue", "Total Revenue", "Expenses", "Operating Profit", "OPM %", "Other Income", "Interest", "Depreciation", "Profit before tax", "Tax %", "Net Profit", "EPS in Rs"];
+  const balanceOrder = ["Equity Capital", "Reserves", "Borrowings", "Other Liabilities", "Total Liabilities", "Fixed Assets", "CWIP", "Investments", "Other Assets", "Total Assets"];
+  const cashflowOrder = ["Cash from Operating Activity", "Cash from Investing Activity", "Cash from Financing Activity", "Net Cash Flow"];
+  const ratiosOrder = ["Debtor Days", "Inventory Days", "Days Payable", "Cash Conversion Cycle", "Working Capital Days", "ROCE %"];
+
+  const announcements = data.external_analyst?.announcements ?? [];
 
   return (
     <>
@@ -151,155 +311,317 @@ export default function StockDetail() {
         canonical={`/stocks/${ticker}`}
         jsonLd={[
           generateStockBreadcrumbSchema(ticker, companyName),
-          generateFinancialProductSchema(ticker, companyName, `AI-powered stock analysis for ${companyName} including sentiment, technical indicators, and fundamentals.`),
+          generateFinancialProductSchema(ticker, companyName, `Stock analysis for ${companyName} including fundamentals, financial statements, and shareholding pattern.`),
         ]}
       />
 
       <div className="min-h-screen bg-background">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-12 space-y-12">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-8">
 
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Link href="/" className="hover:text-foreground transition-colors flex items-center gap-1">
-              <Home className="w-3 h-3" /> Home
-            </Link>
-            <ChevronRight className="w-3 h-3 opacity-40" />
-            <Link href="/stocks" className="hover:text-foreground transition-colors">Stocks</Link>
-            <ChevronRight className="w-3 h-3 opacity-40" />
-            <span className="text-foreground font-medium">{basic.symbol}</span>
-          </nav>
-
-          {/* HERO */}
-          <motion.section
-            variants={fadeInUp}
-            initial="hidden"
-            animate="visible"
-            transition={easeOut}
-            className="space-y-3"
-          >
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-xs font-semibold px-2 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">
-                {basic.symbol}
-              </span>
-              <span className="text-xs text-muted-foreground">{basic.exchange}</span>
-              {basic.sector && <Badge variant="secondary" className="text-[11px] h-5 rounded-full">{basic.sector}</Badge>}
-              {suffixConfig && <Badge variant={suffixConfig.variant} className="text-[11px] h-5 rounded-full">{suffixConfig.label}</Badge>}
+          {/* HEADER */}
+          <header className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 pb-2 border-b border-border/60">
+            <div className="space-y-1.5 min-w-0">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">{companyName}</h1>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                {basic.website && (
+                  <a
+                    href={basic.website.startsWith("http") ? basic.website : `https://${basic.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 hover:text-primary transition-colors"
+                  >
+                    <Globe className="w-3 h-3" />
+                    {basic.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                  </a>
+                )}
+                <span className="font-mono">{basic.exchange}: {basic.symbol}</span>
+                {basic.sector && <span>· {basic.sector}</span>}
+                {basic.industry && <span>· {basic.industry}</span>}
+              </div>
             </div>
-            <h1 className="text-xl md:text-2xl font-medium text-muted-foreground">{companyName}</h1>
-            <div className="leading-none">
-              <HeroNumber
-                value={currentPrice ?? 0}
-                decimals={2}
-                prefix="₹"
-                className="text-6xl md:text-8xl text-foreground"
+            <div className="flex flex-col items-end shrink-0">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl md:text-3xl font-semibold font-mono tabular-nums text-foreground">
+                  {formatRupees(currentPrice)}
+                </span>
+                {priceChangePercent != null && (
+                  <span className={cn("text-sm font-semibold tabular-nums", isPositive ? "text-positive" : "text-negative")}>
+                    {isPositive ? "▲" : "▼"} {Math.abs(priceChangePercent).toFixed(2)}%
+                  </span>
+                )}
+              </div>
+              {f.last_updated && (
+                <span className="text-[11px] text-muted-foreground mt-1">
+                  Updated {new Date(f.last_updated).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                </span>
+              )}
+            </div>
+          </header>
+
+          {/* KEY METRICS + ABOUT */}
+          <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left: 3x3 metric grid */}
+            <div className="rounded-xl border border-border/50 bg-card p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6">
+                <MetricRow label="Market Cap" value={formatCrore(f.market_cap)} />
+                <MetricRow label="Current Price" value={formatRupees(currentPrice)} />
+                <MetricRow
+                  label="High / Low"
+                  value={
+                    f.fifty_two_week_high && f.fifty_two_week_low
+                      ? `${formatRupees(f.fifty_two_week_high).replace("₹", "₹")} / ${formatRupees(f.fifty_two_week_low).replace("₹", "")}`
+                      : "—"
+                  }
+                />
+                <MetricRow label="Stock P/E" value={f.trailing_pe != null ? f.trailing_pe.toFixed(2) : "—"} />
+                <MetricRow label="Book Value" value={f.price_to_book && currentPrice ? formatRupees(currentPrice / f.price_to_book) : "—"} />
+                <MetricRow label="Dividend Yield" value={f.dividend_yield != null ? formatPct(f.dividend_yield * 100) : "—"} />
+                <MetricRow label="ROCE" value={f.return_on_assets != null ? formatPct(f.return_on_assets * 100) : "—"} />
+                <MetricRow label="ROE" value={f.return_on_equity != null ? formatPct(f.return_on_equity * 100) : "—"} />
+                <MetricRow label="Face Value" value="—" />
+              </div>
+            </div>
+
+            {/* Right: About + Key Points */}
+            <div className="rounded-xl border border-border/50 bg-card p-5 space-y-4">
+              <div>
+                <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-2">About</h3>
+                {basic.description ? (
+                  <p className="text-sm text-foreground leading-relaxed">{basic.description}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No description available.</p>
+                )}
+              </div>
+              <div>
+                <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Key Points</h3>
+                <p className="text-sm text-muted-foreground">
+                  {basic.industry ? `Operates in ${basic.industry}.` : "—"}
+                  {basic.sector ? ` Part of the ${basic.sector} sector.` : ""}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* CHART */}
+          <section>
+            <PriceChartSection key={ticker} ticker={ticker} />
+          </section>
+
+          {/* PROS / CONS */}
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="rounded-xl border border-positive/30 bg-positive/5 p-5">
+              <h3 className="text-xs uppercase tracking-wide text-positive font-semibold mb-3">Pros</h3>
+              {pros.length > 0 ? (
+                <ul className="space-y-2">
+                  {pros.map((p, i) => (
+                    <li key={i} className="text-sm text-foreground flex gap-2">
+                      <span className="text-positive shrink-0">•</span>
+                      <span>{p}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">No standout pros identified from current data.</p>
+              )}
+            </div>
+            <div className="rounded-xl border border-negative/30 bg-negative/5 p-5">
+              <h3 className="text-xs uppercase tracking-wide text-negative font-semibold mb-3">Cons</h3>
+              {cons.length > 0 ? (
+                <ul className="space-y-2">
+                  {cons.map((c, i) => (
+                    <li key={i} className="text-sm text-foreground flex gap-2">
+                      <span className="text-negative shrink-0">•</span>
+                      <span>{c}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">No major concerns flagged from current data.</p>
+              )}
+            </div>
+          </section>
+          <p className="text-xs text-muted-foreground -mt-4">* Pros and cons are derived from current fundamentals.</p>
+
+          {/* QUARTERLY RESULTS */}
+          <section className="rounded-xl border border-border/50 bg-card p-5">
+            <SectionHeader title="Quarterly Results" />
+            <FinancialTable
+              data={data.financials.quarterly_financials}
+              fieldOrder={incomeOrder}
+              emptyMessage="Quarterly results not available."
+            />
+          </section>
+
+          {/* PROFIT & LOSS */}
+          <section className="rounded-xl border border-border/50 bg-card p-5">
+            <SectionHeader title="Profit & Loss" />
+            <FinancialTable
+              data={data.financials.income_statement}
+              fieldOrder={incomeOrder}
+              emptyMessage="Profit & loss data not available."
+            />
+            {/* Compounded growth */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+              <GrowthCard
+                title="Compounded Sales Growth"
+                periods={[
+                  { label: "10 Years", value: fmtGrowth(salesGrowth["10 Years"]) },
+                  { label: "5 Years", value: fmtGrowth(salesGrowth["5 Years"]) },
+                  { label: "3 Years", value: fmtGrowth(salesGrowth["3 Years"]) },
+                  { label: "TTM", value: f.revenue_growth != null ? `${(f.revenue_growth * 100).toFixed(0)}%` : "—" },
+                ]}
+              />
+              <GrowthCard
+                title="Compounded Profit Growth"
+                periods={[
+                  { label: "10 Years", value: fmtGrowth(profitGrowth["10 Years"]) },
+                  { label: "5 Years", value: fmtGrowth(profitGrowth["5 Years"]) },
+                  { label: "3 Years", value: fmtGrowth(profitGrowth["3 Years"]) },
+                  { label: "TTM", value: f.earnings_growth != null ? `${(f.earnings_growth * 100).toFixed(0)}%` : "—" },
+                ]}
+              />
+              <GrowthCard
+                title="Stock Price CAGR"
+                periods={[
+                  { label: "10 Years", value: "—" },
+                  { label: "5 Years", value: "—" },
+                  { label: "3 Years", value: "—" },
+                  { label: "1 Year", value: priceChangePercent != null ? `${priceChangePercent.toFixed(0)}%` : "—" },
+                ]}
+              />
+              <GrowthCard
+                title="Return on Equity"
+                periods={[
+                  { label: "10 Years", value: "—" },
+                  { label: "5 Years", value: "—" },
+                  { label: "3 Years", value: "—" },
+                  { label: "Last Year", value: f.return_on_equity != null ? `${(f.return_on_equity * 100).toFixed(0)}%` : "—" },
+                ]}
               />
             </div>
-            {priceChange != null && priceChangePercent != null && (
-              <div className={cn(
-                "text-xl md:text-2xl font-medium tabular-nums",
-                isPositive ? "text-positive" : "text-negative",
-              )}>
-                {isPositive ? "+" : ""}{priceChange.toFixed(2)} ({isPositive ? "+" : ""}{priceChangePercent.toFixed(2)}%)
+          </section>
+
+          {/* BALANCE SHEET */}
+          <section className="rounded-xl border border-border/50 bg-card p-5">
+            <SectionHeader title="Balance Sheet" />
+            <FinancialTable
+              data={data.financials.balance_sheet}
+              fieldOrder={balanceOrder}
+              emptyMessage="Balance sheet data not available."
+            />
+          </section>
+
+          {/* CASH FLOWS */}
+          <section className="rounded-xl border border-border/50 bg-card p-5">
+            <SectionHeader title="Cash Flows" />
+            <FinancialTable
+              data={data.financials.cash_flow}
+              fieldOrder={cashflowOrder}
+              emptyMessage="Cash flow data not available."
+            />
+          </section>
+
+          {/* RATIOS */}
+          <section className="rounded-xl border border-border/50 bg-card p-5">
+            <SectionHeader title="Ratios" />
+            <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/70">
+                    <th className="text-left py-2.5 pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap">Metric</th>
+                    <th className="text-right py-2.5 px-3 font-medium text-muted-foreground whitespace-nowrap">Latest</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ratiosOrder.map((label) => {
+                    let value = "—";
+                    if (label === "ROCE %" && f.return_on_assets != null) value = formatPct(f.return_on_assets * 100);
+                    return (
+                      <tr key={label} className="border-b border-border/30 last:border-b-0 hover:bg-muted/30 transition-colors">
+                        <td className="py-2 pr-3 sticky left-0 bg-card whitespace-nowrap text-foreground">{label}</td>
+                        <td className="text-right py-2 px-3 font-mono tabular-nums">{value}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* SHAREHOLDING PATTERN */}
+          <section className="rounded-xl border border-border/50 bg-card p-5">
+            <SectionHeader title="Shareholding Pattern" />
+            {!shareholding ? (
+              <div className="text-sm text-muted-foreground py-6 text-center">Loading shareholding…</div>
+            ) : shareholding.data.length === 0 ? (
+              <div className="text-sm text-muted-foreground py-6 text-center">Shareholding data not available.</div>
+            ) : (
+              <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
+                <p className="text-xs text-muted-foreground mb-3">Numbers in percentages</p>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border/70">
+                      <th className="text-left py-2.5 pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap">
+                        Category
+                      </th>
+                      {shareholding.quarters.map((q) => (
+                        <th key={q} className="text-right py-2.5 px-3 font-medium text-muted-foreground whitespace-nowrap">
+                          {q}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shareholding.data.map((row) => (
+                      <tr key={row.category} className="border-b border-border/30 last:border-b-0 hover:bg-muted/30 transition-colors">
+                        <td className="py-2 pr-3 sticky left-0 bg-card whitespace-nowrap text-foreground">{row.category}</td>
+                        {row.values.map((v, i) => (
+                          <td key={i} className="text-right py-2 px-3 font-mono tabular-nums">
+                            {v == null ? "—" : `${v.toFixed(2)}%`}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
-          </motion.section>
+          </section>
 
-          {/* STICKY ACTION BAR */}
-          <div className="sticky top-16 z-20 -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 py-3 bg-background/85 backdrop-blur-md border-y border-border/50">
-            <div className="flex gap-2">
-              <Button variant="default" size="sm" className="flex-1 rounded-full gap-1.5">
-                <Bookmark className="w-3.5 h-3.5" /> Watchlist
-              </Button>
-              <Button asChild variant="outline" size="sm" className="flex-1 rounded-full gap-1.5">
-                <Link href={`/tip-tease?context=${encodeURIComponent(ticker)}`}>
-                  <Brain className="w-3.5 h-3.5" /> Ask Equity Pro
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm" className="flex-1 rounded-full gap-1.5 hidden sm:inline-flex">
-                <Link href={`/compare?symbols=${ticker}`}>
-                  <GitCompare className="w-3.5 h-3.5" /> Compare
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm" className="flex-1 rounded-full gap-1.5 hidden md:inline-flex">
-                <Link href={`/alpha-generation?ticker=${ticker}`}>
-                  <Zap className="w-3.5 h-3.5" /> Alpha
-                </Link>
-              </Button>
-            </div>
-          </div>
-
-          {/* KEY METRICS — horizontal scroll rail */}
-          {keyMetrics.length > 0 && (
-            <section>
-              <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 md:mx-0 md:px-0">
-                {keyMetrics.map((m) => (
-                  <MetricPill key={m.label} label={m.label} value={m.value} />
+          {/* DOCUMENTS / ANNOUNCEMENTS */}
+          {announcements.length > 0 && (
+            <section className="rounded-xl border border-border/50 bg-card p-5">
+              <SectionHeader title="Documents" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {announcements.slice(0, 8).map((a, i) => (
+                  <a
+                    key={i}
+                    href={a.link ?? "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-3 p-3 rounded-lg border border-border/40 hover:border-primary/40 hover:bg-primary/5 transition-colors group"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                        {a.title ?? "Announcement"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {a.publisher ?? a.type ?? ""} {a.published_at ? `· ${new Date(a.published_at).toLocaleDateString("en-IN")}` : ""}
+                      </p>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5 group-hover:text-primary transition-colors" />
+                  </a>
                 ))}
               </div>
             </section>
           )}
 
-          {/* Accordion sections */}
-          <div>
-            <AccordionSection title="Chart" defaultOpen>
-              <PriceChartSection key={ticker} ticker={ticker} />
-            </AccordionSection>
-
-            <AccordionSection title="Scorecard">
-              <StockScorecard ticker={ticker} />
-            </AccordionSection>
-
-            <SentimentProvider ticker={ticker}>
-              <AccordionSection title="AI Sentiment">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <SentimentGauge />
-                  <SentimentMetrics />
-                </div>
-              </AccordionSection>
-
-              <AccordionSection title="Fundamentals">
-                <FundamentalsTable data={fundamentals} />
-              </AccordionSection>
-
-              <AccordionSection title="Analyst Coverage">
-                <AnalystRecommendationCard data={data} ticker={ticker} />
-              </AccordionSection>
-
-              <AccordionSection title="Shareholding">
-                <ShareholdingPattern ticker={ticker} />
-              </AccordionSection>
-
-              <AccordionSection title="Technical Indicators">
-                <TechnicalIndicatorsTable
-                  ticker={ticker}
-                  ltp={ltpData?.ltp ?? fundamentals.current_price ?? null}
-                />
-              </AccordionSection>
-
-              <AccordionSection title="Reverse DCF">
-                <ReverseDCFCard
-                  ticker={ticker}
-                  currentPrice={ltpData?.ltp ?? fundamentals.current_price ?? null}
-                />
-              </AccordionSection>
-
-              <AccordionSection title="Financial Statements">
-                <FinancialStatementsSection ticker={ticker} exchange={basic.exchange} financials={data.financials} />
-              </AccordionSection>
-
-              <AccordionSection title="News">
-                <SentimentNewsSection />
-              </AccordionSection>
-            </SentimentProvider>
+          {/* Footer link back */}
+          <div className="pt-2 pb-8">
+            <Link href="/stocks" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              ← Back to all stocks
+            </Link>
           </div>
-
-          {/* About */}
-          {basic.description && (
-            <section>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium mb-3">About</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">{basic.description}</p>
-            </section>
-          )}
 
         </div>
       </div>
