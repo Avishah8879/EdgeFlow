@@ -186,6 +186,11 @@ app.use((req, res, next) => {
   if (authDbConnected) {
     log('[AUTH] ✓ Authentication database connected successfully');
 
+    // Run idempotent self-healing schema fixes (e.g. drift in check_tier
+    // between migrations folder and the live RGX_Auth database)
+    const { runSelfHealingMigrations } = await import('./db/self-heal.js');
+    await runSelfHealingMigrations();
+
     // Initialize subscription cron jobs (only if DB is connected)
     initSubscriptionCronJobs();
 
