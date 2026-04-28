@@ -133,15 +133,15 @@ router.post('/v2/signup', signupRateLimiter, async (req: Request, res: Response)
       termsVersion: '1.0',
     });
 
-    // Log successful signup
-    await logAuthEventV2({
+    // Log successful signup — best-effort, don't block the response
+    logAuthEventV2({
       userId: user.id,
       eventType: 'signup',
       provider: 'password',
       ipAddress,
       userAgent,
       success: true,
-    });
+    }).catch((err) => console.warn('[AUTH_V2] auth_log insert failed:', err.message));
 
     // Send welcome email (non-blocking)
     sendWelcomeEmail({
@@ -166,6 +166,8 @@ router.post('/v2/signup', signupRateLimiter, async (req: Request, res: Response)
     res.status(201).json(session);
   } catch (error: any) {
     console.error('[AUTH_V2] Signup error:', error.message);
+    console.error('[AUTH_V2] Signup stack:', error.stack);
+    if (error.code) console.error('[AUTH_V2] PG code:', error.code, 'detail:', error.detail, 'constraint:', error.constraint);
 
     // Log failed signup
     await logAuthEventV2({
@@ -175,14 +177,19 @@ router.post('/v2/signup', signupRateLimiter, async (req: Request, res: Response)
       userAgent,
       success: false,
       failureReason: error.message,
-    });
+    }).catch(() => {}); // don't let log failure mask the real error
 
     // Return appropriate error message
     if (error.message.includes('email already exists') || error.message.includes('username is already taken')) {
       return res.status(409).json({ message: error.message });
     }
 
-    res.status(500).json({ message: 'Failed to create account. Please try again.' });
+    // In development, expose the underlying error so we can debug
+    const isDev = process.env.NODE_ENV !== 'production';
+    res.status(500).json({
+      message: 'Failed to create account. Please try again.',
+      ...(isDev ? { debug: error.message, code: error.code, constraint: error.constraint } : {}),
+    });
   }
 });
 

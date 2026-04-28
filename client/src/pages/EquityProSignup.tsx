@@ -26,15 +26,12 @@ import { EquityProLogo } from "@/components/EquityProLogo";
 import { HalvorsenAttractor } from "@/components/HalvorsenAttractor";
 import { cn } from "@/lib/utils";
 
-type UserTierOption = "basic" | "premium";
-
 type FormState = {
   username: string;
   email: string;
   password: string;
   confirm: string;
   phone: string;
-  tier: UserTierOption;
   country: string;
   dateOfBirth: string;
   terms: boolean;
@@ -51,7 +48,6 @@ export default function EquityProSignup() {
     password: "",
     confirm: "",
     phone: "",
-    tier: "premium",
     country: "",
     dateOfBirth: "",
     terms: false,
@@ -93,7 +89,6 @@ export default function EquityProSignup() {
       const phoneRegex = /^\+?[1-9]\d{6,14}$/;
       return phoneRegex.test(normalized) ? undefined : "Enter a valid phone number (e.g., +919876543210)";
     },
-    tier: () => undefined,
     country: () =>
       form.country ? undefined : "Please select your country.",
     dateOfBirth: () => {
@@ -149,7 +144,6 @@ export default function EquityProSignup() {
       email: form.email.trim(),
       password: form.password,
       name: form.username.trim(),
-      tier: form.tier,
       countryOfResidence: form.country,
       dateOfBirth: form.dateOfBirth,
       phoneNumber: form.phone.replace(/[\s\-\(\)]/g, ''),

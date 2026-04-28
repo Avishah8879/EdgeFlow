@@ -15,6 +15,7 @@ import { generateOrganizationSchema, generateWebSiteSchema } from "@/lib/json-ld
 import { useAdminUpdates } from "@/hooks/use-admin-updates";
 import { initNavigationTracker } from "@/lib/navigation-tracker";
 import { AppShell } from "@/components/layout";
+import { AuthGuard } from "@/components/AuthGuard";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ImpersonationBanner } from "@/components/ImpersonationBanner";
 import { NotificationBanner } from "@/components/NotificationBanner";
@@ -241,14 +242,18 @@ function Router() {
   }
 
   if (isAdmin) {
-    // Admin pages use their own AdminLayout internally — render without AppShell
+    // Admin pages use their own AdminLayout internally (which wraps with AdminGuard)
     return <AppRoutes />;
   }
 
+  // Every shell route requires authentication. AuthGuard redirects to
+  // /login?returnUrl=<current path> for unauthenticated visitors.
   return (
-    <AppShell>
-      <AppRoutes />
-    </AppShell>
+    <AuthGuard>
+      <AppShell>
+        <AppRoutes />
+      </AppShell>
+    </AuthGuard>
   );
 }
 
