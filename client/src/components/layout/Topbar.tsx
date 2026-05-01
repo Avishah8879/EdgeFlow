@@ -3,6 +3,7 @@ import { ModeToggle } from "@/components/ModeToggle";
 import { SearchBar } from "@/components/search/SearchBar";
 import MarketStatusBadge from "@/components/MarketStatusBadge";
 import { CoinBalanceBadge } from "@/components/CoinBalanceBadge";
+import { UserMenu } from "@/components/UserMenu";
 import { Zap } from "lucide-react";
 
 export default function Topbar() {
@@ -30,6 +31,7 @@ export default function Topbar() {
           <MarketStatusBadge />
           <CoinBalanceBadge />
           <ModeToggle />
+          <UserMenu />
         </div>
       </div>
     </header>

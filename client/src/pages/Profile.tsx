@@ -18,6 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CoinsTab } from "@/components/profile/CoinsTab";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useSubscriptionStatus,
@@ -61,7 +62,13 @@ import { formatDistanceToNow } from "date-fns";
 export default function Profile() {
   const { user, isAuthenticated, logout } = useAuth();
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState("account");
+  // Seed initial tab from ?tab= query param so links like /profile?tab=coins land on the right tab
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    if (typeof window === "undefined") return "account";
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    const allowed = new Set(["account", "security", "usage", "coins", "danger"]);
+    return tab && allowed.has(tab) ? tab : "account";
+  });
 
   // Verification state
   const [showVerification, setShowVerification] = useState(false);
@@ -451,10 +458,11 @@ export default function Profile() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="account">Account</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
             <TabsTrigger value="usage">Usage</TabsTrigger>
+            <TabsTrigger value="coins">Coins</TabsTrigger>
             <TabsTrigger value="danger">Danger Zone</TabsTrigger>
           </TabsList>
 
@@ -991,6 +999,11 @@ export default function Profile() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Coins Tab */}
+          <TabsContent value="coins" className="space-y-6 mt-6">
+            <CoinsTab />
           </TabsContent>
 
           {/* Danger Zone Tab */}

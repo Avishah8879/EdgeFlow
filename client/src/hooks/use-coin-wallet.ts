@@ -13,7 +13,7 @@ export interface CoinTransaction {
   id: string;
   user_id: string;
   platform_id: string | null;
-  type: "purchase" | "debit" | "refund" | "admin_grant" | "monthly_top_up" | "expiry";
+  type: "purchase" | "debit" | "refund" | "admin_grant" | "monthly_top_up" | "expiry" | "signup_bonus";
   amount: number;
   feature_key: string | null;
   reference_id: string | null;
@@ -217,11 +217,21 @@ export function useUpdateFeatureCost() {
   const baseUrl = getAuthBaseUrl();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ key, cost, description }: { key: string; cost: number; description?: string }) => {
+    mutationFn: async ({
+      key,
+      cost,
+      description,
+      is_active,
+    }: {
+      key: string;
+      cost: number;
+      description?: string;
+      is_active?: boolean;
+    }) => {
       const r = await fetch(`${baseUrl}/api/admin/coins/feature-costs/${encodeURIComponent(key)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ cost, description }),
+        body: JSON.stringify({ cost, description, is_active }),
       });
       if (!r.ok) {
         const e = await r.json().catch(() => ({}));
@@ -230,6 +240,75 @@ export function useUpdateFeatureCost() {
       return r.json();
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ADMIN_FEATURES_KEY }),
+  });
+}
+
+// ─── Coin pricing (single ₹/coin rate) ───────────────────────────────────────
+
+export interface CoinPricing {
+  paise_per_coin: number;
+  signup_bonus_coins: number;
+  updated_at: string;
+}
+
+const PRICING_KEY = ["coin-wallet", "pricing"];
+
+export function useCoinPricing() {
+  const { token } = useAuth();
+  const baseUrl = getAuthBaseUrl();
+  return useQuery<{ data: CoinPricing }>({
+    queryKey: PRICING_KEY,
+    queryFn: async () => {
+      const r = await fetch(`${baseUrl}/api/coins/pricing`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!r.ok) throw new Error("Failed to load coin pricing");
+      return r.json();
+    },
+    enabled: !!token,
+    staleTime: 60_000,
+  });
+}
+
+export function useUpdateCoinPricing() {
+  const { token } = useAuth();
+  const baseUrl = getAuthBaseUrl();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ paise_per_coin }: { paise_per_coin: number }) => {
+      const r = await fetch(`${baseUrl}/api/admin/coins/pricing`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ paise_per_coin }),
+      });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        throw new Error(e.message || "Failed to update pricing");
+      }
+      return r.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: PRICING_KEY }),
+  });
+}
+
+export function useUpdateSignupBonus() {
+  const { token } = useAuth();
+  const baseUrl = getAuthBaseUrl();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ signup_bonus_coins }: { signup_bonus_coins: number }) => {
+      const r = await fetch(`${baseUrl}/api/admin/coins/signup-bonus`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ signup_bonus_coins }),
+      });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        throw new Error(e.message || "Failed to update signup bonus");
+      }
+      return r.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: PRICING_KEY }),
   });
 }
 

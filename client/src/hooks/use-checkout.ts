@@ -14,14 +14,20 @@ export interface CheckoutResponse {
 
 export interface PaymentRecord {
   id: string;
-  kind: "plan" | "coin_pack";
+  kind: "plan" | "coin_pack" | "custom_coins";
   product_id: string;
   amount_paise: number;
   status: "pending" | "paid" | "failed" | "expired" | "refunded";
   cashfree_order_id: string | null;
   fulfilled_at: string | null;
   created_at: string;
+  metadata?: Record<string, any>;
 }
+
+type CheckoutInput =
+  | { kind: "plan"; productId: string }
+  | { kind: "coin_pack"; productId: string }
+  | { kind: "custom_coins"; quantity: number };
 
 /**
  * Initiate a Cashfree checkout. Returns a payment_session_id which the
@@ -36,20 +42,18 @@ export function useCheckout() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      kind,
-      productId,
-    }: {
-      kind: "plan" | "coin_pack";
-      productId: string;
-    }): Promise<CheckoutResponse> => {
+    mutationFn: async (input: CheckoutInput): Promise<CheckoutResponse> => {
+      const body: Record<string, any> =
+        input.kind === "custom_coins"
+          ? { kind: "custom_coins", quantity: input.quantity }
+          : { kind: input.kind, product_id: input.productId };
       const r = await fetch(`${baseUrl}/api/payments/checkout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ kind, product_id: productId }),
+        body: JSON.stringify(body),
       });
       if (!r.ok) {
         const err = await r.json().catch(() => ({}));

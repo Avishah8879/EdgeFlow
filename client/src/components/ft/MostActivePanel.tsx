@@ -28,7 +28,7 @@ export function MostActivePanel() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full bg-[#0A0A0A]">
+      <div className="flex items-center justify-center h-full bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-primary" data-testid="loading-spinner-active" />
       </div>
     );
@@ -36,7 +36,7 @@ export function MostActivePanel() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4 bg-[#0A0A0A]">
+      <div className="flex flex-col items-center justify-center h-full gap-4 bg-background">
         <AlertCircle className="w-8 h-8 text-destructive" data-testid="error-icon-active" />
         <p className="text-sm text-muted-foreground" data-testid="text-error-message">Failed to load most active stocks</p>
         <Button 
@@ -53,11 +53,11 @@ export function MostActivePanel() {
   const lastUpdate = new Date();
 
   return (
-    <div className="flex flex-col h-full bg-[#0A0A0A]">
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#1a1a1a]">
+    <div className="flex flex-col h-full bg-background">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] uppercase tracking-wider text-[#888888]">Most Active</span>
-          <span className="text-[10px] text-[#888888]" data-testid="text-last-update">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Most Active</span>
+          <span className="text-[10px] text-muted-foreground" data-testid="text-last-update">
             {lastUpdate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
@@ -72,7 +72,7 @@ export function MostActivePanel() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-5 gap-1 px-3 py-1.5 text-[10px] uppercase tracking-wider text-[#888888] border-b border-[#1a1a1a] bg-[#000000]">
+      <div className="grid grid-cols-5 gap-1 px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/40">
         <div>Symbol</div>
         <div>Company</div>
         <div className="text-right">Price</div>
@@ -85,21 +85,21 @@ export function MostActivePanel() {
           {stocks && stocks.map((stock, index) => (
             <div
               key={stock.symbol}
-              className="grid grid-cols-5 gap-1 py-2 border-b border-[#1a1a1a] hover:bg-[#1a1a1a] transition-colors cursor-pointer"
+              className="grid grid-cols-5 gap-1 py-2 border-b border-border hover:bg-accent transition-colors cursor-pointer"
               data-testid={`row-active-${stock.symbol}`}
             >
               <div className="flex items-center gap-1">
-                <span className="text-[#FF6B47] font-mono text-sm financial-ticker" data-testid={`text-symbol-${stock.symbol}`}>
+                <span className="text-primary font-mono text-sm financial-ticker" data-testid={`text-symbol-${stock.symbol}`}>
                   {stock.symbol}
                 </span>
-                <span className="text-[10px] text-[#888888]" data-testid={`text-rank-${index + 1}`}>
+                <span className="text-[10px] text-muted-foreground" data-testid={`text-rank-${index + 1}`}>
                   {index + 1}
                 </span>
               </div>
-              <div className="text-[11px] text-[#FFFFFF] truncate" title={stock.name} data-testid={`text-name-${stock.symbol}`}>
+              <div className="text-[11px] text-foreground truncate" title={stock.name} data-testid={`text-name-${stock.symbol}`}>
                 {stock.name}
               </div>
-              <div className="text-right font-mono text-sm text-[#FFFFFF] financial-price" data-testid={`text-price-${stock.symbol}`}>
+              <div className="text-right font-mono text-sm text-foreground financial-price" data-testid={`text-price-${stock.symbol}`}>
                 ₹{stock.price.toFixed(2)}
               </div>
               <div className="text-right">
@@ -118,10 +118,10 @@ export function MostActivePanel() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-mono text-sm text-[#FFFFFF]" data-testid={`text-volume-${stock.symbol}`}>
+                <div className="font-mono text-sm text-foreground" data-testid={`text-volume-${stock.symbol}`}>
                   {formatVolume(stock.volume)}
                 </div>
-                <div className="text-[10px] text-[#888888]">
+                <div className="text-[10px] text-muted-foreground">
                   shares
                 </div>
               </div>

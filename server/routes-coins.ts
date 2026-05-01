@@ -37,6 +37,9 @@ import {
   listFeatureCosts,
   upsertFeatureCost,
   getOrCreateBalance,
+  getCoinPricing,
+  updateCoinPricing,
+  updateSignupBonus,
 } from './db/coin-store';
 
 const router = Router();
@@ -125,7 +128,13 @@ router.post(
         });
         return;
       }
-      res.json({ data: { transaction: result.transaction, balance_after: result.balanceAfter } });
+      res.json({
+        data: {
+          transaction: result.transaction,
+          balance_after: result.balanceAfter,
+          was_replay: result.wasReplay,
+        },
+      });
     } catch (err: any) {
       console.error('[COINS] debit error:', err.message);
       res.status(500).json({ message: 'Failed to debit coins' });
@@ -212,13 +221,21 @@ router.get('/api/admin/coins/feature-costs', requireAuth, requireAdmin, async (_
 });
 
 router.patch('/api/admin/coins/feature-costs/:key', requireAuth, requireAdmin, async (req: Request, res: Response) => {
-  const { cost, description } = req.body as { cost?: number; description?: string };
+  const { cost, description, is_active } = req.body as {
+    cost?: number;
+    description?: string;
+    is_active?: boolean;
+  };
   if (cost == null || !Number.isInteger(cost) || cost < 0) {
     res.status(400).json({ message: 'cost must be a non-negative integer' });
     return;
   }
+  if (is_active !== undefined && typeof is_active !== 'boolean') {
+    res.status(400).json({ message: 'is_active must be a boolean' });
+    return;
+  }
   try {
-    await upsertFeatureCost(req.params.key, cost, description);
+    await upsertFeatureCost(req.params.key, cost, description, is_active);
     res.json({ message: 'Feature cost updated' });
   } catch (err: any) {
     res.status(500).json({ message: 'Failed to update feature cost' });
@@ -304,6 +321,53 @@ router.delete('/api/admin/coins/packs/:id', requireAuth, requireAdmin, async (re
     res.json({ message: 'Pack deleted' });
   } catch (err: any) {
     res.status(500).json({ message: 'Failed to delete pack' });
+  }
+});
+
+// ─── Coin pricing (single ₹/coin rate) ───────────────────────────────────────
+
+router.get('/api/coins/pricing', requireAuth, async (_req: Request, res: Response) => {
+  try {
+    const pricing = await getCoinPricing();
+    res.json({ data: pricing });
+  } catch (err: any) {
+    res.status(500).json({ message: 'Failed to fetch coin pricing' });
+  }
+});
+
+router.patch('/api/admin/coins/pricing', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  const { paise_per_coin } = req.body as { paise_per_coin?: number };
+  if (paise_per_coin == null || !Number.isInteger(paise_per_coin) || paise_per_coin <= 0) {
+    res.status(400).json({ message: 'paise_per_coin must be a positive integer' });
+    return;
+  }
+  try {
+    await updateCoinPricing(paise_per_coin, req.user?.userId ?? null);
+    const pricing = await getCoinPricing();
+    res.json({ data: pricing, message: 'Coin pricing updated' });
+  } catch (err: any) {
+    console.error('[COINS] update pricing error:', err.message);
+    res.status(500).json({ message: 'Failed to update coin pricing' });
+  }
+});
+
+router.patch('/api/admin/coins/signup-bonus', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  const { signup_bonus_coins } = req.body as { signup_bonus_coins?: number };
+  if (
+    signup_bonus_coins == null ||
+    !Number.isInteger(signup_bonus_coins) ||
+    signup_bonus_coins < 0
+  ) {
+    res.status(400).json({ message: 'signup_bonus_coins must be a non-negative integer' });
+    return;
+  }
+  try {
+    await updateSignupBonus(signup_bonus_coins, req.user?.userId ?? null);
+    const pricing = await getCoinPricing();
+    res.json({ data: pricing, message: 'Signup bonus updated' });
+  } catch (err: any) {
+    console.error('[COINS] update signup bonus error:', err.message);
+    res.status(500).json({ message: 'Failed to update signup bonus' });
   }
 });
 

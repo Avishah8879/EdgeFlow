@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AdminLayout } from "@/components/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,9 +22,82 @@ import {
   useCreateCoinPack,
   useUpdateCoinPack,
   useDeleteCoinPack,
+  useCoinPricing,
+  useUpdateCoinPricing,
   type AdminCoinPack,
 } from "@/hooks/use-coin-wallet";
 import { toast } from "sonner";
+
+function CoinPricingCard() {
+  const { data, isLoading } = useCoinPricing();
+  const update = useUpdateCoinPricing();
+  const current = data?.data;
+  const [rupees, setRupees] = useState("");
+
+  useEffect(() => {
+    if (current && rupees === "") {
+      setRupees((current.paise_per_coin / 100).toFixed(2));
+    }
+    // intentional: only seed once when the value first arrives
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current?.paise_per_coin]);
+
+  const dirty =
+    current != null &&
+    rupees !== "" &&
+    Math.round(parseFloat(rupees) * 100) !== current.paise_per_coin;
+
+  const onSave = async () => {
+    const paise = Math.round(parseFloat(rupees) * 100);
+    if (!Number.isFinite(paise) || paise <= 0) {
+      toast.error("Rate must be a positive number");
+      return;
+    }
+    try {
+      await update.mutateAsync({ paise_per_coin: paise });
+      toast.success("Rate updated");
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Coin pricing — custom amount rate</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground mb-3">
+          End-users buying a custom number of coins on Profile → Coins pay <span className="font-medium">qty × rate</span>.
+          Discrete packs above carry their own bundled prices and ignore this rate.
+        </p>
+        <div className="flex items-end gap-3">
+          <div>
+            <Label>₹ per coin</Label>
+            <Input
+              type="number"
+              min={0.01}
+              step={0.01}
+              value={rupees}
+              onChange={(e) => setRupees(e.target.value)}
+              className="w-32 font-mono"
+              disabled={isLoading}
+            />
+          </div>
+          <Button onClick={onSave} disabled={!dirty || update.isPending}>
+            {update.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+            Save rate
+          </Button>
+          {current && (
+            <span className="text-xs text-muted-foreground pb-2">
+              Last updated {new Date(current.updated_at).toLocaleString("en-IN")}
+            </span>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 function PackForm({ initial, onSave, onCancel, isSaving }: {
   initial?: Partial<AdminCoinPack>;
@@ -158,6 +231,8 @@ export default function AdminCoinPacks() {
           </div>
           <CreatePackDialog />
         </div>
+
+        <CoinPricingCard />
 
         <Card>
           <CardHeader><CardTitle className="text-base">Packs ({packs.length})</CardTitle></CardHeader>

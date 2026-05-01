@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { getApiBaseUrl } from "@/lib/api-config";
+import { getApiBaseUrl, getAuthBaseUrl } from "@/lib/api-config";
+import { parseCoinError, type CoinError } from "@/lib/coin-error";
 
 export interface FundamentalResult {
   symbol: string;
@@ -39,6 +40,10 @@ export function useFundamentalScreener() {
   const jobIdRef = useRef<string | null>(null);
   const abortedRef = useRef(false);
   const baseUrl = getApiBaseUrl();
+  // /start MUST go through Node so the coinGate middleware can debit before
+  // proxying to Python. SSE stream + cancel stay direct to Python.
+  const gateBaseUrl = getAuthBaseUrl();
+  const [coinError, setCoinError] = useState<CoinError | null>(null);
 
   const runScreener = useCallback(
     async (expression: string) => {
@@ -47,11 +52,12 @@ export function useFundamentalScreener() {
       setResults([]);
       setSummary(null);
       setError(null);
+      setCoinError(null);
       setIsRunning(true);
       abortedRef.current = false;
 
       try {
-        const startResponse = await fetch(`${baseUrl}/api/fundamental-screener/start`, {
+        const startResponse = await fetch(`${gateBaseUrl}/api/fundamental-screener/start`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ expression }),
@@ -59,7 +65,16 @@ export function useFundamentalScreener() {
 
         if (!startResponse.ok) {
           const errorData = await startResponse.json().catch(() => ({ detail: "Unknown error" }));
-          throw new Error(errorData.detail || `Failed to start screener: ${startResponse.status}`);
+          const coinErr = parseCoinError(startResponse.status, errorData);
+          if (coinErr) {
+            setCoinError(coinErr);
+            setStatus("disconnected");
+            setIsRunning(false);
+            return;
+          }
+          throw new Error(
+            errorData.message || errorData.detail || `Failed to start screener: ${startResponse.status}`,
+          );
         }
 
         const responseData = await startResponse.json();
@@ -128,7 +143,7 @@ export function useFundamentalScreener() {
         setIsRunning(false);
       }
     },
-    [baseUrl, queryClient],
+    [baseUrl, gateBaseUrl, queryClient],
   );
 
   const cancelScreener = useCallback(async () => {
@@ -169,6 +184,7 @@ export function useFundamentalScreener() {
     results,
     summary,
     error,
+    coinError,
     isRunning,
     runScreener,
     cancelScreener,

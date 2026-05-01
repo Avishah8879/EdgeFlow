@@ -12,6 +12,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { maybeRedirectToCallingPlatform } from "@/lib/platform-handshake";
 import { SEO } from "@/components/SEO";
 import { EquityProLogo } from "@/components/EquityProLogo";
 import { HalvorsenAttractor } from "@/components/HalvorsenAttractor";
@@ -30,6 +31,8 @@ export default function EquityProLogin() {
     clearError,
     startGoogleLogin,
     isAuthenticated,
+    token,
+    refreshToken,
   } = useAuth();
   const [, navigate] = useLocation();
   const [form, setForm] = useState<FormState>({
@@ -47,13 +50,18 @@ export default function EquityProLogin() {
 
   useEffect(() => {
     if (isAuthenticated) {
+      // Cross-platform handshake first — if the URL carries
+      // `?platform=&returnUrl=` and returnUrl is an absolute external URL
+      // on a trusted origin, bounce there with the JWT in query params.
+      if (maybeRedirectToCallingPlatform(token, refreshToken)) return;
+
       const searchParams = new URLSearchParams(window.location.search);
       const returnUrl = searchParams.get("returnUrl");
       const destination = returnUrl ? decodeURIComponent(returnUrl) : "/home";
       const timeout = setTimeout(() => navigate(destination), 800);
       return () => clearTimeout(timeout);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, token, refreshToken]);
 
   const handleChange =
     (key: keyof FormState) => (event: React.ChangeEvent<HTMLInputElement>) => {

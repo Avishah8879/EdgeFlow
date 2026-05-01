@@ -15,7 +15,8 @@ export type CoinTxType =
   | 'refund'
   | 'admin_grant'
   | 'monthly_top_up'
-  | 'expiry';
+  | 'expiry'
+  | 'signup_bonus';
 
 export interface CoinBalance {
   user_id: string;
@@ -294,6 +295,18 @@ export async function getFeatureCost(featureKey: string): Promise<number> {
   return row?.cost ?? 1; // default 1 coin if key not registered
 }
 
+/**
+ * Fetch the full feature_costs row (including is_active). Used by the
+ * coin gate to decide whether to debit at all (is_active=false → free).
+ */
+export async function getFeatureCostRow(featureKey: string): Promise<FeatureCost | null> {
+  const row = await queryOne<FeatureCost>(
+    'SELECT feature_key, cost, description, is_active FROM feature_costs WHERE feature_key = $1',
+    [featureKey],
+  );
+  return row ?? null;
+}
+
 export async function listFeatureCosts(): Promise<FeatureCost[]> {
   const r = await query<FeatureCost>(
     'SELECT * FROM feature_costs ORDER BY feature_key',
@@ -301,16 +314,66 @@ export async function listFeatureCosts(): Promise<FeatureCost[]> {
   return r.rows;
 }
 
+// ─── Coin pricing (single ₹/coin rate + signup bonus) ────────────────────────
+
+export interface CoinPricing {
+  paise_per_coin: number;
+  signup_bonus_coins: number;
+  updated_at: string;
+}
+
+export async function getCoinPricing(): Promise<CoinPricing> {
+  const row = await queryOne<CoinPricing>(
+    'SELECT paise_per_coin, signup_bonus_coins, updated_at FROM coin_pricing WHERE id = 1',
+  );
+  // Self-heal seeds this row, but defend against an empty result anyway.
+  return row ?? {
+    paise_per_coin: 100,
+    signup_bonus_coins: 10,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+export async function updateCoinPricing(
+  paisePerCoin: number,
+  updatedBy?: string | null,
+): Promise<void> {
+  await query(
+    `INSERT INTO coin_pricing (id, paise_per_coin, updated_at, updated_by)
+     VALUES (1, $1, NOW(), $2)
+     ON CONFLICT (id) DO UPDATE
+     SET paise_per_coin = $1, updated_at = NOW(), updated_by = $2`,
+    [paisePerCoin, updatedBy ?? null],
+  );
+}
+
+export async function updateSignupBonus(
+  bonusCoins: number,
+  updatedBy?: string | null,
+): Promise<void> {
+  await query(
+    `INSERT INTO coin_pricing (id, signup_bonus_coins, updated_at, updated_by)
+     VALUES (1, $1, NOW(), $2)
+     ON CONFLICT (id) DO UPDATE
+     SET signup_bonus_coins = $1, updated_at = NOW(), updated_by = $2`,
+    [bonusCoins, updatedBy ?? null],
+  );
+}
+
 export async function upsertFeatureCost(
   featureKey: string,
   cost: number,
   description?: string,
+  isActive?: boolean,
 ): Promise<void> {
   await query(
-    `INSERT INTO feature_costs (feature_key, cost, description)
-     VALUES ($1, $2, $3)
+    `INSERT INTO feature_costs (feature_key, cost, description, is_active)
+     VALUES ($1, $2, $3, COALESCE($4, TRUE))
      ON CONFLICT (feature_key) DO UPDATE
-     SET cost = $2, description = COALESCE($3, feature_costs.description), updated_at = NOW()`,
-    [featureKey, cost, description ?? null],
+     SET cost        = $2,
+         description = COALESCE($3, feature_costs.description),
+         is_active   = COALESCE($4, feature_costs.is_active),
+         updated_at  = NOW()`,
+    [featureKey, cost, description ?? null, isActive ?? null],
   );
 }

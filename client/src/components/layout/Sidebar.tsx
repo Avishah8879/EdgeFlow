@@ -10,28 +10,17 @@ import {
   Zap,
   Calendar,
   LineChart,
-  GitCompare,
   Newspaper,
-  FileText,
   Link2,
   BookOpen,
   Eye,
   Search,
-  Rocket,
   Brain,
-  MessageSquare,
   ListChecks,
   Briefcase,
   Calculator,
-  StickyNote,
   Bookmark,
-  Code,
   Users,
-  HelpCircle,
-  History,
-  ChevronLeft,
-  ChevronRight,
-  Shield,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -71,10 +60,8 @@ const navSections: NavSection[] = [
     title: "CHARTS & DATA",
     items: [
       { label: "Advanced Chart", href: "/chart", icon: LineChart },
-      { label: "Compare", href: "/compare", icon: GitCompare },
       { label: "Pair Trading", href: "/pair-trading", icon: Activity },
       { label: "News", href: "/news", icon: Newspaper },
-      { label: "Research Reports", href: "/research-reports", icon: FileText },
     ],
   },
   {
@@ -92,37 +79,20 @@ const navSections: NavSection[] = [
       { label: "Expert Screener", href: "/screener", icon: Search },
       { label: "Fundamental Scanner", href: "/equity-screener", icon: ListChecks },
       { label: "Pattern Search", href: "/pattern-search", icon: Eye },
-      { label: "Systematic Patterns", href: "/systematic-patterns", icon: Brain },
+      { label: "Sector Rotation", href: "/systematic-patterns", icon: Brain },
       { label: "Seasonality", href: "/seasonality", icon: Calendar },
     ],
   },
   {
     title: "TOOLS",
     items: [
-      { label: "Watchlist", href: "/watchlist", icon: Bookmark },
       { label: "Portfolio Optimizer", href: "/portfolio-optimizer", icon: Briefcase },
-      { label: "Calculator", href: "/calculator", icon: Calculator },
-      { label: "Notes", href: "/notes", icon: StickyNote },
       { label: "Saved Results", href: "/saved-results", icon: Bookmark },
-    ],
-  },
-  {
-    title: "COMMUNITY",
-    items: [
-      { label: "Blog", href: "/blog", icon: FileText },
-      { label: "Market Reports", href: "/market-reports", icon: FileText },
     ],
   },
   {
     title: "ADMIN",
     items: [
-    ],
-  },
-  {
-    title: "HELP",
-    items: [
-      { label: "Changelog", href: "/changelog", icon: History },
-      { label: "Help", href: "/help", icon: HelpCircle },
     ],
   },
 ];

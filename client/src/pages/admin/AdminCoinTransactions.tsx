@@ -24,11 +24,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { getAuthBaseUrl } from "@/lib/api-config";
 import type { CoinTransaction } from "@/hooks/use-coin-wallet";
+import { usePlatforms } from "@/hooks/use-platforms";
 
 const TX_TYPE_COLORS: Record<string, string> = {
   purchase:       "bg-positive/20 text-positive border-positive/30",
   admin_grant:    "bg-primary/15 text-primary border-primary/25",
   monthly_top_up: "bg-blue-500/15 text-blue-500 border-blue-500/25",
+  signup_bonus:   "bg-positive/15 text-positive border-positive/25",
   debit:          "bg-negative/15 text-negative border-negative/25",
   refund:         "bg-yellow-500/15 text-yellow-600 border-yellow-500/25",
   expiry:         "bg-muted text-muted-foreground border-border",
@@ -46,17 +48,23 @@ export default function AdminCoinTransactions() {
   const baseUrl = getAuthBaseUrl();
   const [userId, setUserId] = useState("");
   const [type, setType] = useState("all");
+  const [platformId, setPlatformId] = useState("all");
   const [offset, setOffset] = useState(0);
   const limit = 50;
+
+  const { data: platformsData } = usePlatforms();
+  const platforms = platformsData?.data ?? [];
+  const platformNameById = new Map(platforms.map((p) => [p.id, p.name] as const));
 
   const params = new URLSearchParams();
   if (userId.trim()) params.set("user_id", userId.trim());
   if (type !== "all") params.set("type", type);
+  if (platformId !== "all") params.set("platform_id", platformId);
   params.set("limit", String(limit));
   params.set("offset", String(offset));
 
   const { data, isLoading } = useQuery<{ data: CoinTransaction[] }>({
-    queryKey: ["admin-coin-txns", userId, type, offset],
+    queryKey: ["admin-coin-txns", userId, type, platformId, offset],
     queryFn: async () => {
       const r = await fetch(`${baseUrl}/api/admin/coins/transactions?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -111,11 +119,23 @@ export default function AdminCoinTransactions() {
             <SelectContent>
               <SelectItem value="all">All types</SelectItem>
               <SelectItem value="purchase">Purchase</SelectItem>
+              <SelectItem value="signup_bonus">Signup bonus</SelectItem>
               <SelectItem value="admin_grant">Admin grant</SelectItem>
               <SelectItem value="monthly_top_up">Monthly top-up</SelectItem>
               <SelectItem value="debit">Debit</SelectItem>
               <SelectItem value="refund">Refund</SelectItem>
               <SelectItem value="expiry">Expiry</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={platformId} onValueChange={(v) => { setPlatformId(v); setOffset(0); }}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="Platform" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All platforms</SelectItem>
+              {platforms.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm" onClick={downloadCSV} disabled={!txns.length}>
@@ -144,6 +164,7 @@ export default function AdminCoinTransactions() {
                       <TableHead>Balance after</TableHead>
                       <TableHead>User ID</TableHead>
                       <TableHead>Feature</TableHead>
+                      <TableHead>Platform</TableHead>
                       <TableHead>Date</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -164,6 +185,9 @@ export default function AdminCoinTransactions() {
                         <TableCell className="font-mono">{t.balance_after}</TableCell>
                         <TableCell className="font-mono text-xs max-w-[140px] truncate">{t.user_id}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{t.feature_key ?? "—"}</TableCell>
+                        <TableCell className="text-xs">
+                          {t.platform_id ? (platformNameById.get(t.platform_id) ?? t.platform_id.slice(0, 8)) : "—"}
+                        </TableCell>
                         <TableCell className="text-xs">{formatDate(t.created_at)}</TableCell>
                       </TableRow>
                     ))}

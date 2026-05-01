@@ -34,7 +34,9 @@ export default function OAuthSetup() {
 
   const [username, setUsername] = useState("");
   const [phone, setPhone] = useState("");
-  const [tier] = useState("premium");
+  // Tier defaults to "free"; tier picking happens later on /pricing.
+  // Migration 025 dropped the legacy "premium" value, which would fail the check_tier constraint.
+  const [tier] = useState("free");
   const [country, setCountry] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);

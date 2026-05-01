@@ -24,7 +24,7 @@ import {
   markIntentPaid,
   listIntentsForUser,
 } from './db/payment-store';
-import { getPackById } from './db/coin-store';
+import { getPackById, getCoinPricing } from './db/coin-store';
 import { getPlanById } from './db/subscription-store';
 import { creditCoins } from './lib/coins';
 import { activateSubscription } from './db/subscription-store';
@@ -32,10 +32,13 @@ import { findUserByIdV2 } from './auth/store-v2';
 
 const router = Router();
 
-const checkoutSchema = z.object({
-  kind:       z.enum(['plan', 'coin_pack']),
-  product_id: z.string().min(1),
-});
+// Discriminated union: { kind: 'plan' | 'coin_pack', product_id: string }
+//                  OR  { kind: 'custom_coins', quantity: number }
+const checkoutSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('plan'),       product_id: z.string().min(1) }),
+  z.object({ kind: z.literal('coin_pack'),  product_id: z.string().min(1) }),
+  z.object({ kind: z.literal('custom_coins'), quantity: z.number().int().positive().max(100_000) }),
+]);
 
 // ─── Checkout ────────────────────────────────────────────────────────────────
 
@@ -51,7 +54,7 @@ router.post('/api/payments/checkout', requireAuth, async (req: Request, res: Res
     return;
   }
 
-  const { kind, product_id } = parsed.data;
+  const data = parsed.data;
   const userId = req.user!.userId;
 
   try {
@@ -63,32 +66,44 @@ router.post('/api/payments/checkout', requireAuth, async (req: Request, res: Res
 
     let amountPaise: number;
     let description: string;
+    let productId: string;
+    let metadata: Record<string, any> | undefined;
 
-    if (kind === 'coin_pack') {
-      const pack = await getPackById(product_id);
+    if (data.kind === 'coin_pack') {
+      const pack = await getPackById(data.product_id);
       if (!pack || !pack.is_active) {
         res.status(404).json({ message: 'Coin pack not found' });
         return;
       }
       amountPaise = pack.price_inr_paise;
       description = `${pack.name} — ${pack.coin_amount + pack.bonus_coins} coins`;
-    } else {
-      const plan = await getPlanById(product_id);
+      productId = data.product_id;
+    } else if (data.kind === 'plan') {
+      const plan = await getPlanById(data.product_id);
       if (!plan || !plan.is_active) {
         res.status(404).json({ message: 'Plan not found' });
         return;
       }
       amountPaise = plan.price_cents;
       description = plan.name;
+      productId = data.product_id;
+    } else {
+      // custom_coins — compute amount from admin-set ₹/coin rate
+      const pricing = await getCoinPricing();
+      amountPaise = data.quantity * pricing.paise_per_coin;
+      description = `${data.quantity} coins (custom amount)`;
+      productId = `custom:${data.quantity}`;
+      metadata = { quantity: data.quantity, paise_per_coin: pricing.paise_per_coin };
     }
 
     // Create intent row first so we have a stable order_id
     const intent = await createPaymentIntent({
       userId,
-      kind,
-      productId: product_id,
+      kind: data.kind,
+      productId,
       amountPaise,
       currency: 'INR',
+      metadata,
     });
 
     const cfOrder = await createCashfreeOrder({
@@ -183,6 +198,24 @@ router.post('/api/payments/webhook', async (req: Request, res: Response) => {
           metadata: { pack_name: pack.name, cf_payment_id: payment.cf_payment_id },
         });
       }
+    } else if (intent.kind === 'custom_coins') {
+      const quantity = Number(intent.metadata?.quantity);
+      if (Number.isFinite(quantity) && quantity > 0) {
+        await creditCoins({
+          userId:         intent.user_id,
+          amount:         quantity,
+          type:           'purchase',
+          referenceId:    intent.id,
+          idempotencyKey: fulfilmentKey,
+          metadata: {
+            kind: 'custom_coins',
+            paise_per_coin: intent.metadata?.paise_per_coin,
+            cf_payment_id: payment.cf_payment_id,
+          },
+        });
+      } else {
+        console.error('[PAYMENTS] custom_coins intent missing quantity metadata:', intent.id);
+      }
     } else if (intent.kind === 'plan') {
       const plan = await getPlanById(intent.product_id);
       if (plan) {
@@ -231,7 +264,7 @@ router.get('/api/admin/payments', requireAuth, requireAdmin, async (req: Request
     if (status && ['pending','paid','failed','expired','refunded'].includes(status)) {
       conditions.push(`p.status = $${i++}::payment_intent_status`); params.push(status);
     }
-    if (kind && ['plan','coin_pack'].includes(kind)) {
+    if (kind && ['plan','coin_pack','custom_coins'].includes(kind)) {
       conditions.push(`p.kind = $${i++}::payment_kind`); params.push(kind);
     }
     if (userId) {

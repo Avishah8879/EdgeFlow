@@ -396,17 +396,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [applySession]);
 
-  // Auto-refresh user profile for existing sessions that might be missing new fields
-  // This ensures existing users get role, phoneNumber, etc. without needing to re-login
+  // Refresh user profile from /me on every mount when a session exists.
+  // Picks up server-side changes (role/tier/email-verified updates) without
+  // forcing the user to log out and back in. One extra request per page
+  // load is a fair price for keeping cached fields fresh.
   useEffect(() => {
     if (session?.token && session?.user) {
-      // Check if session is missing important fields that should come from backend
-      const isMissingRole = session.user.role === undefined;
-
-      if (isMissingRole) {
-        console.log('[AUTH] Session missing role field, refreshing user profile...');
-        refreshUserProfile();
-      }
+      refreshUserProfile();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount - refreshUserProfile is stable

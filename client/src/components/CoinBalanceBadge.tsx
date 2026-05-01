@@ -11,15 +11,14 @@ type CoinBalanceBadgeProps = {
 
 /**
  * Compact coin balance indicator for the topbar / navigation.
- * Links to the Profile coins tab. Invisible for unauthenticated users
- * and for Pro users (who never spend coins).
+ * Links to the Profile coins tab. Invisible only for unauthenticated users.
+ * Coin gating is now tier-agnostic, so every signed-in user sees their balance.
  */
 export function CoinBalanceBadge({ className, showLabel = false }: CoinBalanceBadgeProps) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { data } = useCoinBalance();
 
-  // Pro users don't spend coins — hide the badge for them
-  if (!isAuthenticated || user?.tier === "pro") return null;
+  if (!isAuthenticated) return null;
 
   const balance = data?.data?.balance ?? null;
 

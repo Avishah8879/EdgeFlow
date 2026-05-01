@@ -42,6 +42,7 @@ import { verifyPasswordBcrypt, validatePasswordStrength } from './auth/password-
 import { createJwtSessionPayload } from './auth/session-jwt';
 import { verifyRefreshToken } from './auth/jwt';
 import { requireAuth } from './middleware/auth';
+import { grantSignupBonus } from './lib/coins';
 import jwt from 'jsonwebtoken';
 
 const router = Router();
@@ -132,6 +133,9 @@ router.post('/v2/signup', signupRateLimiter, async (req: Request, res: Response)
       termsAcceptedAt: new Date(),
       termsVersion: '1.0',
     });
+
+    // Credit signup bonus (idempotent + soft-fail — never blocks signup)
+    grantSignupBonus(user.id).catch(() => {});
 
     // Log successful signup — best-effort, don't block the response
     logAuthEventV2({
@@ -627,6 +631,9 @@ router.post('/v2/complete-oauth-signup', async (req: Request, res: Response) => 
       termsAcceptedAt: new Date(),
       termsVersion: '1.0',
     });
+
+    // Credit signup bonus (idempotent + soft-fail — never blocks signup)
+    grantSignupBonus(user.id).catch(() => {});
 
     // Create session
     const session = await createJwtSessionPayload(user, {

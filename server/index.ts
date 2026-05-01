@@ -200,24 +200,33 @@ app.use((req, res, next) => {
     log('[AUTH] ⚠️  WARNING: Authentication database connection failed. V2 auth may not work.');
   }
 
-  // Mount EquityPro-specific routes (chart, options, streaming, watchlist, layouts, forum)
-  const { registerTerminalRoutes } = await import('./routes-terminal.js');
-  registerTerminalRoutes(app);
-  log('[TERMINAL] EquityPro routes mounted');
-
   // ── Coin-gated feature interceptors ─────────────────────────────────────
-  // These MUST be registered before registerRoutes() which mounts the
-  // Python catch-all at the end. Specific routes always match before catch-all.
+  // Registered BEFORE registerTerminalRoutes() so they intercept requests
+  // for routes that the terminal layer also handles (pair-trading,
+  // portfolio, fundamental-screener). Express routes match in registration
+  // order, so the gate fires first; on success it forwards to Python via
+  // pythonCatchAllProxy, bypassing the terminal-route handlers (which are
+  // also just thin proxies — no business logic that we'd lose).
   const { coinGate } = await import('./middleware/coin-gate.js');
   const { pythonCatchAllProxy } = await import('./routes.js');
   const { requireAuth: requireAuthMW } = await import('./middleware/auth.js');
 
-  app.post('/api/strategy-backtest/start',        requireAuthMW, coinGate('backtest.run'),      pythonCatchAllProxy);
-  app.post('/api/strategy-backtest/hybrid/start', requireAuthMW, coinGate('backtest.run'),      pythonCatchAllProxy);
-  app.post('/api/expert-screener/start',          requireAuthMW, coinGate('screener.run'),      pythonCatchAllProxy);
-  app.post('/api/sentiment-analysis/start',       requireAuthMW, coinGate('sentiment.analyze'), pythonCatchAllProxy);
-  log('[COIN_GATE] Coin-gated interceptors mounted for backtest / screener / sentiment');
+  app.post('/api/strategy-backtest/start',        requireAuthMW, coinGate('backtest.run'),             pythonCatchAllProxy);
+  app.post('/api/strategy-backtest/hybrid/start', requireAuthMW, coinGate('backtest.run'),             pythonCatchAllProxy);
+  app.post('/api/expert-screener/start',          requireAuthMW, coinGate('screener.run'),             pythonCatchAllProxy);
+  app.post('/api/sentiment-analysis',             requireAuthMW, coinGate('sentiment.analyze'),        pythonCatchAllProxy);
+  app.post('/api/sentiment-analysis/start',       requireAuthMW, coinGate('sentiment.analyze'),        pythonCatchAllProxy);
+  app.post('/api/tip-tease/chat/start',           requireAuthMW, coinGate('tip_tease.chat'),           pythonCatchAllProxy);
+  app.post('/api/portfolio/optimize',             requireAuthMW, coinGate('portfolio.optimize'),       pythonCatchAllProxy);
+  app.post('/api/fundamental-screener/start',     requireAuthMW, coinGate('fundamental_screener.run'), pythonCatchAllProxy);
+  app.get ('/api/pair-trading/matrix',            requireAuthMW, coinGate('pair_trading.run'),         pythonCatchAllProxy);
+  log('[COIN_GATE] Coin-gated interceptors mounted (backtest, screener, sentiment, tip-tease, portfolio, fundamental, pair-trading)');
   // ────────────────────────────────────────────────────────────────────────
+
+  // Mount EquityPro-specific routes (chart, options, streaming, watchlist, layouts, forum)
+  const { registerTerminalRoutes } = await import('./routes-terminal.js');
+  registerTerminalRoutes(app);
+  log('[TERMINAL] EquityPro routes mounted');
 
   const server = await registerRoutes(app);
 

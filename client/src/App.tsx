@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, Redirect } from "wouter";
 import { queryClient, prefetchTickerOptions } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PageVisibilityProvider } from "@/contexts/PageVisibilityContext";
 import { TrackingProvider } from "@/contexts/TrackingContext";
@@ -22,9 +22,15 @@ import { NotificationBanner } from "@/components/NotificationBanner";
 import { PrivacyConsentBanner } from "@/components/PrivacyConsentBanner";
 
 // ── Pages loaded immediately ───────────────────────────────────────────────
-import Landing from "@/pages/Landing";
 import NotFound from "@/pages/not-found";
 import AuthCallback from "@/pages/AuthCallback";
+
+// `/` redirects: authed → /home, unauthed → /login. The marketing
+// Landing page is no longer reachable — gating is universal.
+function RootRedirect() {
+  const { isAuthenticated } = useAuth();
+  return <Redirect to={isAuthenticated ? "/home" : "/login"} />;
+}
 
 // ── Equity Pro core pages (lazy) ───────────────────────────────────────────
 const Home = lazy(() => import("@/pages/Home"));
@@ -101,6 +107,7 @@ const AdminApiKeys = lazy(() => import("@/pages/admin/AdminApiKeys"));
 const AdminPlatforms = lazy(() => import("@/pages/admin/AdminPlatforms"));
 const AdminCoinTransactions = lazy(() => import("@/pages/admin/AdminCoinTransactions"));
 const AdminCoinPacks = lazy(() => import("@/pages/admin/AdminCoinPacks"));
+const AdminSignupBonus = lazy(() => import("@/pages/admin/AdminSignupBonus"));
 const AdminFeatureCosts = lazy(() => import("@/pages/admin/AdminFeatureCosts"));
 const AdminPayments = lazy(() => import("@/pages/admin/AdminPayments"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
@@ -121,11 +128,17 @@ function AdminUpdatesListener() {
   return null;
 }
 
-// Paths that render WITHOUT the AppShell (no sidebar/topbar)
+// Paths that render WITHOUT the AppShell (no sidebar/topbar) AND
+// are exempt from authentication. Keep this list minimal — only auth
+// flows, legal pages, and integration callbacks belong here.
+//   - "/"               → always redirects via <RootRedirect/>, never renders content
+//   - "/login" etc.     → auth flows must be reachable while logged out
+//   - "/privacy"        → legal page, kept public
+//   - "/fyers-token"    → broker integration callback
 const BARE_PATHS = new Set([
   "/", "/login", "/signup", "/forgot-password",
   "/auth/callback", "/auth/oauth-setup", "/privacy",
-  "/fyers-token", "/pricing",
+  "/fyers-token",
 ]);
 
 function AppRoutes() {
@@ -142,7 +155,7 @@ function AppRoutes() {
         >
       <Switch>
         {/* ── Public/bare routes ──────────────────────────── */}
-        <Route path="/" component={Landing} />
+        <Route path="/" component={RootRedirect} />
         <Route path="/login" component={EquityProLogin} />
         <Route path="/signup" component={EquityProSignup} />
         <Route path="/forgot-password" component={EquityProForgotPassword} />
@@ -219,6 +232,7 @@ function AppRoutes() {
         <Route path="/admin/platforms" component={AdminPlatforms} />
         <Route path="/admin/coins" component={AdminCoinTransactions} />
         <Route path="/admin/coin-packs" component={AdminCoinPacks} />
+        <Route path="/admin/signup-bonus" component={AdminSignupBonus} />
         <Route path="/admin/feature-costs" component={AdminFeatureCosts} />
         <Route path="/admin/payments" component={AdminPayments} />
         <Route path="/pricing" component={Pricing} />

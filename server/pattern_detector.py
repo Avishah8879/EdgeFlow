@@ -1,10 +1,15 @@
 """
 Pattern Detector Module - Chart pattern recognition for stock price data.
 
-Detects 10 classic chart patterns using scipy pivot detection and geometric template matching:
-- Head and Shoulders, Double Top, Double Bottom
-- Ascending/Descending/Symmetric Triangle
-- Flag, Pennant, Cup and Handle, Wedge
+Detects classic chart patterns using scipy pivot detection and geometric template matching:
+- Head and Shoulders + Inverse Head and Shoulders
+- Double Top / Double Bottom, Triple Top / Triple Bottom
+- Ascending / Descending / Symmetric Triangle
+- Bullish Flag / Bearish Flag, Pennant
+- Cup and Handle
+- Rising Wedge / Falling Wedge
+- Ascending Channel / Descending Channel
+- Rounding Top / Rounding Bottom
 
 Uses ohlc_daily for longer timeframes (1M, 3M) and ohlc_1hour for shorter (1D, 5D).
 """
@@ -21,28 +26,46 @@ logger = logging.getLogger(__name__)
 # Historical success rates from financial literature
 PATTERN_SUCCESS_RATES = {
     'Head and Shoulders': 83,
+    'Inverse Head and Shoulders': 83,
     'Double Top': 75,
     'Double Bottom': 78,
+    'Triple Top': 79,
+    'Triple Bottom': 79,
     'Ascending Triangle': 77,
     'Descending Triangle': 72,
     'Symmetric Triangle': 54,
-    'Flag': 67,
+    'Bullish Flag': 67,
+    'Bearish Flag': 67,
     'Pennant': 65,
     'Cup and Handle': 61,
-    'Wedge': 68,
+    'Rising Wedge': 68,
+    'Falling Wedge': 68,
+    'Ascending Channel': 73,
+    'Descending Channel': 73,
+    'Rounding Top': 65,
+    'Rounding Bottom': 70,
 }
 
 PATTERN_DESCRIPTIONS = {
     'Head and Shoulders': 'A bearish reversal pattern with three peaks — the middle (head) is the highest, flanked by two lower peaks (shoulders). A break below the neckline confirms the reversal.',
+    'Inverse Head and Shoulders': 'A bullish reversal pattern with three troughs — the middle (head) is the lowest, flanked by two higher troughs (shoulders). A break above the neckline confirms the reversal.',
     'Double Top': 'A bearish reversal pattern where price reaches a resistance level twice and fails to break through, forming an "M" shape.',
     'Double Bottom': 'A bullish reversal pattern where price tests a support level twice and bounces, forming a "W" shape.',
+    'Triple Top': 'A bearish reversal pattern where price tests a resistance level three times and fails to break through.',
+    'Triple Bottom': 'A bullish reversal pattern where price tests a support level three times and bounces each time.',
     'Ascending Triangle': 'A bullish continuation pattern with a flat resistance line and rising support (higher lows). Breakout is typically upward.',
     'Descending Triangle': 'A bearish continuation pattern with flat support and falling resistance (lower highs). Breakout is typically downward.',
     'Symmetric Triangle': 'A neutral consolidation pattern with converging trendlines (lower highs and higher lows). Can break in either direction.',
-    'Flag': 'A continuation pattern — a small rectangular consolidation channel that slopes against the prior trend, followed by a breakout in the trend direction.',
+    'Bullish Flag': 'A bullish continuation pattern — a strong upward pole followed by a small downward-sloping consolidation channel before breakout.',
+    'Bearish Flag': 'A bearish continuation pattern — a strong downward pole followed by a small upward-sloping consolidation channel before breakdown.',
     'Pennant': 'A continuation pattern — a small symmetric triangle forming after a strong price move (the pole). Breakout continues the prior trend.',
     'Cup and Handle': 'A bullish continuation pattern resembling a tea cup — a rounded bottom (cup) followed by a small downward drift (handle) before breakout.',
-    'Wedge': 'A pattern where both trendlines converge in the same direction. Rising wedges are bearish; falling wedges are bullish.',
+    'Rising Wedge': 'A bearish pattern where both trendlines slope upward but converge (lows rise faster than highs). Typically resolves to the downside.',
+    'Falling Wedge': 'A bullish pattern where both trendlines slope downward but converge (highs fall faster than lows). Typically resolves to the upside.',
+    'Ascending Channel': 'A bullish trend channel with two parallel rising trendlines containing price action. Breakouts above resistance signal continuation.',
+    'Descending Channel': 'A bearish trend channel with two parallel falling trendlines containing price action. Breakdowns below support signal continuation.',
+    'Rounding Top': 'A bearish reversal pattern showing a slow, gradual change from an uptrend to a downtrend — an inverted U shape.',
+    'Rounding Bottom': 'A bullish reversal pattern showing a slow, gradual change from a downtrend to an uptrend — a U shape.',
 }
 
 
@@ -283,6 +306,81 @@ def _detect_head_and_shoulders(
     return best
 
 
+def _detect_inverse_head_and_shoulders(
+    close: np.ndarray,
+    highs_idx: np.ndarray,
+    lows_idx: np.ndarray,
+    timestamps: List[str],
+    volume: np.ndarray,
+) -> Optional[Dict]:
+    """Inverse Head and Shoulders: 3 troughs, middle lowest, roughly equal shoulders."""
+    if len(lows_idx) < 3 or len(highs_idx) < 1:
+        return None
+
+    best = None
+    best_conf = 0
+
+    for i in range(len(lows_idx) - 2):
+        left_idx = lows_idx[i]
+        head_idx = lows_idx[i + 1]
+        right_idx = lows_idx[i + 2]
+
+        left_p = close[left_idx]
+        head_p = close[head_idx]
+        right_p = close[right_idx]
+
+        # Head must be lowest
+        if head_p >= left_p or head_p >= right_p:
+            continue
+
+        # Shoulders within 15% of each other
+        shoulder_diff = abs(left_p - right_p) / max(left_p, right_p)
+        if shoulder_diff > 0.15:
+            continue
+
+        # Find peaks between troughs for neckline
+        peaks_between = highs_idx[(highs_idx > left_idx) & (highs_idx < right_idx)]
+        if len(peaks_between) < 1:
+            continue
+
+        neckline_prices = close[peaks_between]
+        neckline_flatness = 1.0 - min(np.std(neckline_prices) / np.mean(neckline_prices) * 10, 1.0)
+
+        symmetry = 1.0 - shoulder_diff
+        head_depth = (min(left_p, right_p) - head_p) / min(left_p, right_p)
+
+        # Volume confirmation: volume should expand on the right shoulder breakout
+        vol_score = 0.5
+        if len(volume) > right_idx:
+            head_vol = np.mean(volume[max(0, head_idx - 2):head_idx + 3])
+            right_vol = np.mean(volume[max(0, right_idx - 2):right_idx + 3])
+            if head_vol > 0 and right_vol > head_vol:
+                vol_score = min(1.0, (right_vol - head_vol) / right_vol + 0.5)
+
+        confidence = int(symmetry * 30 + neckline_flatness * 25 + min(head_depth * 200, 25) + vol_score * 20)
+        confidence = max(50, min(98, confidence))
+
+        if confidence > best_conf:
+            best_conf = confidence
+            best = {
+                'patternType': 'Inverse Head and Shoulders',
+                'confidence': confidence,
+                'startDate': _format_date(timestamps[left_idx]),
+                'endDate': _format_date(timestamps[right_idx]),
+                'breakoutDirection': 'bullish',
+                'description': f'Inverse Head and Shoulders detected. Head depth: {head_depth:.1%}. Shoulder symmetry: {symmetry:.0%}.',
+                'keyPoints': [
+                    _kp(left_idx, close, timestamps, 'Left Shoulder'),
+                    _kp(head_idx, close, timestamps, 'Head'),
+                    _kp(right_idx, close, timestamps, 'Right Shoulder'),
+                    _kp(peaks_between[0], close, timestamps, 'Neckline L'),
+                    _kp(peaks_between[-1], close, timestamps, 'Neckline R'),
+                ],
+            }
+
+    return best
+
+
 def _detect_double_top(
     close: np.ndarray,
     highs_idx: np.ndarray,
@@ -403,6 +501,142 @@ def _detect_double_bottom(
                     _kp(t1_idx, close, timestamps, 'Bottom 1'),
                     _kp(peaks_between[0], close, timestamps, 'Peak'),
                     _kp(t2_idx, close, timestamps, 'Bottom 2'),
+                ],
+            }
+
+    return best
+
+
+def _detect_triple_top(
+    close: np.ndarray,
+    highs_idx: np.ndarray,
+    lows_idx: np.ndarray,
+    timestamps: List[str],
+    volume: np.ndarray,
+) -> Optional[Dict]:
+    """Triple Top: three peaks at similar price level with troughs between."""
+    if len(highs_idx) < 3 or len(lows_idx) < 2:
+        return None
+
+    best = None
+    best_conf = 0
+
+    for i in range(len(highs_idx) - 2):
+        p1_idx = highs_idx[i]
+        p2_idx = highs_idx[i + 1]
+        p3_idx = highs_idx[i + 2]
+        p1, p2, p3 = close[p1_idx], close[p2_idx], close[p3_idx]
+
+        max_p = max(p1, p2, p3)
+        min_p = min(p1, p2, p3)
+        spread = (max_p - min_p) / max_p
+        if spread > 0.04:
+            continue
+
+        troughs1 = lows_idx[(lows_idx > p1_idx) & (lows_idx < p2_idx)]
+        troughs2 = lows_idx[(lows_idx > p2_idx) & (lows_idx < p3_idx)]
+        if len(troughs1) == 0 or len(troughs2) == 0:
+            continue
+
+        t1_price = close[troughs1[0]]
+        t2_price = close[troughs2[0]]
+
+        depth1 = (max_p - t1_price) / max_p
+        depth2 = (max_p - t2_price) / max_p
+        avg_depth = (depth1 + depth2) / 2.0
+        if avg_depth < 0.02:
+            continue
+
+        similarity = 1.0 - spread / 0.04
+        depth_score = min(avg_depth / 0.06, 1.0)
+        spacing_score = min((p3_idx - p1_idx) / 20.0, 1.0)
+
+        confidence = int(similarity * 32 + depth_score * 30 + spacing_score * 18 + 15)
+        confidence = max(50, min(96, confidence))
+
+        if confidence > best_conf:
+            best_conf = confidence
+            best = {
+                'patternType': 'Triple Top',
+                'confidence': confidence,
+                'startDate': _format_date(timestamps[p1_idx]),
+                'endDate': _format_date(timestamps[p3_idx]),
+                'breakoutDirection': 'bearish',
+                'description': f'Triple Top with {spread:.1%} spread between peaks. Avg trough depth: {avg_depth:.1%}.',
+                'keyPoints': [
+                    _kp(p1_idx, close, timestamps, 'Peak 1'),
+                    _kp(troughs1[0], close, timestamps, 'Trough 1'),
+                    _kp(p2_idx, close, timestamps, 'Peak 2'),
+                    _kp(troughs2[0], close, timestamps, 'Trough 2'),
+                    _kp(p3_idx, close, timestamps, 'Peak 3'),
+                ],
+            }
+
+    return best
+
+
+def _detect_triple_bottom(
+    close: np.ndarray,
+    highs_idx: np.ndarray,
+    lows_idx: np.ndarray,
+    timestamps: List[str],
+    volume: np.ndarray,
+) -> Optional[Dict]:
+    """Triple Bottom: three troughs at similar price level with peaks between."""
+    if len(lows_idx) < 3 or len(highs_idx) < 2:
+        return None
+
+    best = None
+    best_conf = 0
+
+    for i in range(len(lows_idx) - 2):
+        t1_idx = lows_idx[i]
+        t2_idx = lows_idx[i + 1]
+        t3_idx = lows_idx[i + 2]
+        t1, t2, t3 = close[t1_idx], close[t2_idx], close[t3_idx]
+
+        min_p = min(t1, t2, t3)
+        max_p = max(t1, t2, t3)
+        spread = (max_p - min_p) / max_p
+        if spread > 0.04:
+            continue
+
+        peaks1 = highs_idx[(highs_idx > t1_idx) & (highs_idx < t2_idx)]
+        peaks2 = highs_idx[(highs_idx > t2_idx) & (highs_idx < t3_idx)]
+        if len(peaks1) == 0 or len(peaks2) == 0:
+            continue
+
+        p1_price = close[peaks1[0]]
+        p2_price = close[peaks2[0]]
+
+        height1 = (p1_price - min_p) / p1_price
+        height2 = (p2_price - min_p) / p2_price
+        avg_height = (height1 + height2) / 2.0
+        if avg_height < 0.02:
+            continue
+
+        similarity = 1.0 - spread / 0.04
+        height_score = min(avg_height / 0.06, 1.0)
+        spacing_score = min((t3_idx - t1_idx) / 20.0, 1.0)
+
+        confidence = int(similarity * 32 + height_score * 30 + spacing_score * 18 + 15)
+        confidence = max(50, min(96, confidence))
+
+        if confidence > best_conf:
+            best_conf = confidence
+            best = {
+                'patternType': 'Triple Bottom',
+                'confidence': confidence,
+                'startDate': _format_date(timestamps[t1_idx]),
+                'endDate': _format_date(timestamps[t3_idx]),
+                'breakoutDirection': 'bullish',
+                'description': f'Triple Bottom with {spread:.1%} spread between troughs. Avg peak height: {avg_height:.1%}.',
+                'keyPoints': [
+                    _kp(t1_idx, close, timestamps, 'Bottom 1'),
+                    _kp(peaks1[0], close, timestamps, 'Peak 1'),
+                    _kp(t2_idx, close, timestamps, 'Bottom 2'),
+                    _kp(peaks2[0], close, timestamps, 'Peak 2'),
+                    _kp(t3_idx, close, timestamps, 'Bottom 3'),
                 ],
             }
 
@@ -565,19 +799,16 @@ def _detect_symmetric_triangle(
     }
 
 
-def _detect_flag(
+def _detect_flag_directional(
     close: np.ndarray,
-    highs_idx: np.ndarray,
-    lows_idx: np.ndarray,
     timestamps: List[str],
-    volume: np.ndarray,
+    bullish: bool,
 ) -> Optional[Dict]:
-    """Flag: strong move (pole) followed by small counter-trend channel."""
+    """Shared logic for Bullish/Bearish Flag detection."""
     n = len(close)
     if n < 20:
         return None
 
-    # Look for a strong move in the first portion, then a channel
     pole_end = n // 3
     flag_start = pole_end
     flag_end = n - 1
@@ -586,9 +817,11 @@ def _detect_flag(
     if abs(pole_return) < 0.03:
         return None
 
-    bullish_pole = pole_return > 0
+    if bullish and pole_return <= 0:
+        return None
+    if not bullish and pole_return >= 0:
+        return None
 
-    # Flag channel: small counter-trend slope
     flag_section = close[flag_start:flag_end + 1]
     if len(flag_section) < 5:
         return None
@@ -596,14 +829,13 @@ def _detect_flag(
     flag_slope = _linear_slope(flag_section)
 
     # Flag should slope against the pole direction
-    if bullish_pole and flag_slope > 0:
+    if bullish and flag_slope > 0:
         return None
-    if not bullish_pole and flag_slope < 0:
+    if not bullish and flag_slope < 0:
         return None
 
-    # Channel width (volatility within flag)
     flag_range = (np.max(flag_section) - np.min(flag_section)) / np.mean(flag_section)
-    if flag_range > 0.08:  # Too wide for a flag
+    if flag_range > 0.08:
         return None
 
     pole_strength = min(abs(pole_return) / 0.05, 1.0)
@@ -613,18 +845,18 @@ def _detect_flag(
     confidence = int(pole_strength * 25 + channel_quality * 25 + counter_slope * 18 + 12)
     confidence = max(50, min(88, confidence))
 
-    direction = 'bullish' if bullish_pole else 'bearish'
-
     flag_hi_price = float(np.max(flag_section))
     flag_lo_price = float(np.min(flag_section))
+    pattern_type = 'Bullish Flag' if bullish else 'Bearish Flag'
+    direction = 'bullish' if bullish else 'bearish'
 
     return {
-        'patternType': 'Flag',
+        'patternType': pattern_type,
         'confidence': confidence,
         'startDate': _format_date(timestamps[0]),
         'endDate': _format_date(timestamps[flag_end]),
         'breakoutDirection': direction,
-        'description': f'{"Bullish" if bullish_pole else "Bearish"} Flag pattern. Pole return: {pole_return:.1%}. Channel range: {flag_range:.1%}.',
+        'description': f'{pattern_type} pattern. Pole return: {pole_return:.1%}. Channel range: {flag_range:.1%}.',
         'keyPoints': [
             _kp(0, close, timestamps, 'Pole Start'),
             _kp(pole_end, close, timestamps, 'Pole End'),
@@ -634,6 +866,28 @@ def _detect_flag(
             _kp(flag_end, close, timestamps, 'Flag Bottom End', price=flag_lo_price),
         ],
     }
+
+
+def _detect_bullish_flag(
+    close: np.ndarray,
+    highs_idx: np.ndarray,
+    lows_idx: np.ndarray,
+    timestamps: List[str],
+    volume: np.ndarray,
+) -> Optional[Dict]:
+    """Bullish Flag: strong upward pole + small downward-sloping channel."""
+    return _detect_flag_directional(close, timestamps, bullish=True)
+
+
+def _detect_bearish_flag(
+    close: np.ndarray,
+    highs_idx: np.ndarray,
+    lows_idx: np.ndarray,
+    timestamps: List[str],
+    volume: np.ndarray,
+) -> Optional[Dict]:
+    """Bearish Flag: strong downward pole + small upward-sloping channel."""
+    return _detect_flag_directional(close, timestamps, bullish=False)
 
 
 def _detect_pennant(
@@ -778,14 +1032,14 @@ def _detect_cup_and_handle(
     }
 
 
-def _detect_wedge(
+def _detect_rising_wedge(
     close: np.ndarray,
     highs_idx: np.ndarray,
     lows_idx: np.ndarray,
     timestamps: List[str],
     volume: np.ndarray,
 ) -> Optional[Dict]:
-    """Wedge: both trendlines slope same direction but converge."""
+    """Rising Wedge: both trendlines slope upward, lows rising faster (converging upward). Bearish."""
     if len(highs_idx) < 3 or len(lows_idx) < 3:
         return None
 
@@ -797,47 +1051,30 @@ def _detect_wedge(
     high_slope = _linear_slope(recent_highs)
     low_slope = _linear_slope(recent_lows)
 
-    # Both slopes same direction (both positive = rising wedge, both negative = falling wedge)
-    if high_slope * low_slope <= 0:
+    # Both rising
+    if high_slope <= 0 or low_slope <= 0:
+        return None
+    # Lows must rise faster than highs (converging upward)
+    if low_slope <= high_slope:
         return None
 
-    # Must be converging: the steeper slope should be on the side closer to the other
-    rising = high_slope > 0 and low_slope > 0
-    falling = high_slope < 0 and low_slope < 0
-
-    if not (rising or falling):
-        return None
-
-    # Convergence: one slope should be steeper than the other
-    if rising:
-        converging = low_slope > high_slope  # lows rising faster
-    else:
-        converging = abs(high_slope) > abs(low_slope)  # highs falling faster
-
-    if not converging:
-        return None
-
-    slope_diff = abs(abs(high_slope) - abs(low_slope))
+    slope_diff = abs(low_slope - high_slope)
     convergence_score = min(slope_diff / 0.015, 1.0)
-    direction_score = min(abs(high_slope + low_slope) / 0.03, 1.0)
+    direction_score = min((high_slope + low_slope) / 0.03, 1.0)
 
     confidence = int(convergence_score * 30 + direction_score * 25 + 15 + 10)
     confidence = max(50, min(88, confidence))
-
-    # Rising wedge = bearish, falling wedge = bullish
-    direction = 'bearish' if rising else 'bullish'
-    wedge_type = 'Rising' if rising else 'Falling'
 
     start_i = min(highs_idx[0], lows_idx[0])
     end_i = max(highs_idx[-1], lows_idx[-1])
 
     return {
-        'patternType': 'Wedge',
+        'patternType': 'Rising Wedge',
         'confidence': confidence,
         'startDate': _format_date(timestamps[start_i]),
         'endDate': _format_date(timestamps[end_i]),
-        'breakoutDirection': direction,
-        'description': f'{wedge_type} Wedge pattern. Convergence rate: {slope_diff:.4f}.',
+        'breakoutDirection': 'bearish',
+        'description': f'Rising Wedge — both trendlines slope upward and converge. Convergence: {slope_diff:.4f}.',
         'keyPoints': [
             _kp(recent_high_indices[0], close, timestamps, 'Upper Start'),
             _kp(recent_high_indices[-1], close, timestamps, 'Upper End'),
@@ -847,19 +1084,259 @@ def _detect_wedge(
     }
 
 
+def _detect_falling_wedge(
+    close: np.ndarray,
+    highs_idx: np.ndarray,
+    lows_idx: np.ndarray,
+    timestamps: List[str],
+    volume: np.ndarray,
+) -> Optional[Dict]:
+    """Falling Wedge: both trendlines slope downward, highs falling faster (converging downward). Bullish."""
+    if len(highs_idx) < 3 or len(lows_idx) < 3:
+        return None
+
+    recent_high_indices = highs_idx[-4:] if len(highs_idx) >= 4 else highs_idx
+    recent_low_indices = lows_idx[-4:] if len(lows_idx) >= 4 else lows_idx
+    recent_highs = close[recent_high_indices]
+    recent_lows = close[recent_low_indices]
+
+    high_slope = _linear_slope(recent_highs)
+    low_slope = _linear_slope(recent_lows)
+
+    # Both falling
+    if high_slope >= 0 or low_slope >= 0:
+        return None
+    # Highs must fall faster than lows (converging downward)
+    if abs(high_slope) <= abs(low_slope):
+        return None
+
+    slope_diff = abs(abs(high_slope) - abs(low_slope))
+    convergence_score = min(slope_diff / 0.015, 1.0)
+    direction_score = min(abs(high_slope + low_slope) / 0.03, 1.0)
+
+    confidence = int(convergence_score * 30 + direction_score * 25 + 15 + 10)
+    confidence = max(50, min(88, confidence))
+
+    start_i = min(highs_idx[0], lows_idx[0])
+    end_i = max(highs_idx[-1], lows_idx[-1])
+
+    return {
+        'patternType': 'Falling Wedge',
+        'confidence': confidence,
+        'startDate': _format_date(timestamps[start_i]),
+        'endDate': _format_date(timestamps[end_i]),
+        'breakoutDirection': 'bullish',
+        'description': f'Falling Wedge — both trendlines slope downward and converge. Convergence: {slope_diff:.4f}.',
+        'keyPoints': [
+            _kp(recent_high_indices[0], close, timestamps, 'Upper Start'),
+            _kp(recent_high_indices[-1], close, timestamps, 'Upper End'),
+            _kp(recent_low_indices[0], close, timestamps, 'Lower Start'),
+            _kp(recent_low_indices[-1], close, timestamps, 'Lower End'),
+        ],
+    }
+
+
+def _detect_channel_directional(
+    close: np.ndarray,
+    highs_idx: np.ndarray,
+    lows_idx: np.ndarray,
+    timestamps: List[str],
+    ascending: bool,
+) -> Optional[Dict]:
+    """Shared logic for Ascending/Descending Channel — parallel sloped trendlines."""
+    if len(highs_idx) < 3 or len(lows_idx) < 3:
+        return None
+
+    recent_high_indices = highs_idx[-4:] if len(highs_idx) >= 4 else highs_idx
+    recent_low_indices = lows_idx[-4:] if len(lows_idx) >= 4 else lows_idx
+    recent_highs = close[recent_high_indices]
+    recent_lows = close[recent_low_indices]
+
+    high_slope = _linear_slope(recent_highs)
+    low_slope = _linear_slope(recent_lows)
+
+    if ascending:
+        if high_slope < 0.005 or low_slope < 0.005:
+            return None
+        magnitudes = (high_slope, low_slope)
+    else:
+        if high_slope > -0.005 or low_slope > -0.005:
+            return None
+        magnitudes = (abs(high_slope), abs(low_slope))
+
+    # Roughly parallel — slopes within ~30% of each other
+    parallelism = min(magnitudes) / max(magnitudes) if max(magnitudes) > 0 else 0.0
+    if parallelism < 0.65:
+        return None
+
+    direction_score = min((magnitudes[0] + magnitudes[1]) / 0.04, 1.0)
+    parallel_score = (parallelism - 0.65) / 0.35
+
+    confidence = int(parallel_score * 35 + direction_score * 30 + 15)
+    confidence = max(50, min(90, confidence))
+
+    pattern_type = 'Ascending Channel' if ascending else 'Descending Channel'
+    direction = 'bullish' if ascending else 'bearish'
+
+    start_i = int(min(highs_idx[0], lows_idx[0]))
+    end_i = int(max(highs_idx[-1], lows_idx[-1]))
+
+    return {
+        'patternType': pattern_type,
+        'confidence': confidence,
+        'startDate': _format_date(timestamps[start_i]),
+        'endDate': _format_date(timestamps[end_i]),
+        'breakoutDirection': direction,
+        'description': f'{pattern_type} — parallel {"rising" if ascending else "falling"} trendlines. Parallelism: {parallelism:.0%}.',
+        'keyPoints': [
+            _kp(recent_high_indices[0], close, timestamps, 'Upper Start'),
+            _kp(recent_high_indices[-1], close, timestamps, 'Upper End'),
+            _kp(recent_low_indices[0], close, timestamps, 'Lower Start'),
+            _kp(recent_low_indices[-1], close, timestamps, 'Lower End'),
+        ],
+    }
+
+
+def _detect_ascending_channel(
+    close: np.ndarray,
+    highs_idx: np.ndarray,
+    lows_idx: np.ndarray,
+    timestamps: List[str],
+    volume: np.ndarray,
+) -> Optional[Dict]:
+    """Ascending Channel: parallel rising trendlines."""
+    return _detect_channel_directional(close, highs_idx, lows_idx, timestamps, ascending=True)
+
+
+def _detect_descending_channel(
+    close: np.ndarray,
+    highs_idx: np.ndarray,
+    lows_idx: np.ndarray,
+    timestamps: List[str],
+    volume: np.ndarray,
+) -> Optional[Dict]:
+    """Descending Channel: parallel falling trendlines."""
+    return _detect_channel_directional(close, highs_idx, lows_idx, timestamps, ascending=False)
+
+
+def _detect_rounding_directional(
+    close: np.ndarray,
+    timestamps: List[str],
+    bottom: bool,
+) -> Optional[Dict]:
+    """Shared logic for Rounding Bottom (U) and Rounding Top (inverted U) via quadratic fit."""
+    n = len(close)
+    if n < 20:
+        return None
+
+    x = np.arange(n)
+    coeffs = np.polyfit(x, close, 2)
+    a = coeffs[0]
+
+    if bottom and a <= 0:
+        return None
+    if not bottom and a >= 0:
+        return None
+
+    # Vertex location (must be in middle 50% of window)
+    vertex_x = -coeffs[1] / (2 * a)
+    if vertex_x < n * 0.25 or vertex_x > n * 0.75:
+        return None
+
+    # Goodness of fit
+    fitted = np.polyval(coeffs, x)
+    ss_res = float(np.sum((close - fitted) ** 2))
+    ss_tot = float(np.sum((close - np.mean(close)) ** 2))
+    if ss_tot == 0:
+        return None
+    r2 = 1.0 - ss_res / ss_tot
+    if r2 < 0.55:
+        return None
+
+    vertex_price = float(np.polyval(coeffs, vertex_x))
+    edge_avg = float((close[0] + close[-1]) / 2.0)
+
+    if bottom:
+        # Vertex is the low; edges should sit above it
+        depth = (edge_avg - vertex_price) / edge_avg if edge_avg > 0 else 0.0
+    else:
+        # Vertex is the high; edges should sit below it
+        depth = (vertex_price - edge_avg) / vertex_price if vertex_price > 0 else 0.0
+
+    if depth < 0.03:
+        return None
+
+    fit_score = (r2 - 0.55) / 0.45
+    depth_score = min(depth / 0.10, 1.0)
+    centered = 1.0 - abs(vertex_x - n / 2.0) / (n / 2.0)
+
+    confidence = int(fit_score * 35 + depth_score * 30 + centered * 18 + 12)
+    confidence = max(50, min(94, confidence))
+
+    vertex_idx = int(np.clip(round(vertex_x), 0, n - 1))
+    pattern_type = 'Rounding Bottom' if bottom else 'Rounding Top'
+    direction = 'bullish' if bottom else 'bearish'
+    label = 'Bottom' if bottom else 'Top'
+
+    return {
+        'patternType': pattern_type,
+        'confidence': confidence,
+        'startDate': _format_date(timestamps[0]),
+        'endDate': _format_date(timestamps[-1]),
+        'breakoutDirection': direction,
+        'description': f'{pattern_type} — gradual {"U" if bottom else "inverted U"} reversal. Fit R²: {r2:.0%}. Depth: {depth:.1%}.',
+        'keyPoints': [
+            _kp(0, close, timestamps, 'Start'),
+            _kp(vertex_idx, close, timestamps, label),
+            _kp(n - 1, close, timestamps, 'End'),
+        ],
+    }
+
+
+def _detect_rounding_bottom(
+    close: np.ndarray,
+    highs_idx: np.ndarray,
+    lows_idx: np.ndarray,
+    timestamps: List[str],
+    volume: np.ndarray,
+) -> Optional[Dict]:
+    """Rounding Bottom: gradual U-shaped bullish reversal."""
+    return _detect_rounding_directional(close, timestamps, bottom=True)
+
+
+def _detect_rounding_top(
+    close: np.ndarray,
+    highs_idx: np.ndarray,
+    lows_idx: np.ndarray,
+    timestamps: List[str],
+    volume: np.ndarray,
+) -> Optional[Dict]:
+    """Rounding Top: gradual inverted-U bearish reversal."""
+    return _detect_rounding_directional(close, timestamps, bottom=False)
+
+
 # =============================================================================
 # Detector registry
 # =============================================================================
 
 ALL_DETECTORS = {
     'Head and Shoulders': _detect_head_and_shoulders,
+    'Inverse Head and Shoulders': _detect_inverse_head_and_shoulders,
     'Double Top': _detect_double_top,
     'Double Bottom': _detect_double_bottom,
+    'Triple Top': _detect_triple_top,
+    'Triple Bottom': _detect_triple_bottom,
     'Ascending Triangle': _detect_ascending_triangle,
     'Descending Triangle': _detect_descending_triangle,
     'Symmetric Triangle': _detect_symmetric_triangle,
-    'Flag': _detect_flag,
+    'Bullish Flag': _detect_bullish_flag,
+    'Bearish Flag': _detect_bearish_flag,
     'Pennant': _detect_pennant,
     'Cup and Handle': _detect_cup_and_handle,
-    'Wedge': _detect_wedge,
+    'Rising Wedge': _detect_rising_wedge,
+    'Falling Wedge': _detect_falling_wedge,
+    'Ascending Channel': _detect_ascending_channel,
+    'Descending Channel': _detect_descending_channel,
+    'Rounding Top': _detect_rounding_top,
+    'Rounding Bottom': _detect_rounding_bottom,
 }

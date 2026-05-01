@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { getApiBaseUrl } from "@/lib/api-config";
+import { getApiBaseUrl, getAuthBaseUrl } from "@/lib/api-config";
 import { parseCoinError, type CoinError } from "@/lib/coin-error";
 
 export interface BacktestProgress {
@@ -77,6 +77,8 @@ export function useStrategyBacktest() {
   const taskIdRef = useRef<string | null>(null);
   const abortedRef = useRef(false);
   const baseUrl = getApiBaseUrl();
+  // /start goes through Node so coinGate can debit. SSE stream + cancel hit Python directly.
+  const gateBaseUrl = getAuthBaseUrl();
 
   const runBacktest = useCallback(
     async (request: BacktestRequest) => {
@@ -93,8 +95,8 @@ export function useStrategyBacktest() {
         // Determine endpoint based on whether we have pre-computed indicators
         const isHybrid = request.indicators_json && request.compute_backend;
         const endpoint = isHybrid
-          ? `${baseUrl}/api/strategy-backtest/hybrid/start`
-          : `${baseUrl}/api/strategy-backtest/start`;
+          ? `${gateBaseUrl}/api/strategy-backtest/hybrid/start`
+          : `${gateBaseUrl}/api/strategy-backtest/start`;
 
         // Build FormData (backend expects multipart/form-data)
         const formData = new FormData();

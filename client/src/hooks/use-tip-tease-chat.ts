@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback } from "react";
-import { getApiBaseUrl } from "@/lib/api-config";
+import { getApiBaseUrl, getAuthBaseUrl } from "@/lib/api-config";
 
 export interface ChatMessage {
   id: string;
@@ -50,6 +50,8 @@ export function useTipTeaseChat(): UseTipTeaseChatReturn {
   const streamIdRef = useRef<string | null>(null);
   const currentAssistantMessageIdRef = useRef<string | null>(null);
   const baseUrl = getApiBaseUrl();
+  // /chat/start goes through Node so coinGate can debit. SSE stream + cancel hit Python directly.
+  const gateBaseUrl = getAuthBaseUrl();
 
   /**
    * Fetch today's market summary and contextual hint.
@@ -138,7 +140,7 @@ export function useTipTeaseChat(): UseTipTeaseChatReturn {
         setIsStreaming(true);
 
         // Start the chat stream
-        const startResponse = await fetch(`${baseUrl}/api/tip-tease/chat/start`, {
+        const startResponse = await fetch(`${gateBaseUrl}/api/tip-tease/chat/start`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

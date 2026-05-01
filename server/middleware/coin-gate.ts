@@ -1,11 +1,15 @@
 /**
- * Coin Gate Middleware
+ * Coin Gate Middleware (tier-agnostic)
  *
- * Intercepts feature start endpoints and enforces the 3-tier access model:
+ * Intercepts feature start endpoints and enforces a single rule:
  *
- *   Pro   → passes through immediately (no coin debit)
- *   Semi  → debits coins; blocks with 402 if balance insufficient
- *   Free  → always blocks with 402 + upgrade prompt
+ *   feature_costs.is_active = FALSE → pass through (free for everyone)
+ *   feature_costs.is_active = TRUE  → debit feature_costs.cost coins;
+ *                                     402 INSUFFICIENT_COINS if balance is too low.
+ *
+ * Tier no longer matters at this layer. Differentiation for Semi/Pro
+ * (e.g. monthly free coin allowance, discounts) is delivered separately
+ * via credits/grants, not by skipping the gate.
  *
  * Usage:
  *   app.post('/api/strategy-backtest/start', requireAuth, coinGate('backtest.run'), pythonProxy)
@@ -16,8 +20,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { debitCoins } from '../lib/coins';
-import { canAccessFeature } from '../lib/tier-gates';
-import type { UserTier } from '../auth/jwt';
+import { getFeatureCostRow } from '../db/coin-store';
 
 declare global {
   namespace Express {
@@ -34,27 +37,18 @@ export function coinGate(featureKey: string) {
       return;
     }
 
-    const tier = req.user.tier as UserTier;
-    const verdict = canAccessFeature(tier, featureKey);
+    // Look up the feature's gating config. If the row is missing we still
+    // gate (debitCoins falls back to cost=1) — only an explicit is_active=false
+    // turns the gate off.
+    const featureRow = await getFeatureCostRow(featureKey).catch(() => null);
 
-    if (verdict === 'blocked') {
-      res.status(402).json({
-        code: 'TIER_BLOCKED',
-        message: 'Upgrade to Semi or Pro to use this feature.',
-        featureKey,
-        currentTier: tier,
-        upgradeUrl: '/pricing',
-      });
-      return;
-    }
-
-    if (verdict === 'allowed') {
-      // Pro tier — no coin debit needed
+    if (featureRow && featureRow.is_active === false) {
+      // Feature flagged free for everyone — skip debit entirely.
+      console.log(`[COIN_GATE] ${featureKey} is_active=false → free, skipping debit (user=${req.user.userId})`);
       next();
       return;
     }
 
-    // Semi tier — debit coins
     const idempotencyKey = `${req.user.userId}:${featureKey}:${Date.now()}`;
 
     const result = await debitCoins({
@@ -74,17 +68,18 @@ export function coinGate(featureKey: string) {
     }
 
     if (!result.ok) {
+      console.log(`[COIN_GATE] ${featureKey} → 402 INSUFFICIENT_COINS (user=${req.user.userId})`);
       res.status(402).json({
         code: 'INSUFFICIENT_COINS',
-        message: 'You don\'t have enough coins to run this feature. Buy more coins to continue.',
+        message: "You don't have enough coins to run this feature. Buy more coins to continue.",
         featureKey,
-        currentTier: tier,
         buyCoinsUrl: '/profile?tab=coins',
       });
       return;
     }
 
     // Store transaction ID for potential downstream refund
+    console.log(`[COIN_GATE] ${featureKey} debited → balance=${result.balanceAfter} (user=${req.user.userId}, txn=${result.transaction.id})`);
     req.coinTxnId = result.transaction.id;
     next();
   };

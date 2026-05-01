@@ -43,12 +43,12 @@ const Sparkline = ({ data, isPositive }: { data: number[]; isPositive: boolean }
       height="20"
       viewBox="0 0 100 100"
       preserveAspectRatio="none"
-      className="inline-block"
+      className={`inline-block ${isPositive ? 'text-positive' : 'text-negative'}`}
     >
       <polyline
         points={points}
         fill="none"
-        stroke={isPositive ? '#00FF00' : '#FF6B35'}
+        stroke="currentColor"
         strokeWidth="2"
         vectorEffect="non-scaling-stroke"
       />
@@ -94,7 +94,7 @@ export function WorldIndicesPanel() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full bg-[#0A0A0A]">
+      <div className="flex items-center justify-center h-full bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-primary" data-testid="loading-spinner-indices" />
       </div>
     );
@@ -102,7 +102,7 @@ export function WorldIndicesPanel() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4 bg-[#0A0A0A]">
+      <div className="flex flex-col items-center justify-center h-full gap-4 bg-background">
         <AlertCircle className="w-8 h-8 text-destructive" data-testid="error-icon-indices" />
         <p className="text-sm text-muted-foreground" data-testid="text-error-message">Failed to load world indices</p>
         <Button 
@@ -131,13 +131,13 @@ export function WorldIndicesPanel() {
   const lastRefresh = new Date();
 
   return (
-    <div className="flex flex-col h-full bg-[#0A0A0A]">
-      <div className="p-3 border-b border-[#1a1a1a]">
+    <div className="flex flex-col h-full bg-background">
+      <div className="p-3 border-b border-border">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-[#FF6B47]" />
-            <span className="text-[10px] uppercase tracking-wider text-[#888888]">World Indices</span>
-            <span className="text-[10px] text-[#888888]" data-testid="text-last-update">
+            <Globe className="h-4 w-4 text-primary" />
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">World Indices</span>
+            <span className="text-[10px] text-muted-foreground" data-testid="text-last-update">
               Last: {lastRefresh.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </span>
           </div>
@@ -168,8 +168,8 @@ export function WorldIndicesPanel() {
             <div key={region} className="mb-4">
               <div className="flex items-center gap-2 mb-2">
                 <Globe className="w-4 h-4 text-primary" />
-                <span className="text-xs uppercase tracking-wider text-[#888888]">{region}</span>
-                <div className="flex-1 h-[1px] bg-[#1a1a1a]"></div>
+                <span className="text-xs uppercase tracking-wider text-muted-foreground">{region}</span>
+                <div className="flex-1 h-[1px] bg-border"></div>
               </div>
 
               {regionIndices.map((index) => {
@@ -182,24 +182,24 @@ export function WorldIndicesPanel() {
                 return (
                   <div
                     key={index.symbol}
-                    className="mb-3 p-3 border border-[#1a1a1a] rounded bg-[#0f0f0f] hover:bg-[#1a1a1a] transition-colors cursor-pointer"
+                    className="mb-3 p-3 border border-border rounded bg-card hover:bg-accent transition-colors cursor-pointer"
                     data-testid={`row-index-${index.symbol}`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-[#FF6B47] font-mono text-sm font-semibold" data-testid={`text-symbol-${index.symbol}`}>
+                          <span className="text-primary font-mono text-sm font-semibold" data-testid={`text-symbol-${index.symbol}`}>
                             {index.symbol}
                           </span>
-                          <span className="text-[#FFFFFF] text-sm" data-testid={`text-name-${index.symbol}`}>
+                          <span className="text-foreground text-sm" data-testid={`text-name-${index.symbol}`}>
                             {index.name}
                           </span>
                         </div>
                         <div className="flex items-center gap-4 mt-1">
-                          <span className="text-xl font-mono text-[#FFFFFF]" data-testid={`text-value-${index.symbol}`}>
+                          <span className="text-xl font-mono text-foreground" data-testid={`text-value-${index.symbol}`}>
                             {index.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
-                          <div className={`flex items-center gap-1 ${index.change >= 0 ? 'text-[#00FF00]' : 'text-[#FF6B35]'}`}>
+                          <div className={`flex items-center gap-1 ${index.change >= 0 ? 'text-positive' : 'text-negative'}`}>
                             {index.change >= 0 ? (
                               <ArrowUp className="h-4 w-4" />
                             ) : (
@@ -221,9 +221,9 @@ export function WorldIndicesPanel() {
 
                     <div className="grid grid-cols-3 gap-3 text-[10px]">
                       <div>
-                        <div className="text-[#888888] uppercase tracking-wider mb-1">Day Range</div>
+                        <div className="text-muted-foreground uppercase tracking-wider mb-1">Day Range</div>
                         <div className="space-y-1">
-                          <div className="flex justify-between text-[#FFFFFF] font-mono">
+                          <div className="flex justify-between text-foreground font-mono">
                             <span data-testid={`text-day-low-${index.symbol}`}>{index.dayLow.toLocaleString()}</span>
                             <span data-testid={`text-day-high-${index.symbol}`}>{index.dayHigh.toLocaleString()}</span>
                           </div>
@@ -234,9 +234,9 @@ export function WorldIndicesPanel() {
                         </div>
                       </div>
                       <div>
-                        <div className="text-[#888888] uppercase tracking-wider mb-1">52W Range</div>
+                        <div className="text-muted-foreground uppercase tracking-wider mb-1">52W Range</div>
                         <div className="space-y-1">
-                          <div className="flex justify-between text-[#FFFFFF] font-mono">
+                          <div className="flex justify-between text-foreground font-mono">
                             <span data-testid={`text-year-low-${index.symbol}`}>{yearLow.toFixed(2)}</span>
                             <span data-testid={`text-year-high-${index.symbol}`}>{yearHigh.toFixed(2)}</span>
                           </div>
@@ -248,8 +248,8 @@ export function WorldIndicesPanel() {
                       </div>
                       {index.volume && (
                         <div>
-                          <div className="text-[#888888] uppercase tracking-wider mb-1">Volume</div>
-                          <div className="text-[#FFFFFF] font-mono" data-testid={`text-volume-${index.symbol}`}>
+                          <div className="text-muted-foreground uppercase tracking-wider mb-1">Volume</div>
+                          <div className="text-foreground font-mono" data-testid={`text-volume-${index.symbol}`}>
                             {formatVolume(index.volume)}
                           </div>
                         </div>

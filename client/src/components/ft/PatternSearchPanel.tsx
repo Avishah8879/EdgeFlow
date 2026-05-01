@@ -35,15 +35,24 @@ interface Pattern {
 const patternTypes = [
   'all',
   'Head and Shoulders',
+  'Inverse Head and Shoulders',
   'Double Top',
   'Double Bottom',
+  'Triple Top',
+  'Triple Bottom',
   'Ascending Triangle',
   'Descending Triangle',
   'Symmetric Triangle',
-  'Flag',
+  'Bullish Flag',
+  'Bearish Flag',
   'Pennant',
   'Cup and Handle',
-  'Wedge',
+  'Rising Wedge',
+  'Falling Wedge',
+  'Ascending Channel',
+  'Descending Channel',
+  'Rounding Top',
+  'Rounding Bottom',
 ];
 
 const timeframes = [

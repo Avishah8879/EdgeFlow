@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { maybeRedirectToCallingPlatform } from "@/lib/platform-handshake";
 import { SEO } from "@/components/SEO";
 import { COUNTRIES } from "@/lib/countries";
 import { EquityProLogo } from "@/components/EquityProLogo";
@@ -41,7 +42,23 @@ type FieldErrors = Partial<Record<keyof FormState, string | undefined>>;
 
 export default function EquityProSignup() {
   const [, navigate] = useLocation();
-  const { authBaseUrl, completeOAuthLogin, startGoogleLogin } = useAuth();
+  const {
+    authBaseUrl,
+    completeOAuthLogin,
+    startGoogleLogin,
+    isAuthenticated,
+    token,
+    refreshToken,
+  } = useAuth();
+
+  // Cross-platform handshake: if /signup was opened with
+  // ?platform=&returnUrl=, bounce to the originating platform with the
+  // freshly minted JWT once auth flips to true.
+  useEffect(() => {
+    if (isAuthenticated) {
+      maybeRedirectToCallingPlatform(token, refreshToken);
+    }
+  }, [isAuthenticated, token, refreshToken]);
   const [form, setForm] = useState<FormState>({
     username: "",
     email: "",

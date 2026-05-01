@@ -21,13 +21,15 @@ interface Props {
  * Each pattern expects `points` in a specific order (matching what the
  * backend pattern detectors emit in `keyPoints`):
  *
- *   Head and Shoulders: [Left Shoulder, Head, Right Shoulder, Neckline L, Neckline R]
- *   Double Top:         [Peak 1, Trough, Peak 2]
- *   Double Bottom:      [Bottom 1, Peak, Bottom 2]
- *   Triangles / Wedge:  [Upper Start, Upper End, Lower Start, Lower End]
- *   Flag:               [Pole Start, Pole End, Flag Top S, Flag Top E, Flag Bot S, Flag Bot E]
- *   Pennant:            [Pole Start, Pole End, Upper Start, Upper End, Lower Start, Lower End]
- *   Cup and Handle:     [Cup Start, Cup Bottom, Cup End, Handle Start, Handle Low, Handle End]
+ *   Head and Shoulders / Inverse:  [Left Shoulder, Head, Right Shoulder, Neckline L, Neckline R]
+ *   Double Top / Bottom:           [P1, mid, P2]
+ *   Triple Top:                    [Peak 1, Trough 1, Peak 2, Trough 2, Peak 3]
+ *   Triple Bottom:                 [Bottom 1, Peak 1, Bottom 2, Peak 2, Bottom 3]
+ *   Triangles / Wedges / Channels: [Upper Start, Upper End, Lower Start, Lower End]
+ *   Bullish/Bearish Flag:          [Pole Start, Pole End, Flag Top S, Flag Top E, Flag Bot S, Flag Bot E]
+ *   Pennant:                       [Pole Start, Pole End, Upper Start, Upper End, Lower Start, Lower End]
+ *   Cup and Handle:                [Cup Start, Cup Bottom, Cup End, Handle Start, Handle Low, Handle End]
+ *   Rounding Top / Bottom:         [Start, Vertex, End]
  */
 export function PatternShape({ patternType, points, color, containerWidth, containerHeight, confidence }: Props) {
   if (points.length === 0) return null;
@@ -62,7 +64,8 @@ export function PatternShape({ patternType, points, color, containerWidth, conta
   let shape: JSX.Element | null = null;
 
   switch (patternType) {
-    case 'Head and Shoulders': {
+    case 'Head and Shoulders':
+    case 'Inverse Head and Shoulders': {
       if (points.length < 5) break;
       const [ls, head, rs, nl, nr] = points;
       // Extend neckline slightly past both shoulders
@@ -126,7 +129,10 @@ export function PatternShape({ patternType, points, color, containerWidth, conta
     case 'Ascending Triangle':
     case 'Descending Triangle':
     case 'Symmetric Triangle':
-    case 'Wedge': {
+    case 'Rising Wedge':
+    case 'Falling Wedge':
+    case 'Ascending Channel':
+    case 'Descending Channel': {
       if (points.length < 4) break;
       const [us, ue, ls, le] = points;
       shape = (
@@ -142,7 +148,69 @@ export function PatternShape({ patternType, points, color, containerWidth, conta
       break;
     }
 
-    case 'Flag': {
+    case 'Triple Top': {
+      if (points.length < 5) break;
+      const [p1, t1, p2, t2, p3] = points;
+      shape = (
+        <>
+          <line x1={p1.x} y1={p1.y} x2={p3.x} y2={p3.y} stroke={color} strokeDasharray="5 3" strokeWidth={1.5} opacity={0.75} />
+          <polyline points={`${p1.x},${p1.y} ${t1.x},${t1.y} ${p2.x},${p2.y} ${t2.x},${t2.y} ${p3.x},${p3.y}`} {...common} />
+          {dot(p1, 'p1')}
+          {dot(p2, 'p2')}
+          {dot(p3, 'p3')}
+          {dot(t1, 't1', 3)}
+          {dot(t2, 't2', 3)}
+          {textLabel(p1, 'p1')}
+          {textLabel(p2, 'p2')}
+          {textLabel(p3, 'p3')}
+        </>
+      );
+      break;
+    }
+
+    case 'Triple Bottom': {
+      if (points.length < 5) break;
+      const [b1, k1, b2, k2, b3] = points;
+      shape = (
+        <>
+          <line x1={b1.x} y1={b1.y} x2={b3.x} y2={b3.y} stroke={color} strokeDasharray="5 3" strokeWidth={1.5} opacity={0.75} />
+          <polyline points={`${b1.x},${b1.y} ${k1.x},${k1.y} ${b2.x},${b2.y} ${k2.x},${k2.y} ${b3.x},${b3.y}`} {...common} />
+          {dot(b1, 'b1')}
+          {dot(b2, 'b2')}
+          {dot(b3, 'b3')}
+          {dot(k1, 'k1', 3)}
+          {dot(k2, 'k2', 3)}
+          {textLabel(b1, 'b1', 14)}
+          {textLabel(b2, 'b2', 14)}
+          {textLabel(b3, 'b3', 14)}
+        </>
+      );
+      break;
+    }
+
+    case 'Rounding Top':
+    case 'Rounding Bottom': {
+      if (points.length < 3) break;
+      const [start, vertex, end] = points;
+      // Quadratic curve through start → vertex → end. Solve control point
+      // so the bezier passes through `vertex` at t=0.5: control = 2*vertex - 0.5*(start + end).
+      const controlX = 2 * vertex.x - 0.5 * (start.x + end.x);
+      const controlY = 2 * vertex.y - 0.5 * (start.y + end.y);
+      const path = `M ${start.x} ${start.y} Q ${controlX} ${controlY}, ${end.x} ${end.y}`;
+      shape = (
+        <>
+          <path d={path} {...common} />
+          {dot(start, 'rs', 3)}
+          {dot(vertex, 'rv', 4)}
+          {dot(end, 're', 3)}
+          {textLabel(vertex, 'rv', patternType === 'Rounding Top' ? -12 : 14)}
+        </>
+      );
+      break;
+    }
+
+    case 'Bullish Flag':
+    case 'Bearish Flag': {
       if (points.length < 6) break;
       const [poleS, poleE, fts, fte, fbs, fbe] = points;
       shape = (

@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useFundamentalScreener } from "@/hooks/use-fundamental-screener";
+import { CoinGateAlert } from "@/components/CoinGateAlert";
 import type { FundamentalResult } from "@/hooks/use-fundamental-screener";
 import { ModeToggle, type ScreenerMode } from "@/components/screener/ModeToggle";
 import { ConditionBuilder } from "@/components/screener/ConditionBuilder";
@@ -161,6 +162,7 @@ export function FundamentalScreenerTab() {
     results,
     summary,
     error,
+    coinError,
     isRunning,
     runScreener,
     cancelScreener,
@@ -201,20 +203,17 @@ export function FundamentalScreenerTab() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Mode toggle (standalone row above card) */}
+      {/* Mode toggle row */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-white">Fundamental Screener</h2>
-          <p className="text-xs text-[#9f9f9f]">
-            Filter stocks by fundamental metrics like P/E, ROE, Market Cap, Debt/Equity, etc.
-          </p>
-        </div>
         <ModeToggle mode={mode} onChange={handleModeChange} />
+        <p className="text-xs text-muted-foreground">
+          {mode === "builder" ? "Visual condition builder" : "Python-style free-text expression"}
+        </p>
       </div>
 
       {/* Expression input + presets */}
       <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
-        <div className="rounded-lg border border-[#1f1f1f] bg-black/40 p-4 shadow-lg shadow-black/30">
+        <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
           {mode === "builder" ? (
             <ConditionBuilder
               variant="fundamental"
@@ -227,7 +226,7 @@ export function FundamentalScreenerTab() {
               value={expression}
               onChange={(e) => setExpression(e.target.value)}
               placeholder="trailing_pe < 20 and return_on_equity > 15 and debt_to_equity < 1"
-              className="min-h-[80px] bg-black/60 font-mono text-sm text-white border-[#2a2a2a]"
+              className="min-h-[80px] font-mono text-sm"
             />
           )}
 
@@ -264,10 +263,10 @@ export function FundamentalScreenerTab() {
         </div>
 
         {/* Cheatsheet + stats */}
-        <div className="rounded-lg border border-[#1f1f1f] bg-black/40 p-4 shadow-lg shadow-black/30">
-          <Alert className="mb-3 bg-transparent border-[#2a2a2a]">
+        <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+          <Alert className="mb-3 bg-muted/30 border-border">
             <Info className="h-4 w-4" />
-            <AlertDescription className="text-[10px] font-mono text-[#9f9f9f]">
+            <AlertDescription className="text-[10px] font-mono text-muted-foreground">
               {variableCheatsheet.map((group) => (
                 <div key={group.cat} className="mb-1">
                   <span className="text-primary font-semibold">{group.cat}:</span>{" "}
@@ -283,14 +282,14 @@ export function FundamentalScreenerTab() {
           {/* Stats */}
           {(summary || progress) && (
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded bg-black/40 p-2 border border-[#1f1f1f]">
-                <p className="text-[#7f7f7f]">Matches</p>
+              <div className="rounded bg-muted/30 p-2 border border-border">
+                <p className="text-muted-foreground">Matches</p>
                 <p className="text-lg font-semibold text-primary">
                   {summary?.matched ?? progress?.matches ?? 0}
                 </p>
               </div>
-              <div className="rounded bg-black/40 p-2 border border-[#1f1f1f]">
-                <p className="text-[#7f7f7f]">Universe</p>
+              <div className="rounded bg-muted/30 p-2 border border-border">
+                <p className="text-muted-foreground">Universe</p>
                 <p className="text-lg font-semibold">
                   {summary?.universe ?? progress?.total ?? 0}
                 </p>
@@ -302,7 +301,7 @@ export function FundamentalScreenerTab() {
 
       {/* Progress */}
       {isRunning && progress && (
-        <div className="rounded-lg border border-[#1f1f1f] bg-black/40 p-3">
+        <div className="rounded-lg border border-border bg-card p-3">
           <div className="flex items-center gap-3">
             <Loader2 className="w-4 h-4 animate-spin text-primary" />
             <div className="flex-1">
@@ -315,6 +314,9 @@ export function FundamentalScreenerTab() {
         </div>
       )}
 
+      {/* Coin gate (insufficient coins / tier blocked) */}
+      {coinError && <CoinGateAlert coinError={coinError} />}
+
       {/* Error */}
       {error && (
         <Alert variant="destructive">
@@ -324,15 +326,15 @@ export function FundamentalScreenerTab() {
 
       {/* Results table */}
       {sortedResults.length > 0 && (
-        <div className="rounded-lg border border-[#1f1f1f] bg-black/40 shadow-lg shadow-black/30 overflow-hidden">
-          <div className="px-4 py-2 border-b border-[#1f1f1f] flex items-center justify-between">
+        <div className="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
+          <div className="px-4 py-2 border-b border-border flex items-center justify-between">
             <span className="text-xs text-muted-foreground font-mono">
               {sortedResults.length} stocks matched
             </span>
           </div>
           <ScrollArea className="max-h-[500px]">
             <table className="w-full text-xs">
-              <thead className="sticky top-0 bg-[#0a0a0a] border-b border-[#1f1f1f]">
+              <thead className="sticky top-0 bg-card border-b border-border">
                 <tr>
                   <th className="text-left px-3 py-2 text-muted-foreground font-medium">#</th>
                   <th className="text-left px-3 py-2 text-muted-foreground font-medium">Symbol</th>
@@ -350,7 +352,7 @@ export function FundamentalScreenerTab() {
               </thead>
               <tbody>
                 {sortedResults.map((row, i) => (
-                  <tr key={row.symbol} className="border-b border-[#1f1f1f]/50 hover:bg-[#1a1a1a]">
+                  <tr key={row.symbol} className="border-b border-border/50 hover:bg-accent/50">
                     <td className="px-3 py-1.5 text-muted-foreground">{i + 1}</td>
                     <td className="px-3 py-1.5">
                       <div>

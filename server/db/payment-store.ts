@@ -1,6 +1,6 @@
 import { query, queryOne } from './auth-connection';
 
-export type PaymentKind = 'plan' | 'coin_pack';
+export type PaymentKind = 'plan' | 'coin_pack' | 'custom_coins';
 export type PaymentIntentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'refunded';
 
 export interface PaymentIntent {
@@ -28,14 +28,16 @@ export async function createPaymentIntent(input: {
   productId: string;
   amountPaise: number;
   currency?: string;
+  metadata?: Record<string, any>;
 }): Promise<PaymentIntent> {
   const r = await query<PaymentIntent>(
     `INSERT INTO payment_intents
-       (user_id, platform_id, kind, product_id, amount_paise, currency)
-     VALUES ($1,$2,$3,$4,$5,$6)
+       (user_id, platform_id, kind, product_id, amount_paise, currency, metadata)
+     VALUES ($1,$2,$3,$4,$5,$6,$7)
      RETURNING *`,
     [input.userId, input.platformId ?? null, input.kind, input.productId,
-     input.amountPaise, input.currency ?? 'INR'],
+     input.amountPaise, input.currency ?? 'INR',
+     JSON.stringify(input.metadata ?? {})],
   );
   return r.rows[0];
 }

@@ -19,6 +19,7 @@ import {
   findTransactionByIdempotencyKey,
   findTransactionById,
   getFeatureCost,
+  getCoinPricing,
 } from '../db/coin-store';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -46,7 +47,7 @@ export interface CreditOptions {
 }
 
 export type DebitResult =
-  | { ok: true; transaction: CoinTransaction; balanceAfter: number }
+  | { ok: true; transaction: CoinTransaction; balanceAfter: number; wasReplay: boolean }
   | { ok: false; reason: 'insufficient_coins' | 'idempotency_replay'; transaction?: CoinTransaction };
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -54,13 +55,21 @@ export type DebitResult =
 /**
  * Debit coins for a feature use. Returns ok=false when the user's balance
  * is too low. Idempotent: replaying the same idempotencyKey returns the
- * original transaction without re-debiting.
+ * original transaction without re-debiting (caller can detect this via
+ * `wasReplay: true`).
  */
 export async function debitCoins(opts: DebitOptions): Promise<DebitResult> {
   // Idempotency check (outside transaction — fast path)
   if (opts.idempotencyKey) {
     const existing = await findTransactionByIdempotencyKey(opts.idempotencyKey);
-    if (existing) return { ok: true, transaction: existing, balanceAfter: existing.balance_after };
+    if (existing) {
+      return {
+        ok: true,
+        transaction: existing,
+        balanceAfter: existing.balance_after,
+        wasReplay: true,
+      };
+    }
   }
 
   const cost = opts.costOverride ?? (await getFeatureCost(opts.featureKey));
@@ -98,7 +107,7 @@ export async function debitCoins(opts: DebitOptions): Promise<DebitResult> {
     );
 
     await client.query('COMMIT');
-    return { ok: true, transaction: txn, balanceAfter: newBalance };
+    return { ok: true, transaction: txn, balanceAfter: newBalance, wasReplay: false };
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -182,4 +191,37 @@ export async function refundCoins(
 export async function getBalance(userId: string): Promise<number> {
   const bal = await getOrCreateBalance(userId);
   return bal.balance;
+}
+
+/**
+ * Grant the configured signup-bonus coins to a brand-new user.
+ *
+ * - Idempotent via `signup_bonus:<userId>` idempotency key — calling twice
+ *   for the same user does NOT double-credit.
+ * - No-op when the admin has set the bonus to 0 (no ledger row written).
+ * - Failures are caught here and logged — callers should NEVER let a coin
+ *   credit failure fail the signup itself.
+ */
+export async function grantSignupBonus(userId: string): Promise<CoinTransaction | null> {
+  try {
+    const pricing = await getCoinPricing();
+    const amount = pricing.signup_bonus_coins;
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return null;
+    }
+    const txn = await creditCoins({
+      userId,
+      amount,
+      type: 'signup_bonus',
+      referenceId: userId,
+      idempotencyKey: `signup_bonus:${userId}`,
+      metadata: { reason: 'new_user_signup_bonus' },
+    });
+    console.log(`[COINS] Signup bonus credited: user=${userId} amount=${amount}`);
+    return txn;
+  } catch (err: any) {
+    // Bonus credit failures must never block signup.
+    console.error(`[COINS] grantSignupBonus failed for user=${userId}:`, err.message);
+    return null;
+  }
 }
