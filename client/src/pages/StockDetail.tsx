@@ -59,6 +59,22 @@ function MetricRow({ label, value, accent = false }: { label: string; value: str
   );
 }
 
+/**
+ * StatCell — single cell in the 7-up stat strip below the hero.
+ * Mirrors the design's `.stat-cell` pattern (eyebrow + mono value).
+ */
+function StatCell({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="p-3.5 md:p-4 border-r last:border-r-0 border-b sm:[&:nth-child(-n+4)]:border-b lg:border-b-0 border-border">
+      <div className="text-[10px] font-bold uppercase tracking-uppercase text-muted-foreground">{label}</div>
+      <div className="font-mono text-base font-bold tabular-nums text-foreground mt-1.5 leading-none">
+        {value}
+      </div>
+      {sub && <div className="text-[11px] text-muted-foreground mt-1">{sub}</div>}
+    </div>
+  );
+}
+
 // ─── compounded growth grid card ────────────────────────────────────────────
 
 function GrowthCard({ title, periods }: { title: string; periods: { label: string; value: string }[] }) {
@@ -255,104 +271,133 @@ export default function StockDetail() {
       <div className="min-h-screen bg-background">
         <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-6">
 
-          {/* HEADER — eyebrow + ticker mark + display H1 + price block */}
-          <header className="flex flex-col md:flex-row md:items-start md:justify-between gap-5 pb-4 border-b border-border/60">
-            <div className="flex items-start gap-4 min-w-0">
-              {/* Ticker mark — gradient navy badge with the first 2 letters of the symbol */}
-              <div
-                aria-hidden
-                className="hidden sm:flex shrink-0 h-14 w-14 items-center justify-center rounded-xl border border-[hsl(var(--brand-gold)/0.4)] text-[hsl(var(--brand-gold))] font-mono font-bold text-lg tabular-nums shadow-card"
-                style={{
-                  background:
-                    "linear-gradient(135deg, hsl(var(--brand-navy)) 0%, hsl(var(--brand-navy-deep)) 100%)",
-                }}
-              >
-                {basic.symbol.slice(0, 2).toUpperCase()}
-              </div>
-              <div className="space-y-1.5 min-w-0">
-                <Eyebrow tone="gold">
-                  Stock · {basic.exchange} · {basic.symbol}
-                </Eyebrow>
-                <h1 className="font-display text-2xl md:text-3xl font-bold leading-tight tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
-                  {companyName}
-                </h1>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                  {basic.website && (
-                    <a
-                      href={basic.website.startsWith("http") ? basic.website : `https://${basic.website}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 hover:text-[hsl(var(--brand-gold))] transition-colors"
-                    >
-                      <Globe className="w-3 h-3" />
-                      {basic.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-                    </a>
-                  )}
-                  {basic.sector && <span>· {basic.sector}</span>}
-                  {basic.industry && <span>· {basic.industry}</span>}
+          {/* HERO — gradient bg with breadcrumbs + ticker mark + display H1 + price block */}
+          <section
+            className="relative overflow-hidden rounded-xl border border-border bg-card -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 pt-5 pb-6"
+            style={{
+              background:
+                "radial-gradient(800px 200px at 90% -50%, hsl(var(--brand-gold) / 0.10), transparent 70%), linear-gradient(180deg, hsl(var(--card)), hsl(var(--background)))",
+            }}
+          >
+            {/* Breadcrumbs */}
+            <nav className="text-xs text-muted-foreground flex items-center gap-1.5 mb-3" aria-label="Breadcrumb">
+              <Link href="/home" className="hover:text-[hsl(var(--brand-gold))] transition-colors">Markets</Link>
+              <span className="opacity-40">/</span>
+              <Link href="/stocks" className="hover:text-[hsl(var(--brand-gold))] transition-colors">Stocks</Link>
+              <span className="opacity-40">/</span>
+              <span className="text-foreground/80">{basic.symbol}</span>
+            </nav>
+
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
+              <div className="flex items-start gap-4 min-w-0">
+                {/* Ticker mark — gradient navy badge with the first 2 letters of the symbol */}
+                <div
+                  aria-hidden
+                  className="hidden sm:flex shrink-0 h-14 w-14 items-center justify-center rounded-xl border border-[hsl(var(--brand-gold)/0.4)] text-white font-display font-extrabold text-lg tabular-nums shadow-card"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, hsl(var(--brand-navy)) 0%, hsl(var(--brand-navy-deep)) 100%)",
+                  }}
+                >
+                  {basic.symbol.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="space-y-1.5 min-w-0">
+                  <Eyebrow tone="gold">
+                    Stock · {basic.exchange} · {basic.symbol}
+                  </Eyebrow>
+                  <h1 className="font-display text-2xl md:text-3xl font-bold leading-tight tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+                    {companyName}
+                  </h1>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    {basic.website && (
+                      <a
+                        href={basic.website.startsWith("http") ? basic.website : `https://${basic.website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 hover:text-[hsl(var(--brand-gold))] transition-colors"
+                      >
+                        <Globe className="w-3 h-3" />
+                        {basic.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                      </a>
+                    )}
+                    {basic.sector && <span>· {basic.sector}</span>}
+                    {basic.industry && <span>· {basic.industry}</span>}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex flex-col items-start md:items-end shrink-0">
-              <div className="flex items-baseline gap-3">
-                <span className="text-3xl md:text-4xl font-semibold font-mono tabular-nums text-foreground">
-                  {formatRupees(currentPrice)}
-                </span>
-                {priceChangePercent != null && (
-                  <DeltaBadge
-                    value={priceChangePercent}
-                    suffix="%"
-                    direction={isPositive ? "up" : "down"}
-                  />
+              <div className="flex flex-col items-start md:items-end shrink-0">
+                <div className="flex items-baseline gap-3">
+                  <span className="text-3xl md:text-4xl font-semibold font-mono tabular-nums text-foreground leading-none">
+                    {formatRupees(currentPrice)}
+                  </span>
+                  {priceChangePercent != null && (
+                    <DeltaBadge
+                      value={priceChangePercent}
+                      suffix="%"
+                      direction={isPositive ? "up" : "down"}
+                    />
+                  )}
+                </div>
+                {f.last_updated && (
+                  <span className="text-[10.5px] text-muted-foreground mt-1.5 font-bold uppercase tracking-uppercase">
+                    Updated {new Date(f.last_updated).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                  </span>
                 )}
               </div>
-              {f.last_updated && (
-                <span className="text-[11px] text-muted-foreground mt-1">
-                  Updated {new Date(f.last_updated).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                </span>
+            </div>
+          </section>
+
+          {/* 7-cell stat strip */}
+          <section className="rounded-xl border border-border bg-card overflow-hidden">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
+              <StatCell label="Market Cap" value={formatCrore(f.market_cap)} />
+              <StatCell
+                label="P / E"
+                value={f.trailing_pe != null ? f.trailing_pe.toFixed(2) : "—"}
+              />
+              <StatCell
+                label="P / B"
+                value={f.price_to_book != null ? f.price_to_book.toFixed(2) : "—"}
+              />
+              <StatCell
+                label="Div Yield"
+                value={f.dividend_yield != null ? formatPct(f.dividend_yield * 100) : "—"}
+              />
+              <StatCell
+                label="52W Range"
+                value={
+                  f.fifty_two_week_high && f.fifty_two_week_low
+                    ? `${formatRupees(f.fifty_two_week_low).replace("₹", "")}–${formatRupees(f.fifty_two_week_high).replace("₹", "")}`
+                    : "—"
+                }
+              />
+              <StatCell
+                label="ROCE"
+                value={f.return_on_assets != null ? formatPct(f.return_on_assets * 100) : "—"}
+              />
+              <StatCell
+                label="ROE"
+                value={f.return_on_equity != null ? formatPct(f.return_on_equity * 100) : "—"}
+              />
+            </div>
+          </section>
+
+          {/* About + Key Points (combined card) */}
+          <section className="rounded-xl border border-border bg-card p-5 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2">
+              <Eyebrow className="mb-2 block">About</Eyebrow>
+              {basic.description ? (
+                <p className="text-sm text-foreground leading-relaxed">{basic.description}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">No description available.</p>
               )}
             </div>
-          </header>
-
-          {/* KEY METRICS + ABOUT */}
-          <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="rounded-xl border border-border/50 bg-card p-5">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6">
-                <MetricRow label="Market Cap" value={formatCrore(f.market_cap)} />
-                <MetricRow label="Current Price" value={formatRupees(currentPrice)} />
-                <MetricRow
-                  label="High / Low"
-                  value={
-                    f.fifty_two_week_high && f.fifty_two_week_low
-                      ? `${formatRupees(f.fifty_two_week_high).replace("₹", "₹")} / ${formatRupees(f.fifty_two_week_low).replace("₹", "")}`
-                      : "—"
-                  }
-                />
-                <MetricRow label="Stock P/E" value={f.trailing_pe != null ? f.trailing_pe.toFixed(2) : "—"} />
-                <MetricRow label="Book Value" value={f.price_to_book && currentPrice ? formatRupees(currentPrice / f.price_to_book) : "—"} />
-                <MetricRow label="Dividend Yield" value={f.dividend_yield != null ? formatPct(f.dividend_yield * 100) : "—"} />
-                <MetricRow label="ROCE" value={f.return_on_assets != null ? formatPct(f.return_on_assets * 100) : "—"} />
-                <MetricRow label="ROE" value={f.return_on_equity != null ? formatPct(f.return_on_equity * 100) : "—"} />
-                <MetricRow label="Face Value" value="—" />
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-border/50 bg-card p-5 space-y-4">
-              <div>
-                <Eyebrow className="mb-2 block">About</Eyebrow>
-                {basic.description ? (
-                  <p className="text-sm text-foreground leading-relaxed">{basic.description}</p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No description available.</p>
-                )}
-              </div>
-              <div>
-                <Eyebrow className="mb-2 block">Key Points</Eyebrow>
-                <p className="text-sm text-muted-foreground">
-                  {basic.industry ? `Operates in ${basic.industry}.` : "—"}
-                  {basic.sector ? ` Part of the ${basic.sector} sector.` : ""}
-                </p>
-              </div>
+            <div>
+              <Eyebrow className="mb-2 block">Key Points</Eyebrow>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {basic.industry ? `Operates in ${basic.industry}.` : "—"}
+                {basic.sector ? ` Part of the ${basic.sector} sector.` : ""}
+              </p>
             </div>
           </section>
 
