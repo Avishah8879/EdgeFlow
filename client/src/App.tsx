@@ -111,6 +111,7 @@ const AdminSignupBonus = lazy(() => import("@/pages/admin/AdminSignupBonus"));
 const AdminFeatureCosts = lazy(() => import("@/pages/admin/AdminFeatureCosts"));
 const AdminPayments = lazy(() => import("@/pages/admin/AdminPayments"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
+const DesignShowcase = lazy(() => import("@/pages/DesignShowcase"));
 
 function PageLoader() {
   return (
@@ -236,6 +237,7 @@ function AppRoutes() {
         <Route path="/admin/feature-costs" component={AdminFeatureCosts} />
         <Route path="/admin/payments" component={AdminPayments} />
         <Route path="/pricing" component={Pricing} />
+        <Route path="/_design" component={DesignShowcase} />
 
         {/* ── 404 ───────────────────────────────────────────── */}
         <Route component={NotFound} />

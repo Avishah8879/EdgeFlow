@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { fadeInUp, easeOut } from "@/lib/motion";
 import { toast } from "sonner";
+import { Eyebrow } from "@/components/ui/eyebrow";
 
 // ─── Plan definitions (matches subscription_plans seed in migration 025) ──────
 
@@ -240,7 +241,7 @@ export default function Pricing() {
       <div className="min-h-screen bg-background">
         <div className="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-10 md:py-16 space-y-16">
 
-          {/* Header */}
+          {/* Header — eyebrow + display H1 + muted byline */}
           <motion.div
             variants={fadeInUp}
             initial="hidden"
@@ -248,11 +249,13 @@ export default function Pricing() {
             transition={easeOut}
             className="text-center space-y-3"
           >
-            <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground font-medium">
-              Pricing
-            </p>
-            <h1 className="text-4xl md:text-6xl font-serif italic font-light tracking-tight">
-              Pick your plan
+            <div className="flex justify-center">
+              <Eyebrow tone="gold" rule>
+                Pricing
+              </Eyebrow>
+            </div>
+            <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+              Pick your <em className="italic font-bold">plan</em>
             </h1>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
               Free forever. Pay only for what you use with coins, or go unlimited with Pro.
@@ -277,10 +280,12 @@ export default function Pricing() {
           {/* Coin packs */}
           <section>
             <div className="mb-6 text-center space-y-2">
-              <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground font-medium">
-                Coin Packs
-              </p>
-              <h2 className="text-2xl md:text-3xl font-serif italic font-light tracking-tight">
+              <div className="flex justify-center">
+                <Eyebrow tone="gold" rule>
+                  Coin Packs
+                </Eyebrow>
+              </div>
+              <h2 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
                 Pay per use
               </h2>
               <p className="text-sm text-muted-foreground max-w-sm mx-auto">

@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Link } from 'wouter';
 import { ArrowLeft, Shield, Eye, Lock, Database, UserCheck, Mail, Globe, Cookie, FileText, Users, AlertTriangle, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Eyebrow } from '@/components/ui/eyebrow';
 
 export default function PrivacyPolicy() {
   const lastUpdated = 'February 21, 2026';
@@ -25,13 +26,15 @@ export default function PrivacyPolicy() {
           </Button>
         </Link>
 
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Shield className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">EquityPro Privacy Policy</h1>
-          </div>
-          <p className="text-muted-foreground">
+        {/* Header — eyebrow + display H1 + muted byline */}
+        <div className="mb-10 space-y-3">
+          <Eyebrow tone="gold" rule>
+            Legal
+          </Eyebrow>
+          <h1 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+            EquityPro Privacy Policy
+          </h1>
+          <p className="text-sm text-muted-foreground">
             Last updated: {lastUpdated}
           </p>
         </div>

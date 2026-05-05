@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { ModeToggle } from "@/components/ModeToggle";
 import { SearchBar } from "@/components/search/SearchBar";
-import MarketStatusBadge from "@/components/MarketStatusBadge";
+import { MarketStatusPill } from "@/components/ui/market-status-pill";
 import { CoinBalanceBadge } from "@/components/CoinBalanceBadge";
 import { UserMenu } from "@/components/UserMenu";
 import { EquityProLogo } from "@/components/EquityProLogo";
@@ -22,7 +22,7 @@ export default function Topbar() {
 
         {/* Right section */}
         <div className="flex items-center gap-3 shrink-0">
-          <MarketStatusBadge />
+          <MarketStatusPill className="hidden sm:inline-flex" />
           <CoinBalanceBadge />
           <ModeToggle />
           <UserMenu />
