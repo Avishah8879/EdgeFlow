@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { EquityCurveChart } from "@/components/strategy-backtest/EquityCurveChart";
 import { SEO } from "@/components/SEO";
 import { PAGE_SEO } from "@/lib/seo-config";
@@ -811,13 +812,13 @@ export default function StrategyBacktesting() {
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-6">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-3">
-                <BarChart3 className="h-8 w-8 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold">Alpha Generation</h1>
-              </div>
+            <div className="space-y-2">
+              <Eyebrow tone="gold" rule>
+                Analysis
+              </Eyebrow>
+              <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+                Alpha Generation
+              </h1>
             </div>
           <div className="flex items-center gap-2">
             <UsageLimitBadge feature="backtest" showLabel />

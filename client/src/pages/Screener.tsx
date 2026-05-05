@@ -27,6 +27,7 @@ import { parse } from "@/lib/screener/parse";
 import type { BuilderTree } from "@/lib/screener/types";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -395,9 +396,11 @@ export default function Screener() {
           {/* Header */}
           <div className="mb-12">
           <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="space-y-2">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Screener</p>
-              <h1 className="text-3xl md:text-5xl font-serif italic font-light tracking-tight text-foreground">
+            <div className="space-y-3">
+              <Eyebrow tone="gold" rule>
+                Analysis
+              </Eyebrow>
+              <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
                 Find your edge
               </h1>
               <p className="text-sm text-muted-foreground max-w-md">

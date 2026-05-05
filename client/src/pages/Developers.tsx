@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -74,9 +75,14 @@ export default function Developers() {
         <div className="mx-auto w-full max-w-5xl px-6 py-8 space-y-8">
           {/* Header */}
           <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <h1 className="text-3xl font-bold">Developer API</h1>
-              <p className="text-muted-foreground mt-1">
+            <div className="space-y-2">
+              <Eyebrow tone="gold" rule>
+                Settings
+              </Eyebrow>
+              <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+                Developer API
+              </h1>
+              <p className="text-muted-foreground">
                 Access EquityPro market data, screener, and analytics
                 programmatically.
               </p>

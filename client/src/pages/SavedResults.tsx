@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { Link } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Eyebrow } from '@/components/ui/eyebrow';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -385,9 +386,14 @@ export default function SavedResults() {
 
   return (
     <div className="container max-w-5xl mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Saved Results</h1>
-        <p className="text-muted-foreground mt-2">
+      <div className="mb-8 space-y-2">
+        <Eyebrow tone="gold" rule>
+          Library
+        </Eyebrow>
+        <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+          Saved Results
+        </h1>
+        <p className="text-muted-foreground">
           View and manage your saved screener and backtest results
         </p>
       </div>

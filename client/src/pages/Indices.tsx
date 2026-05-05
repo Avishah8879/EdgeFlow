@@ -6,6 +6,7 @@ import { PAGE_SEO } from "@/lib/seo-config";
 import { generateFAQSchema, INDICES_FAQS } from "@/lib/json-ld";
 import { motion } from "framer-motion";
 import { fadeInUp, easeOut } from "@/lib/motion";
+import { Eyebrow } from "@/components/ui/eyebrow";
 
 export default function Indices() {
   const { data: indicesData, isLoading, error } = useIndices();
@@ -28,10 +29,12 @@ export default function Indices() {
             initial="hidden"
             animate="visible"
             transition={easeOut}
-            className="space-y-2"
+            className="space-y-3"
           >
-            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Indices</p>
-            <h1 className="text-3xl md:text-5xl font-serif italic font-light tracking-tight text-foreground">
+            <Eyebrow tone="gold" rule>
+              Markets
+            </Eyebrow>
+            <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
               Market indices
             </h1>
             <p className="text-sm text-muted-foreground">
