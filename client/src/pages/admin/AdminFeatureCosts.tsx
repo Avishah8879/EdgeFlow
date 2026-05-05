@@ -97,7 +97,7 @@ export default function AdminFeatureCosts() {
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-md bg-primary/10"><Settings2 className="h-5 w-5 text-primary" /></div>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Feature Costs</h1>
+            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Feature Costs</h1>
             <p className="text-sm text-muted-foreground">
               Coins debited per use of each gated feature. Toggle a feature to <span className="font-medium">Free</span> to skip the gate entirely;
               everyone pays the configured cost when set to <span className="font-medium">Paid</span>.

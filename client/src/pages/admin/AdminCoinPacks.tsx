@@ -225,7 +225,7 @@ export default function AdminCoinPacks() {
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-md bg-primary/10"><Coins className="h-5 w-5 text-primary" /></div>
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Coin Packs</h1>
+              <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Coin Packs</h1>
               <p className="text-sm text-muted-foreground">Edit the packs that show up on /pricing.</p>
             </div>
           </div>

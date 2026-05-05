@@ -96,7 +96,7 @@ export default function AdminCoinTransactions() {
             <Coins className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Coin Transactions</h1>
+            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Coin Transactions</h1>
             <p className="text-sm text-muted-foreground">All ledger entries across every user and platform.</p>
           </div>
         </div>

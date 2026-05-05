@@ -758,7 +758,7 @@ export default function AdminEmailSettings() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-semibold">Email Notifications</h1>
+          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Email Notifications</h1>
           <p className="text-muted-foreground">
             Configure email notification preferences and settings
           </p>

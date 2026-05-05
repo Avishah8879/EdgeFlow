@@ -251,7 +251,7 @@ export default function AdminAnalytics() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Analytics</h1>
+            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Analytics</h1>
             <p className="text-muted-foreground mt-1">
               User growth, engagement, and retention metrics
             </p>

@@ -84,7 +84,7 @@ export default function AdminPayments() {
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-md bg-primary/10"><CreditCard className="h-5 w-5 text-primary" /></div>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Payments</h1>
+            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Payments</h1>
             <p className="text-sm text-muted-foreground">Cashfree payment intents — every checkout attempt.</p>
           </div>
         </div>

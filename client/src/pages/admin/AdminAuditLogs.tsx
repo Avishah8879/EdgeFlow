@@ -503,7 +503,7 @@ export default function AdminAuditLogs() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Audit Logs</h1>
+            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Audit Logs</h1>
             <p className="text-muted-foreground mt-1">
               Authentication and security event history
             </p>
