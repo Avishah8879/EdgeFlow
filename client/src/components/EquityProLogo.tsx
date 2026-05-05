@@ -1,3 +1,11 @@
+/**
+ * EquityPro brand lockup — shield mark + wordmark.
+ *
+ * Visual reference: design/equitypro-v1/EdgeFlow Design System/assets/shield.png
+ * Wordmark colors come from theme tokens:
+ *   - Light theme: --brand-navy (#1F3A5F)
+ *   - Dark theme:  --brand-gold (#C8A04A)
+ */
 type EquityProLogoProps = {
   className?: string;
   size?: "sm" | "md" | "lg";
@@ -5,9 +13,9 @@ type EquityProLogoProps = {
 };
 
 const SIZES = {
-  sm: { icon: 20, text: 16 },
-  md: { icon: 28, text: 22 },
-  lg: { icon: 36, text: 30 },
+  sm: { icon: 22, text: 16 },
+  md: { icon: 28, text: 18 },
+  lg: { icon: 40, text: 26 },
 } as const;
 
 export function EquityProLogo({
@@ -18,28 +26,19 @@ export function EquityProLogo({
   const dims = SIZES[size] ?? SIZES.md;
 
   const Icon = (
-    <svg
+    <img
+      src="/equitypro-shield.png"
+      alt=""
       width={dims.icon}
       height={dims.icon}
-      viewBox="0 0 32 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+      style={{ width: dims.icon, height: dims.icon, display: "block" }}
       aria-hidden="true"
-    >
-      <path
-        d="M3 25 Q 11 22, 17 15 T 29 4"
-        stroke="hsl(var(--primary))"
-        strokeWidth={3}
-        strokeLinecap="round"
-        fill="none"
-      />
-      <circle cx={29} cy={4} r={2.5} fill="hsl(var(--primary))" />
-    </svg>
+    />
   );
 
   if (iconOnly) {
     return (
-      <span className={className} aria-label="Equity Pro">
+      <span className={className} aria-label="EquityPro">
         {Icon}
       </span>
     );
@@ -48,21 +47,21 @@ export function EquityProLogo({
   return (
     <span
       className={className}
-      style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
-      aria-label="Equity Pro"
+      style={{ display: "inline-flex", alignItems: "center", gap: 10 }}
+      aria-label="EquityPro"
     >
       {Icon}
       <span
+        className="text-[hsl(var(--brand-navy))] dark:text-[hsl(var(--brand-gold))]"
         style={{
-          fontFamily: '"Instrument Serif", Newsreader, Georgia, serif',
+          fontFamily: 'var(--font-sans)',
+          fontWeight: 800,
           fontSize: dims.text,
-          fontStyle: "italic",
-          letterSpacing: "-0.01em",
+          letterSpacing: "-0.015em",
           lineHeight: 1,
-          color: "hsl(var(--foreground))",
         }}
       >
-        Equity Pro
+        EquityPro
       </span>
     </span>
   );

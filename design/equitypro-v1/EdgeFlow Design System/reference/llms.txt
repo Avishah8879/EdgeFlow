@@ -1,0 +1,44 @@
+# Tiphub
+
+> Tiphub (tiphub.ai) is a free AI-powered stock analysis platform for Indian investors covering 3,000+ NSE stocks. It provides stock news sentiment analysis, a Chartink like expert screener with 24+ technical indicators, and a functionality for producing trading alpha and strategy backtesting. Tiphub is a Screener.in alternative built specifically for the Indian stock market.
+
+Tiphub is a web-based financial analysis platform at https://tiphub.ai serving Indian retail investors, traders, and researchers. The platform covers all stocks listed on the National Stock Exchange of India (NSE), including Nifty 50, Nifty 500, and sectoral index constituents. Key differentiators include AI-powered news sentiment analysis, a Chartink like boolean expression screener, and an AI strategy optimizer for automated alpha generation and backtesting. The platform tracks 57 Indian market indices and provides a proprietary Fear & Greed index calculated from Nifty 50 price and volatility data.
+
+## Core Tools
+
+- [Market Dashboard](https://tiphub.ai/home): Real-time Indian stock market overview with proprietary Fear & Greed index, top gainers and losers, trending stocks, and curated screens.
+- [Stock Browser](https://tiphub.ai/stocks): Browse 3,000+ NSE stocks filterable by market cap (Large Cap, Mid Cap, Small Cap). View fundamentals, P/E ratios, and market data.
+- [Stock Detail Pages](https://tiphub.ai/stocks/RELIANCE): Comprehensive stock analysis with multi-timeframe charts, 24 technical indicators, AI sentiment on news feed, Sankey chart for financials, Reverse DCF for implied growth rate, and shareholding pattern breakdown.
+- [Market Indices](https://tiphub.ai/indices): Track 57 Indian market indices including Nifty 50, Bank Nifty, Nifty IT, and sectoral/thematic indices with real-time prices.
+- [Expert Screener](https://tiphub.ai/screener): Chartink like stock screener using boolean expressions with 24+ technical indicators (SMA, EMA, RSI, MACD, ATR, Supertrend, Bollinger Bands). Screens all 3,000+ NSE stocks with real-time streaming results.
+- [Strategy Backtesting](https://tiphub.ai/alpha-generation): AI-powered trading strategy generator, optimizer and backtester. Discovers optimal entry/exit rules with Calmar ratio, max drawdown, win rate, and profit factor metrics. Supports standard and TPSL optimization modes.
+- [AI Sentiment Analysis](https://tiphub.ai/home): AI-powered news sentiment analysis categorizing stock news articles as positive, negative, or neutral.
+
+## Content
+
+- [Blog](https://tiphub.ai/blog): Trading strategies, educational guides, and market analysis articles for Indian investors.
+- [Advanced Trading Strategies](https://tiphub.ai/blog/advanced-strategies): Complete guide to strategy development and alpha generation using quantitative approaches.
+- [Market Reports](https://tiphub.ai/market-reports): Sector analysis, performance breakdowns, and key market insights for Indian markets.
+- [Steel Sector Outlook](https://tiphub.ai/market-reports/steel-sector-outlook): Detailed analysis of the Indian steel sector with stock-level recommendations.
+
+## Stock Analysis Pages
+
+- [Reliance Industries](https://tiphub.ai/stocks/RELIANCE): Analysis, sentiment, technicals, fundamentals, Sankey chart, and Reverse DCF for RELIANCE on NSE.
+- [TCS](https://tiphub.ai/stocks/TCS): Analysis for Tata Consultancy Services on NSE.
+- [HDFC Bank](https://tiphub.ai/stocks/HDFCBANK): Analysis for HDFC Bank on NSE.
+- [Infosys](https://tiphub.ai/stocks/INFY): Analysis for Infosys on NSE.
+- [ICICI Bank](https://tiphub.ai/stocks/ICICIBANK): Analysis for ICICI Bank on NSE.
+
+## Shared Results
+
+- [Shared Screener Results](https://tiphub.ai/shared/screener/): Public URLs for sharing expert screener filter results with other investors.
+- [Shared Backtest Results](https://tiphub.ai/shared/backtest/): Public URLs for sharing strategy backtest results including equity curves and metrics.
+
+## Legal
+
+- [Privacy Policy](https://tiphub.ai/privacy): Tiphub's data collection, usage, and protection policies.
+
+## Optional
+
+- [Landing Page](https://tiphub.ai/): Tiphub homepage with platform overview, feature highlights, and FAQs.
+- [Create Account](https://tiphub.ai/signup): Create a free Tiphub account to access AI stock analysis tools.

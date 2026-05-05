@@ -1,0 +1,171 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Screener · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.page-hd{padding:24px 0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.page-hd h1{font-family:var(--font-display);font-size:32px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .page-hd h1{color:hsl(38 30% 95%)}
+.layout{display:grid;grid-template-columns:280px 1fr;gap:24px;padding:24px 0 60px;align-items:start}
+.preset-rail{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;position:sticky;top:80px}
+.preset-rail h4{margin:0;padding:14px 18px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));border-bottom:1px solid hsl(var(--border));background:hsl(var(--muted)/0.4)}
+.preset{padding:12px 18px;border-bottom:1px solid hsl(var(--border));cursor:pointer;transition:background var(--t-fast)}
+.preset:last-child{border-bottom:0}
+.preset:hover{background:hsl(var(--muted)/0.4)}
+.preset.active{background:hsl(var(--accent));border-left:3px solid hsl(var(--brand-gold));padding-left:15px}
+.preset .nm{font-weight:600;font-size:13px}
+.preset .ds{font-size:11px;color:hsl(var(--muted-foreground));margin-top:2px;line-height:1.4}
+.preset .ct{font-family:var(--font-mono);font-size:10.5px;color:hsl(var(--brand-gold));margin-top:4px;font-weight:700}
+
+.builder{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px;margin-bottom:18px}
+.builder-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid hsl(var(--border))}
+.builder-hd h2{font-family:var(--font-display);font-size:22px;letter-spacing:-0.01em;margin:0;color:hsl(var(--brand-navy))}
+.dark .builder-hd h2{color:hsl(38 30% 95%)}
+.rule{display:grid;grid-template-columns:24px 1.4fr 0.8fr 1fr 30px;gap:10px;align-items:center;margin-bottom:8px;padding:10px;border-radius:var(--radius-md);background:hsl(var(--muted)/0.4);border:1px solid hsl(var(--border))}
+.rule-op{display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:10px;font-weight:700;color:white;width:24px;height:24px;border-radius:50%;background:hsl(var(--brand-navy))}
+.rule select,.rule input{height:36px;border:1px solid hsl(var(--border));background:hsl(var(--background));border-radius:var(--radius-sm);padding:0 10px;font-size:13px;color:inherit;width:100%;font-family:inherit}
+.rule input[type=number]{font-family:var(--font-mono)}
+.rule .x{background:transparent;border:0;color:hsl(var(--muted-foreground));cursor:pointer;font-size:18px}
+.add-rule{display:flex;gap:8px;margin-top:10px}
+
+.summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;margin-bottom:18px}
+.summary > div{padding:18px 20px;border-right:1px solid hsl(var(--border))}
+.summary > div:last-child{border-right:0}
+.summary .ey{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground))}
+.summary .v{font-family:var(--font-mono);font-size:30px;font-weight:700;color:hsl(var(--brand-navy));margin-top:4px}
+.dark .summary .v{color:hsl(var(--brand-gold))}
+.summary .sub{font-size:11.5px;color:hsl(var(--muted-foreground));margin-top:2px}
+
+table.results{width:100%;border-collapse:collapse;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+table.results th,table.results td{padding:11px 14px;text-align:left;border-bottom:1px solid hsl(var(--border));font-size:12.5px}
+table.results th{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));background:hsl(var(--muted)/0.4)}
+table.results td.num{font-family:var(--font-mono);text-align:right}
+table.results tbody tr:hover{background:hsl(var(--muted)/0.4);cursor:pointer}
+table.results .sym{font-weight:700}
+.score-bar{display:inline-block;width:60px;height:6px;background:hsl(var(--muted));border-radius:3px;overflow:hidden;vertical-align:middle;margin-right:6px}
+.score-bar i{display:block;height:100%;background:hsl(var(--brand-gold))}
+</style></head>
+<body data-page="screener" data-screen-label="04 Expert Screener">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="page-hd"><div class="container">
+  <span class="eyebrow">Expert screener</span>
+  <h1>Find your edge.</h1>
+  <p class="muted body-sm" style="margin:4px 0 0">40+ pre-built screens, plus a no-code rule builder across 142 fundamentals &amp; technicals.</p>
+</div></section>
+
+<main class="container"><div class="layout">
+
+  <aside class="preset-rail">
+    <h4>Built-in presets · 42</h4>
+    <div class="preset active"><div class="nm">Magic Formula</div><div class="ds">Greenblatt’s ROC × earnings yield</div><div class="ct">42 matches today</div></div>
+    <div class="preset"><div class="nm">Piotroski F ≥ 8</div><div class="ds">9-point fundamental quality score</div><div class="ct">11 matches</div></div>
+    <div class="preset"><div class="nm">Coffee Can</div><div class="ds">10-yr ROCE &gt; 15 %, sales growth &gt; 10 %</div><div class="ct">28 matches</div></div>
+    <div class="preset"><div class="nm">52-Week Breakout</div><div class="ds">Price near 52W high · vol surge</div><div class="ct">18 matches</div></div>
+    <div class="preset"><div class="nm">Dividend Champions</div><div class="ds">10-yr dividend growth ≥ 8 %</div><div class="ct">26 matches</div></div>
+    <div class="preset"><div class="nm">Net-Net (Graham)</div><div class="ds">P &lt; ⅔ × NCAV</div><div class="ct">7 matches</div></div>
+    <div class="preset"><div class="nm">Momentum 12-1</div><div class="ds">12-month rtn ex last month</div><div class="ct">42 matches</div></div>
+    <div class="preset"><div class="nm">Low-vol Quality</div><div class="ds">Beta &lt; 0.8 · ROE &gt; 18 %</div><div class="ct">19 matches</div></div>
+    <h4>My screens · 5</h4>
+    <div class="preset"><div class="nm">Sundar's QGV</div><div class="ds">Custom · 7 rules</div><div class="ct">14 matches</div></div>
+    <div class="preset"><div class="nm">Smallcap turnaround</div><div class="ds">Custom · 5 rules</div><div class="ct">9 matches</div></div>
+  </aside>
+
+  <section>
+    <div class="builder">
+      <div class="builder-hd">
+        <div>
+          <h2>Magic Formula</h2>
+          <p class="muted body-sm" style="margin:4px 0 0">Joel Greenblatt's high-ROC, high-earnings-yield selection. <span class="badge badge-gold">Preset</span></p>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-ghost btn-sm">Duplicate</button>
+          <button class="btn btn-primary btn-sm">Save changes</button>
+        </div>
+      </div>
+
+      <div class="rule">
+        <span class="rule-op">A</span>
+        <select><option>Return on capital (ROC, TTM)</option></select>
+        <select><option>≥</option><option>&gt;</option><option>&lt;</option></select>
+        <input type="number" value="20" /> <span class="muted body-sm" style="text-align:left">%</span>
+        <button class="x">×</button>
+      </div>
+      <div class="rule">
+        <span class="rule-op">B</span>
+        <select><option>Earnings yield (E / EV, TTM)</option></select>
+        <select><option>≥</option></select>
+        <input type="number" value="8" /> <span class="muted body-sm" style="text-align:left">%</span>
+        <button class="x">×</button>
+      </div>
+      <div class="rule">
+        <span class="rule-op">C</span>
+        <select><option>Market cap</option></select>
+        <select><option>&gt;</option></select>
+        <input type="number" value="2000" /> <span class="muted body-sm" style="text-align:left">₹ Cr</span>
+        <button class="x">×</button>
+      </div>
+      <div class="rule">
+        <span class="rule-op">D</span>
+        <select><option>Sector</option></select>
+        <select><option>≠</option></select>
+        <input type="text" value="Banking, Insurance, Real Estate" />
+        <button class="x">×</button>
+      </div>
+      <div class="rule">
+        <span class="rule-op">E</span>
+        <select><option>Average daily volume (30D)</option></select>
+        <select><option>&gt;</option></select>
+        <input type="number" value="500000" /> <span class="muted body-sm" style="text-align:left">shares</span>
+        <button class="x">×</button>
+      </div>
+
+      <div class="add-rule">
+        <button class="btn btn-ghost btn-sm">+ Add rule</button>
+        <button class="btn btn-ghost btn-sm">+ Add group (OR)</button>
+        <div style="flex:1"></div>
+        <button class="btn btn-gold btn-sm">Run screen →</button>
+      </div>
+    </div>
+
+    <div class="summary">
+      <div><div class="ey">Matches</div><div class="v">42</div><div class="sub">of 3,142 NSE listings · 1.34 %</div></div>
+      <div><div class="ey">Median 1Y return</div><div class="v change-up">+34.6%</div><div class="sub">vs NIFTY 50: +18.2 %</div></div>
+      <div><div class="ey">Backtest CAGR · 5Y</div><div class="v" style="color:hsl(var(--brand-gold))">+22.4%</div><div class="sub">Sharpe 1.18 · MaxDD −18.4 %</div></div>
+    </div>
+
+    <div class="flex justify-between items-center mb-4">
+      <div class="flex gap-2"><span class="muted body-sm">Showing 42 results · sorted by Magic Score</span></div>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost btn-sm">Backtest →</button>
+        <button class="btn btn-ghost btn-sm">Export CSV</button>
+        <button class="btn btn-ghost btn-sm">Add all to watchlist</button>
+      </div>
+    </div>
+
+    <table class="results">
+      <thead><tr>
+        <th>Rank</th><th>Symbol</th><th>Sector</th>
+        <th class="text-right">ROC</th><th class="text-right">E/EV</th><th class="text-right">Magic Score</th>
+        <th class="text-right">P/E</th><th class="text-right">Mkt Cap</th><th class="text-right">1Y</th>
+      </tr></thead>
+      <tbody>
+        <tr onclick="location='stock-detail.html'"><td class="num">1</td><td class="sym">TANLA<div class="muted body-sm" style="font-weight:400">Tanla Platforms</div></td><td>IT</td><td class="num">42.6%</td><td class="num">14.2%</td><td class="num"><span class="score-bar"><i style="width:96%"></i></span>96</td><td class="num">14.2</td><td class="num">9,840 Cr</td><td class="num change-up">+86%</td></tr>
+        <tr><td class="num">2</td><td class="sym">CASTROLIND<div class="muted body-sm" style="font-weight:400">Castrol India</div></td><td>Energy</td><td class="num">38.4%</td><td class="num">11.8%</td><td class="num"><span class="score-bar"><i style="width:91%"></i></span>91</td><td class="num">18.8</td><td class="num">22,140 Cr</td><td class="num change-up">+42%</td></tr>
+        <tr><td class="num">3</td><td class="sym">COALINDIA<div class="muted body-sm" style="font-weight:400">Coal India</div></td><td>Energy</td><td class="num">36.2%</td><td class="num">12.4%</td><td class="num"><span class="score-bar"><i style="width:88%"></i></span>88</td><td class="num">9.2</td><td class="num">2.78 L Cr</td><td class="num change-up">+62%</td></tr>
+        <tr><td class="num">4</td><td class="sym">VEDL<div class="muted body-sm" style="font-weight:400">Vedanta</div></td><td>Metals</td><td class="num">34.8%</td><td class="num">13.6%</td><td class="num"><span class="score-bar"><i style="width:86%"></i></span>86</td><td class="num">12.4</td><td class="num">1.84 L Cr</td><td class="num change-up">+58%</td></tr>
+        <tr><td class="num">5</td><td class="sym">HINDPETRO<div class="muted body-sm" style="font-weight:400">Hindustan Petroleum</div></td><td>Energy</td><td class="num">33.1%</td><td class="num">14.8%</td><td class="num"><span class="score-bar"><i style="width:84%"></i></span>84</td><td class="num">6.8</td><td class="num">94,200 Cr</td><td class="num change-up">+72%</td></tr>
+        <tr><td class="num">6</td><td class="sym">BPCL<div class="muted body-sm" style="font-weight:400">Bharat Petroleum</div></td><td>Energy</td><td class="num">31.4%</td><td class="num">12.1%</td><td class="num"><span class="score-bar"><i style="width:82%"></i></span>82</td><td class="num">7.4</td><td class="num">1.42 L Cr</td><td class="num change-up">+38%</td></tr>
+        <tr><td class="num">7</td><td class="sym">NMDC<div class="muted body-sm" style="font-weight:400">NMDC Ltd.</div></td><td>Metals</td><td class="num">30.2%</td><td class="num">11.4%</td><td class="num"><span class="score-bar"><i style="width:79%"></i></span>79</td><td class="num">8.2</td><td class="num">68,400 Cr</td><td class="num change-up">+44%</td></tr>
+        <tr><td class="num">8</td><td class="sym">IOC<div class="muted body-sm" style="font-weight:400">Indian Oil Corp</div></td><td>Energy</td><td class="num">28.9%</td><td class="num">10.8%</td><td class="num"><span class="score-bar"><i style="width:76%"></i></span>76</td><td class="num">7.8</td><td class="num">2.18 L Cr</td><td class="num change-up">+34%</td></tr>
+        <tr><td class="num">9</td><td class="sym">RECLTD<div class="muted body-sm" style="font-weight:400">REC Ltd.</div></td><td>Finance</td><td class="num">28.4%</td><td class="num">9.6%</td><td class="num"><span class="score-bar"><i style="width:74%"></i></span>74</td><td class="num">10.4</td><td class="num">1.32 L Cr</td><td class="num change-up">+128%</td></tr>
+        <tr><td class="num">10</td><td class="sym">PFC<div class="muted body-sm" style="font-weight:400">Power Finance</div></td><td>Finance</td><td class="num">27.6%</td><td class="num">9.2%</td><td class="num"><span class="score-bar"><i style="width:72%"></i></span>72</td><td class="num">8.6</td><td class="num">1.46 L Cr</td><td class="num change-up">+114%</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</div></main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

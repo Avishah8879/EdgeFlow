@@ -1,0 +1,178 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>API keys · Admin</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.ad-shell{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
+.ad-side{background:hsl(var(--brand-navy-deep));color:hsl(38 30% 88%);padding:18px 0;font-family:var(--font-mono)}
+.ad-side h4{padding:8px 18px;margin:0;font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--brand-gold));font-family:var(--font-display)}
+.ad-side a{display:block;padding:8px 18px;font-size:12.5px;color:hsl(38 30% 75%);text-decoration:none;border-left:3px solid transparent}
+.ad-side a.active{background:hsl(213 50% 18%);color:hsl(var(--brand-gold));border-left-color:hsl(var(--brand-gold));font-weight:700}
+.ad-side a:hover{background:hsl(213 50% 18%);color:white}
+.ad-main{padding:24px 32px 60px;background:hsl(var(--background))}
+.ad-hd{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+.ad-hd h1{font-family:var(--font-display);font-size:28px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .ad-hd h1{color:hsl(38 30% 95%)}
+
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px}
+.kpi .k{padding:16px 20px;border-right:1px solid hsl(var(--border))}
+.kpi .k:last-child{border-right:0}
+.kpi .l{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.kpi .v{font-family:var(--font-mono);font-size:24px;font-weight:700;margin-top:4px;color:hsl(var(--foreground))}
+
+.tbl{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px}
+.tbl th{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:11px 14px;background:hsl(var(--muted)/0.5);text-align:left}
+.tbl td{padding:12px 14px;border-bottom:1px solid hsl(var(--border));vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tr:hover{background:hsl(var(--muted)/0.4)}
+.tbl .key{font-family:var(--font-mono);font-size:12px;font-weight:700;color:hsl(var(--brand-navy));background:hsl(var(--muted));padding:3px 8px;border-radius:4px}
+.dark .tbl .key{color:hsl(var(--brand-gold))}
+.tbl .nm{font-family:var(--font-display);font-weight:700;font-size:13px;color:hsl(var(--foreground))}
+.tbl .ds{font-size:11px;color:hsl(var(--muted-foreground));margin-top:1px;font-family:inherit}
+.scope{display:inline-block;font-size:10px;font-weight:700;padding:2px 6px;border-radius:var(--radius-pill);background:hsl(213 50% 50% / 0.12);color:hsl(213 50% 35%);margin-right:4px;font-family:var(--font-mono)}
+.dark .scope{color:hsl(213 50% 70%)}
+.scope.write{background:hsl(0 60% 50% / 0.12);color:hsl(0 60% 45%)}
+.dark .scope.write{color:hsl(0 60% 70%)}
+.status-b{font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:0.04em}
+.status-b.ok{background:hsl(var(--positive)/0.15);color:hsl(var(--positive))}
+.status-b.warn{background:hsl(var(--brand-gold)/0.18);color:hsl(var(--brand-gold))}
+.status-b.rev{background:hsl(213 14% 50% / 0.15);color:hsl(213 14% 35%)}
+.usage-bar{display:inline-block;width:80px;height:6px;background:hsl(var(--muted));border-radius:3px;margin-right:6px;vertical-align:middle;overflow:hidden}
+.usage-bar span{display:block;height:100%;background:hsl(var(--brand-gold))}
+
+.card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px;margin-bottom:14px}
+.card h3{margin:0 0 14px;font-family:var(--font-display);font-size:16px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .card h3{color:hsl(38 30% 95%)}
+.card svg{width:100%;height:200px}
+</style></head>
+<body data-page="admin-api-keys" data-screen-label="Admin · 48 API keys">
+<div class="shell"><div data-shell-topbar></div>
+
+<main class="ad-shell">
+  <aside class="ad-side">
+    <h4>Admin</h4>
+    <a href="admin-analytics.html">Analytics</a>
+    <a href="admin-users.html">Users</a>
+    <a href="admin-feature-flags.html">Feature flags</a>
+    <a href="admin-audit-logs.html">Audit logs</a>
+    <a href="admin-coin-packs.html">Coin packs</a>
+    <a href="admin-coin-transactions.html">Coin transactions</a>
+    <a href="admin-email-settings.html">Email settings</a>
+    <a href="admin-api-keys.html" class="active">API keys</a>
+  </aside>
+
+  <section class="ad-main">
+    <div class="ad-hd">
+      <div><span class="eyebrow">Admin · Developer platform</span><h1>API keys · all customers</h1></div>
+      <div class="flex gap-2"><button class="btn btn-ghost btn-sm">Rate-limit policy</button><button class="btn btn-primary btn-sm">+ Issue key</button></div>
+    </div>
+
+    <div class="kpi">
+      <div class="k"><div class="l">Active keys</div><div class="v">412</div></div>
+      <div class="k"><div class="l">API calls (30d)</div><div class="v">94.2M</div></div>
+      <div class="k"><div class="l">P95 latency</div><div class="v">142 ms</div></div>
+      <div class="k"><div class="l">Errors (24h)</div><div class="v" style="color:hsl(var(--negative))">0.18%</div></div>
+    </div>
+
+    <div class="card">
+      <h3>API call volume · last 7 days</h3>
+      <svg viewBox="0 0 800 200">
+        <line x1="0" y1="180" x2="800" y2="180" stroke="hsl(var(--border))"/>
+        <line x1="0" y1="120" x2="800" y2="120" stroke="hsl(var(--border))" stroke-dasharray="2 4"/>
+        <line x1="0" y1="60" x2="800" y2="60" stroke="hsl(var(--border))" stroke-dasharray="2 4"/>
+        <g fill="hsl(var(--brand-gold))" opacity="0.85">
+          <rect x="20" y="80" width="80" height="100"/>
+          <rect x="120" y="50" width="80" height="130"/>
+          <rect x="220" y="40" width="80" height="140"/>
+          <rect x="320" y="20" width="80" height="160"/>
+          <rect x="420" y="34" width="80" height="146"/>
+          <rect x="520" y="100" width="80" height="80"/>
+          <rect x="620" y="110" width="80" height="70"/>
+        </g>
+        <g font-family="ui-monospace" font-size="10" fill="hsl(var(--muted-foreground))">
+          <text x="0" y="14">18M</text><text x="0" y="64">12M</text><text x="0" y="124">6M</text><text x="0" y="184">0</text>
+          <text x="60" y="196" text-anchor="middle">Mon</text><text x="160" y="196" text-anchor="middle">Tue</text><text x="260" y="196" text-anchor="middle">Wed</text><text x="360" y="196" text-anchor="middle">Thu</text><text x="460" y="196" text-anchor="middle">Fri</text><text x="560" y="196" text-anchor="middle">Sat</text><text x="660" y="196" text-anchor="middle">Sun</text>
+        </g>
+      </svg>
+    </div>
+
+    <table class="tbl">
+      <thead><tr><th>Key</th><th>Owner / app</th><th>Scopes</th><th>Plan / RPS</th><th>Calls (30d)</th><th>Last used</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="key">sk_live_8420…</span></td>
+          <td><div class="nm">QuantOne Trading Bot</div><div class="ds">@dev.raman · UID 7240</div></td>
+          <td><span class="scope">read:portfolio</span><span class="scope">read:quotes</span><span class="scope">read:option-chain</span></td>
+          <td>Quant · 50 RPS</td>
+          <td><span class="usage-bar"><span style="width:84%"></span></span>14.2M</td>
+          <td>2 min ago</td>
+          <td><span class="status-b ok">Active</span></td>
+          <td>⋯</td>
+        </tr>
+        <tr>
+          <td><span class="key">sk_live_2840…</span></td>
+          <td><div class="nm">PaperTrade backtest</div><div class="ds">@meera · UID 8420</div></td>
+          <td><span class="scope">read:quotes</span><span class="scope">read:historical</span></td>
+          <td>Quant · 50 RPS</td>
+          <td><span class="usage-bar"><span style="width:62%"></span></span>8.4M</td>
+          <td>14 min ago</td>
+          <td><span class="status-b ok">Active</span></td>
+          <td>⋯</td>
+        </tr>
+        <tr>
+          <td><span class="key">sk_live_4218…</span></td>
+          <td><div class="nm">EquityPro Mobile (RN)</div><div class="ds">internal · @anjali</div></td>
+          <td><span class="scope">read:portfolio</span><span class="scope write">write:watchlist</span></td>
+          <td>Internal · ∞</td>
+          <td><span class="usage-bar"><span style="width:100%"></span></span>62.4M</td>
+          <td>0 sec</td>
+          <td><span class="status-b ok">Active</span></td>
+          <td>⋯</td>
+        </tr>
+        <tr>
+          <td><span class="key">sk_live_a8c2…</span></td>
+          <td><div class="nm">Excel Add-in</div><div class="ds">@rahul.p · UID 2820</div></td>
+          <td><span class="scope">read:quotes</span></td>
+          <td>Pro · 10 RPS</td>
+          <td><span class="usage-bar"><span style="width:18%"></span></span>1.2M</td>
+          <td>2 hrs ago</td>
+          <td><span class="status-b ok">Active</span></td>
+          <td>⋯</td>
+        </tr>
+        <tr>
+          <td><span class="key">sk_test_1a4b…</span></td>
+          <td><div class="nm">My-strategy.py local</div><div class="ds">@vikram.g · UID 9824</div></td>
+          <td><span class="scope">read:quotes</span></td>
+          <td>Test · 5 RPS</td>
+          <td><span class="usage-bar"><span style="width:8%"></span></span>0.42M</td>
+          <td>4 hrs ago</td>
+          <td><span class="status-b warn">Approaching limit</span></td>
+          <td>⋯</td>
+        </tr>
+        <tr>
+          <td><span class="key">sk_live_8d0e…</span></td>
+          <td><div class="nm">Internal · audit-export</div><div class="ds">system · @anjali</div></td>
+          <td><span class="scope">read:audit</span><span class="scope write">write:export</span></td>
+          <td>Internal · 5 RPS</td>
+          <td><span class="usage-bar"><span style="width:14%"></span></span>0.86M</td>
+          <td>22 min ago</td>
+          <td><span class="status-b ok">Active</span></td>
+          <td>⋯</td>
+        </tr>
+        <tr>
+          <td><span class="key">sk_live_3f12…</span></td>
+          <td><div class="nm">Old-pipeline · v1</div><div class="ds">@dev.raman · UID 7240</div></td>
+          <td><span class="scope">read:quotes</span></td>
+          <td>Quant · 50 RPS</td>
+          <td>0</td>
+          <td>22 days ago</td>
+          <td><span class="status-b rev">Revoked</span></td>
+          <td>⋯</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+</div>
+<script src="app.js"></script>
+</body></html>

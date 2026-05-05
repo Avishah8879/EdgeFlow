@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin:0; padding:24px; background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-sans); display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .badge { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:9999px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; border:1px solid; }
+  .pos { background: hsl(var(--positive)/0.2); color: hsl(var(--positive)); border-color: hsl(var(--positive)/0.3); }
+  .neg { background: hsl(var(--negative)/0.2); color: hsl(var(--negative)); border-color: hsl(var(--negative)/0.3); }
+  .neu { background: hsl(var(--muted)/0.5); color: hsl(var(--muted-foreground)); border-color: hsl(var(--muted-foreground)/0.3); }
+  .pri { background: hsl(var(--primary)/0.2); color: hsl(var(--primary)); border-color: hsl(var(--primary)/0.3); }
+  .dot { width:6px; height:6px; border-radius:50%; background: currentColor; }
+  .pulse-dot { box-shadow: 0 0 0 3px currentColor; opacity:.6; }
+</style></head>
+<body>
+  <span class="badge pos"><span class="dot"></span>Long</span>
+  <span class="badge neg"><span class="dot"></span>Short</span>
+  <span class="badge neu">Neutral</span>
+  <span class="badge pri">Conservative</span>
+  <span class="badge pos"><span class="dot"></span>Bullish</span>
+  <span class="badge neg">Bearish</span>
+  <span class="badge" style="background: hsl(var(--status-pre-market)/0.2); color: hsl(var(--status-pre-market)); border:1px solid hsl(var(--status-pre-market)/0.3)">Pre-Market</span>
+  <span class="badge" style="background: hsl(var(--status-open)/0.2); color: hsl(var(--status-open)); border:1px solid hsl(var(--status-open)/0.3)"><span class="dot"></span>Market Open</span>
+</body></html>

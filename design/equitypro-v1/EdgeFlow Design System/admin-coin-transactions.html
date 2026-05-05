@@ -1,0 +1,113 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coin transactions · Admin</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.ad-shell{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
+.ad-side{background:hsl(var(--brand-navy-deep));color:hsl(38 30% 88%);padding:18px 0;font-family:var(--font-mono)}
+.ad-side h4{padding:8px 18px;margin:0;font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--brand-gold));font-family:var(--font-display)}
+.ad-side a{display:block;padding:8px 18px;font-size:12.5px;color:hsl(38 30% 75%);text-decoration:none;border-left:3px solid transparent}
+.ad-side a.active{background:hsl(213 50% 18%);color:hsl(var(--brand-gold));border-left-color:hsl(var(--brand-gold));font-weight:700}
+.ad-side a:hover{background:hsl(213 50% 18%);color:white}
+.ad-main{padding:24px 32px 60px;background:hsl(var(--background))}
+.ad-hd{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+.ad-hd h1{font-family:var(--font-display);font-size:28px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .ad-hd h1{color:hsl(38 30% 95%)}
+
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px}
+.kpi .k{padding:16px 20px;border-right:1px solid hsl(var(--border))}
+.kpi .k:last-child{border-right:0}
+.kpi .l{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.kpi .v{font-family:var(--font-mono);font-size:24px;font-weight:700;margin-top:4px;color:hsl(var(--foreground))}
+.kpi .c{font-family:var(--font-mono);font-size:11px;margin-top:2px}
+
+.toolbar{display:flex;gap:10px;padding:12px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);margin-bottom:14px}
+.toolbar input,.toolbar select{height:34px;padding:0 12px;border:1px solid hsl(var(--border));border-radius:var(--radius-md);background:hsl(var(--background));font-family:var(--font-mono);font-size:12.5px;color:hsl(var(--foreground))}
+
+.tbl{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.tbl th{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:10px 12px;background:hsl(var(--muted)/0.5);text-align:right}
+.tbl th:first-child,.tbl th:nth-child(2),.tbl th:nth-child(3),.tbl th:nth-child(4){text-align:left}
+.tbl td{padding:9px 12px;border-bottom:1px solid hsl(var(--border));text-align:right}
+.tbl td:first-child,.tbl td:nth-child(2),.tbl td:nth-child(3),.tbl td:nth-child(4){text-align:left}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tr:hover{background:hsl(var(--muted)/0.4)}
+.txid{color:hsl(var(--muted-foreground));font-size:11px}
+.ev-b{font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:0.04em}
+.ev-b.purchase{background:hsl(150 50% 40% / 0.15);color:hsl(150 50% 30%)}
+.ev-b.spend{background:hsl(0 60% 50% / 0.15);color:hsl(0 60% 45%)}
+.ev-b.refund{background:hsl(38 75% 50% / 0.15);color:hsl(38 60% 35%)}
+.ev-b.bonus{background:hsl(213 50% 50% / 0.15);color:hsl(213 50% 35%)}
+.dark .ev-b.spend{color:hsl(0 60% 70%)}
+.dark .ev-b.refund{color:hsl(var(--brand-gold))}
+.dark .ev-b.bonus{color:hsl(213 50% 70%)}
+.amt-pos{color:hsl(var(--positive));font-weight:700}
+.amt-neg{color:hsl(var(--negative));font-weight:700}
+.user{display:flex;align-items:center;gap:8px}
+.user .av{width:24px;height:24px;border-radius:50%;background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:9.5px;font-family:var(--font-display)}
+.user .av.b{background:hsl(213 50% 50%);color:white}
+.user .av.c{background:hsl(150 50% 40%);color:white}
+.user .av.d{background:hsl(0 60% 50%);color:white}
+.user .nm{font-family:var(--font-display);font-weight:700;font-size:12.5px;color:hsl(var(--foreground))}
+.status-b{font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:0.04em}
+.status-b.ok{background:hsl(var(--positive)/0.15);color:hsl(var(--positive))}
+.status-b.pending{background:hsl(var(--brand-gold)/0.18);color:hsl(var(--brand-gold))}
+.status-b.fail{background:hsl(var(--negative)/0.15);color:hsl(var(--negative))}
+</style></head>
+<body data-page="admin-coin-transactions" data-screen-label="Admin · 46 Coin transactions">
+<div class="shell"><div data-shell-topbar></div>
+
+<main class="ad-shell">
+  <aside class="ad-side">
+    <h4>Admin</h4>
+    <a href="admin-analytics.html">Analytics</a>
+    <a href="admin-users.html">Users</a>
+    <a href="admin-feature-flags.html">Feature flags</a>
+    <a href="admin-audit-logs.html">Audit logs</a>
+    <a href="admin-coin-packs.html">Coin packs</a>
+    <a href="admin-coin-transactions.html" class="active">Coin transactions</a>
+    <a href="admin-email-settings.html">Email settings</a>
+    <a href="admin-api-keys.html">API keys</a>
+  </aside>
+
+  <section class="ad-main">
+    <div class="ad-hd">
+      <div><span class="eyebrow">Admin · Monetization</span><h1>Coin transactions</h1></div>
+      <div class="flex gap-2"><button class="btn btn-ghost btn-sm">Stripe dashboard ↗</button><button class="btn btn-ghost btn-sm">Export CSV</button></div>
+    </div>
+
+    <div class="kpi">
+      <div class="k"><div class="l">Coins issued (30d)</div><div class="v">2.84M</div><div class="c change-up">+18.4%</div></div>
+      <div class="k"><div class="l">Coins spent (30d)</div><div class="v">2.12M</div><div class="c change-up">+22.4%</div></div>
+      <div class="k"><div class="l">Outstanding liability</div><div class="v">8.42M coins</div><div class="c muted">≈ ₹84L deferred</div></div>
+      <div class="k"><div class="l">Refunds (30d)</div><div class="v change-down">42,180</div><div class="c muted">1.5% of issued</div></div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" placeholder="Filter by tx ID / user / SKU…" style="flex:1">
+      <select><option>All event types</option></select>
+      <select><option>All statuses</option></select>
+      <select><option>Last 7 days</option></select>
+    </div>
+
+    <table class="tbl">
+      <thead><tr><th>Tx ID · time</th><th>User</th><th>Event</th><th>Detail</th><th>Coins Δ</th><th>Balance after</th><th>₹ value</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><b>tx_h82f0a4</b><div class="txid">22 Apr 09:42:18</div></td><td><div class="user"><div class="av">AS</div><div class="nm">Anjali Sharma</div></div></td><td><span class="ev-b purchase">Purchase</span></td><td>Pro pack 500c · Stripe · UPI</td><td class="amt-pos">+500</td><td>2,840</td><td>₹449</td><td><span class="status-b ok">Captured</span></td></tr>
+        <tr><td><b>tx_92j4kl1</b><div class="txid">22 Apr 09:38:42</div></td><td><div class="user"><div class="av b">RP</div><div class="nm">Rahul Patel</div></div></td><td><span class="ev-b spend">Spend</span></td><td>AI summary · RELIANCE Q4</td><td class="amt-neg">−10</td><td>342</td><td>—</td><td><span class="status-b ok">Settled</span></td></tr>
+        <tr><td><b>tx_4a8f0d2</b><div class="txid">22 Apr 09:32:14</div></td><td><div class="user"><div class="av c">MK</div><div class="nm">Meera Krishnan</div></div></td><td><span class="ev-b purchase">Purchase</span></td><td>Quant pack 1500c · Stripe · NB</td><td class="amt-pos">+1,500</td><td>1,824</td><td>₹1,199</td><td><span class="status-b ok">Captured</span></td></tr>
+        <tr><td><b>tx_6e2b8c4</b><div class="txid">22 Apr 09:28:54</div></td><td><div class="user"><div class="av d">SV</div><div class="nm">Siddharth Verma</div></div></td><td><span class="ev-b spend">Spend</span></td><td>Premium report · Cement sector · 50c</td><td class="amt-neg">−50</td><td>120</td><td>—</td><td><span class="status-b ok">Settled</span></td></tr>
+        <tr><td><b>tx_88h1f02</b><div class="txid">22 Apr 09:22:08</div></td><td><div class="user"><div class="av">PN</div><div class="nm">Priya Nair</div></div></td><td><span class="ev-b spend">Spend</span></td><td>Expert call · 30 min · Equity strategist</td><td class="amt-neg">−999</td><td>4,021</td><td>—</td><td><span class="status-b pending">Hold</span></td></tr>
+        <tr><td><b>tx_72ab904</b><div class="txid">22 Apr 09:18:42</div></td><td><div class="user"><div class="av c">DR</div><div class="nm">Dev Raman</div></div></td><td><span class="ev-b bonus">Bonus</span></td><td>Welcome bonus · 100 coins</td><td class="amt-pos">+100</td><td>100</td><td>—</td><td><span class="status-b ok">Settled</span></td></tr>
+        <tr><td><b>tx_98c4f12</b><div class="txid">22 Apr 09:14:22</div></td><td><div class="user"><div class="av b">VG</div><div class="nm">Vikram Gupta</div></div></td><td><span class="ev-b purchase">Purchase</span></td><td>Starter pack 100c · Stripe · UPI</td><td class="amt-pos">+100</td><td>148</td><td>₹100</td><td><span class="status-b ok">Captured</span></td></tr>
+        <tr><td><b>tx_18g8e88</b><div class="txid">22 Apr 09:08:14</div></td><td><div class="user"><div class="av d">IT</div><div class="nm">Ishita Tiwari</div></div></td><td><span class="ev-b refund">Refund</span></td><td>Refund · faulty AI summary (UID 4828)</td><td class="amt-pos">+10</td><td>40</td><td>—</td><td><span class="status-b ok">Manual</span></td></tr>
+        <tr><td><b>tx_a8b2c40</b><div class="txid">22 Apr 09:02:48</div></td><td><div class="user"><div class="av">SK</div><div class="nm">Sandeep Kumar</div></div></td><td><span class="ev-b spend">Spend</span></td><td>Premium report · Auto sector · 50c</td><td class="amt-neg">−50</td><td>318</td><td>—</td><td><span class="status-b ok">Settled</span></td></tr>
+        <tr><td><b>tx_24d8a18</b><div class="txid">22 Apr 08:58:32</div></td><td><div class="user"><div class="av c">AR</div><div class="nm">Arjun Reddy</div></div></td><td><span class="ev-b purchase">Purchase</span></td><td>Enterprise pack 5000c · Stripe · CC</td><td class="amt-pos">+5,000</td><td>5,142</td><td>₹3,499</td><td><span class="status-b ok">Captured</span></td></tr>
+        <tr><td><b>tx_44e0c20</b><div class="txid">22 Apr 08:48:14</div></td><td><div class="user"><div class="av b">NJ</div><div class="nm">Neha Jaiswal</div></div></td><td><span class="ev-b purchase">Purchase</span></td><td>Starter pack · Stripe</td><td class="amt-pos">+100</td><td>100</td><td>₹100</td><td><span class="status-b fail">Failed · 4001</span></td></tr>
+        <tr><td><b>tx_52f1b74</b><div class="txid">22 Apr 08:42:08</div></td><td><div class="user"><div class="av d">KT</div><div class="nm">Kiran Thakur</div></div></td><td><span class="ev-b refund">Refund</span></td><td>Reversal · double-charge UPI</td><td class="amt-neg">−500</td><td>0</td><td>−₹449</td><td><span class="status-b ok">Stripe</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+</div>
+<script src="app.js"></script>
+</body></html>

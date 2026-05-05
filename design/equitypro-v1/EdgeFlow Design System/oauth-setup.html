@@ -1,0 +1,148 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Broker connections · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.page-hd{padding:24px 0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.page-hd h1{font-family:var(--font-display);font-size:32px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .page-hd h1{color:hsl(38 30% 95%)}
+.page-hd .sub{color:hsl(var(--muted-foreground));font-size:14px;margin:6px 0 0;max-width:64ch}
+
+.brokers{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:28px 0}
+.broker{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:22px;display:flex;flex-direction:column;gap:14px;transition:all var(--t-base);position:relative}
+.broker:hover{border-color:hsl(var(--brand-gold)/0.5)}
+.broker.connected{border-color:hsl(var(--positive)/0.4);background:linear-gradient(180deg,hsl(var(--positive)/0.04),transparent 40%)}
+.broker-hd{display:flex;align-items:center;gap:14px}
+.broker-logo{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:18px;font-family:var(--font-display);flex-shrink:0}
+.bl-fyers{background:linear-gradient(135deg,#0066FF,#003a99)}
+.bl-zerodha{background:linear-gradient(135deg,#387ED1,#1c4d80)}
+.bl-upstox{background:linear-gradient(135deg,#382D7C,#1a1547)}
+.bl-iifl{background:linear-gradient(135deg,#E84E1B,#a8350f)}
+.bl-icici{background:linear-gradient(135deg,#A1142D,#5a0a18)}
+.bl-aliceblue{background:linear-gradient(135deg,#0E1F3F,#06122a)}
+.broker h3{font-family:var(--font-display);font-size:18px;letter-spacing:-0.01em;margin:0;color:hsl(var(--brand-navy))}
+.dark .broker h3{color:hsl(38 30% 95%)}
+.broker .tagline{font-size:12px;color:hsl(var(--muted-foreground));margin:2px 0 0}
+.broker-feats{display:flex;flex-wrap:wrap;gap:6px;font-size:11px}
+.broker-feats span{background:hsl(var(--muted));border:1px solid hsl(var(--border));padding:3px 8px;border-radius:var(--radius-pill);color:hsl(var(--muted-foreground));font-weight:600}
+.broker-foot{margin-top:auto;padding-top:14px;border-top:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center}
+.broker-status{font-size:11px;font-family:var(--font-mono);color:hsl(var(--muted-foreground))}
+.broker-status.ok{color:hsl(var(--positive))}
+
+.guide{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:28px;margin-bottom:60px}
+.guide h2{font-family:var(--font-display);font-size:22px;letter-spacing:-0.01em;margin:0 0 6px;color:hsl(var(--brand-navy))}
+.dark .guide h2{color:hsl(38 30% 95%)}
+.guide-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px}
+.guide-step{padding:16px;border:1px solid hsl(var(--border));border-radius:var(--radius-md);background:hsl(var(--muted)/0.3)}
+.guide-step .num{width:28px;height:28px;border-radius:50%;background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--font-display);font-size:13px;margin-bottom:10px}
+.guide-step h4{font-size:13px;margin:0 0 6px;color:hsl(var(--foreground));font-weight:700}
+.guide-step p{font-size:12px;color:hsl(var(--muted-foreground));margin:0;line-height:1.5}
+</style></head>
+<body data-page="oauth" data-screen-label="A5 Broker OAuth">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="page-hd"><div class="container">
+  <span class="eyebrow">Account · Integrations</span>
+  <h1>Broker connections</h1>
+  <p class="sub">Link your trading account to place orders directly from EquityPro screens, sync holdings into Portfolio, and execute backtest signals live. Tokens are held server-side &amp; revocable any time.</p>
+</div></section>
+
+<main class="container">
+
+  <div class="brokers">
+    <!-- Fyers connected -->
+    <div class="broker connected">
+      <div class="broker-hd">
+        <div class="broker-logo bl-fyers">F</div>
+        <div><h3>Fyers</h3><p class="tagline">v3 API · OAuth 2.0</p></div>
+        <span class="badge badge-pos" style="margin-left:auto"><span class="dot pulse"></span>Connected</span>
+      </div>
+      <div class="broker-feats"><span>Place orders</span><span>Holdings</span><span>Live LTP</span><span>Historical 1m</span></div>
+      <div class="broker-foot">
+        <span class="broker-status ok">Token refreshes 03:32 IST</span>
+        <a href="fyers-token.html" class="btn btn-ghost btn-sm">Manage</a>
+      </div>
+    </div>
+
+    <!-- Zerodha disconnected -->
+    <div class="broker">
+      <div class="broker-hd">
+        <div class="broker-logo bl-zerodha">Z</div>
+        <div><h3>Zerodha Kite</h3><p class="tagline">Connect API · daily auth</p></div>
+      </div>
+      <div class="broker-feats"><span>Place orders</span><span>Holdings</span><span>Margin</span></div>
+      <div class="broker-foot">
+        <span class="broker-status">Not connected</span>
+        <a href="auth-callback.html" class="btn btn-primary btn-sm">Connect</a>
+      </div>
+    </div>
+
+    <!-- Upstox disconnected -->
+    <div class="broker">
+      <div class="broker-hd">
+        <div class="broker-logo bl-upstox">U</div>
+        <div><h3>Upstox Pro</h3><p class="tagline">v2 API · OAuth 2.0</p></div>
+      </div>
+      <div class="broker-feats"><span>Place orders</span><span>Holdings</span><span>WebSocket</span></div>
+      <div class="broker-foot">
+        <span class="broker-status">Not connected</span>
+        <a href="auth-callback.html" class="btn btn-primary btn-sm">Connect</a>
+      </div>
+    </div>
+
+    <!-- IIFL -->
+    <div class="broker">
+      <div class="broker-hd">
+        <div class="broker-logo bl-iifl">I</div>
+        <div><h3>IIFL Markets</h3><p class="tagline">Interactive · OAuth</p></div>
+      </div>
+      <div class="broker-feats"><span>Place orders</span><span>Holdings</span></div>
+      <div class="broker-foot">
+        <span class="broker-status">Not connected</span>
+        <a href="auth-callback.html" class="btn btn-primary btn-sm">Connect</a>
+      </div>
+    </div>
+
+    <!-- ICICI Direct -->
+    <div class="broker">
+      <div class="broker-hd">
+        <div class="broker-logo bl-icici">i</div>
+        <div><h3>ICICI Direct</h3><p class="tagline">Breeze API</p></div>
+      </div>
+      <div class="broker-feats"><span>Place orders</span><span>Holdings</span><span>Mutual funds</span></div>
+      <div class="broker-foot">
+        <span class="broker-status">Not connected</span>
+        <a href="auth-callback.html" class="btn btn-primary btn-sm">Connect</a>
+      </div>
+    </div>
+
+    <!-- Alice Blue -->
+    <div class="broker">
+      <div class="broker-hd">
+        <div class="broker-logo bl-aliceblue">A</div>
+        <div><h3>Alice Blue ANT</h3><p class="tagline">Web API</p></div>
+      </div>
+      <div class="broker-feats"><span>Place orders</span><span>Holdings</span></div>
+      <div class="broker-foot">
+        <span class="broker-status">Coming soon</span>
+        <button class="btn btn-ghost btn-sm" disabled style="opacity:0.5;cursor:not-allowed">Notify me</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="guide">
+    <span class="eyebrow">How OAuth works on EquityPro</span>
+    <h2>From "Connect" to live trading in four steps</h2>
+    <div class="guide-steps">
+      <div class="guide-step"><div class="num">1</div><h4>Click Connect</h4><p>You'll be redirected to your broker's login page on their domain — never on ours.</p></div>
+      <div class="guide-step"><div class="num">2</div><h4>Approve scopes</h4><p>Grant read-only or trade permissions. We never see your password.</p></div>
+      <div class="guide-step"><div class="num">3</div><h4>Token exchange</h4><p>Broker redirects back. We exchange the code for an access token, encrypted at rest.</p></div>
+      <div class="guide-step"><div class="num">4</div><h4>Trade &amp; sync</h4><p>Holdings appear in Portfolio; Place-Order buttons go live across all screens.</p></div>
+    </div>
+  </section>
+
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blog · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.b-hero{padding:60px 0 48px;background:linear-gradient(180deg,hsl(var(--card)),transparent);border-bottom:1px solid hsl(var(--border))}
+.b-hero h1{font-family:var(--font-display);font-size:48px;letter-spacing:-0.025em;margin:8px 0 8px;color:hsl(var(--brand-navy))}
+.dark .b-hero h1{color:hsl(38 30% 95%)}
+.b-hero h1 em{font-style:italic;color:hsl(var(--brand-gold))}
+.b-hero p{color:hsl(var(--muted-foreground));font-size:16px;max-width:60ch;line-height:1.55;margin:0}
+
+.b-feat{padding:32px 0;border-bottom:1px solid hsl(var(--border))}
+.b-feat-card{display:grid;grid-template-columns:1.2fr 1fr;gap:32px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-xl);padding:36px;align-items:center}
+.b-feat-card .fcat{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--brand-gold))}
+.b-feat-card h2{font-family:var(--font-display);font-size:36px;letter-spacing:-0.02em;margin:8px 0 12px;color:hsl(var(--brand-navy));line-height:1.15}
+.dark .b-feat-card h2{color:hsl(38 30% 95%)}
+.b-feat-card .lede{color:hsl(var(--muted-foreground));font-size:15px;line-height:1.6;margin:0 0 18px}
+.b-feat-card .author{display:flex;align-items:center;gap:10px;font-size:13px;color:hsl(var(--muted-foreground))}
+.b-feat-card .author .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,hsl(var(--brand-gold)),hsl(38 60% 38%));color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display)}
+.b-feat-card .author b{color:hsl(var(--foreground));display:block;margin-bottom:1px}
+.b-feat-card .img{aspect-ratio:4/3;border-radius:var(--radius-lg);overflow:hidden;position:relative}
+.b-feat-card .img svg{width:100%;height:100%;display:block}
+
+.b-list{padding:48px 0 80px}
+.b-list-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.bp{cursor:pointer}
+.bp .img{aspect-ratio:16/10;border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px;position:relative;transition:transform var(--t-base)}
+.bp:hover .img{transform:translateY(-3px)}
+.bp .cat{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--brand-gold))}
+.bp h3{font-family:var(--font-display);font-size:20px;letter-spacing:-0.01em;margin:6px 0 8px;color:hsl(var(--brand-navy));line-height:1.25}
+.dark .bp h3{color:hsl(38 30% 95%)}
+.bp p{font-size:13px;color:hsl(var(--muted-foreground));line-height:1.55;margin:0 0 12px}
+.bp .meta{font-size:12px;color:hsl(var(--muted-foreground));font-family:var(--font-mono)}
+
+.bp-i1 svg{background:linear-gradient(135deg,hsl(213 50% 22%),hsl(213 50% 14%))}
+.bp-i2 svg{background:linear-gradient(135deg,hsl(38 75% 55%),hsl(38 75% 35%))}
+.bp-i3 svg{background:linear-gradient(135deg,hsl(0 60% 55%),hsl(0 60% 35%))}
+.bp-i4 svg{background:linear-gradient(135deg,hsl(150 50% 50%),hsl(150 50% 30%))}
+.bp-i5 svg{background:linear-gradient(135deg,hsl(280 40% 50%),hsl(280 40% 30%))}
+.bp-i6 svg{background:linear-gradient(135deg,hsl(195 60% 50%),hsl(195 60% 30%))}
+
+.b-newsletter{margin:60px 0;padding:48px;border-radius:var(--radius-xl);background:linear-gradient(155deg,hsl(var(--brand-navy)),hsl(var(--brand-navy-deep)));color:white;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center;position:relative;overflow:hidden}
+.b-newsletter::before{content:"";position:absolute;right:-40px;top:-40px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,hsl(var(--brand-gold)/0.3),transparent 70%);filter:blur(20px)}
+.b-newsletter h3{font-family:var(--font-display);font-size:30px;letter-spacing:-0.02em;margin:0 0 8px;color:white;position:relative}
+.b-newsletter h3 em{font-style:italic;color:hsl(var(--brand-gold))}
+.b-newsletter p{color:hsl(38 30% 88%);font-size:14px;margin:0;max-width:50ch;position:relative}
+.b-newsletter form{display:flex;gap:8px;position:relative}
+.b-newsletter input{height:46px;padding:0 16px;border-radius:var(--radius-md);border:1px solid hsl(38 30% 70% / 0.3);background:hsl(213 45% 8%);color:white;font-size:14px;width:300px;outline:none}
+.b-newsletter input:focus{border-color:hsl(var(--brand-gold))}
+</style></head>
+<body data-page="blog" data-screen-label="13 Blog">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="b-hero"><div class="container">
+  <span class="eyebrow">EquityPro · Journal</span>
+  <h1>Notes from the<br><em>research desk.</em></h1>
+  <p>Long-form essays on building investment processes, decoding market structure, and using data to think clearly about Indian equities.</p>
+</div></section>
+
+<main class="container">
+  <section class="b-feat">
+    <article class="b-feat-card">
+      <div>
+        <span class="fcat">Featured · Process</span>
+        <h2>Why most retail backtests are a lie — and how to fix yours in fifteen minutes</h2>
+        <p class="lede">Survivorship bias, look-ahead leakage, optimistic fills, and the three forms of overfitting. We walk through a real example: a "perfect" Nifty momentum strategy that crumbles once you make four corrections. Then we rebuild it honestly.</p>
+        <div class="author">
+          <span class="av">VI</span>
+          <div><b>Vikram Iyengar</b><span>Head of quant research · 14 min read · 12 Apr 2026</span></div>
+        </div>
+        <a href="#" class="btn btn-primary" style="margin-top:20px">Read the essay →</a>
+      </div>
+      <div class="img"><svg viewBox="0 0 400 300"><defs><linearGradient id="bg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="hsl(213 50% 18%)"/><stop offset="1" stop-color="hsl(213 50% 8%)"/></linearGradient></defs><rect width="400" height="300" fill="url(#bg)"/><circle cx="320" cy="60" r="80" fill="hsl(38 75% 50%)" opacity="0.2"/><polyline points="20,240 60,220 100,200 140,180 180,150 220,160 260,130 300,110 340,90 380,80" fill="none" stroke="hsl(38 75% 56%)" stroke-width="3" stroke-linecap="round"/><polyline points="20,240 60,235 100,228 140,222 180,215 220,210 260,200 300,195 340,188 380,184" fill="none" stroke="hsl(0 60% 60%)" stroke-width="2" stroke-dasharray="6 4" stroke-linecap="round"/><text x="20" y="40" font-family="serif" font-size="14" fill="hsl(38 75% 56%)">Backtest</text><text x="20" y="60" font-family="serif" font-size="14" font-style="italic" fill="white">vs. live</text></svg></div>
+    </article>
+  </section>
+
+  <section class="b-list">
+    <div class="b-list-grid">
+      <article class="bp">
+        <div class="img bp-i2"><svg viewBox="0 0 400 250"><circle cx="200" cy="120" r="60" fill="white" opacity="0.15"/><polyline points="40,180 90,150 140,120 190,100 240,140 290,130 340,80 380,60" fill="none" stroke="white" stroke-width="3"/></svg></div>
+        <span class="cat">Strategy</span>
+        <h3>The end of momentum's free lunch in midcaps</h3>
+        <p>Five years of data, three regime breaks. Why a vanilla 12-1 cross-section momentum factor stopped working in mid-2023, and what's eating the alpha now.</p>
+        <div class="meta">Anjali Sethi · 9 min · 9 Apr</div>
+      </article>
+
+      <article class="bp">
+        <div class="img bp-i1"><svg viewBox="0 0 400 250"><rect x="40" y="100" width="320" height="80" fill="none" stroke="white" stroke-width="2"/><rect x="60" y="120" width="40" height="40" fill="hsl(38 75% 56%)"/><rect x="120" y="120" width="40" height="40" fill="hsl(38 75% 56%)" opacity="0.6"/><rect x="180" y="120" width="40" height="40" fill="hsl(38 75% 56%)" opacity="0.4"/><rect x="240" y="120" width="40" height="40" fill="white" opacity="0.5"/><rect x="300" y="120" width="40" height="40" fill="white" opacity="0.3"/></svg></div>
+        <span class="cat">Macro</span>
+        <h3>Reading the RBI: what the dot plot actually tells you</h3>
+        <p>The MPC vote split is the first hint; the language change is the second. We map four pivot scenarios and how to position bond proxies in each.</p>
+        <div class="meta">Shreya Rao · 11 min · 7 Apr</div>
+      </article>
+
+      <article class="bp">
+        <div class="img bp-i3"><svg viewBox="0 0 400 250"><polyline points="20,200 60,180 100,150 140,170 180,130 220,150 260,90 300,110 340,60 380,70" fill="none" stroke="white" stroke-width="2.5"/><circle cx="260" cy="90" r="14" fill="white"/><circle cx="260" cy="90" r="6" fill="hsl(0 60% 50%)"/></svg></div>
+        <span class="cat">Trader's craft</span>
+        <h3>Three ways to think about stop-losses (and only one of them works)</h3>
+        <p>Fixed % stops, ATR-based stops, and structural stops. We backtest all three on Nifty 500 over 12 years. The result is uncomfortable for a lot of YouTube traders.</p>
+        <div class="meta">Manish Pillai · 8 min · 5 Apr</div>
+      </article>
+
+      <article class="bp">
+        <div class="img bp-i4"><svg viewBox="0 0 400 250"><circle cx="200" cy="125" r="80" fill="none" stroke="white" stroke-width="2"/><circle cx="200" cy="125" r="60" fill="none" stroke="white" stroke-width="2" opacity="0.6"/><circle cx="200" cy="125" r="40" fill="none" stroke="white" stroke-width="2" opacity="0.4"/><circle cx="200" cy="125" r="20" fill="white" opacity="0.7"/></svg></div>
+        <span class="cat">Process</span>
+        <h3>Build a watchlist that scales: tags, tiers, and a Friday review</h3>
+        <p>Most watchlists become graveyards. Here's the framework we use internally: 5 tiers, 14 tags, one weekly ritual. Yours will outlive your conviction in any single name.</p>
+        <div class="meta">Vikram Iyengar · 7 min · 3 Apr</div>
+      </article>
+
+      <article class="bp">
+        <div class="img bp-i5"><svg viewBox="0 0 400 250"><path d="M50,200 Q120,100 200,140 T380,80" fill="none" stroke="white" stroke-width="3"/><path d="M50,210 Q120,180 200,200 T380,170" fill="none" stroke="white" stroke-width="2" opacity="0.5"/></svg></div>
+        <span class="cat">Sector</span>
+        <h3>Cement: a multi-year capacity wave is meeting demand head-on</h3>
+        <p>For the first time since 2018, supply is growing faster than demand. We map mill capacity, regional pricing power, and which 4 names actually de-rated for the right reason.</p>
+        <div class="meta">Anjali Sethi · 13 min · 1 Apr</div>
+      </article>
+
+      <article class="bp">
+        <div class="img bp-i6"><svg viewBox="0 0 400 250"><rect x="30" y="60" width="40" height="160" fill="white" opacity="0.7"/><rect x="80" y="100" width="40" height="120" fill="white" opacity="0.7"/><rect x="130" y="80" width="40" height="140" fill="white" opacity="0.7"/><rect x="180" y="40" width="40" height="180" fill="white"/><rect x="230" y="120" width="40" height="100" fill="white" opacity="0.7"/><rect x="280" y="160" width="40" height="60" fill="white" opacity="0.7"/><rect x="330" y="180" width="40" height="40" fill="white" opacity="0.7"/></svg></div>
+        <span class="cat">Quant</span>
+        <h3>The most under-rated factor in Indian equities? Quality, but only sometimes.</h3>
+        <p>Quality dominates value over 12 years of data — but its alpha is concentrated in three regimes. We isolate them and show how to switch on/off the factor cleanly.</p>
+        <div class="meta">Vikram Iyengar · 12 min · 28 Mar</div>
+      </article>
+    </div>
+
+    <section class="b-newsletter">
+      <div>
+        <h3>Saturday <em>Reflections</em>.</h3>
+        <p>One long-form note. Sundays at 9 AM IST. No promotions, no recommendations — just our best thinking from the week.</p>
+      </div>
+      <form>
+        <input type="email" placeholder="aanya@equitypro.in" />
+        <button class="btn btn-gold btn-lg" type="button">Subscribe</button>
+      </form>
+    </section>
+  </section>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

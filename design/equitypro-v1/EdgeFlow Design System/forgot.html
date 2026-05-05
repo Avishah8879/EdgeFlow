@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reset password · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+body{background:hsl(var(--background));min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{width:100%;max-width:420px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-2xl);padding:36px;box-shadow:var(--shadow-card-lg)}
+.card .brand-lockup{margin-bottom:28px}
+.card h1{font-family:var(--font-display);font-size:26px;letter-spacing:-0.02em;color:hsl(var(--brand-navy));margin:0 0 8px}
+.dark .card h1{color:hsl(38 30% 95%)}
+.card p{color:hsl(var(--muted-foreground));font-size:14px;line-height:1.55;margin:0 0 24px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11.5px;font-weight:600;margin-bottom:6px}
+.field input{width:100%;height:42px;border:1px solid hsl(var(--border));background:hsl(var(--background));border-radius:var(--radius-md);padding:0 14px;font-size:14px;color:inherit;font-family:inherit}
+.field input:focus{outline:none;border-color:hsl(var(--brand-gold));box-shadow:0 0 0 3px hsl(var(--brand-gold)/0.15)}
+.back{margin-top:18px;text-align:center;font-size:12.5px;color:hsl(var(--muted-foreground))}
+.back a{color:hsl(var(--brand-gold));font-weight:600}
+.success{display:flex;gap:14px;align-items:flex-start;padding:14px;border-radius:var(--radius-md);background:hsl(var(--positive)/0.08);border:1px solid hsl(var(--positive)/0.3);margin-bottom:18px;font-size:13px;line-height:1.5}
+.success .ic{flex:0 0 28px;height:28px;border-radius:50%;background:hsl(var(--positive));color:white;display:flex;align-items:center;justify-content:center;font-weight:700}
+</style></head>
+<body data-screen-label="Auth · Forgot password">
+<div class="card">
+  <a href="index.html" class="brand-lockup"><img class="brand-mark" src="assets/shield.png" alt=""><span>EquityPro</span></a>
+  <h1>Reset your password.</h1>
+  <p>Enter the email on your account. We'll send a secure reset link valid for 30 minutes.</p>
+
+  <div class="success" style="display:none">
+    <div class="ic">✓</div>
+    <div><strong>Link sent.</strong> Check arjun@example.in. The link expires in 30 minutes.</div>
+  </div>
+
+  <div class="field"><label>Email address</label><input type="email" placeholder="you@firm.in" value="arjun@example.in"></div>
+  <button class="btn btn-primary" style="width:100%;height:44px">Send reset link</button>
+
+  <div class="back">Remembered it? <a href="login.html">Sign in →</a></div>
+</div>
+<script src="app.js"></script>
+</body></html>

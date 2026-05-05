@@ -1,0 +1,179 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monitor · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.mn-hd{padding:14px 32px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card));display:flex;justify-content:space-between;align-items:center}
+.mn-hd h1{font-family:var(--font-display);font-size:22px;letter-spacing:-0.01em;margin:0;color:hsl(var(--brand-navy))}
+.dark .mn-hd h1{color:hsl(38 30% 95%)}
+.mn-hd .ws{display:flex;gap:6px;font-family:var(--font-mono);font-size:11.5px}
+.ws-tab{padding:6px 12px;border:1px solid hsl(var(--border));border-radius:var(--radius-md);background:hsl(var(--background));font-weight:700;cursor:pointer;color:hsl(var(--muted-foreground))}
+.ws-tab.active{background:hsl(var(--brand-navy));color:white;border-color:hsl(var(--brand-navy))}
+.dark .ws-tab.active{background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));border-color:hsl(var(--brand-gold))}
+
+.mn-grid{display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(8,1fr);gap:6px;padding:6px;height:calc(100vh - 64px - 56px)}
+.mn-cell{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-md);overflow:hidden;display:flex;flex-direction:column}
+.mn-cell .hd{padding:6px 10px;border-bottom:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center;background:hsl(var(--muted)/0.5);font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground))}
+.mn-cell .body{flex:1;overflow:hidden;padding:8px 10px;font-family:var(--font-mono);font-size:11.5px}
+.mn-cell .x{cursor:pointer;color:hsl(var(--muted-foreground))}
+
+.cell-quote{display:flex;flex-direction:column;justify-content:center;text-align:center;padding:8px}
+.cell-quote .sym{font-family:var(--font-display);font-weight:800;font-size:20px;color:hsl(var(--brand-navy))}
+.dark .cell-quote .sym{color:hsl(38 30% 95%)}
+.cell-quote .px{font-size:32px;font-weight:700;font-family:var(--font-mono);color:hsl(var(--foreground));margin-top:4px}
+.cell-quote .ch{font-size:13px;font-weight:700;font-family:var(--font-mono);margin-top:2px}
+
+.cell-tbl{font-size:11px}
+.cell-tbl .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed hsl(var(--border)/0.5)}
+.cell-tbl .row:last-child{border-bottom:0}
+.cell-tbl b{color:hsl(var(--foreground));font-weight:700}
+
+.cell-spark svg{width:100%;height:80%}
+
+.cell-news .item{padding:4px 0;border-bottom:1px dashed hsl(var(--border)/0.5);font-size:10.5px;line-height:1.4}
+.cell-news .ti{color:hsl(var(--muted-foreground));font-size:9.5px;font-weight:700}
+.cell-news b{color:hsl(var(--foreground));font-weight:600}
+
+.gain{color:hsl(var(--positive))}
+.loss{color:hsl(var(--negative))}
+
+/* layout positions */
+.gp-1{grid-column:1/4;grid-row:1/3}
+.gp-2{grid-column:4/7;grid-row:1/3}
+.gp-3{grid-column:7/10;grid-row:1/3}
+.gp-4{grid-column:10/13;grid-row:1/3}
+.gp-5{grid-column:1/5;grid-row:3/6}
+.gp-6{grid-column:5/9;grid-row:3/6}
+.gp-7{grid-column:9/13;grid-row:3/5}
+.gp-8{grid-column:9/13;grid-row:5/7}
+.gp-9{grid-column:1/5;grid-row:6/9}
+.gp-10{grid-column:5/9;grid-row:6/9}
+.gp-11{grid-column:9/13;grid-row:7/9}
+</style></head>
+<body data-page="monitor" data-screen-label="Terminal · 33 Monitor">
+<div class="shell"><div data-shell-topbar></div>
+
+<div class="mn-hd">
+  <h1>Monitor — multi-asset workspace</h1>
+  <div class="ws">
+    <button class="ws-tab active">Pre-market</button>
+    <button class="ws-tab">Intraday</button>
+    <button class="ws-tab">Earnings week</button>
+    <button class="ws-tab">F&amp;O dashboard</button>
+    <button class="ws-tab">Macro</button>
+    <button class="ws-tab" style="border-style:dashed;color:hsl(var(--muted-foreground))">+ New</button>
+  </div>
+</div>
+
+<main class="mn-grid">
+  <div class="mn-cell gp-1 cell-quote" style="border-color:hsl(var(--brand-gold))">
+    <div class="hd"><span>NIFTY 50</span><span class="x">⋮</span></div>
+    <div class="body cell-quote"><div class="sym">NIFTY</div><div class="px">22,418</div><div class="ch gain">+143 (+0.64%)</div></div>
+  </div>
+  <div class="mn-cell gp-2 cell-quote">
+    <div class="hd"><span>BANK NIFTY</span><span class="x">⋮</span></div>
+    <div class="body cell-quote"><div class="sym">BANKNIFTY</div><div class="px">48,624</div><div class="ch gain">+342 (+0.71%)</div></div>
+  </div>
+  <div class="mn-cell gp-3 cell-quote">
+    <div class="hd"><span>VIX</span><span class="x">⋮</span></div>
+    <div class="body cell-quote"><div class="sym">INDIAVIX</div><div class="px">12.42</div><div class="ch loss">−0.30 (−2.42%)</div></div>
+  </div>
+  <div class="mn-cell gp-4 cell-quote">
+    <div class="hd"><span>USDINR</span><span class="x">⋮</span></div>
+    <div class="body cell-quote"><div class="sym">USDINR</div><div class="px">83.42</div><div class="ch loss">−0.08 (−0.10%)</div></div>
+  </div>
+
+  <div class="mn-cell gp-5">
+    <div class="hd"><span>NIFTY · 1-min · live tick</span><span class="x">⋮</span></div>
+    <div class="body cell-spark">
+      <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+        <defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl(var(--brand-gold))" stop-opacity="0.25"/><stop offset="1" stop-color="hsl(var(--brand-gold))" stop-opacity="0"/></linearGradient></defs>
+        <line x1="0" y1="100" x2="400" y2="100" stroke="hsl(var(--border))" stroke-dasharray="2 4"/>
+        <path d="M0,160 L20,150 L40,156 L60,140 L80,148 L100,128 L120,136 L140,120 L160,128 L180,108 L200,116 L220,98 L240,104 L260,86 L280,92 L300,76 L320,82 L340,68 L360,74 L380,58 L400,62 L400,200 L0,200 Z" fill="url(#mg)"/>
+        <path d="M0,160 L20,150 L40,156 L60,140 L80,148 L100,128 L120,136 L140,120 L160,128 L180,108 L200,116 L220,98 L240,104 L260,86 L280,92 L300,76 L320,82 L340,68 L360,74 L380,58 L400,62" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="1.5"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="mn-cell gp-6">
+    <div class="hd"><span>Top movers · NIFTY 50</span><span class="x">⋮</span></div>
+    <div class="body cell-tbl">
+      <div class="row"><span><b>MARUTI</b> Maruti Suzuki</span><span class="gain">+2.42% · 12,148</span></div>
+      <div class="row"><span><b>BHARTIARTL</b> Bharti Airtel</span><span class="gain">+1.84% · 1,524</span></div>
+      <div class="row"><span><b>HDFCBANK</b> HDFC Bank</span><span class="gain">+1.22% · 1,520</span></div>
+      <div class="row"><span><b>RELIANCE</b> Reliance Ind</span><span class="gain">+0.82% · 2,948</span></div>
+      <div class="row"><span><b>SUNPHARMA</b> Sun Pharma</span><span class="gain">+0.62% · 1,624</span></div>
+      <div class="row"><span><b>INFY</b> Infosys</span><span class="gain">+0.46% · 1,422</span></div>
+      <div class="row"><span><b>ITC</b> ITC</span><span class="loss">−0.66% · 428</span></div>
+      <div class="row"><span><b>ASIANPAINT</b> Asian Paints</span><span class="loss">−1.24% · 2,842</span></div>
+      <div class="row"><span><b>TCS</b> Tata Consultancy</span><span class="loss">−0.34% · 3,842</span></div>
+    </div>
+  </div>
+
+  <div class="mn-cell gp-7">
+    <div class="hd"><span>FII / DII flows</span><span class="x">⋮</span></div>
+    <div class="body cell-tbl">
+      <div class="row"><span>FII Cash today</span><b class="loss">−₹2,148cr</b></div>
+      <div class="row"><span>DII Cash today</span><b class="gain">+₹3,420cr</b></div>
+      <div class="row"><span>FII F&amp;O Index Long</span><b class="gain">+12.4%</b></div>
+      <div class="row"><span>FII MTD net</span><b class="gain">+₹14,820cr</b></div>
+      <div class="row"><span>DII MTD net</span><b class="gain">+₹38,420cr</b></div>
+      <div class="row"><span>NIFTY PCR</span><b>1.18</b></div>
+    </div>
+  </div>
+
+  <div class="mn-cell gp-8 cell-news">
+    <div class="hd"><span>News tape · live</span><span class="x">⋮</span></div>
+    <div class="body">
+      <div class="item"><span class="ti">09:42</span> · <b>RELIANCE</b> board approves ₹75,000cr Jio listing</div>
+      <div class="item"><span class="ti">09:40</span> · <b>FED</b> minutes show no cut before September</div>
+      <div class="item"><span class="ti">09:38</span> · <b>INFY</b> Q4 EPS beat 4% / FY27 guide narrowed</div>
+      <div class="item"><span class="ti">09:34</span> · <b>BRENT</b> jumps 1.2% on Gulf tensions</div>
+      <div class="item"><span class="ti">09:30</span> · MARKET OPENS — flat to positive</div>
+    </div>
+  </div>
+
+  <div class="mn-cell gp-9">
+    <div class="hd"><span>Sector heat · today</span><span class="x">⋮</span></div>
+    <div class="body" style="padding:0">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:1px;height:100%">
+        <div style="background:hsl(150 50% 35%);color:white;padding:8px;display:flex;flex-direction:column;justify-content:center"><div style="font-family:var(--font-display);font-weight:700;font-size:11px">Banking</div><div style="font-family:var(--font-mono);font-weight:700;font-size:14px">+1.42%</div></div>
+        <div style="background:hsl(150 50% 42%);color:white;padding:8px;display:flex;flex-direction:column;justify-content:center"><div style="font-family:var(--font-display);font-weight:700;font-size:11px">Auto</div><div style="font-family:var(--font-mono);font-weight:700;font-size:14px">+1.18%</div></div>
+        <div style="background:hsl(150 30% 60%);color:white;padding:8px;display:flex;flex-direction:column;justify-content:center"><div style="font-family:var(--font-display);font-weight:700;font-size:11px">Cap goods</div><div style="font-family:var(--font-mono);font-weight:700;font-size:14px">+0.86%</div></div>
+        <div style="background:hsl(150 30% 60%);color:white;padding:8px;display:flex;flex-direction:column;justify-content:center"><div style="font-family:var(--font-display);font-weight:700;font-size:11px">Energy</div><div style="font-family:var(--font-mono);font-weight:700;font-size:14px">+0.62%</div></div>
+        <div style="background:hsl(213 14% 70%);color:white;padding:8px;display:flex;flex-direction:column;justify-content:center"><div style="font-family:var(--font-display);font-weight:700;font-size:11px">Pharma</div><div style="font-family:var(--font-mono);font-weight:700;font-size:14px">+0.18%</div></div>
+        <div style="background:hsl(0 30% 60%);color:white;padding:8px;display:flex;flex-direction:column;justify-content:center"><div style="font-family:var(--font-display);font-weight:700;font-size:11px">IT</div><div style="font-family:var(--font-mono);font-weight:700;font-size:14px">−0.34%</div></div>
+        <div style="background:hsl(0 50% 50%);color:white;padding:8px;display:flex;flex-direction:column;justify-content:center"><div style="font-family:var(--font-display);font-weight:700;font-size:11px">FMCG</div><div style="font-family:var(--font-mono);font-weight:700;font-size:14px">−0.42%</div></div>
+        <div style="background:hsl(0 50% 50%);color:white;padding:8px;display:flex;flex-direction:column;justify-content:center"><div style="font-family:var(--font-display);font-weight:700;font-size:11px">Realty</div><div style="font-family:var(--font-mono);font-weight:700;font-size:14px">−0.84%</div></div>
+        <div style="background:hsl(0 60% 40%);color:white;padding:8px;display:flex;flex-direction:column;justify-content:center"><div style="font-family:var(--font-display);font-weight:700;font-size:11px">Metals</div><div style="font-family:var(--font-mono);font-weight:700;font-size:14px">−1.42%</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mn-cell gp-10">
+    <div class="hd"><span>Open positions</span><span class="x">⋮</span></div>
+    <div class="body cell-tbl">
+      <div class="row" style="font-weight:700;border-bottom:1px solid hsl(var(--border));padding-bottom:4px"><span>Symbol</span><span>Qty / P&amp;L</span></div>
+      <div class="row"><span><b>RELIANCE</b></span><span>+200 · <span class="gain">+₹46k</span></span></div>
+      <div class="row"><span><b>HDFCBANK</b></span><span>+120 · <span class="gain">+₹12k</span></span></div>
+      <div class="row"><span><b>NIFTY 22500CE 02 May</b></span><span>+50 · <span class="gain">+₹3.4k</span></span></div>
+      <div class="row"><span><b>BANKNIFTY 48800PE 25 Apr</b></span><span>−25 · <span class="loss">−₹1.8k</span></span></div>
+      <div class="row"><span><b>ICICIBANK</b></span><span>+120 · <span class="gain">+₹21k</span></span></div>
+      <div class="row" style="font-weight:700;border-top:1px solid hsl(var(--border));padding-top:4px;margin-top:4px"><span>Net unrealized</span><b class="gain">+₹81,820</b></div>
+    </div>
+  </div>
+
+  <div class="mn-cell gp-11">
+    <div class="hd"><span>Triggered alerts · today</span><span class="x">⋮</span></div>
+    <div class="body cell-news">
+      <div class="item"><span class="ti gain">09:38</span> · <b>NIFTY</b> closed above 22,400 SMA-50 ✓</div>
+      <div class="item"><span class="ti gain">09:36</span> · <b>RELIANCE</b> RSI(14) crossed 70 — overbought</div>
+      <div class="item"><span class="ti loss">09:32</span> · <b>TATASTEEL</b> stop-loss 158 hit</div>
+      <div class="item"><span class="ti">09:30</span> · <b>USDINR</b> opened weaker for the 4th day</div>
+    </div>
+  </div>
+</main>
+
+</div>
+<script src="app.js"></script>
+</body></html>

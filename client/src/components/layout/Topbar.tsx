@@ -4,21 +4,15 @@ import { SearchBar } from "@/components/search/SearchBar";
 import MarketStatusBadge from "@/components/MarketStatusBadge";
 import { CoinBalanceBadge } from "@/components/CoinBalanceBadge";
 import { UserMenu } from "@/components/UserMenu";
-import { Zap } from "lucide-react";
+import { EquityProLogo } from "@/components/EquityProLogo";
 
 export default function Topbar() {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-14 border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="flex h-full items-center justify-between px-4 gap-4">
-        {/* Logo */}
-        <Link href="/home" className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/15 border border-primary/30">
-            <Zap className="h-4 w-4 text-primary" />
-          </div>
-          <span className="text-lg font-bold tracking-tight">
-            <span className="text-primary">Edge</span>
-            <span className="text-foreground">Flow</span>
-          </span>
+    <header className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-border bg-background/85 backdrop-blur-md backdrop-saturate-150">
+      <div className="flex h-full items-center justify-between px-4 gap-6">
+        {/* Brand lockup */}
+        <Link href="/home" className="shrink-0" aria-label="EquityPro home">
+          <EquityProLogo size="sm" />
         </Link>
 
         {/* Search — center */}

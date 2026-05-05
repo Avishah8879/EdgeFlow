@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Analytics · Admin</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.ad-shell{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
+.ad-side{background:hsl(var(--brand-navy-deep));color:hsl(38 30% 88%);padding:18px 0;font-family:var(--font-mono)}
+.ad-side h4{padding:8px 18px;margin:0;font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--brand-gold));font-family:var(--font-display)}
+.ad-side a{display:block;padding:8px 18px;font-size:12.5px;color:hsl(38 30% 75%);text-decoration:none;border-left:3px solid transparent}
+.ad-side a:hover{background:hsl(213 50% 18%);color:white}
+.ad-side a.active{background:hsl(213 50% 18%);color:hsl(var(--brand-gold));border-left-color:hsl(var(--brand-gold));font-weight:700}
+.ad-main{padding:24px 32px 60px;background:hsl(var(--background))}
+.ad-hd{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+.ad-hd h1{font-family:var(--font-display);font-size:28px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .ad-hd h1{color:hsl(38 30% 95%)}
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:0;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;margin-bottom:18px}
+.kpi-row .k{padding:16px 18px;border-right:1px solid hsl(var(--border))}
+.kpi-row .k:last-child{border-right:0}
+.kpi-row .l{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.kpi-row .v{font-family:var(--font-mono);font-size:24px;font-weight:700;color:hsl(var(--brand-navy));margin-top:4px}
+.dark .kpi-row .v{color:hsl(38 30% 95%)}
+.kpi-row .c{font-family:var(--font-mono);font-size:11px;margin-top:2px}
+.ad-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:18px}
+.card h3{margin:0 0 12px;font-family:var(--font-display);font-size:16px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .card h3{color:hsl(38 30% 95%)}
+.card svg{width:100%;height:200px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-family:var(--font-mono);font-size:12px}
+.bar-row .l{width:120px;color:hsl(var(--muted-foreground))}
+.bar-row .b{flex:1;height:8px;background:hsl(var(--muted));border-radius:4px;overflow:hidden}
+.bar-row .b span{display:block;height:100%;background:hsl(var(--brand-gold))}
+.bar-row .v{font-weight:700;color:hsl(var(--foreground));width:60px;text-align:right}
+.tbl{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12px}
+.tbl th{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:8px 10px;background:hsl(var(--muted)/0.5);text-align:right}
+.tbl th:first-child{text-align:left}
+.tbl td{padding:8px 10px;border-bottom:1px solid hsl(var(--border));text-align:right}
+.tbl td:first-child{text-align:left;font-weight:700}
+</style></head>
+<body data-page="admin-analytics" data-screen-label="Admin · 41 Analytics">
+<div class="shell"><div data-shell-topbar></div>
+
+<main class="ad-shell">
+  <aside class="ad-side">
+    <h4>Admin</h4>
+    <a href="admin-analytics.html" class="active">Analytics</a>
+    <a href="admin-users.html">Users</a>
+    <a href="admin-feature-flags.html">Feature flags</a>
+    <a href="admin-audit-logs.html">Audit logs</a>
+    <a href="admin-coin-packs.html">Coin packs</a>
+    <a href="admin-coin-transactions.html">Coin transactions</a>
+    <a href="admin-email-settings.html">Email settings</a>
+    <a href="admin-api-keys.html">API keys</a>
+  </aside>
+
+  <section class="ad-main">
+    <div class="ad-hd">
+      <div><span class="eyebrow">Admin · Internal dashboard</span><h1>Platform analytics</h1></div>
+      <div class="flex gap-2"><button class="btn btn-ghost btn-sm">Last 30 days ▾</button><button class="btn btn-ghost btn-sm">Export</button></div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="k"><div class="l">DAU</div><div class="v">14,820</div><div class="c change-up">+8.4% WoW</div></div>
+      <div class="k"><div class="l">MAU</div><div class="v">82,400</div><div class="c change-up">+12.4%</div></div>
+      <div class="k"><div class="l">Pro subs</div><div class="v">3,142</div><div class="c change-up">+184 net</div></div>
+      <div class="k"><div class="l">MRR</div><div class="v">₹46.2L</div><div class="c change-up">+₹3.4L</div></div>
+      <div class="k"><div class="l">Churn (90d)</div><div class="v">3.2%</div><div class="c change-down">+0.4pp</div></div>
+    </div>
+
+    <div class="ad-grid">
+      <div class="card">
+        <h3>DAU · last 30 days</h3>
+        <svg viewBox="0 0 600 200">
+          <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl(var(--brand-gold))" stop-opacity="0.3"/><stop offset="1" stop-color="hsl(var(--brand-gold))" stop-opacity="0"/></linearGradient></defs>
+          <line x1="0" y1="160" x2="600" y2="160" stroke="hsl(var(--border))"/>
+          <line x1="0" y1="80" x2="600" y2="80" stroke="hsl(var(--border))" stroke-dasharray="2 4"/>
+          <path d="M0,140 L20,134 L40,142 L60,128 L80,120 L100,128 L120,108 L140,98 L160,114 L180,92 L200,82 L220,98 L240,76 L260,68 L280,84 L300,62 L320,54 L340,68 L360,48 L380,42 L400,56 L420,38 L440,32 L460,48 L480,28 L500,22 L520,36 L540,18 L560,12 L580,28 L600,10 L600,200 L0,200 Z" fill="url(#ag)"/>
+          <path d="M0,140 L20,134 L40,142 L60,128 L80,120 L100,128 L120,108 L140,98 L160,114 L180,92 L200,82 L220,98 L240,76 L260,68 L280,84 L300,62 L320,54 L340,68 L360,48 L380,42 L400,56 L420,38 L440,32 L460,48 L480,28 L500,22 L520,36 L540,18 L560,12 L580,28 L600,10" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="card">
+        <h3>MRR by plan</h3>
+        <div class="bar-row"><span class="l">Quant ₹4,999</span><div class="b"><span style="width:88%"></span></div><span class="v">₹22.4L</span></div>
+        <div class="bar-row"><span class="l">Pro ₹1,999</span><div class="b"><span style="width:62%"></span></div><span class="v">₹18.6L</span></div>
+        <div class="bar-row"><span class="l">Starter ₹499</span><div class="b"><span style="width:18%"></span></div><span class="v">₹5.2L</span></div>
+        <div class="bar-row"><span class="l">Annual disc.</span><div class="b"><span style="width:42%;background:hsl(var(--negative))"></span></div><span class="v" style="color:hsl(var(--negative))">−₹4.8L</span></div>
+        <h3 style="margin-top:18px">Top features by usage</h3>
+        <div class="bar-row"><span class="l">Charts</span><div class="b"><span style="width:94%"></span></div><span class="v">11.4k</span></div>
+        <div class="bar-row"><span class="l">Screener</span><div class="b"><span style="width:72%"></span></div><span class="v">8.2k</span></div>
+        <div class="bar-row"><span class="l">Backtest</span><div class="b"><span style="width:54%"></span></div><span class="v">6.4k</span></div>
+        <div class="bar-row"><span class="l">Option chain</span><div class="b"><span style="width:48%"></span></div><span class="v">5.8k</span></div>
+        <div class="bar-row"><span class="l">Notes</span><div class="b"><span style="width:24%"></span></div><span class="v">2.1k</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Top growth markets · cohorts (last 30 days)</h3>
+      <table class="tbl">
+        <thead><tr><th>City</th><th>New signups</th><th>Pro conversion</th><th>D7 retention</th><th>D30 retention</th><th>LTV</th><th>CAC</th><th>Payback</th></tr></thead>
+        <tbody>
+          <tr><td>Mumbai</td><td>4,820</td><td>14.2%</td><td>62%</td><td>38%</td><td>₹14,820</td><td>₹2,420</td><td>4.2 mo</td></tr>
+          <tr><td>Bengaluru</td><td>3,420</td><td>18.4%</td><td>68%</td><td>42%</td><td>₹18,420</td><td>₹2,820</td><td>3.6 mo</td></tr>
+          <tr><td>Delhi NCR</td><td>2,840</td><td>11.4%</td><td>58%</td><td>34%</td><td>₹12,420</td><td>₹2,640</td><td>5.1 mo</td></tr>
+          <tr><td>Pune</td><td>1,420</td><td>16.8%</td><td>64%</td><td>40%</td><td>₹16,240</td><td>₹2,180</td><td>3.4 mo</td></tr>
+          <tr><td>Hyderabad</td><td>1,240</td><td>13.6%</td><td>60%</td><td>36%</td><td>₹13,840</td><td>₹2,520</td><td>4.4 mo</td></tr>
+          <tr><td>Chennai</td><td>980</td><td>12.4%</td><td>58%</td><td>34%</td><td>₹12,840</td><td>₹2,640</td><td>4.6 mo</td></tr>
+          <tr><td>Ahmedabad</td><td>820</td><td>10.8%</td><td>54%</td><td>30%</td><td>₹11,420</td><td>₹2,840</td><td>5.4 mo</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</div>
+<script src="app.js"></script>
+</body></html>

@@ -4,34 +4,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Tiphub** - A financial market analysis platform (Tickertape clone) with real-time stock data, sentiment analysis, strategy backtesting, AI chat, developer API, and market insights. NSE (National Stock Exchange of India) focused.
+**EquityPro** - A financial market analysis platform with real-time stock data, sentiment analysis, strategy backtesting, AI chat, developer API, and market insights. NSE (National Stock Exchange of India) focused.
 
-**Brand Identity:**
-- Primary accent: Orange (#ffa31a)
-- Theme system: Light/dark mode with toggle (defaults to dark)
-- Logo: TiphubLogo component (orange upward arrow)
-- Professional financial UI optimized for data density
+**Brand Identity (EquityPro v1 design system):**
+- Primary brand: Navy `#1F3A5F` (`--brand-navy`) + Gold `#C8A04A` (`--brand-gold`)
+- Sky accent: `#3FA9D6`, Gold-bright: `#F4A024` (chart series)
+- Theme system: Light (default) / dark mode toggle. Premium FT-style — calm navy + gold, restrained
+- Tagline: _Technical Precision · Fundamental Insight · Quantitative Rigor · Integrated Solutions_
+- Logo: `EquityProLogo` component (shield + wordmark; navy text in light, gold text in dark)
+- Fonts: Inter (sans) + JetBrains Mono (numerics — required for all prices/percentages/volumes/dates) + Playfair Display (editorial only)
+- Reference: [design/equitypro-v1/](design/equitypro-v1/) — 56 reference HTML pages + tokens. See [MIGRATION_PLAN.md](MIGRATION_PLAN.md) for the migration record.
 
 ### Theme System
 
-- Uses `next-themes` (v0.4.6) with class-based switching, configured in `client/src/App.tsx`
+- Uses `next-themes` (v0.4.6) with class-based switching, configured in `client/src/App.tsx`. **Default: light.**
 - Theme toggle: `client/src/components/ModeToggle.tsx`
-- `:root` = dark mode colors (prevents FOUC), `.light` class = light overrides
-- All colors use HSL values for Tailwind compatibility
+- `:root` = light mode tokens (light is default — matches EquityPro's premium-navy-on-white). `.dark` class = dark mode overrides
+- All colors use HSL component triplets so `hsl(var(--token) / <alpha>)` works
 
 **Semantic Color Tokens (client/src/index.css):**
 ```css
---positive: 142 71% 45%;           /* Green for gains */
---positive-foreground: 142 71% 35%; /* Darker green for text */
---negative: 0 72% 51%;             /* Red for losses */
---negative-foreground: 0 72% 41%;   /* Darker red for text */
---neutral: 0 0% 50%;               /* Gray */
+/* Light (default :root) */
+--positive: 150 60% 35%;           /* Calmer green for gains */
+--positive-foreground: 150 60% 25%;
+--negative: 0 72% 45%;             /* Red for losses */
+--negative-foreground: 0 72% 35%;
+--neutral:  213 14% 45%;           /* Navy-tinted gray */
+
+/* Dark (.dark) */
+--positive: 150 70% 45%;
+--negative: 0 72% 55%;
 ```
 
 **Tailwind Extensions (tailwind.config.ts):**
-- `text-positive` / `text-negative` / `text-neutral` semantic classes
-- Never use hardcoded colors like `text-green-600` or `#22c55e`
-- Charts: Use `getCSSColor()` helper to convert CSS variables to color strings
+- `text-positive` / `text-negative` / `text-neutral` semantic classes — never use raw green/red hex
+- `font-display` for marketing hero H1s (Playfair Display)
+- `letterSpacing.uppercase` (`0.12em`) for the eyebrow / spaced-uppercase labels
+- `boxShadow.card` / `card-lg` / `glow-primary` / `glow-gold` for calibrated shadows
+- Charts: use `getCSSColor()` helper to read `--chart-1..5` CSS variables
 
 **Smart Loading System:**
 - `useSmartLoader` hook: 300ms delay before showing skeleton

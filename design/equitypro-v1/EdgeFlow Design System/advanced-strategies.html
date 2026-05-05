@@ -1,0 +1,157 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Advanced strategies · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.as-hd{padding:28px 0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.as-hd h1{font-family:var(--font-display);font-size:32px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .as-hd h1{color:hsl(38 30% 95%)}
+
+.as-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;padding:28px 0}
+.strat{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:22px;transition:all var(--t-base);cursor:pointer}
+.strat:hover{border-color:hsl(var(--brand-gold)/0.5);box-shadow:var(--shadow-card-lg)}
+.strat .top{display:flex;justify-content:space-between;align-items:start;margin-bottom:14px}
+.strat h3{font-family:var(--font-display);font-size:20px;letter-spacing:-0.01em;margin:0 0 4px;color:hsl(var(--brand-navy))}
+.dark .strat h3{color:hsl(38 30% 95%)}
+.strat .desc{color:hsl(var(--muted-foreground));font-size:13px;line-height:1.55;margin:0 0 14px}
+.strat .legs{background:hsl(var(--muted)/0.4);border:1px solid hsl(var(--border));border-radius:var(--radius-md);padding:10px 12px;font-family:var(--font-mono);font-size:12px;color:hsl(var(--foreground));margin-bottom:14px}
+.strat .legs div{padding:3px 0;display:flex;justify-content:space-between}
+.strat .legs .pos{color:hsl(var(--positive))}
+.strat .legs .neg{color:hsl(var(--negative))}
+.strat .payoff{height:100px;margin:6px 0 14px;background:hsl(var(--muted)/0.3);border-radius:var(--radius-sm);padding:6px}
+.strat .payoff svg{width:100%;height:100%}
+.strat .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;border-top:1px solid hsl(var(--border));padding-top:12px}
+.strat .stats div .ey{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700}
+.strat .stats div .v{font-family:var(--font-mono);font-size:14px;font-weight:700;margin-top:2px;color:hsl(var(--foreground))}
+
+.as-hero{padding:24px 0;background:linear-gradient(155deg,hsl(var(--brand-navy)),hsl(var(--brand-navy-deep)));color:white;border-radius:var(--radius-xl);margin:8px 0 24px;padding:32px;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center;position:relative;overflow:hidden}
+.as-hero::before{content:"";position:absolute;right:-60px;top:-60px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,hsl(var(--brand-gold)/0.3),transparent 70%);filter:blur(30px)}
+.as-hero h2{font-family:var(--font-display);font-size:28px;letter-spacing:-0.02em;color:white;margin:0 0 8px;position:relative}
+.as-hero h2 em{font-style:italic;color:hsl(var(--brand-gold))}
+.as-hero p{margin:0;color:hsl(38 30% 88%);font-size:14px;max-width:60ch;position:relative}
+</style></head>
+<body data-page="advanced-strategies" data-screen-label="15 Advanced strategies">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="as-hd"><div class="container">
+  <span class="eyebrow">Research · Advanced strategies</span>
+  <h1>Multi-leg playbook</h1>
+  <p class="muted body-sm" style="margin:6px 0 0">Pre-built F&amp;O strategies with live underlyings, IV filters, and one-click deployment to your broker.</p>
+</div></section>
+
+<main class="container">
+
+<section class="as-hero">
+  <div>
+    <span class="eyebrow" style="color:hsl(var(--brand-gold))">Featured this week</span>
+    <h2>Iron Condor on <em>BANKNIFTY</em> — IV percentile at 78</h2>
+    <p>Bank Nifty IV is in the 78th percentile and price has been mean-reverting all week. Sell the 47800/48600 strangle, buy the 47200/49200 wings. Defined risk, ₹4,800 max profit per lot at expiry.</p>
+  </div>
+  <a href="ft-options-visualizer.html" class="btn btn-gold btn-lg">Open in visualizer →</a>
+</section>
+
+<div class="as-grid">
+  <article class="strat">
+    <div class="top"><div><span class="eyebrow">Neutral · Range bound</span><h3>Iron Condor</h3></div><span class="badge badge-pos">Hot</span></div>
+    <p class="desc">Sell OTM call &amp; put spreads when IV is high and you expect the underlying to stay in range. Defined risk, defined reward.</p>
+    <div class="legs">
+      <div><span class="pos">+1 BUY</span><span>BANKNIFTY 47200 PE</span></div>
+      <div><span class="neg">−1 SELL</span><span>BANKNIFTY 47800 PE</span></div>
+      <div><span class="neg">−1 SELL</span><span>BANKNIFTY 48600 CE</span></div>
+      <div><span class="pos">+1 BUY</span><span>BANKNIFTY 49200 CE</span></div>
+    </div>
+    <div class="payoff"><svg viewBox="0 0 400 88"><path d="M0,70 L80,70 L140,20 L260,20 L320,70 L400,70" fill="none" stroke="hsl(var(--positive))" stroke-width="2"/><line x1="0" y1="44" x2="400" y2="44" stroke="hsl(var(--border))" stroke-dasharray="2 2"/></svg></div>
+    <div class="stats">
+      <div><div class="ey">Max profit</div><div class="v change-up">₹4,800</div></div>
+      <div><div class="ey">Max loss</div><div class="v change-down">−₹3,200</div></div>
+      <div><div class="ey">PoP</div><div class="v">68%</div></div>
+      <div><div class="ey">Margin</div><div class="v">₹78k</div></div>
+    </div>
+  </article>
+
+  <article class="strat">
+    <div class="top"><div><span class="eyebrow">Bullish · Limited upside</span><h3>Bull Call Spread</h3></div></div>
+    <p class="desc">Buy a near-the-money call and sell an out-of-the-money call to reduce premium. Best when you're moderately bullish.</p>
+    <div class="legs">
+      <div><span class="pos">+1 BUY</span><span>NIFTY 22400 CE</span></div>
+      <div><span class="neg">−1 SELL</span><span>NIFTY 22600 CE</span></div>
+    </div>
+    <div class="payoff"><svg viewBox="0 0 400 88"><path d="M0,70 L180,70 L260,20 L400,20" fill="none" stroke="hsl(var(--positive))" stroke-width="2"/><line x1="0" y1="44" x2="400" y2="44" stroke="hsl(var(--border))" stroke-dasharray="2 2"/></svg></div>
+    <div class="stats">
+      <div><div class="ey">Max profit</div><div class="v change-up">₹6,250</div></div>
+      <div><div class="ey">Max loss</div><div class="v change-down">−₹3,750</div></div>
+      <div><div class="ey">PoP</div><div class="v">52%</div></div>
+      <div><div class="ey">Margin</div><div class="v">₹3,750</div></div>
+    </div>
+  </article>
+
+  <article class="strat">
+    <div class="top"><div><span class="eyebrow">Bearish · Defined risk</span><h3>Bear Put Spread</h3></div></div>
+    <p class="desc">Buy a higher put, sell a lower put. Profits if the underlying falls; loss capped at the net premium paid.</p>
+    <div class="legs">
+      <div><span class="pos">+1 BUY</span><span>RELIANCE 2900 PE</span></div>
+      <div><span class="neg">−1 SELL</span><span>RELIANCE 2800 PE</span></div>
+    </div>
+    <div class="payoff"><svg viewBox="0 0 400 88"><path d="M0,20 L140,20 L220,70 L400,70" fill="none" stroke="hsl(var(--positive))" stroke-width="2"/><line x1="0" y1="44" x2="400" y2="44" stroke="hsl(var(--border))" stroke-dasharray="2 2"/></svg></div>
+    <div class="stats">
+      <div><div class="ey">Max profit</div><div class="v change-up">₹6,800</div></div>
+      <div><div class="ey">Max loss</div><div class="v change-down">−₹3,200</div></div>
+      <div><div class="ey">PoP</div><div class="v">48%</div></div>
+      <div><div class="ey">Margin</div><div class="v">₹3,200</div></div>
+    </div>
+  </article>
+
+  <article class="strat">
+    <div class="top"><div><span class="eyebrow">Volatility · Long</span><h3>Long Straddle</h3></div></div>
+    <p class="desc">Buy ATM call &amp; put together. Profits from a large move in either direction. Pay-off needs IV expansion or the move to overcome theta.</p>
+    <div class="legs">
+      <div><span class="pos">+1 BUY</span><span>NIFTY 22400 CE</span></div>
+      <div><span class="pos">+1 BUY</span><span>NIFTY 22400 PE</span></div>
+    </div>
+    <div class="payoff"><svg viewBox="0 0 400 88"><path d="M0,20 L180,70 L220,70 L400,20" fill="none" stroke="hsl(var(--positive))" stroke-width="2"/><line x1="0" y1="44" x2="400" y2="44" stroke="hsl(var(--border))" stroke-dasharray="2 2"/></svg></div>
+    <div class="stats">
+      <div><div class="ey">Max profit</div><div class="v change-up">Unlimited</div></div>
+      <div><div class="ey">Max loss</div><div class="v change-down">−₹14,200</div></div>
+      <div><div class="ey">Breakeven</div><div class="v">±2.4%</div></div>
+      <div><div class="ey">Margin</div><div class="v">₹14,200</div></div>
+    </div>
+  </article>
+
+  <article class="strat">
+    <div class="top"><div><span class="eyebrow">Income · Theta</span><h3>Short Strangle</h3></div></div>
+    <p class="desc">Sell OTM call &amp; OTM put. Profits from theta decay if underlying stays in range. Naked, undefined risk — broker margin heavy.</p>
+    <div class="legs">
+      <div><span class="neg">−1 SELL</span><span>NIFTY 22000 PE</span></div>
+      <div><span class="neg">−1 SELL</span><span>NIFTY 22800 CE</span></div>
+    </div>
+    <div class="payoff"><svg viewBox="0 0 400 88"><path d="M0,80 L120,30 L280,30 L400,80" fill="none" stroke="hsl(var(--positive))" stroke-width="2"/><line x1="0" y1="44" x2="400" y2="44" stroke="hsl(var(--border))" stroke-dasharray="2 2"/></svg></div>
+    <div class="stats">
+      <div><div class="ey">Max profit</div><div class="v change-up">₹4,200</div></div>
+      <div><div class="ey">Max loss</div><div class="v change-down">Unlimited</div></div>
+      <div><div class="ey">PoP</div><div class="v">72%</div></div>
+      <div><div class="ey">Margin</div><div class="v">₹1.4L</div></div>
+    </div>
+  </article>
+
+  <article class="strat">
+    <div class="top"><div><span class="eyebrow">Calendar · Time skew</span><h3>Calendar Spread</h3></div></div>
+    <p class="desc">Sell front-month, buy back-month at same strike. Profits from theta decay differential and IV term structure.</p>
+    <div class="legs">
+      <div><span class="neg">−1 SELL</span><span>NIFTY 22400 CE · APR</span></div>
+      <div><span class="pos">+1 BUY</span><span>NIFTY 22400 CE · MAY</span></div>
+    </div>
+    <div class="payoff"><svg viewBox="0 0 400 88"><path d="M0,72 Q200,12 400,72" fill="none" stroke="hsl(var(--positive))" stroke-width="2"/><line x1="0" y1="44" x2="400" y2="44" stroke="hsl(var(--border))" stroke-dasharray="2 2"/></svg></div>
+    <div class="stats">
+      <div><div class="ey">Max profit</div><div class="v change-up">₹3,400</div></div>
+      <div><div class="ey">Max loss</div><div class="v change-down">−₹2,100</div></div>
+      <div><div class="ey">PoP</div><div class="v">58%</div></div>
+      <div><div class="ey">Margin</div><div class="v">₹2,100</div></div>
+    </div>
+  </article>
+</div>
+
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

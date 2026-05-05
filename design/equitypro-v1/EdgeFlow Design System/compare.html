@@ -1,0 +1,173 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Compare · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.cmp-hd{padding:18px 32px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.cmp-hd h1{font-family:var(--font-display);font-size:24px;letter-spacing:-0.01em;margin:0;color:hsl(var(--brand-navy))}
+.dark .cmp-hd h1{color:hsl(38 30% 95%)}
+.cmp-pills{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.cmp-pill{height:34px;padding:0 14px;border-radius:var(--radius-pill);background:hsl(var(--card));border:2px solid;display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:13px;font-weight:700}
+.cmp-pill .x{color:hsl(var(--muted-foreground));margin-left:6px;cursor:pointer}
+.cmp-pill .ch{font-size:11px}
+.cmp-pill.add{border-style:dashed;color:hsl(var(--muted-foreground));font-weight:600}
+
+.cmp-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;padding:24px 32px 60px}
+.chart-card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:18px}
+.chart-card .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.chart-card h3{margin:0;font-family:var(--font-display);font-size:18px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .chart-card h3{color:hsl(38 30% 95%)}
+.chart-card svg{width:100%;height:340px}
+
+.metric-tbl{margin-top:18px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.metric-tbl table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12.5px}
+.metric-tbl th{font-size:10.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:11px 14px;background:hsl(var(--muted)/0.5);text-align:right}
+.metric-tbl th:first-child{text-align:left}
+.metric-tbl td{padding:10px 14px;border-bottom:1px solid hsl(var(--border));text-align:right}
+.metric-tbl td:first-child{text-align:left;color:hsl(var(--muted-foreground));font-weight:600}
+.metric-tbl tr:last-child td{border-bottom:0}
+.metric-tbl .best{background:hsl(var(--positive)/0.12);font-weight:700;color:hsl(var(--positive))}
+.metric-tbl .worst{background:hsl(var(--negative)/0.10);color:hsl(var(--negative))}
+
+.cmp-side{display:flex;flex-direction:column;gap:14px}
+.cmp-side .panel{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:16px}
+.cmp-side h4{margin:0 0 12px;font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.corr-mtx{display:grid;grid-template-columns:60px repeat(4,1fr);gap:2px;font-family:var(--font-mono);font-size:11px}
+.corr-mtx div{padding:8px 4px;text-align:center;background:hsl(var(--muted));font-weight:600}
+.corr-mtx .lbl{background:transparent;color:hsl(var(--muted-foreground));font-weight:700;font-size:10px}
+.corr-mtx .h1{background:hsl(150 50% 40% / 0.7);color:white}
+.corr-mtx .h2{background:hsl(150 50% 50% / 0.5)}
+.corr-mtx .h3{background:hsl(38 60% 60% / 0.4)}
+.corr-mtx .h4{background:hsl(0 50% 50% / 0.3)}
+</style></head>
+<body data-page="compare" data-screen-label="Terminal · 23 Compare">
+<div class="shell"><div data-shell-topbar></div>
+
+<div class="cmp-hd">
+  <span class="eyebrow">Terminal · Compare</span>
+  <h1>Stock comparator</h1>
+  <p class="muted body-sm" style="margin:4px 0 0">Overlay up to 6 instruments. Re-base, normalize, or compare on absolute price, %, or beta-adjusted return.</p>
+  <div class="cmp-pills">
+    <span class="cmp-pill" style="border-color:hsl(var(--brand-gold));color:hsl(var(--brand-gold))">RELIANCE <span class="ch change-up">+0.82</span><span class="x">×</span></span>
+    <span class="cmp-pill" style="border-color:hsl(213 50% 50%);color:hsl(213 50% 50%)">HDFCBANK <span class="ch change-up">+1.22</span><span class="x">×</span></span>
+    <span class="cmp-pill" style="border-color:hsl(150 50% 40%);color:hsl(150 50% 40%)">TCS <span class="ch change-down">−0.34</span><span class="x">×</span></span>
+    <span class="cmp-pill" style="border-color:hsl(0 60% 50%);color:hsl(0 60% 50%)">INFY <span class="ch change-up">+0.46</span><span class="x">×</span></span>
+    <span class="cmp-pill" style="border-color:hsl(280 40% 50%);color:hsl(280 40% 50%)">NIFTY 50 <span class="ch change-up">+0.64</span><span class="x">×</span></span>
+    <button class="cmp-pill add">+ Add symbol</button>
+  </div>
+</div>
+
+<main class="cmp-grid">
+  <div>
+    <div class="chart-card">
+      <div class="hd">
+        <h3>Performance · re-based to 100</h3>
+        <div class="flex gap-2">
+          <div class="tabs">
+            <button>1M</button><button>3M</button><button>6M</button><button class="active">1Y</button><button>3Y</button><button>5Y</button>
+          </div>
+          <div class="tabs">
+            <button class="active">% return</button><button>Absolute</button><button>Beta-adj</button>
+          </div>
+        </div>
+      </div>
+      <svg viewBox="0 0 800 340" preserveAspectRatio="none">
+        <defs><pattern id="g3" width="80" height="68" patternUnits="userSpaceOnUse"><path d="M80 0H0V68" fill="none" stroke="hsl(var(--border))" stroke-width="0.4"/></pattern></defs>
+        <rect width="100%" height="100%" fill="url(#g3)"/>
+        <line x1="0" y1="170" x2="800" y2="170" stroke="hsl(var(--brand-gold)/0.4)" stroke-dasharray="2 4"/>
+        <text x="788" y="166" text-anchor="end" font-family="ui-monospace" font-size="9" fill="hsl(var(--muted-foreground))">100 (rebased)</text>
+
+        <!-- 5 lines -->
+        <path d="M0,170 L60,160 L120,150 L180,140 L240,130 L300,120 L360,110 L420,90 L480,80 L540,70 L600,60 L660,50 L720,40 L800,30" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="2"/>
+        <path d="M0,170 L60,180 L120,176 L180,184 L240,178 L300,182 L360,170 L420,164 L480,158 L540,150 L600,160 L660,148 L720,140 L800,132" fill="none" stroke="hsl(213 50% 50%)" stroke-width="2"/>
+        <path d="M0,170 L60,168 L120,164 L180,160 L240,164 L300,158 L360,154 L420,148 L480,150 L540,144 L600,140 L660,138 L720,132 L800,128" fill="none" stroke="hsl(150 50% 40%)" stroke-width="2"/>
+        <path d="M0,170 L60,164 L120,170 L180,166 L240,180 L300,184 L360,182 L420,188 L480,184 L540,194 L600,200 L660,196 L720,202 L800,210" fill="none" stroke="hsl(0 60% 50%)" stroke-width="2"/>
+        <path d="M0,170 L60,164 L120,158 L180,150 L240,144 L300,138 L360,128 L420,120 L480,114 L540,106 L600,100 L660,94 L720,86 L800,80" fill="none" stroke="hsl(280 40% 50%)" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+        <g transform="translate(20,18)" font-family="ui-monospace" font-size="11">
+          <rect width="200" height="100" rx="6" fill="hsl(var(--card)/0.92)" stroke="hsl(var(--border))"/>
+          <text x="14" y="20" font-size="10" fill="hsl(var(--muted-foreground))">12-MONTH RETURNS</text>
+          <circle cx="20" cy="38" r="4" fill="hsl(var(--brand-gold))"/><text x="32" y="42" fill="hsl(var(--foreground))">RELIANCE</text><text x="180" y="42" text-anchor="end" fill="hsl(var(--positive))" font-weight="700">+38.4%</text>
+          <circle cx="20" cy="56" r="4" fill="hsl(213 50% 50%)"/><text x="32" y="60" fill="hsl(var(--foreground))">HDFCBANK</text><text x="180" y="60" text-anchor="end" fill="hsl(var(--positive))" font-weight="700">+18.2%</text>
+          <circle cx="20" cy="74" r="4" fill="hsl(150 50% 40%)"/><text x="32" y="78" fill="hsl(var(--foreground))">TCS</text><text x="180" y="78" text-anchor="end" fill="hsl(var(--positive))" font-weight="700">+24.6%</text>
+          <circle cx="20" cy="92" r="4" fill="hsl(0 60% 50%)"/><text x="32" y="96" fill="hsl(var(--foreground))">INFY</text><text x="180" y="96" text-anchor="end" fill="hsl(var(--negative))" font-weight="700">−4.2%</text>
+        </g>
+        <g font-family="ui-monospace" font-size="10" fill="hsl(var(--muted-foreground))">
+          <text x="0" y="332">May '25</text><text x="200" y="332">Aug</text><text x="400" y="332">Nov</text><text x="600" y="332">Feb '26</text><text x="800" y="332" text-anchor="end">today</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="metric-tbl">
+      <table>
+        <thead><tr><th>Metric</th><th>RELIANCE</th><th>HDFCBANK</th><th>TCS</th><th>INFY</th><th>NIFTY 50</th></tr></thead>
+        <tbody>
+          <tr><td>Last price</td><td>2,948.55</td><td>1,520.40</td><td>3,842.10</td><td>1,422.80</td><td>22,418.40</td></tr>
+          <tr><td>1Y return</td><td class="best">+38.4%</td><td>+18.2%</td><td>+24.6%</td><td class="worst">−4.2%</td><td>+24.8%</td></tr>
+          <tr><td>3Y CAGR</td><td class="best">+22.4%</td><td>+8.6%</td><td>+14.2%</td><td>+5.4%</td><td>+15.2%</td></tr>
+          <tr><td>YTD</td><td>+18.4%</td><td class="worst">−2.4%</td><td class="best">+24.6%</td><td>+5.4%</td><td>+11.2%</td></tr>
+          <tr><td>52w high</td><td>3,012.40</td><td>1,628.50</td><td>4,254.80</td><td>1,712.40</td><td>22,840.10</td></tr>
+          <tr><td>52w low</td><td>2,116.80</td><td>1,398.20</td><td>3,022.40</td><td>1,318.40</td><td>17,900.20</td></tr>
+          <tr><td>Mkt cap (cr)</td><td class="best">19,93,420</td><td>11,54,210</td><td>13,90,820</td><td>5,90,180</td><td>—</td></tr>
+          <tr><td>P/E (TTM)</td><td>24.6</td><td class="best">18.2</td><td>28.4</td><td>24.8</td><td>22.4</td></tr>
+          <tr><td>P/B</td><td>2.4</td><td class="best">2.8</td><td>14.2</td><td>8.6</td><td>3.4</td></tr>
+          <tr><td>ROE %</td><td>9.2</td><td>17.4</td><td class="best">52.4</td><td>32.6</td><td>15.4</td></tr>
+          <tr><td>ROCE %</td><td>11.4</td><td>—</td><td class="best">62.8</td><td>38.4</td><td>—</td></tr>
+          <tr><td>Debt/Equity</td><td>0.42</td><td>—</td><td class="best">0.02</td><td>0.05</td><td>—</td></tr>
+          <tr><td>Div yield</td><td>0.34%</td><td>1.18%</td><td class="best">3.42%</td><td>2.84%</td><td>—</td></tr>
+          <tr><td>Beta (1Y)</td><td>1.12</td><td class="best">0.84</td><td>0.92</td><td>1.04</td><td>1.00</td></tr>
+          <tr><td>Volatility 30d</td><td>22.4%</td><td>14.6%</td><td>18.4%</td><td>26.2%</td><td class="best">12.4%</td></tr>
+          <tr><td>Avg vol (M)</td><td>4.2</td><td>8.6</td><td>1.2</td><td>3.8</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <aside class="cmp-side">
+    <div class="panel">
+      <h4>Correlation matrix · 1Y daily</h4>
+      <div class="corr-mtx">
+        <div class="lbl"></div><div class="lbl">REL</div><div class="lbl">HDFCB</div><div class="lbl">TCS</div><div class="lbl">INFY</div>
+        <div class="lbl">REL</div><div class="h1">1.00</div><div class="h3">0.46</div><div class="h4">0.32</div><div class="h4">0.28</div>
+        <div class="lbl">HDFCB</div><div class="h3">0.46</div><div class="h1">1.00</div><div class="h3">0.42</div><div class="h3">0.38</div>
+        <div class="lbl">TCS</div><div class="h4">0.32</div><div class="h3">0.42</div><div class="h1">1.00</div><div class="h2">0.78</div>
+        <div class="lbl">INFY</div><div class="h4">0.28</div><div class="h3">0.38</div><div class="h2">0.78</div><div class="h1">1.00</div>
+      </div>
+      <p class="muted body-sm" style="font-size:11px;margin:10px 0 0;line-height:1.5">TCS &amp; INFY are highly correlated (sector). RELIANCE is the most diversifying name in the basket.</p>
+    </div>
+
+    <div class="panel">
+      <h4>Risk · return scatter</h4>
+      <svg viewBox="0 0 280 200">
+        <line x1="40" y1="170" x2="270" y2="170" stroke="hsl(var(--border))"/>
+        <line x1="40" y1="20" x2="40" y2="170" stroke="hsl(var(--border))"/>
+        <text x="40" y="190" font-size="9" font-family="ui-monospace" fill="hsl(var(--muted-foreground))">vol →</text>
+        <text x="36" y="20" text-anchor="end" font-size="9" font-family="ui-monospace" fill="hsl(var(--muted-foreground))">↑ ret</text>
+        <circle cx="180" cy="40" r="14" fill="hsl(var(--brand-gold)/0.4)" stroke="hsl(var(--brand-gold))" stroke-width="2"/>
+        <text x="180" y="44" text-anchor="middle" font-family="ui-monospace" font-size="9" font-weight="700">REL</text>
+        <circle cx="100" cy="100" r="11" fill="hsl(213 50% 50% / 0.4)" stroke="hsl(213 50% 50%)" stroke-width="2"/>
+        <text x="100" y="104" text-anchor="middle" font-family="ui-monospace" font-size="8" font-weight="700">HDFCB</text>
+        <circle cx="140" cy="80" r="13" fill="hsl(150 50% 40% / 0.4)" stroke="hsl(150 50% 40%)" stroke-width="2"/>
+        <text x="140" y="84" text-anchor="middle" font-family="ui-monospace" font-size="9" font-weight="700">TCS</text>
+        <circle cx="200" cy="150" r="10" fill="hsl(0 60% 50% / 0.4)" stroke="hsl(0 60% 50%)" stroke-width="2"/>
+        <text x="200" y="154" text-anchor="middle" font-family="ui-monospace" font-size="9" font-weight="700">INFY</text>
+        <circle cx="80" cy="120" r="9" fill="hsl(280 40% 50% / 0.3)" stroke="hsl(280 40% 50%)" stroke-width="2" stroke-dasharray="2 2"/>
+        <text x="80" y="124" text-anchor="middle" font-family="ui-monospace" font-size="8" font-weight="700">NIFTY</text>
+      </svg>
+    </div>
+
+    <div class="panel">
+      <h4>Quick takeaways</h4>
+      <ul class="muted body-sm" style="font-size:12px;margin:0;padding-left:18px;line-height:1.7">
+        <li><b>RELIANCE</b> · best 1Y return, but highest beta &amp; vol</li>
+        <li><b>HDFCBANK</b> · cheapest on P/E, lowest beta — defensive</li>
+        <li><b>TCS</b> · strongest balance sheet, highest ROE &amp; div yield</li>
+        <li><b>INFY</b> · only laggard YoY; valuation has compressed</li>
+      </ul>
+    </div>
+  </aside>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stocks · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.page-hd{padding:24px 0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.page-hd h1{font-family:var(--font-display);font-size:32px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .page-hd h1{color:hsl(38 30% 95%)}
+.layout{display:grid;grid-template-columns:260px 1fr;gap:24px;padding:24px 0 60px;align-items:start}
+.filters{position:sticky;top:80px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:16px}
+.filters h4{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));margin:18px 0 8px}
+.filters h4:first-child{margin-top:0}
+.filters label{display:flex;align-items:center;gap:8px;font-size:13px;padding:5px 0;cursor:pointer}
+.filters input[type=checkbox]{accent-color:hsl(var(--brand-gold))}
+.filters .count{margin-left:auto;color:hsl(var(--muted-foreground));font-family:var(--font-mono);font-size:11px}
+.filters .range{display:flex;gap:6px;margin-top:6px}
+.filters .range input{flex:1;height:30px;border:1px solid hsl(var(--border));background:hsl(var(--background));border-radius:var(--radius-sm);padding:0 8px;font-family:var(--font-mono);font-size:12px;color:inherit}
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px}
+.toolbar .count{font-family:var(--font-mono);font-size:13px}
+.toolbar .count strong{color:hsl(var(--brand-gold))}
+table.stockslist{width:100%;border-collapse:collapse;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+table.stockslist th,table.stockslist td{padding:11px 14px;text-align:left;border-bottom:1px solid hsl(var(--border));font-size:12.5px}
+table.stockslist th{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));background:hsl(var(--muted)/0.5);position:sticky;top:64px}
+table.stockslist tbody tr:hover{background:hsl(var(--muted)/0.4);cursor:pointer}
+table.stockslist td.num{font-family:var(--font-mono);text-align:right}
+table.stockslist td.sym{font-weight:700}
+.spark{width:80px;height:24px}
+.applied-chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;gap:6px;align-items:center;height:26px;padding:0 10px;border-radius:var(--radius-pill);background:hsl(var(--accent));color:hsl(var(--brand-navy));font-size:11.5px;font-weight:600;border:1px solid hsl(var(--brand-gold)/0.3)}
+.dark .chip{color:hsl(var(--brand-gold));background:hsl(var(--muted))}
+.chip .x{opacity:0.5;cursor:pointer}
+</style></head>
+<body data-page="stocks" data-screen-label="03 Stock Browser">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="page-hd"><div class="container">
+  <span class="eyebrow">Universe</span>
+  <h1>Stocks</h1>
+  <p class="muted body-sm" style="margin:4px 0 0">Browse 3,142 NSE listings with live prices, technicals and fundamentals.</p>
+</div></section>
+
+<main class="container"><div class="layout">
+
+  <aside class="filters">
+    <h4>Index</h4>
+    <label><input type="checkbox" checked> NIFTY 50 <span class="count">50</span></label>
+    <label><input type="checkbox"> NIFTY NEXT 50 <span class="count">50</span></label>
+    <label><input type="checkbox"> NIFTY 100 <span class="count">100</span></label>
+    <label><input type="checkbox"> NIFTY 500 <span class="count">500</span></label>
+    <label><input type="checkbox"> Bank Nifty <span class="count">12</span></label>
+
+    <h4>Market cap</h4>
+    <label><input type="checkbox" checked> Large (₹20k Cr+) <span class="count">142</span></label>
+    <label><input type="checkbox"> Mid (₹5k–20k Cr) <span class="count">388</span></label>
+    <label><input type="checkbox"> Small (&lt;₹5k Cr) <span class="count">2,612</span></label>
+
+    <h4>Sector</h4>
+    <label><input type="checkbox"> Banking &amp; Finance <span class="count">68</span></label>
+    <label><input type="checkbox"> IT &amp; Software <span class="count">42</span></label>
+    <label><input type="checkbox"> Pharma <span class="count">38</span></label>
+    <label><input type="checkbox"> FMCG <span class="count">31</span></label>
+    <label><input type="checkbox"> Energy <span class="count">22</span></label>
+    <label><input type="checkbox"> Auto <span class="count">28</span></label>
+
+    <h4>P/E ratio</h4>
+    <div class="range"><input placeholder="Min" value="0"><input placeholder="Max" value="40"></div>
+
+    <h4>Dividend yield (%)</h4>
+    <div class="range"><input placeholder="Min" value="0"><input placeholder="Max" value="∞"></div>
+
+    <h4>RSI (14)</h4>
+    <div class="range"><input placeholder="Min" value="30"><input placeholder="Max" value="70"></div>
+
+    <button class="btn btn-primary" style="width:100%;margin-top:18px">Apply filters</button>
+    <button class="btn btn-quiet btn-sm" style="width:100%;margin-top:6px">Reset</button>
+  </aside>
+
+  <section>
+    <div class="toolbar">
+      <div>
+        <div class="count"><strong>142</strong> stocks · sorted by market cap</div>
+        <div class="applied-chips" style="margin-top:8px">
+          <span class="chip">NIFTY 50<span class="x">×</span></span>
+          <span class="chip">Large cap<span class="x">×</span></span>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <div class="tabs"><button class="active">Table</button><button>Cards</button><button>Heatmap</button></div>
+        <button class="btn btn-ghost btn-sm">Export CSV</button>
+        <button class="btn btn-primary btn-sm">Save screen</button>
+      </div>
+    </div>
+
+    <table class="stockslist">
+      <thead><tr>
+        <th>Symbol</th><th>Sector</th><th class="text-right">Price</th><th class="text-right">Change</th><th>1M chart</th>
+        <th class="text-right">Mkt cap</th><th class="text-right">P/E</th><th class="text-right">Div %</th><th class="text-right">RSI 14</th><th class="text-right">52W %ile</th>
+      </tr></thead>
+      <tbody>
+        <tr onclick="location='stock-detail.html'">
+          <td class="sym">RELIANCE<div class="muted body-sm" style="font-weight:400">Reliance Industries</div></td>
+          <td>Energy</td>
+          <td class="num">2,948.55</td>
+          <td class="num change-up">+1.46%</td>
+          <td><svg class="spark" viewBox="0 0 80 24" style="color:hsl(var(--positive))"><path d="M0,18 L10,17 L20,15 L30,13 L40,14 L50,11 L60,9 L70,8 L80,5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></td>
+          <td class="num">19.94 L Cr</td><td class="num">28.4</td><td class="num">0.34</td><td class="num">63</td><td class="num">73</td>
+        </tr>
+        <tr><td class="sym">TCS<div class="muted body-sm" style="font-weight:400">Tata Consultancy</div></td><td>IT</td><td class="num">3,802.10</td><td class="num change-down">−0.32%</td><td><svg class="spark" viewBox="0 0 80 24" style="color:hsl(var(--negative))"><path d="M0,8 L10,9 L20,12 L30,11 L40,14 L50,13 L60,16 L70,15 L80,17" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></td><td class="num">13.78 L Cr</td><td class="num">31.2</td><td class="num">1.42</td><td class="num">42</td><td class="num">38</td></tr>
+        <tr><td class="sym">HDFCBANK<div class="muted body-sm" style="font-weight:400">HDFC Bank</div></td><td>Banking</td><td class="num">1,684.40</td><td class="num change-up">+0.78%</td><td><svg class="spark" viewBox="0 0 80 24" style="color:hsl(var(--positive))"><path d="M0,16 L10,15 L20,17 L30,14 L40,12 L50,13 L60,10 L70,11 L80,9" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></td><td class="num">12.84 L Cr</td><td class="num">19.8</td><td class="num">1.16</td><td class="num">58</td><td class="num">52</td></tr>
+        <tr><td class="sym">ICICIBANK<div class="muted body-sm" style="font-weight:400">ICICI Bank</div></td><td>Banking</td><td class="num">1,108.20</td><td class="num change-up">+0.42%</td><td><svg class="spark" viewBox="0 0 80 24" style="color:hsl(var(--positive))"><path d="M0,18 L10,16 L20,14 L30,15 L40,12 L50,11 L60,9 L70,10 L80,7" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></td><td class="num">7.78 L Cr</td><td class="num">17.6</td><td class="num">0.72</td><td class="num">61</td><td class="num">68</td></tr>
+        <tr><td class="sym">INFY<div class="muted body-sm" style="font-weight:400">Infosys</div></td><td>IT</td><td class="num">1,512.85</td><td class="num change-up">+1.12%</td><td><svg class="spark" viewBox="0 0 80 24" style="color:hsl(var(--positive))"><path d="M0,17 L10,16 L20,18 L30,14 L40,15 L50,12 L60,13 L70,10 L80,8" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></td><td class="num">6.28 L Cr</td><td class="num">26.2</td><td class="num">2.84</td><td class="num">56</td><td class="num">48</td></tr>
+        <tr><td class="sym">SBIN<div class="muted body-sm" style="font-weight:400">State Bank of India</div></td><td>Banking</td><td class="num">812.40</td><td class="num change-up">+2.84%</td><td><svg class="spark" viewBox="0 0 80 24" style="color:hsl(var(--positive))"><path d="M0,20 L10,18 L20,17 L30,15 L40,13 L50,12 L60,9 L70,8 L80,4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></td><td class="num">7.25 L Cr</td><td class="num">10.8</td><td class="num">1.62</td><td class="num">72</td><td class="num">88</td></tr>
+        <tr><td class="sym">BHARTIARTL<div class="muted body-sm" style="font-weight:400">Bharti Airtel</div></td><td>Telecom</td><td class="num">1,212.75</td><td class="num change-down">−2.84%</td><td><svg class="spark" viewBox="0 0 80 24" style="color:hsl(var(--negative))"><path d="M0,6 L10,8 L20,7 L30,11 L40,13 L50,12 L60,15 L70,17 L80,18" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></td><td class="num">7.04 L Cr</td><td class="num">62.4</td><td class="num">0.72</td><td class="num">38</td><td class="num">42</td></tr>
+        <tr><td class="sym">ITC<div class="muted body-sm" style="font-weight:400">ITC Ltd.</div></td><td>FMCG</td><td class="num">442.60</td><td class="num change-up">+0.18%</td><td><svg class="spark" viewBox="0 0 80 24" style="color:hsl(var(--neutral))"><path d="M0,12 L10,13 L20,11 L30,12 L40,13 L50,11 L60,12 L70,11 L80,10" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></td><td class="num">5.52 L Cr</td><td class="num">28.9</td><td class="num">3.14</td><td class="num">48</td><td class="num">35</td></tr>
+        <tr><td class="sym">LT<div class="muted body-sm" style="font-weight:400">Larsen &amp; Toubro</div></td><td>Capital Goods</td><td class="num">3,628.40</td><td class="num change-up">+1.04%</td><td><svg class="spark" viewBox="0 0 80 24" style="color:hsl(var(--positive))"><path d="M0,16 L10,14 L20,15 L30,12 L40,13 L50,10 L60,8 L70,9 L80,6" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></td><td class="num">4.98 L Cr</td><td class="num">36.4</td><td class="num">0.74</td><td class="num">66</td><td class="num">82</td></tr>
+        <tr><td class="sym">KOTAKBANK<div class="muted body-sm" style="font-weight:400">Kotak Mahindra Bank</div></td><td>Banking</td><td class="num">1,742.30</td><td class="num change-up">+0.32%</td><td><svg class="spark" viewBox="0 0 80 24" style="color:hsl(var(--positive))"><path d="M0,15 L10,16 L20,13 L30,14 L40,11 L50,12 L60,10 L70,11 L80,9" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></td><td class="num">3.46 L Cr</td><td class="num">19.4</td><td class="num">0.34</td><td class="num">52</td><td class="num">44</td></tr>
+        <tr><td class="sym">ASIANPAINT<div class="muted body-sm" style="font-weight:400">Asian Paints</div></td><td>Consumer</td><td class="num">2,914.60</td><td class="num change-down">−1.20%</td><td><svg class="spark" viewBox="0 0 80 24" style="color:hsl(var(--negative))"><path d="M0,5 L10,7 L20,8 L30,11 L40,10 L50,13 L60,15 L70,16 L80,18" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></td><td class="num">2.80 L Cr</td><td class="num">52.8</td><td class="num">1.16</td><td class="num">34</td><td class="num">22</td></tr>
+        <tr><td class="sym">M&amp;M<div class="muted body-sm" style="font-weight:400">Mahindra &amp; Mahindra</div></td><td>Auto</td><td class="num">2,184.50</td><td class="num change-up">+3.76%</td><td><svg class="spark" viewBox="0 0 80 24" style="color:hsl(var(--positive))"><path d="M0,18 L10,16 L20,14 L30,12 L40,13 L50,10 L60,8 L70,6 L80,3" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></td><td class="num">2.72 L Cr</td><td class="num">22.4</td><td class="num">0.82</td><td class="num">74</td><td class="num">92</td></tr>
+      </tbody>
+    </table>
+
+    <div class="flex justify-between items-center mt-4">
+      <div class="muted body-sm">Showing 1–12 of 142</div>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost btn-sm">← Prev</button>
+        <button class="btn btn-ghost btn-sm" style="background:hsl(var(--brand-navy));color:white">1</button>
+        <button class="btn btn-ghost btn-sm">2</button>
+        <button class="btn btn-ghost btn-sm">3</button>
+        <button class="btn btn-ghost btn-sm">…</button>
+        <button class="btn btn-ghost btn-sm">12</button>
+        <button class="btn btn-ghost btn-sm">Next →</button>
+      </div>
+    </div>
+  </section>
+
+</div></main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

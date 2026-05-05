@@ -1,0 +1,150 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seasonality · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.s-hd{padding:24px 0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.s-hd h1{font-family:var(--font-display);font-size:32px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .s-hd h1{color:hsl(38 30% 95%)}
+.s-hd .ctrls{display:flex;align-items:center;gap:14px;margin-top:18px}
+.sym-pick{height:38px;padding:0 14px;border:1px solid hsl(var(--border));background:hsl(var(--card));border-radius:var(--radius-md);font-family:var(--font-mono);font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:10px;color:hsl(var(--foreground))}
+.sym-pick .ti{font-family:var(--font-display);color:hsl(var(--brand-gold))}
+
+.s-grid{display:grid;grid-template-columns:1fr 320px;gap:24px;padding:24px 0 60px}
+
+.heat{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px}
+.heat h3{margin:0 0 14px;font-family:var(--font-display);font-size:18px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .heat h3{color:hsl(38 30% 95%)}
+.heat-tbl{width:100%;border-collapse:separate;border-spacing:3px;font-family:var(--font-mono);font-size:11.5px}
+.heat-tbl th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));padding:6px 4px;text-align:center}
+.heat-tbl th:first-child{text-align:left;padding-left:8px}
+.heat-tbl td{padding:8px 4px;text-align:center;border-radius:4px;font-weight:600;color:hsl(var(--foreground))}
+.heat-tbl td.lbl{background:transparent;color:hsl(var(--muted-foreground));font-weight:700;text-align:left;padding-left:8px;font-family:var(--font-display);font-size:13px}
+.h1{background:hsl(0 60% 50% / 0.7);color:white}
+.h2{background:hsl(0 60% 60% / 0.5)}
+.h3{background:hsl(0 50% 70% / 0.3)}
+.h4{background:hsl(213 14% 90%)}
+.dark .h4{background:hsl(213 30% 22%)}
+.h5{background:hsl(150 50% 70% / 0.4)}
+.h6{background:hsl(150 60% 50% / 0.5)}
+.h7{background:hsl(150 60% 40% / 0.7);color:white}
+
+.month-bar{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px;margin-top:18px}
+.month-bar h3{margin:0 0 14px;font-family:var(--font-display);font-size:18px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .month-bar h3{color:hsl(38 30% 95%)}
+.bars{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:160px;padding-top:14px;border-bottom:1px solid hsl(var(--border));position:relative}
+.bars::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:hsl(var(--border));border-top:1px dashed hsl(var(--border))}
+.bar{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:end}
+.bar .b{width:80%;border-radius:3px 3px 0 0;background:hsl(var(--positive));position:relative}
+.bar .b.neg{background:hsl(var(--negative))}
+.bar .l{font-size:10px;font-family:var(--font-mono);color:hsl(var(--muted-foreground));font-weight:700;margin-top:4px}
+.bar .v{font-size:10px;font-family:var(--font-mono);color:hsl(var(--foreground));font-weight:700}
+.bar .v.pos{color:hsl(var(--positive))}
+.bar .v.neg{color:hsl(var(--negative))}
+
+.s-side .panel{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:18px;margin-bottom:16px}
+.s-side .panel h4{margin:0 0 12px;font-family:var(--font-display);font-size:14px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .s-side .panel h4{color:hsl(38 30% 95%)}
+.stat-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed hsl(var(--border));font-size:12px}
+.stat-row:last-child{border-bottom:0}
+.stat-row .l{color:hsl(var(--muted-foreground))}
+.stat-row .v{font-family:var(--font-mono);font-weight:700;color:hsl(var(--foreground))}
+
+.day-of-week{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
+.day-of-week div{text-align:center;padding:10px 0;border:1px solid hsl(var(--border));border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:11px}
+.day-of-week .lbl{font-weight:700;color:hsl(var(--muted-foreground));font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase)}
+.day-of-week .pct{font-size:14px;font-weight:700;color:hsl(var(--foreground));margin-top:3px}
+</style></head>
+<body data-page="seasonality" data-screen-label="16 Seasonality">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="s-hd"><div class="container">
+  <span class="eyebrow">Research · Calendar &amp; periodicity</span>
+  <h1>Seasonality</h1>
+  <p class="muted body-sm" style="margin:6px 0 0">Historical month-of-year, day-of-week, and intra-month patterns. 12 years of data; raw + de-trended views.</p>
+  <div class="ctrls">
+    <button class="sym-pick"><span class="ti">RELIANCE</span><span class="muted">· Reliance Industries</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></button>
+    <div class="tabs">
+      <button>1Y</button><button>3Y</button><button>5Y</button><button class="active">10Y</button><button>All</button>
+    </div>
+    <div class="tabs">
+      <button class="active">Raw</button><button>De-trended</button>
+    </div>
+    <div style="margin-left:auto" class="muted body-sm">Window · Apr 2014 – Apr 2026</div>
+  </div>
+</div></section>
+
+<main class="container s-grid">
+  <div>
+    <div class="heat">
+      <h3>Monthly returns heatmap · Reliance Industries</h3>
+      <table class="heat-tbl">
+        <thead><tr><th>Year</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th><th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th></tr></thead>
+        <tbody>
+          <tr><td class="lbl">2026</td><td class="h6">+4.2</td><td class="h5">+1.8</td><td class="h7">+8.4</td><td class="h6">+3.6</td><td class="h4">—</td><td class="h4">—</td><td class="h4">—</td><td class="h4">—</td><td class="h4">—</td><td class="h4">—</td><td class="h4">—</td><td class="h4">—</td></tr>
+          <tr><td class="lbl">2025</td><td class="h2">−2.1</td><td class="h6">+3.4</td><td class="h7">+6.8</td><td class="h5">+1.2</td><td class="h3">−0.4</td><td class="h6">+4.1</td><td class="h7">+7.6</td><td class="h2">−2.8</td><td class="h6">+3.2</td><td class="h5">+0.9</td><td class="h6">+4.4</td><td class="h6">+2.8</td></tr>
+          <tr><td class="lbl">2024</td><td class="h6">+3.8</td><td class="h6">+2.4</td><td class="h7">+9.1</td><td class="h7">+5.6</td><td class="h2">−3.4</td><td class="h6">+4.2</td><td class="h5">+1.4</td><td class="h6">+3.6</td><td class="h2">−2.6</td><td class="h6">+4.8</td><td class="h6">+2.2</td><td class="h7">+6.4</td></tr>
+          <tr><td class="lbl">2023</td><td class="h1">−5.4</td><td class="h2">−1.8</td><td class="h6">+4.2</td><td class="h6">+3.4</td><td class="h7">+8.2</td><td class="h2">−2.4</td><td class="h6">+2.8</td><td class="h5">+0.6</td><td class="h6">+3.4</td><td class="h2">−1.4</td><td class="h6">+4.4</td><td class="h6">+2.2</td></tr>
+          <tr><td class="lbl">2022</td><td class="h2">−1.2</td><td class="h2">−2.6</td><td class="h6">+5.1</td><td class="h6">+4.4</td><td class="h2">−3.4</td><td class="h1">−6.8</td><td class="h7">+8.4</td><td class="h6">+3.6</td><td class="h2">−2.4</td><td class="h6">+4.2</td><td class="h6">+3.8</td><td class="h2">−1.4</td></tr>
+          <tr><td class="lbl">2021</td><td class="h6">+3.6</td><td class="h6">+2.2</td><td class="h6">+4.4</td><td class="h2">−1.4</td><td class="h6">+3.6</td><td class="h6">+4.2</td><td class="h7">+8.4</td><td class="h6">+3.6</td><td class="h6">+2.4</td><td class="h2">−2.4</td><td class="h6">+4.2</td><td class="h6">+3.6</td></tr>
+          <tr><td class="lbl">2020</td><td class="h2">−2.4</td><td class="h1">−8.4</td><td class="h1">−12.4</td><td class="h7">+10.6</td><td class="h7">+9.4</td><td class="h6">+4.2</td><td class="h7">+12.6</td><td class="h7">+8.4</td><td class="h2">−2.6</td><td class="h6">+3.4</td><td class="h6">+5.4</td><td class="h6">+2.2</td></tr>
+          <tr><td class="lbl">2019</td><td class="h6">+3.4</td><td class="h2">−1.4</td><td class="h6">+4.2</td><td class="h6">+3.4</td><td class="h2">−2.4</td><td class="h5">+0.4</td><td class="h2">−1.6</td><td class="h2">−2.4</td><td class="h6">+5.4</td><td class="h7">+8.6</td><td class="h6">+4.4</td><td class="h6">+2.2</td></tr>
+          <tr><td class="lbl">2018</td><td class="h6">+4.4</td><td class="h2">−1.8</td><td class="h2">−3.4</td><td class="h6">+4.2</td><td class="h2">−2.4</td><td class="h2">−1.6</td><td class="h6">+4.4</td><td class="h6">+5.6</td><td class="h2">−1.4</td><td class="h2">−3.4</td><td class="h6">+5.4</td><td class="h2">−1.6</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="month-bar">
+      <h3>Average monthly return · 10-year window</h3>
+      <div class="bars">
+        <div class="bar"><div class="v pos">+1.4</div><div class="b" style="height:50%"></div><div class="l">JAN</div></div>
+        <div class="bar"><div class="v neg">−0.8</div><div class="b neg" style="height:18%"></div><div class="l">FEB</div></div>
+        <div class="bar"><div class="v pos">+3.6</div><div class="b" style="height:88%"></div><div class="l">MAR</div></div>
+        <div class="bar"><div class="v pos">+2.8</div><div class="b" style="height:72%"></div><div class="l">APR</div></div>
+        <div class="bar"><div class="v neg">−0.4</div><div class="b neg" style="height:12%"></div><div class="l">MAY</div></div>
+        <div class="bar"><div class="v pos">+1.2</div><div class="b" style="height:42%"></div><div class="l">JUN</div></div>
+        <div class="bar"><div class="v pos">+4.2</div><div class="b" style="height:96%"></div><div class="l">JUL</div></div>
+        <div class="bar"><div class="v pos">+1.8</div><div class="b" style="height:54%"></div><div class="l">AUG</div></div>
+        <div class="bar"><div class="v pos">+0.6</div><div class="b" style="height:22%"></div><div class="l">SEP</div></div>
+        <div class="bar"><div class="v pos">+1.4</div><div class="b" style="height:48%"></div><div class="l">OCT</div></div>
+        <div class="bar"><div class="v pos">+3.4</div><div class="b" style="height:84%"></div><div class="l">NOV</div></div>
+        <div class="bar"><div class="v pos">+2.2</div><div class="b" style="height:62%"></div><div class="l">DEC</div></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="s-side">
+    <div class="panel">
+      <h4>Strongest months</h4>
+      <div class="stat-row"><span class="l">July</span><span class="v change-up">+4.2% avg · 80% positive</span></div>
+      <div class="stat-row"><span class="l">March</span><span class="v change-up">+3.6% · 78% positive</span></div>
+      <div class="stat-row"><span class="l">November</span><span class="v change-up">+3.4% · 75% positive</span></div>
+      <div class="stat-row"><span class="l">April</span><span class="v change-up">+2.8% · 70% positive</span></div>
+    </div>
+    <div class="panel">
+      <h4>Weakest months</h4>
+      <div class="stat-row"><span class="l">February</span><span class="v change-down">−0.8% · 38% positive</span></div>
+      <div class="stat-row"><span class="l">May</span><span class="v change-down">−0.4% · 42% positive</span></div>
+      <div class="stat-row"><span class="l">September</span><span class="v">+0.6% · 50% positive</span></div>
+    </div>
+    <div class="panel">
+      <h4>Day-of-week bias</h4>
+      <div class="day-of-week">
+        <div><div class="lbl">Mon</div><div class="pct change-down">−0.08</div></div>
+        <div><div class="lbl">Tue</div><div class="pct change-up">+0.12</div></div>
+        <div><div class="lbl">Wed</div><div class="pct change-up">+0.06</div></div>
+        <div><div class="lbl">Thu</div><div class="pct change-up">+0.18</div></div>
+        <div><div class="lbl">Fri</div><div class="pct change-up">+0.22</div></div>
+      </div>
+      <p class="muted body-sm" style="font-size:11px;margin:10px 0 0;line-height:1.5">Average daily return % · 10y. Friday is the strongest day historically; Mon trends weakly negative on average.</p>
+    </div>
+    <div class="panel">
+      <h4>Statistical caveats</h4>
+      <p class="muted body-sm" style="font-size:11.5px;margin:0;line-height:1.55">All numbers are sample averages. Past patterns are not predictive on their own — combine with a regime filter (vol, trend, or breadth) and walk-forward validate before trading.</p>
+    </div>
+  </aside>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

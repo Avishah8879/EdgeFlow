@@ -1,0 +1,127 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.page-hd{padding:24px 0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.page-hd .row{display:flex;justify-content:space-between;align-items:end;gap:16px}
+.page-hd h1{font-family:var(--font-display);font-size:32px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .page-hd h1{color:hsl(38 30% 95%)}
+.admin-tabs{display:flex;gap:4px;background:hsl(var(--muted));padding:3px;border-radius:var(--radius-md)}
+.admin-tabs button{height:32px;padding:0 12px;background:transparent;border:0;border-radius:var(--radius-sm);font-size:12px;font-weight:600;color:hsl(var(--muted-foreground))}
+.admin-tabs button.active{background:hsl(var(--card));color:hsl(var(--foreground));box-shadow:0 1px 2px hsl(213 30% 20%/0.08)}
+
+.admin-grid{padding:24px 0 60px;display:flex;flex-direction:column;gap:18px}
+
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:0;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.kpi{padding:18px 20px;border-right:1px solid hsl(var(--border))}
+.kpi:last-child{border-right:0}
+.kpi .ey{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground))}
+.kpi .v{font-family:var(--font-mono);font-size:26px;font-weight:700;margin-top:4px;color:hsl(var(--brand-navy))}
+.dark .kpi .v{color:hsl(38 30% 95%)}
+.kpi .delta{font-size:11.5px;font-weight:600;font-family:var(--font-mono);margin-top:2px}
+
+.two-col{display:grid;grid-template-columns:1.6fr 1fr;gap:18px}
+
+.panel{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px}
+.panel-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid hsl(var(--border))}
+.panel-hd h2{font-family:var(--font-display);font-size:18px;margin:0;color:hsl(var(--brand-navy))}
+.dark .panel-hd h2{color:hsl(38 30% 95%)}
+
+.users-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.users-tbl th,.users-tbl td{padding:10px 12px;text-align:left;border-bottom:1px solid hsl(var(--border))}
+.users-tbl th{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));background:hsl(var(--muted)/0.4)}
+.users-tbl td.num{font-family:var(--font-mono);text-align:right}
+.av{width:28px;height:28px;border-radius:50%;background:hsl(var(--brand-navy));color:white;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;margin-right:8px;vertical-align:middle}
+
+.feed-row{padding:12px 0;border-bottom:1px solid hsl(var(--border));font-size:12.5px;display:grid;grid-template-columns:60px 1fr;gap:10px;align-items:flex-start}
+.feed-row:last-child{border-bottom:0}
+.feed-row .ts{font-family:var(--font-mono);font-size:10.5px;color:hsl(var(--muted-foreground));padding-top:2px}
+.feed-row .ttl{font-weight:600;line-height:1.4}
+.feed-row .sub{font-size:11.5px;color:hsl(var(--muted-foreground));margin-top:2px}
+
+.health-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:11px 0;border-bottom:1px solid hsl(var(--border));font-size:12.5px;align-items:center}
+.health-row:last-child{border-bottom:0}
+.health-row .pct{font-family:var(--font-mono);font-weight:700}
+.health-row .meter{width:90px;height:5px;background:hsl(var(--muted));border-radius:3px;overflow:hidden}
+.health-row .meter i{display:block;height:100%;background:hsl(var(--positive))}
+</style></head>
+<body data-screen-label="10 Admin Console">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="page-hd"><div class="container">
+  <div class="row">
+    <div>
+      <span class="eyebrow">Internal · Admin</span>
+      <h1>Admin console</h1>
+      <p class="muted body-sm" style="margin:4px 0 0">User management, system health, and feature flags · for EquityPro staff only.</p>
+    </div>
+    <div class="admin-tabs">
+      <button class="active">Overview</button><button>Users</button><button>Subscriptions</button><button>System</button><button>Audit log</button>
+    </div>
+  </div>
+</div></section>
+
+<main class="container"><div class="admin-grid">
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="ey">Active users · 30d</div><div class="v">18,142</div><div class="delta change-up">+8.4 % WoW</div></div>
+    <div class="kpi"><div class="ey">Paid subscribers</div><div class="v">2,486</div><div class="delta change-up">+142 net</div></div>
+    <div class="kpi"><div class="ey">MRR</div><div class="v" style="color:hsl(var(--brand-gold))">₹62.4 L</div><div class="delta change-up">+₹4.8 L MoM</div></div>
+    <div class="kpi"><div class="ey">API calls · 24h</div><div class="v">14.2M</div><div class="delta">peak 642 rps</div></div>
+    <div class="kpi"><div class="ey">Backtests · 24h</div><div class="v">2,184</div><div class="delta">avg 84s</div></div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-hd"><h2>Recently joined · 7 days</h2><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Export CSV</button><button class="btn btn-primary btn-sm">+ Invite</button></div></div>
+      <table class="users-tbl">
+        <thead><tr><th>User</th><th>Plan</th><th>City</th><th class="num">Joined</th><th class="num">MRR</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><span class="av">RP</span>Rhea Patil <span class="muted body-sm" style="font-weight:400">· @rheap</span></td><td><span class="badge badge-gold">Quant</span></td><td>Bengaluru</td><td class="num">2h ago</td><td class="num">₹4,999</td><td><button class="btn btn-quiet btn-sm">···</button></td></tr>
+          <tr><td><span class="av" style="background:hsl(var(--brand-gold))">VK</span>Vikram Kapur</td><td><span class="badge badge-gold">Pro</span></td><td>Mumbai</td><td class="num">5h ago</td><td class="num">₹1,499</td><td><button class="btn btn-quiet btn-sm">···</button></td></tr>
+          <tr><td><span class="av" style="background:hsl(150 60% 40%)">SB</span>Suhas Bhat</td><td><span class="badge">Free</span></td><td>Pune</td><td class="num">1d ago</td><td class="num">—</td><td><button class="btn btn-quiet btn-sm">···</button></td></tr>
+          <tr><td><span class="av" style="background:hsl(0 50% 50%)">NJ</span>Neha Joshi</td><td><span class="badge badge-gold">Pro</span></td><td>Delhi</td><td class="num">1d ago</td><td class="num">₹1,499</td><td><button class="btn btn-quiet btn-sm">···</button></td></tr>
+          <tr><td><span class="av">AS</span>Arjun Sharma</td><td><span class="badge badge-gold">Pro</span></td><td>Pune</td><td class="num">2d ago</td><td class="num">₹1,499</td><td><button class="btn btn-quiet btn-sm">···</button></td></tr>
+          <tr><td><span class="av" style="background:hsl(var(--brand-gold))">MD</span>Mira Desai</td><td><span class="badge">Free</span></td><td>Ahmedabad</td><td class="num">3d ago</td><td class="num">—</td><td><button class="btn btn-quiet btn-sm">···</button></td></tr>
+          <tr><td><span class="av" style="background:hsl(213 50% 50%)">RT</span>Rohit Tandon</td><td><span class="badge badge-gold">Quant</span></td><td>Gurugram</td><td class="num">4d ago</td><td class="num">₹4,999</td><td><button class="btn btn-quiet btn-sm">···</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd"><h2>System health</h2><span class="badge badge-pos"><span class="dot pulse"></span>All green</span></div>
+      <div class="health-row"><span>API · REST</span><div class="meter"><i style="width:99%"></i></div><span class="pct text-positive">99.98 %</span></div>
+      <div class="health-row"><span>API · WebSocket</span><div class="meter"><i style="width:99%"></i></div><span class="pct text-positive">99.94 %</span></div>
+      <div class="health-row"><span>NSE feed</span><div class="meter"><i style="width:100%"></i></div><span class="pct text-positive">100 %</span></div>
+      <div class="health-row"><span>BSE feed</span><div class="meter"><i style="width:99%;background:hsl(var(--brand-gold))"></i></div><span class="pct">99.82 %</span></div>
+      <div class="health-row"><span>QGA backtester</span><div class="meter"><i style="width:97%;background:hsl(var(--brand-gold))"></i></div><span class="pct">97.2 %</span></div>
+      <div class="health-row"><span>Sentiment LLM</span><div class="meter"><i style="width:99%"></i></div><span class="pct text-positive">99.6 %</span></div>
+      <div class="health-row"><span>DB primary (RDS)</span><div class="meter"><i style="width:100%"></i></div><span class="pct text-positive">100 %</span></div>
+    </div>
+  </div>
+
+  <div class="two-col" style="grid-template-columns:1fr 1fr">
+    <div class="panel">
+      <div class="panel-hd"><h2>Audit log · last 24h</h2><a href="#" class="btn btn-quiet btn-sm">View all →</a></div>
+      <div class="feed-row"><div class="ts">14:30</div><div><div class="ttl">Subscription upgraded · Pro → Quant</div><div class="sub">User <strong>rheap</strong> · ₹3,500 prorated · order EQ-2026-0148</div></div></div>
+      <div class="feed-row"><div class="ts">13:18</div><div><div class="ttl">Feature flag toggled: <code>qga_v4</code> = on</div><div class="sub">Admin <strong>kavya@equitypro</strong> · 100 % rollout</div></div></div>
+      <div class="feed-row"><div class="ts">11:42</div><div><div class="ttl">API key rotated</div><div class="sub">User <strong>vk_mumbai</strong> · old key revoked, new in 30s grace</div></div></div>
+      <div class="feed-row"><div class="ts">09:08</div><div><div class="ttl">Refund issued · ₹1,499</div><div class="sub">User <strong>arnav.kothari</strong> · reason: accidental annual upgrade · approved by ops</div></div></div>
+      <div class="feed-row"><div class="ts">08:30</div><div><div class="ttl">Daily briefing emails dispatched</div><div class="sub">18,124 / 18,142 delivered · 0.10 % bounce</div></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd"><h2>Feature flags</h2><a href="#" class="btn btn-quiet btn-sm">Manage →</a></div>
+      <div class="feed-row"><div class="ts">100%</div><div><div class="ttl"><code>qga_v4</code> · QGA generation 4 engine</div><div class="sub">Faster convergence, larger search space · stable</div></div></div>
+      <div class="feed-row"><div class="ts">25%</div><div><div class="ttl"><code>reverse_dcf_v2</code> · TTM-aware terminal value</div><div class="sub">Beta cohort · Pro users only</div></div></div>
+      <div class="feed-row"><div class="ts">10%</div><div><div class="ttl"><code>news_summarizer</code> · LLM-generated stock-level digests</div><div class="sub">Internal + 12 advisors</div></div></div>
+      <div class="feed-row"><div class="ts">0%</div><div><div class="ttl"><code>option_chains</code> · F&amp;O option chain UI</div><div class="sub">Awaiting NSE F&amp;O data licensing approval</div></div></div>
+    </div>
+  </div>
+
+</div></main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

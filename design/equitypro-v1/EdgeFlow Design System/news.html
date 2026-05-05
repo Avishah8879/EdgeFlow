@@ -1,0 +1,125 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>News &amp; insights · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.news-hd{padding:28px 0 22px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.news-hd h1{font-family:var(--font-display);font-size:34px;letter-spacing:-0.025em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .news-hd h1{color:hsl(38 30% 95%)}
+.news-hd .filt{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.chip{height:30px;padding:0 12px;border-radius:var(--radius-pill);border:1px solid hsl(var(--border));background:hsl(var(--card));font-size:12px;font-weight:600;color:hsl(var(--muted-foreground));cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip.active{background:hsl(var(--brand-navy));color:white;border-color:hsl(var(--brand-navy))}
+.dark .chip.active{background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));border-color:hsl(var(--brand-gold))}
+
+.news-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:24px;padding:28px 0 60px}
+
+/* feature article */
+.feat{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column}
+.feat .img{aspect-ratio:16/9;background:linear-gradient(135deg,hsl(var(--brand-navy)),hsl(var(--brand-navy-deep)));position:relative;overflow:hidden;display:flex;align-items:end;padding:24px;color:white}
+.feat .img::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 70% 20%,hsl(var(--brand-gold)/0.4),transparent 50%)}
+.feat .img .ph{position:relative;z-index:1}
+.feat .img .ey{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--brand-gold))}
+.feat .img h2{font-family:var(--font-display);font-size:30px;letter-spacing:-0.02em;line-height:1.15;margin:6px 0 0;max-width:24ch;color:white}
+.feat .body{padding:22px 24px}
+.feat .body p{color:hsl(var(--muted-foreground));font-size:14px;line-height:1.6;margin:0 0 14px}
+.feat .meta{display:flex;align-items:center;gap:10px;font-size:12px;color:hsl(var(--muted-foreground));font-family:var(--font-mono)}
+.feat .meta .av{width:24px;height:24px;border-radius:50%;background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;font-family:var(--font-display)}
+
+/* item list */
+.news-list{display:flex;flex-direction:column;gap:0}
+.story{display:grid;grid-template-columns:120px 1fr;gap:16px;padding:18px 0;border-bottom:1px solid hsl(var(--border));cursor:pointer}
+.story:first-child{padding-top:0}
+.story:last-child{border-bottom:0}
+.story .thumb{aspect-ratio:4/3;border-radius:var(--radius-md);background:hsl(var(--muted));display:flex;align-items:center;justify-content:center;color:hsl(var(--muted-foreground));font-size:11px;font-family:var(--font-mono);position:relative;overflow:hidden}
+.story .t1{background:linear-gradient(135deg,hsl(150 50% 55%),hsl(150 50% 35%));color:white}
+.story .t2{background:linear-gradient(135deg,hsl(0 60% 55%),hsl(0 60% 35%));color:white}
+.story .t3{background:linear-gradient(135deg,hsl(213 50% 50%),hsl(213 50% 30%));color:white}
+.story .t4{background:linear-gradient(135deg,hsl(38 75% 55%),hsl(38 75% 35%));color:white}
+.story .t5{background:linear-gradient(135deg,hsl(280 40% 55%),hsl(280 40% 30%));color:white}
+.story h3{font-family:var(--font-display);font-size:16px;line-height:1.3;letter-spacing:-0.01em;margin:0 0 6px;color:hsl(var(--brand-navy))}
+.dark .story h3{color:hsl(38 30% 95%)}
+.story p{font-size:13px;color:hsl(var(--muted-foreground));margin:0 0 8px;line-height:1.5}
+.story .meta{display:flex;gap:10px;font-size:11px;color:hsl(var(--muted-foreground));font-family:var(--font-mono)}
+.story .meta .tag{background:hsl(var(--brand-gold)/0.15);color:hsl(38 60% 38%);padding:1px 7px;border-radius:var(--radius-pill);font-weight:600}
+.dark .story .meta .tag{color:hsl(var(--brand-gold))}
+
+.movers{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:18px;margin-bottom:18px}
+.movers h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--brand-gold));margin:0 0 14px}
+.mv-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid hsl(var(--border));font-size:13px}
+.mv-row:last-child{border-bottom:0}
+.mv-row .sym{font-weight:700;font-family:var(--font-display)}
+.mv-row .pr{font-family:var(--font-mono);font-size:12px}
+</style></head>
+<body data-page="news" data-screen-label="11 News">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="news-hd"><div class="container">
+  <span class="eyebrow">Markets · News &amp; insights</span>
+  <h1>The market, in context.</h1>
+  <p class="muted body-sm" style="margin:6px 0 0">Curated stories that move the needle. Filtered by symbols you watch, themes you follow, and time you have.</p>
+  <div class="filt">
+    <button class="chip active">All news</button>
+    <button class="chip">My watchlist</button>
+    <button class="chip">Macro</button>
+    <button class="chip">Earnings</button>
+    <button class="chip">Sector · IT</button>
+    <button class="chip">Sector · Banks</button>
+    <button class="chip">Sector · Oil &amp; Gas</button>
+    <button class="chip">Crypto</button>
+    <button class="chip">Global</button>
+  </div>
+</div></section>
+
+<main class="container">
+  <div class="news-grid">
+    <article class="feat">
+      <div class="img"><div class="ph">
+        <span class="ey">Macro · 6 min read · ⓟ Sponsored insight</span>
+        <h2>RBI holds rates steady; pivot now hinges on March CPI print</h2>
+      </div></div>
+      <div class="body">
+        <p>Governor Das signals a "data-dependent" stance after the MPC's 4-2 split decision. Bond yields rallied 8 bps; rate-sensitives Banking, NBFCs and Auto rallied across the curve. We unpack the four scenarios traders are pricing into the OIS curve.</p>
+        <div class="meta">
+          <span class="av">SR</span><span><b>Shreya Rao</b> · Chief markets editor</span><span>· 38 min ago</span><span>· 2,418 reads</span>
+        </div>
+      </div>
+    </article>
+
+    <div class="news-list">
+      <article class="story">
+        <div class="thumb t1">RELIANCE</div>
+        <div><h3>Reliance Q4 preview: jio-monetization, retail margins in focus</h3><p>Street pegs revenue at ₹2.4 lakh cr; tariff hike pass-through to drive ARPU. Five technicals say…</p><div class="meta"><span class="tag">Earnings</span><span>1 h ago</span><span>EquityPro Desk</span></div></div>
+      </article>
+      <article class="story">
+        <div class="thumb t3">ADANI</div>
+        <div><h3>Adani Group taps overseas markets for $1.5B green-energy bond</h3><p>Three-tranche issuance to refinance project debt at Adani Green &amp; Adani Energy.</p><div class="meta"><span class="tag">Capital raise</span><span>2 h ago</span><span>Reuters · syndicated</span></div></div>
+      </article>
+      <article class="story">
+        <div class="thumb t4">FII flows</div>
+        <div><h3>FIIs net buyers for sixth straight session; IT laggard despite tailwinds</h3><p>Cash equity buying of ₹3,142 cr; F&amp;O index futures longs up 14%.</p><div class="meta"><span class="tag">Flows</span><span>3 h ago</span><span>NSE Provisional</span></div></div>
+      </article>
+      <article class="story">
+        <div class="thumb t2">NIFTY IT</div>
+        <div><h3>Nifty IT slips 0.4% as TCS guidance cautious into Q1</h3><p>Discretionary spending in BFSI verticals remains soft; mid-tier IT outperforms again.</p><div class="meta"><span class="tag">Sector</span><span>4 h ago</span><span>Mint · syndicated</span></div></div>
+      </article>
+      <article class="story">
+        <div class="thumb t5">SEBI</div>
+        <div><h3>SEBI tightens disclosure norms for AIFs investing in unlisted firms</h3><p>New circular requires monthly NAV disclosures and stricter related-party rules.</p><div class="meta"><span class="tag">Regulatory</span><span>5 h ago</span><span>SEBI press release</span></div></div>
+      </article>
+      <article class="story">
+        <div class="thumb t3">HDFCBANK</div>
+        <div><h3>HDFC Bank deposit growth lags as private banks battle for retail SA</h3><p>Q4 update shows advances +14% YoY but deposit growth only +12.6%; CD ratio elevated.</p><div class="meta"><span class="tag">Bank update</span><span>7 h ago</span><span>EquityPro Desk</span></div></div>
+      </article>
+      <article class="story">
+        <div class="thumb t1">CEMENT</div>
+        <div><h3>Cement realisations bottom out; UltraTech, Shree set to lead recovery</h3><p>Channel checks point to ₹15-20/bag price hike across south &amp; west in April.</p><div class="meta"><span class="tag">Sector</span><span>9 h ago</span><span>Brokerage note</span></div></div>
+      </article>
+    </div>
+  </div>
+</main>
+
+<aside style="display:none"></aside>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

@@ -1,0 +1,19 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin:0; padding:24px; background: hsl(var(--background)); color: hsl(var(--foreground)); }
+  .row { display:flex; align-items:flex-end; gap:24px; }
+  .swatch { font-family: var(--font-sans); }
+  .name { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color: hsl(var(--muted-foreground)); margin-top:8px; }
+  .val { font-family: var(--font-mono); font-size: 11px; color: hsl(var(--muted-foreground)); }
+  .chip { width:72px; height:72px; border-radius: 12px; border: 1px solid hsl(var(--border)); }
+  h1 { font-size:13px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color: hsl(var(--muted-foreground)); margin:0 0 16px; }
+</style></head>
+<body>
+  <h1>Brand</h1>
+  <div class="row">
+    <div class="swatch"><div class="chip" style="background: hsl(var(--brand-orange))"></div><div class="name">Brand orange</div><div class="val">#FFA31A</div></div>
+    <div class="swatch"><div class="chip" style="background: hsl(var(--primary))"></div><div class="name">Primary cyan</div><div class="val">#00BFFF</div></div>
+    <div class="swatch"><div class="chip" style="background: linear-gradient(163deg, hsl(var(--primary)) 0%, hsl(35 100% 50%) 100%)"></div><div class="name">Brand gradient</div><div class="val">cyan→orange</div></div>
+  </div>
+</body></html>

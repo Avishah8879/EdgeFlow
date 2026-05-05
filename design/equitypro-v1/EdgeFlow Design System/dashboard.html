@@ -1,0 +1,223 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.page-hd{padding:24px 0 16px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.page-hd .row{display:flex;align-items:end;justify-content:space-between;gap:24px}
+.page-hd h1{font-family:var(--font-display);font-size:32px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .page-hd h1{color:hsl(38 30% 95%)}
+.layout-tweak{display:inline-flex;background:hsl(var(--muted));padding:3px;border-radius:var(--radius-md);gap:2px}
+.layout-tweak button{height:30px;padding:0 12px;background:transparent;border:0;border-radius:var(--radius-sm);font-size:12px;font-weight:600;color:hsl(var(--muted-foreground))}
+.layout-tweak button.active{background:hsl(var(--card));color:hsl(var(--foreground));box-shadow:0 1px 2px hsl(213 30% 20%/0.08)}
+
+.dash{padding:24px 0 60px}
+
+/* Layout A: Classic 3-col */
+.dash[data-layout="A"] .grid-main{display:grid;grid-template-columns:280px 1fr 320px;gap:20px;align-items:start}
+/* Layout B: Hero + 2-col */
+.dash[data-layout="B"] .grid-main{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start}
+.dash[data-layout="B"] #col-rail{display:none}
+.dash[data-layout="B"] .hero-strip{grid-column:1 / -1}
+/* Layout C: Dense terminal */
+.dash[data-layout="C"] .grid-main{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:start}
+.dash[data-layout="C"] #col-rail{grid-column:1/2}
+.dash[data-layout="C"] #col-mid{grid-column:2/4}
+.dash[data-layout="C"] #col-side{grid-column:4/5}
+
+.indices-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px}
+.idx-cell{padding:14px 16px;border-right:1px solid hsl(var(--border))}
+.idx-cell:last-child{border-right:0}
+.idx-cell .nm{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground))}
+.idx-cell .v{font-family:var(--font-mono);font-size:18px;font-weight:700;margin-top:4px}
+.idx-cell .c{font-size:11px;font-weight:600;margin-top:2px}
+
+.rail{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.rail-head{padding:14px 18px;border-bottom:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center}
+.rail h3{margin:0;font-size:13px;font-weight:700;letter-spacing:-0.01em}
+.rail .ey{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground))}
+.wl-row{display:grid;grid-template-columns:1fr auto auto;gap:12px;padding:11px 18px;border-bottom:1px solid hsl(var(--border));align-items:center;font-size:12.5px;cursor:pointer;transition:background var(--t-fast)}
+.wl-row:hover{background:hsl(var(--muted)/0.5)}
+.wl-row:last-child{border-bottom:0}
+.wl-row .sym{font-weight:600}
+.wl-row .nm{font-size:11px;color:hsl(var(--muted-foreground));margin-top:1px}
+.wl-row .price{font-family:var(--font-mono);font-weight:600;text-align:right}
+.wl-row .chg{font-family:var(--font-mono);font-size:11px;text-align:right;margin-top:1px}
+
+.heatmap{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;padding:14px}
+.heat{padding:10px 8px;border-radius:var(--radius-sm);text-align:center}
+.heat .s{font-size:11px;font-weight:700;color:white}
+.heat .p{font-family:var(--font-mono);font-size:10.5px;color:white;opacity:0.85;margin-top:2px}
+
+.movers{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.mov-col{}
+.mov-col:first-child{border-right:1px solid hsl(var(--border))}
+.mov-row{display:grid;grid-template-columns:1fr auto;padding:9px 16px;border-bottom:1px solid hsl(var(--border));font-size:12.5px;align-items:center}
+.mov-row:last-child{border-bottom:0}
+.mov-row .sym{font-weight:600}
+.mov-row .pct{font-family:var(--font-mono);font-weight:700}
+
+.feed-row{padding:13px 18px;border-bottom:1px solid hsl(var(--border));font-size:12.5px;display:grid;grid-template-columns:50px 1fr;gap:10px;align-items:center}
+.feed-row:last-child{border-bottom:0}
+.feed-row .ts{font-family:var(--font-mono);font-size:10.5px;color:hsl(var(--muted-foreground))}
+.feed-row .ttl{font-weight:600;line-height:1.4}
+.feed-row .sub{font-size:11px;color:hsl(var(--muted-foreground));margin-top:2px}
+
+.alpha-cta{background:linear-gradient(155deg,hsl(var(--brand-navy)),hsl(var(--brand-navy-deep)));color:white;border-radius:var(--radius-lg);padding:22px;border:1px solid hsl(var(--brand-gold)/0.3);position:relative;overflow:hidden}
+.alpha-cta::before{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,hsl(var(--brand-gold)/0.4),transparent 70%);filter:blur(20px)}
+.alpha-cta .ey{color:hsl(var(--brand-gold));font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase)}
+.alpha-cta h3{font-family:var(--font-display);font-size:20px;margin:6px 0 8px;color:white}
+.alpha-cta p{font-size:13px;line-height:1.55;color:hsl(38 30% 88%);margin:0 0 14px}
+</style></head>
+<body data-page="dashboard" data-screen-label="02 Dashboard">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="page-hd"><div class="container">
+  <div class="row">
+    <div>
+      <span class="eyebrow">Workspace</span>
+      <h1>Good afternoon, Arjun.</h1>
+      <p class="muted body-sm" style="margin:4px 0 0">Indian markets are <strong style="color:hsl(var(--positive))">open</strong> · NIFTY +0.82 % · 14:32 IST</p>
+    </div>
+    <div class="layout-tweak" id="layoutTweak">
+      <button data-l="A" class="active">Classic</button>
+      <button data-l="B">Focus</button>
+      <button data-l="C">Terminal</button>
+    </div>
+  </div>
+</div></section>
+
+<main class="dash" data-layout="A"><div class="container">
+
+  <div class="indices-strip hero-strip">
+    <div class="idx-cell"><div class="nm">NIFTY 50</div><div class="v">22,418.25</div><div class="c change-up">+182.40 · +0.82 %</div></div>
+    <div class="idx-cell"><div class="nm">SENSEX</div><div class="v">73,892.05</div><div class="c change-up">+612.80 · +0.84 %</div></div>
+    <div class="idx-cell"><div class="nm">BANK NIFTY</div><div class="v">48,210.30</div><div class="c change-up">+421.10 · +0.88 %</div></div>
+    <div class="idx-cell"><div class="nm">NIFTY IT</div><div class="v">38,124.55</div><div class="c change-down">−92.40 · −0.24 %</div></div>
+    <div class="idx-cell"><div class="nm">INDIA VIX</div><div class="v">12.84</div><div class="c change-down">−0.42 · −3.16 %</div></div>
+    <div class="idx-cell"><div class="nm">USD / INR</div><div class="v">83.42</div><div class="c muted">+0.03</div></div>
+  </div>
+
+  <div class="grid-main">
+
+    <aside id="col-rail" class="flex-col gap-4" style="display:flex">
+      <div class="rail">
+        <div class="rail-head"><h3>Watchlist</h3><span class="ey">12 stocks</span></div>
+        <div>
+          <a href="stock-detail.html" class="wl-row" style="text-decoration:none;color:inherit">
+            <div><div class="sym">RELIANCE</div><div class="nm">Reliance Industries</div></div>
+            <div class="price">2,948.55</div><div class="chg change-up">+1.46 %</div>
+          </a>
+          <div class="wl-row"><div><div class="sym">TCS</div><div class="nm">Tata Consultancy</div></div><div class="price">3,802.10</div><div class="chg change-down">−0.32 %</div></div>
+          <div class="wl-row"><div><div class="sym">HDFCBANK</div><div class="nm">HDFC Bank</div></div><div class="price">1,684.40</div><div class="chg change-up">+0.78 %</div></div>
+          <div class="wl-row"><div><div class="sym">INFY</div><div class="nm">Infosys</div></div><div class="price">1,512.85</div><div class="chg change-up">+1.12 %</div></div>
+          <div class="wl-row"><div><div class="sym">ICICIBANK</div><div class="nm">ICICI Bank</div></div><div class="price">1,108.20</div><div class="chg change-up">+0.42 %</div></div>
+          <div class="wl-row"><div><div class="sym">ASIANPAINT</div><div class="nm">Asian Paints</div></div><div class="price">2,914.60</div><div class="chg change-down">−1.20 %</div></div>
+          <div class="wl-row"><div><div class="sym">BAJFINANCE</div><div class="nm">Bajaj Finance</div></div><div class="price">7,128.40</div><div class="chg change-up">+0.92 %</div></div>
+        </div>
+      </div>
+
+      <div class="alpha-cta">
+        <div class="ey">EquityPro AI</div>
+        <h3>Generate alpha for your watchlist</h3>
+        <p>Run the QGA backtester across all 12 watchlist tickers in parallel. Average runtime 84s.</p>
+        <a href="backtesting.html" class="btn btn-gold btn-sm">Run batch →</a>
+      </div>
+    </aside>
+
+    <section id="col-mid" class="flex-col gap-4" style="display:flex">
+
+      <div class="rail">
+        <div class="rail-head"><div><span class="ey">Sector heatmap</span><h3>Today · NSE 200</h3></div>
+          <div class="tabs"><button class="active">Sectors</button><button>Industries</button><button>Cap</button></div>
+        </div>
+        <div class="heatmap">
+          <div class="heat" style="background:hsl(150 60% 40%);grid-column:span 2"><div class="s">Banking</div><div class="p">+1.84 %</div></div>
+          <div class="heat" style="background:hsl(150 55% 45%)"><div class="s">Energy</div><div class="p">+1.46</div></div>
+          <div class="heat" style="background:hsl(150 50% 48%)"><div class="s">FMCG</div><div class="p">+0.92</div></div>
+          <div class="heat" style="background:hsl(150 50% 50%)"><div class="s">Auto</div><div class="p">+0.84</div></div>
+          <div class="heat" style="background:hsl(150 45% 55%)"><div class="s">Pharma</div><div class="p">+0.42</div></div>
+          <div class="heat" style="background:hsl(213 14% 60%)"><div class="s">Realty</div><div class="p">+0.08</div></div>
+          <div class="heat" style="background:hsl(213 14% 58%)"><div class="s">Media</div><div class="p">−0.04</div></div>
+          <div class="heat" style="background:hsl(0 50% 60%)"><div class="s">IT</div><div class="p">−0.24</div></div>
+          <div class="heat" style="background:hsl(0 55% 55%)"><div class="s">Metals</div><div class="p">−0.84</div></div>
+          <div class="heat" style="background:hsl(0 60% 50%);grid-column:span 2"><div class="s">Telecom</div><div class="p">−1.42 %</div></div>
+        </div>
+      </div>
+
+      <div class="rail">
+        <div class="rail-head"><div><span class="ey">Top movers</span><h3>NSE 200 · Gainers / Losers</h3></div><a href="stocks.html" class="btn btn-quiet btn-sm">View all →</a></div>
+        <div class="movers">
+          <div class="mov-col">
+            <div class="mov-row"><div><div class="sym">ADANIPORTS</div><div class="nm muted body-sm">Adani Ports</div></div><span class="pct change-up">+5.84%</span></div>
+            <div class="mov-row"><div><div class="sym">JSWSTEEL</div><div class="nm muted body-sm">JSW Steel</div></div><span class="pct change-up">+4.21%</span></div>
+            <div class="mov-row"><div><div class="sym">M&amp;M</div><div class="nm muted body-sm">Mahindra &amp; Mahindra</div></div><span class="pct change-up">+3.76%</span></div>
+            <div class="mov-row"><div><div class="sym">TATAMOTORS</div><div class="nm muted body-sm">Tata Motors</div></div><span class="pct change-up">+3.12%</span></div>
+            <div class="mov-row"><div><div class="sym">SBIN</div><div class="nm muted body-sm">State Bank of India</div></div><span class="pct change-up">+2.84%</span></div>
+          </div>
+          <div class="mov-col">
+            <div class="mov-row"><div><div class="sym">BHARTIARTL</div><div class="nm muted body-sm">Bharti Airtel</div></div><span class="pct change-down">−2.84%</span></div>
+            <div class="mov-row"><div><div class="sym">HINDALCO</div><div class="nm muted body-sm">Hindalco</div></div><span class="pct change-down">−2.12%</span></div>
+            <div class="mov-row"><div><div class="sym">WIPRO</div><div class="nm muted body-sm">Wipro</div></div><span class="pct change-down">−1.74%</span></div>
+            <div class="mov-row"><div><div class="sym">DRREDDY</div><div class="nm muted body-sm">Dr Reddy's</div></div><span class="pct change-down">−1.32%</span></div>
+            <div class="mov-row"><div><div class="sym">ASIANPAINT</div><div class="nm muted body-sm">Asian Paints</div></div><span class="pct change-down">−1.20%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rail">
+        <div class="rail-head"><div><span class="ey">Live feed</span><h3>Tickers · Filings · Brokerage</h3></div>
+          <span class="badge badge-pos"><span class="dot pulse"></span>Live</span>
+        </div>
+        <div>
+          <div class="feed-row"><div class="ts">14:30</div><div><div class="ttl">Adani Ports lifts FY guidance after Q3 cargo throughput beat</div><div class="sub">Filing · BSE · ADANIPORTS · <span class="text-positive">+5.84 %</span></div></div></div>
+          <div class="feed-row"><div class="ts">14:24</div><div><div class="ttl">Morgan Stanley reiterates Overweight on RELIANCE, target ₹3,250</div><div class="sub">Brokerage · MS · RELIANCE</div></div></div>
+          <div class="feed-row"><div class="ts">14:18</div><div><div class="ttl">RBI fines HDFC Bank ₹1.0 Cr for KYC compliance lapse</div><div class="sub">Regulatory · RBI · HDFCBANK</div></div></div>
+          <div class="feed-row"><div class="ts">14:11</div><div><div class="ttl">India VIX falls below 13 for first time in 14 sessions</div><div class="sub">Macro · NSE · INDIAVIX</div></div></div>
+          <div class="feed-row"><div class="ts">14:05</div><div><div class="ttl">M&amp;M EV book hits 80,000 units, board approves new Pune plant</div><div class="sub">Filing · BSE · M&amp;M · <span class="text-positive">+3.76 %</span></div></div></div>
+        </div>
+      </div>
+
+    </section>
+
+    <aside id="col-side" class="flex-col gap-4" style="display:flex">
+      <div class="rail">
+        <div class="rail-head"><h3>Saved screens</h3><span class="ey">8</span></div>
+        <div>
+          <div class="wl-row"><div><div class="sym">Magic Formula</div><div class="nm">42 matches today</div></div><span class="badge badge-gold">Run</span></div>
+          <div class="wl-row"><div><div class="sym">52W Breakout</div><div class="nm">18 matches</div></div><span class="badge badge-gold">Run</span></div>
+          <div class="wl-row"><div><div class="sym">Piotroski F ≥ 8</div><div class="nm">11 matches</div></div><span class="badge badge-gold">Run</span></div>
+          <div class="wl-row"><div><div class="sym">Dividend Champions</div><div class="nm">26 matches</div></div><span class="badge badge-gold">Run</span></div>
+        </div>
+      </div>
+      <div class="rail">
+        <div class="rail-head"><h3>Recent backtests</h3><span class="ey">5</span></div>
+        <div>
+          <div class="wl-row"><div><div class="sym">MOMO-BB · NIFTY50</div><div class="nm">Sharpe 1.42 · CAGR 38.4 %</div></div><span class="chg change-up">+38.4</span></div>
+          <div class="wl-row"><div><div class="sym">RSI-MR · BANKNIFTY</div><div class="nm">Sharpe 0.84 · CAGR 14.2 %</div></div><span class="chg change-up">+14.2</span></div>
+          <div class="wl-row"><div><div class="sym">VWAP-Cross · IT</div><div class="nm">Sharpe 1.06 · CAGR 22.1 %</div></div><span class="chg change-up">+22.1</span></div>
+        </div>
+      </div>
+      <div class="rail">
+        <div class="rail-head"><h3>Earnings · this week</h3><span class="ey">14</span></div>
+        <div>
+          <div class="wl-row"><div><div class="sym">INFY</div><div class="nm">Mon · After mkt</div></div><span class="badge">Q3</span></div>
+          <div class="wl-row"><div><div class="sym">HDFCBANK</div><div class="nm">Tue · Pre mkt</div></div><span class="badge">Q3</span></div>
+          <div class="wl-row"><div><div class="sym">RELIANCE</div><div class="nm">Fri · After mkt</div></div><span class="badge">Q3</span></div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div></main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+<script>
+document.getElementById('layoutTweak').addEventListener('click',(e)=>{
+  const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#layoutTweak button').forEach(x=>x.classList.toggle('active',x===b));
+  document.querySelector('.dash').dataset.layout=b.dataset.l;
+});
+</script>
+</body></html>

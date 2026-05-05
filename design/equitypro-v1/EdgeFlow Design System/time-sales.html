@@ -1,0 +1,139 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Time &amp; Sales · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.ts-hd{padding:18px 0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card));display:flex;align-items:center;gap:24px;padding:18px 32px}
+.ts-hd h1{font-family:var(--font-display);font-size:22px;letter-spacing:-0.01em;margin:0;color:hsl(var(--brand-navy))}
+.dark .ts-hd h1{color:hsl(38 30% 95%)}
+.ts-hd .px{font-family:var(--font-mono);font-weight:700;font-size:18px}
+.ts-hd .ch{font-family:var(--font-mono);font-size:13px}
+
+.ts-grid{display:grid;grid-template-columns:1fr 360px;gap:0;height:calc(100vh - 64px - 70px)}
+.ts-tape{overflow:auto;background:hsl(var(--card));border-right:1px solid hsl(var(--border))}
+.ts-tape table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12px}
+.ts-tape th{background:hsl(var(--muted)/0.7);font-size:10.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:9px 14px;text-align:right;position:sticky;top:0;border-bottom:1px solid hsl(var(--border))}
+.ts-tape th:first-child{text-align:left}
+.ts-tape td{padding:7px 14px;border-bottom:1px solid hsl(var(--border)/0.5);text-align:right;font-feature-settings:"tnum"}
+.ts-tape td:first-child{text-align:left;color:hsl(var(--muted-foreground))}
+.ts-tape .px-up{color:hsl(var(--positive));font-weight:700}
+.ts-tape .px-dn{color:hsl(var(--negative));font-weight:700}
+.ts-tape .lg{background:hsl(var(--brand-gold)/0.06);border-left:3px solid hsl(var(--brand-gold))}
+.ts-tape .ag{background:hsl(var(--positive)/0.08)}
+.ts-tape .ag-s{background:hsl(var(--negative)/0.08)}
+
+.ts-side{overflow-y:auto;padding:18px;background:hsl(var(--background))}
+.ts-side .panel{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:16px;margin-bottom:14px}
+.ts-side h4{margin:0 0 12px;font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi-grid div .ey{font-size:9.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700}
+.kpi-grid div .v{font-family:var(--font-mono);font-size:15px;font-weight:700;color:hsl(var(--foreground));margin-top:1px}
+.flow-bar{height:8px;background:linear-gradient(90deg,hsl(var(--positive)) 0%,hsl(var(--positive)) 64%,hsl(var(--negative)) 64%,hsl(var(--negative)) 100%);border-radius:4px;position:relative;margin:8px 0 6px}
+.flow-bar::after{content:"";position:absolute;left:64%;top:-3px;bottom:-3px;width:2px;background:hsl(var(--background))}
+.histo{display:grid;grid-template-columns:repeat(20,1fr);gap:2px;height:80px;align-items:end;margin-top:6px}
+.histo div{background:hsl(var(--positive));opacity:0.7;border-radius:1px}
+.histo div.s{background:hsl(var(--negative))}
+
+.filt-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.filt-row .chip{height:28px;padding:0 10px;border-radius:var(--radius-pill);border:1px solid hsl(var(--border));background:hsl(var(--card));font-size:11px;font-weight:600;color:hsl(var(--muted-foreground));cursor:pointer}
+.filt-row .chip.active{background:hsl(var(--brand-navy));color:white;border-color:hsl(var(--brand-navy))}
+.dark .filt-row .chip.active{background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));border-color:hsl(var(--brand-gold))}
+</style></head>
+<body data-page="time-sales" data-screen-label="Terminal · 21 Time &amp; Sales">
+<div class="shell"><div data-shell-topbar></div>
+
+<div class="ts-hd">
+  <h1>RELIANCE <span class="muted body-sm" style="font-weight:400">· Time &amp; Sales</span></h1>
+  <span class="px">2,948.55</span><span class="ch change-up">+24.10 (+0.82%)</span>
+  <div class="filt-row" style="margin:0">
+    <button class="chip active">All</button>
+    <button class="chip">Aggressive buy</button>
+    <button class="chip">Aggressive sell</button>
+    <button class="chip">Block ≥5L</button>
+    <button class="chip">After-hours</button>
+  </div>
+  <div style="margin-left:auto" class="flex gap-2">
+    <button class="btn btn-ghost btn-sm">Export</button>
+    <button class="btn btn-ghost btn-sm">Pause feed</button>
+  </div>
+</div>
+
+<main class="ts-grid">
+  <div class="ts-tape">
+    <table>
+      <thead><tr><th>Time (IST)</th><th>Price</th><th>Δ</th><th>Qty</th><th>Side</th><th>Bid</th><th>Ask</th><th>Cumvol</th></tr></thead>
+      <tbody>
+        <tr class="ag lg"><td>09:42:14.812</td><td class="px-up">2,948.65</td><td class="px-up">+0.10</td><td>5,420</td><td class="px-up">BUY ↑</td><td>2,948.55</td><td>2,948.65</td><td>1,428,420</td></tr>
+        <tr class="ag"><td>09:42:14.624</td><td class="px-up">2,948.55</td><td>0.00</td><td>200</td><td class="px-up">BUY ↑</td><td>2,948.50</td><td>2,948.55</td><td>1,423,000</td></tr>
+        <tr class="ag"><td>09:42:14.182</td><td class="px-up">2,948.55</td><td class="px-up">+0.05</td><td>120</td><td class="px-up">BUY ↑</td><td>2,948.50</td><td>2,948.55</td><td>1,422,800</td></tr>
+        <tr class="ag-s"><td>09:42:13.918</td><td class="px-dn">2,948.50</td><td class="px-dn">−0.05</td><td>340</td><td class="px-dn">SELL ↓</td><td>2,948.45</td><td>2,948.55</td><td>1,422,680</td></tr>
+        <tr class="ag-s"><td>09:42:13.624</td><td class="px-dn">2,948.50</td><td>0.00</td><td>80</td><td class="px-dn">SELL ↓</td><td>2,948.45</td><td>2,948.55</td><td>1,422,340</td></tr>
+        <tr class="ag"><td>09:42:13.412</td><td class="px-up">2,948.55</td><td class="px-up">+0.10</td><td>220</td><td class="px-up">BUY ↑</td><td>2,948.45</td><td>2,948.55</td><td>1,422,260</td></tr>
+        <tr><td>09:42:13.124</td><td>2,948.45</td><td>0.00</td><td>40</td><td class="muted">CROSS</td><td>2,948.40</td><td>2,948.50</td><td>1,422,040</td></tr>
+        <tr class="ag"><td>09:42:12.918</td><td class="px-up">2,948.45</td><td class="px-up">+0.05</td><td>180</td><td class="px-up">BUY ↑</td><td>2,948.40</td><td>2,948.50</td><td>1,422,000</td></tr>
+        <tr class="ag-s lg"><td>09:42:12.612</td><td class="px-dn">2,948.40</td><td class="px-dn">−0.10</td><td>8,200</td><td class="px-dn">SELL ↓</td><td>2,948.40</td><td>2,948.55</td><td>1,421,820</td></tr>
+        <tr class="ag-s"><td>09:42:12.418</td><td class="px-dn">2,948.40</td><td>0.00</td><td>340</td><td class="px-dn">SELL ↓</td><td>2,948.35</td><td>2,948.50</td><td>1,413,620</td></tr>
+        <tr class="ag"><td>09:42:12.124</td><td class="px-up">2,948.45</td><td class="px-up">+0.05</td><td>240</td><td class="px-up">BUY ↑</td><td>2,948.40</td><td>2,948.50</td><td>1,413,280</td></tr>
+        <tr class="ag"><td>09:42:11.918</td><td class="px-up">2,948.40</td><td class="px-up">+0.05</td><td>180</td><td class="px-up">BUY ↑</td><td>2,948.35</td><td>2,948.45</td><td>1,413,040</td></tr>
+        <tr class="ag-s"><td>09:42:11.612</td><td class="px-dn">2,948.35</td><td class="px-dn">−0.05</td><td>120</td><td class="px-dn">SELL ↓</td><td>2,948.30</td><td>2,948.40</td><td>1,412,860</td></tr>
+        <tr class="ag"><td>09:42:11.412</td><td class="px-up">2,948.40</td><td class="px-up">+0.05</td><td>1,420</td><td class="px-up">BUY ↑</td><td>2,948.35</td><td>2,948.45</td><td>1,412,740</td></tr>
+        <tr class="ag"><td>09:42:11.124</td><td class="px-up">2,948.35</td><td>0.00</td><td>180</td><td class="px-up">BUY ↑</td><td>2,948.30</td><td>2,948.40</td><td>1,411,320</td></tr>
+        <tr class="ag-s"><td>09:42:10.918</td><td class="px-dn">2,948.35</td><td class="px-dn">−0.05</td><td>240</td><td class="px-dn">SELL ↓</td><td>2,948.30</td><td>2,948.40</td><td>1,411,140</td></tr>
+        <tr class="ag"><td>09:42:10.612</td><td class="px-up">2,948.40</td><td class="px-up">+0.05</td><td>340</td><td class="px-up">BUY ↑</td><td>2,948.35</td><td>2,948.45</td><td>1,410,900</td></tr>
+        <tr><td>09:42:10.412</td><td>2,948.35</td><td>0.00</td><td>20</td><td class="muted">CROSS</td><td>2,948.30</td><td>2,948.40</td><td>1,410,560</td></tr>
+        <tr class="ag-s lg"><td>09:42:10.124</td><td class="px-dn">2,948.30</td><td class="px-dn">−0.05</td><td>12,400</td><td class="px-dn">SELL ↓</td><td>2,948.25</td><td>2,948.35</td><td>1,410,540</td></tr>
+        <tr class="ag-s"><td>09:42:09.918</td><td class="px-dn">2,948.30</td><td>0.00</td><td>80</td><td class="px-dn">SELL ↓</td><td>2,948.25</td><td>2,948.35</td><td>1,398,140</td></tr>
+        <tr class="ag"><td>09:42:09.612</td><td class="px-up">2,948.35</td><td class="px-up">+0.05</td><td>200</td><td class="px-up">BUY ↑</td><td>2,948.30</td><td>2,948.40</td><td>1,398,060</td></tr>
+        <tr class="ag"><td>09:42:09.412</td><td class="px-up">2,948.30</td><td>0.00</td><td>120</td><td class="px-up">BUY ↑</td><td>2,948.25</td><td>2,948.35</td><td>1,397,860</td></tr>
+        <tr class="ag-s"><td>09:42:09.124</td><td class="px-dn">2,948.25</td><td class="px-dn">−0.05</td><td>160</td><td class="px-dn">SELL ↓</td><td>2,948.20</td><td>2,948.30</td><td>1,397,740</td></tr>
+        <tr class="ag"><td>09:42:08.918</td><td class="px-up">2,948.30</td><td class="px-up">+0.05</td><td>280</td><td class="px-up">BUY ↑</td><td>2,948.25</td><td>2,948.35</td><td>1,397,580</td></tr>
+        <tr class="ag"><td>09:42:08.612</td><td class="px-up">2,948.25</td><td class="px-up">+0.05</td><td>180</td><td class="px-up">BUY ↑</td><td>2,948.20</td><td>2,948.30</td><td>1,397,300</td></tr>
+        <tr class="ag-s"><td>09:42:08.412</td><td class="px-dn">2,948.20</td><td class="px-dn">−0.05</td><td>120</td><td class="px-dn">SELL ↓</td><td>2,948.15</td><td>2,948.25</td><td>1,397,120</td></tr>
+        <tr class="ag"><td>09:42:08.124</td><td class="px-up">2,948.25</td><td class="px-up">+0.10</td><td>1,820</td><td class="px-up">BUY ↑</td><td>2,948.15</td><td>2,948.25</td><td>1,397,000</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <aside class="ts-side">
+    <div class="panel">
+      <h4>Session statistics</h4>
+      <div class="kpi-grid">
+        <div><div class="ey">Volume</div><div class="v">1.42M</div></div>
+        <div><div class="ey">Trades</div><div class="v">8,420</div></div>
+        <div><div class="ey">Avg trade</div><div class="v">169 sh</div></div>
+        <div><div class="ey">Largest</div><div class="v">12,400</div></div>
+        <div><div class="ey">VWAP</div><div class="v">2,941.80</div></div>
+        <div><div class="ey">Tick range</div><div class="v">2,924–2,956</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h4>Order-flow imbalance</h4>
+      <div class="flow-bar"></div>
+      <div class="flex justify-between" style="font-size:11px;font-family:var(--font-mono);font-weight:700;color:hsl(var(--muted-foreground))"><span class="change-up">Buy 64%</span><span class="change-down">Sell 36%</span></div>
+      <p class="muted body-sm" style="font-size:11.5px;margin:8px 0 0;line-height:1.5">Buy aggressors dominating since 09:30. Net delta <b class="change-up">+184k shares</b>.</p>
+    </div>
+    <div class="panel">
+      <h4>Volume by minute · last 20</h4>
+      <div class="histo">
+        <div style="height:30%"></div><div style="height:46%"></div><div class="s" style="height:30%"></div><div style="height:64%"></div>
+        <div style="height:50%"></div><div class="s" style="height:42%"></div><div style="height:78%"></div><div style="height:52%"></div>
+        <div class="s" style="height:38%"></div><div style="height:66%"></div><div style="height:88%"></div><div style="height:70%"></div>
+        <div class="s" style="height:48%"></div><div style="height:62%"></div><div style="height:54%"></div><div style="height:84%"></div>
+        <div class="s" style="height:52%"></div><div style="height:66%"></div><div style="height:78%"></div><div style="height:96%"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h4>Block trades · last 30 min</h4>
+      <div style="font-family:var(--font-mono);font-size:11.5px">
+        <div class="flex justify-between" style="padding:6px 0;border-bottom:1px dashed hsl(var(--border))"><span>09:42:14 · 5,420 sh</span><span class="change-up">2,948.65 BUY</span></div>
+        <div class="flex justify-between" style="padding:6px 0;border-bottom:1px dashed hsl(var(--border))"><span>09:42:12 · 8,200 sh</span><span class="change-down">2,948.40 SELL</span></div>
+        <div class="flex justify-between" style="padding:6px 0;border-bottom:1px dashed hsl(var(--border))"><span>09:42:10 · 12,400 sh</span><span class="change-down">2,948.30 SELL</span></div>
+        <div class="flex justify-between" style="padding:6px 0"><span>09:36:48 · 22,000 sh</span><span class="change-up">2,944.20 BUY</span></div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

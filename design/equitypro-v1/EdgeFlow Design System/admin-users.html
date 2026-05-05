@@ -1,0 +1,109 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Users · Admin</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.ad-shell{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
+.ad-side{background:hsl(var(--brand-navy-deep));color:hsl(38 30% 88%);padding:18px 0;font-family:var(--font-mono)}
+.ad-side h4{padding:8px 18px;margin:0;font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--brand-gold));font-family:var(--font-display)}
+.ad-side a{display:block;padding:8px 18px;font-size:12.5px;color:hsl(38 30% 75%);text-decoration:none;border-left:3px solid transparent}
+.ad-side a:hover{background:hsl(213 50% 18%);color:white}
+.ad-side a.active{background:hsl(213 50% 18%);color:hsl(var(--brand-gold));border-left-color:hsl(var(--brand-gold));font-weight:700}
+.ad-main{padding:24px 32px 60px;background:hsl(var(--background))}
+.ad-hd{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+.ad-hd h1{font-family:var(--font-display);font-size:28px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .ad-hd h1{color:hsl(38 30% 95%)}
+.toolbar{display:flex;justify-content:space-between;padding:14px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);margin-bottom:14px;align-items:center;gap:12px}
+.toolbar input{height:36px;padding:0 12px;border:1px solid hsl(var(--border));border-radius:var(--radius-md);background:hsl(var(--background));font-family:var(--font-mono);font-size:13px;flex:1;max-width:340px}
+.chips{display:flex;gap:6px}
+.chip{height:28px;padding:0 10px;border-radius:var(--radius-pill);border:1px solid hsl(var(--border));background:hsl(var(--card));font-size:11px;font-weight:600;color:hsl(var(--muted-foreground));cursor:pointer}
+.chip.active{background:hsl(var(--brand-navy));color:white;border-color:hsl(var(--brand-navy))}
+.dark .chip.active{background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));border-color:hsl(var(--brand-gold))}
+.tbl{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.tbl th{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:11px 14px;background:hsl(var(--muted)/0.5);text-align:left}
+.tbl td{padding:10px 14px;border-bottom:1px solid hsl(var(--border));vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tr:hover{background:hsl(var(--muted)/0.4)}
+.user{display:flex;align-items:center;gap:10px}
+.user .av{width:30px;height:30px;border-radius:50%;background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;font-family:var(--font-display);flex-shrink:0}
+.user .av.b{background:hsl(213 50% 50%);color:white}
+.user .av.c{background:hsl(150 50% 40%);color:white}
+.user .av.d{background:hsl(0 60% 50%);color:white}
+.user .av.e{background:hsl(280 40% 50%);color:white}
+.user .nm{font-family:var(--font-display);font-weight:700;font-size:13.5px;color:hsl(var(--foreground))}
+.user .em{font-size:11px;color:hsl(var(--muted-foreground))}
+.plan{font-family:var(--font-mono);font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:0.04em}
+.plan.q{background:hsl(var(--brand-gold)/0.18);color:hsl(var(--brand-gold))}
+.plan.p{background:hsl(213 50% 50% / 0.15);color:hsl(213 50% 35%)}
+.plan.s{background:hsl(150 50% 40% / 0.15);color:hsl(150 50% 30%)}
+.plan.f{background:hsl(213 14% 50% / 0.12);color:hsl(213 14% 35%)}
+.dark .plan.p{color:hsl(213 50% 70%)}
+.dark .plan.s{color:hsl(150 50% 65%)}
+.status{display:inline-flex;align-items:center;gap:5px;font-weight:700;font-size:11px}
+.status .dt{width:6px;height:6px;border-radius:50%}
+.status.ok .dt{background:hsl(var(--positive))}
+.status.warn .dt{background:hsl(var(--brand-gold))}
+.status.bad .dt{background:hsl(var(--negative))}
+</style></head>
+<body data-page="admin-users" data-screen-label="Admin · 42 Users">
+<div class="shell"><div data-shell-topbar></div>
+
+<main class="ad-shell">
+  <aside class="ad-side">
+    <h4>Admin</h4>
+    <a href="admin-analytics.html">Analytics</a>
+    <a href="admin-users.html" class="active">Users</a>
+    <a href="admin-feature-flags.html">Feature flags</a>
+    <a href="admin-audit-logs.html">Audit logs</a>
+    <a href="admin-coin-packs.html">Coin packs</a>
+    <a href="admin-coin-transactions.html">Coin transactions</a>
+    <a href="admin-email-settings.html">Email settings</a>
+    <a href="admin-api-keys.html">API keys</a>
+  </aside>
+
+  <section class="ad-main">
+    <div class="ad-hd">
+      <div><span class="eyebrow">Admin · Members</span><h1>Users · 84,200</h1></div>
+      <div class="flex gap-2"><button class="btn btn-ghost btn-sm">Export CSV</button><button class="btn btn-primary btn-sm">+ Invite team</button></div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" placeholder="Search by email, name, or user ID…">
+      <div class="chips">
+        <button class="chip active">All · 84,200</button>
+        <button class="chip">Quant · 624</button>
+        <button class="chip">Pro · 2,518</button>
+        <button class="chip">Starter · 3,420</button>
+        <button class="chip">Free · 77,638</button>
+        <button class="chip">Suspended · 14</button>
+      </div>
+      <button class="btn btn-ghost btn-sm">Filters ▾</button>
+    </div>
+
+    <table class="tbl">
+      <thead><tr><th>User</th><th>Plan</th><th>MRR</th><th>Status</th><th>Broker</th><th>Last seen</th><th>Joined</th><th>LTV</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><div class="user"><div class="av">AS</div><div><div class="nm">Anjali Sharma</div><div class="em">anjali.s@gmail.com · UID 4218</div></div></div></td><td><span class="plan q">Quant</span></td><td>₹4,999</td><td><span class="status ok"><span class="dt"></span>Active</span></td><td>Fyers</td><td>2 min ago</td><td>14 Mar 2024</td><td>₹98,420</td><td>⋯</td></tr>
+        <tr><td><div class="user"><div class="av b">RP</div><div><div class="nm">Rahul Patel</div><div class="em">rahul.p@protonmail.com · UID 2820</div></div></div></td><td><span class="plan p">Pro</span></td><td>₹1,999</td><td><span class="status ok"><span class="dt"></span>Active</span></td><td>Zerodha</td><td>14 min ago</td><td>22 Aug 2023</td><td>₹62,420</td><td>⋯</td></tr>
+        <tr><td><div class="user"><div class="av c">MK</div><div><div class="nm">Meera Krishnan</div><div class="em">meera@quantone.in · UID 8420</div></div></div></td><td><span class="plan q">Quant</span></td><td>₹4,999</td><td><span class="status ok"><span class="dt"></span>Active</span></td><td>Fyers · IB</td><td>32 min ago</td><td>11 Jan 2024</td><td>₹74,820</td><td>⋯</td></tr>
+        <tr><td><div class="user"><div class="av d">SV</div><div><div class="nm">Siddharth Verma</div><div class="em">sid.v@hotmail.com · UID 1420</div></div></div></td><td><span class="plan p">Pro</span></td><td>₹1,999</td><td><span class="status warn"><span class="dt"></span>Trial · 4d left</span></td><td>—</td><td>4 hrs ago</td><td>18 Apr 2026</td><td>₹0</td><td>⋯</td></tr>
+        <tr><td><div class="user"><div class="av e">PN</div><div><div class="nm">Priya Nair</div><div class="em">priya.nair@kotak.com · UID 6240</div></div></div></td><td><span class="plan q">Quant</span></td><td>₹4,999</td><td><span class="status ok"><span class="dt"></span>Active</span></td><td>Kotak Sec</td><td>1 hr ago</td><td>04 Sep 2023</td><td>₹89,840</td><td>⋯</td></tr>
+        <tr><td><div class="user"><div class="av">VG</div><div><div class="nm">Vikram Gupta</div><div class="em">vikram.g@axis.in · UID 9824</div></div></div></td><td><span class="plan s">Starter</span></td><td>₹499</td><td><span class="status ok"><span class="dt"></span>Active</span></td><td>Axis Direct</td><td>2 hrs ago</td><td>14 Feb 2024</td><td>₹14,820</td><td>⋯</td></tr>
+        <tr><td><div class="user"><div class="av b">KT</div><div><div class="nm">Kiran Thakur</div><div class="em">kiran.t@gmail.com · UID 3142</div></div></div></td><td><span class="plan f">Free</span></td><td>—</td><td><span class="status warn"><span class="dt"></span>Inactive 14d</span></td><td>—</td><td>14 days ago</td><td>02 Jan 2026</td><td>₹0</td><td>⋯</td></tr>
+        <tr><td><div class="user"><div class="av c">DR</div><div><div class="nm">Dev Raman</div><div class="em">dev.raman@quant.io · UID 7240</div></div></div></td><td><span class="plan q">Quant + API</span></td><td>₹6,499</td><td><span class="status ok"><span class="dt"></span>Active · API</span></td><td>Fyers · API</td><td>3 min ago</td><td>14 Sep 2023</td><td>₹1,12,420</td><td>⋯</td></tr>
+        <tr><td><div class="user"><div class="av d">IT</div><div><div class="nm">Ishita Tiwari</div><div class="em">ishita.t@yahoo.com · UID 4828</div></div></div></td><td><span class="plan p">Pro</span></td><td>₹1,999</td><td><span class="status bad"><span class="dt"></span>Payment failed</span></td><td>ICICI Direct</td><td>2 days ago</td><td>11 Nov 2024</td><td>₹38,420</td><td>⋯</td></tr>
+        <tr><td><div class="user"><div class="av e">SK</div><div><div class="nm">Sandeep Kumar</div><div class="em">sandeep@bse.com · UID 1184</div></div></div></td><td><span class="plan p">Pro</span></td><td>₹1,999</td><td><span class="status ok"><span class="dt"></span>Active</span></td><td>HDFC Sec</td><td>1 hr ago</td><td>22 Mar 2024</td><td>₹46,820</td><td>⋯</td></tr>
+        <tr><td><div class="user"><div class="av">NJ</div><div><div class="nm">Neha Jaiswal</div><div class="em">neha.j@icloud.com · UID 6818</div></div></div></td><td><span class="plan f">Free</span></td><td>—</td><td><span class="status ok"><span class="dt"></span>Active</span></td><td>—</td><td>20 min ago</td><td>14 Apr 2026</td><td>₹0</td><td>⋯</td></tr>
+        <tr><td><div class="user"><div class="av b">AR</div><div><div class="nm">Arjun Reddy</div><div class="em">arjun.reddy@iiml.in · UID 2846</div></div></div></td><td><span class="plan q">Quant</span></td><td>₹4,999</td><td><span class="status ok"><span class="dt"></span>Active</span></td><td>Fyers</td><td>just now</td><td>02 Oct 2023</td><td>₹84,200</td><td>⋯</td></tr>
+      </tbody>
+    </table>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-family:var(--font-mono);font-size:12px;color:hsl(var(--muted-foreground))">
+      <span>Showing 1–12 of 84,200</span>
+      <div class="flex gap-2"><button class="btn btn-ghost btn-sm">‹ Prev</button><button class="btn btn-ghost btn-sm">Next ›</button></div>
+    </div>
+  </section>
+</main>
+</div>
+<script src="app.js"></script>
+</body></html>

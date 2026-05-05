@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EquityPro · Brand Colors</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 48px; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 28px; }
+  .sub { color: hsl(var(--muted-foreground)); margin: 0 0 32px; font-size: 14px; }
+
+  .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
+  .row.two { grid-template-columns: repeat(4, 1fr); }
+
+  .swatch {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-card);
+    background: #fff;
+  }
+  .chip { height: 120px; position: relative; }
+  .chip .name {
+    position: absolute; left: 14px; bottom: 12px;
+    font-size: 13px; font-weight: 700;
+    color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  .meta { padding: 12px 14px; font-size: 12px; line-height: 1.5; }
+  .meta .hex { font-family: var(--font-mono); font-weight: 600; color: hsl(var(--brand-navy)); }
+  .meta .token { color: hsl(var(--muted-foreground)); font-family: var(--font-mono); font-size: 11px; }
+
+  .section-h {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.16em;
+    color: hsl(var(--muted-foreground)); text-transform: uppercase;
+    margin: 24px 0 12px;
+  }
+
+  .ramp { display: grid; grid-template-columns: repeat(6, 1fr); border-radius: var(--radius); overflow: hidden; }
+  .ramp div { padding: 16px 12px; font-family: var(--font-mono); font-size: 11px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Brand colors</h1>
+  <p class="sub">Every value below is sampled from the EquityPro logo and exposed as a CSS custom property in <code>colors_and_type.css</code>.</p>
+
+  <div class="section-h">Core — five marks of the shield</div>
+  <div class="row">
+    <div class="swatch">
+      <div class="chip" style="background:#1F3A5F"><span class="name">Navy</span></div>
+      <div class="meta"><div class="hex">#1F3A5F</div><div class="token">--brand-navy</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background:#1B2E48"><span class="name">Navy deep</span></div>
+      <div class="meta"><div class="hex">#1B2E48</div><div class="token">--brand-navy-deep</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background:#C8A04A"><span class="name">Gold</span></div>
+      <div class="meta"><div class="hex">#C8A04A</div><div class="token">--brand-gold</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background:#F4A024"><span class="name">Amber</span></div>
+      <div class="meta"><div class="hex">#F4A024</div><div class="token">--brand-gold-bright</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background:#3FA9D6"><span class="name">Sky</span></div>
+      <div class="meta"><div class="hex">#3FA9D6</div><div class="token">--brand-sky</div></div>
+    </div>
+  </div>
+
+  <div class="section-h">Surfaces</div>
+  <div class="row two">
+    <div class="swatch">
+      <div class="chip" style="background:#F7F9FC"><span class="name" style="color:#1F3A5F;text-shadow:none">Background</span></div>
+      <div class="meta"><div class="hex">#F7F9FC</div><div class="token">--background</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background:#FFFFFF;border-bottom:1px solid hsl(var(--border))"><span class="name" style="color:#1F3A5F;text-shadow:none">Card</span></div>
+      <div class="meta"><div class="hex">#FFFFFF</div><div class="token">--card</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background:#1F3A5F"><span class="name">Sidebar</span></div>
+      <div class="meta"><div class="hex">#1F3A5F</div><div class="token">--sidebar</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background:#B9B9B9"><span class="name">Silver</span></div>
+      <div class="meta"><div class="hex">#B9B9B9</div><div class="token">--brand-silver</div></div>
+    </div>
+  </div>
+
+  <div class="section-h">Financial semantic</div>
+  <div class="row two">
+    <div class="swatch">
+      <div class="chip" style="background:hsl(150 60% 35%)"><span class="name">Positive</span></div>
+      <div class="meta"><div class="hex">hsl(150 60% 35%)</div><div class="token">--positive</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background:hsl(0 72% 45%)"><span class="name">Negative</span></div>
+      <div class="meta"><div class="hex">hsl(0 72% 45%)</div><div class="token">--negative</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background:hsl(213 14% 45%)"><span class="name">Neutral</span></div>
+      <div class="meta"><div class="hex">hsl(213 14% 45%)</div><div class="token">--neutral</div></div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background:hsl(38 87% 50%)"><span class="name">Pre-market</span></div>
+      <div class="meta"><div class="hex">hsl(38 87% 50%)</div><div class="token">--status-pre-market</div></div>
+    </div>
+  </div>
+
+  <div class="section-h">Navy ramp (for charts and elevation)</div>
+  <div class="ramp">
+    <div style="background:#F0F4F9;color:#1F3A5F">#F0F4F9</div>
+    <div style="background:#D6DFEA;color:#1F3A5F">#D6DFEA</div>
+    <div style="background:#8FA3BD;color:#fff">#8FA3BD</div>
+    <div style="background:#3F5C82;color:#fff">#3F5C82</div>
+    <div style="background:#1F3A5F;color:#fff">#1F3A5F</div>
+    <div style="background:#0F1E33;color:#fff">#0F1E33</div>
+  </div>
+
+  <div class="section-h" style="margin-top:24px">Gold ramp</div>
+  <div class="ramp">
+    <div style="background:#FBF3DF;color:#7A5D1A">#FBF3DF</div>
+    <div style="background:#F2DDA0;color:#7A5D1A">#F2DDA0</div>
+    <div style="background:#E0BC68;color:#3a2c0c">#E0BC68</div>
+    <div style="background:#C8A04A;color:#fff">#C8A04A</div>
+    <div style="background:#9C7A2D;color:#fff">#9C7A2D</div>
+    <div style="background:#5C4517;color:#fff">#5C4517</div>
+  </div>
+</div>
+</body>
+</html>

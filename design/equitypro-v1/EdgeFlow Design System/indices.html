@@ -1,0 +1,159 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Indices · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.page-hd{padding:24px 0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.page-hd h1{font-family:var(--font-display);font-size:32px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .page-hd h1{color:hsl(38 30% 95%)}
+.tab-bar{display:flex;gap:0;border-bottom:1px solid hsl(var(--border));margin-top:16px;margin-bottom:-1px}
+.tab-bar button{height:42px;padding:0 18px;background:transparent;border:0;border-bottom:2px solid transparent;font-size:13px;font-weight:600;color:hsl(var(--muted-foreground));cursor:pointer}
+.tab-bar button.active{color:hsl(var(--brand-navy));border-bottom-color:hsl(var(--brand-gold))}
+.dark .tab-bar button.active{color:hsl(var(--brand-gold))}
+.idx-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:24px 0}
+.idx-card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px;transition:all var(--t-base);cursor:pointer}
+.idx-card:hover{border-color:hsl(var(--brand-gold)/0.5);transform:translateY(-2px);box-shadow:var(--shadow-card-lg)}
+.idx-card .nm{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground))}
+.idx-card .v{font-family:var(--font-mono);font-size:30px;font-weight:700;margin-top:6px;color:hsl(var(--brand-navy))}
+.dark .idx-card .v{color:hsl(38 30% 95%)}
+.idx-card .c{font-size:13px;font-family:var(--font-mono);font-weight:600;margin-top:2px}
+.idx-card .meta{display:flex;justify-content:space-between;font-size:11px;color:hsl(var(--muted-foreground));margin-top:14px;padding-top:12px;border-top:1px solid hsl(var(--border));font-family:var(--font-mono)}
+.idx-card svg{margin-top:14px;width:100%;height:60px;display:block}
+
+.saved-section{padding:24px 0 60px}
+.saved-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.saved{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px}
+.saved-hd{display:flex;justify-content:space-between;align-items:start;margin-bottom:14px}
+.saved-hd h3{font-family:var(--font-display);font-size:18px;margin:0 0 4px;color:hsl(var(--brand-navy))}
+.dark .saved-hd h3{color:hsl(38 30% 95%)}
+.saved-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.saved-stats div{padding:10px 0;border-top:1px solid hsl(var(--border))}
+.saved-stats .ey{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground))}
+.saved-stats .v{font-family:var(--font-mono);font-size:18px;font-weight:700;margin-top:2px}
+.saved-actions{display:flex;gap:6px;margin-top:14px}
+</style></head>
+<body data-page="indices" data-screen-label="06 Indices">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="page-hd"><div class="container">
+  <span class="eyebrow">Markets &amp; saved work</span>
+  <h1>Indices</h1>
+  <p class="muted body-sm" style="margin:4px 0 0">Live index quotes, sector aggregates and your saved screens, backtests &amp; lists.</p>
+  <div class="tab-bar">
+    <button class="active">Indices</button>
+    <button>Saved screens (5)</button>
+    <button>Saved backtests (8)</button>
+    <button>Watchlists (4)</button>
+  </div>
+</div></section>
+
+<main class="container">
+
+  <div class="idx-grid">
+    <div class="idx-card">
+      <div class="nm">NIFTY 50</div>
+      <div class="v">22,418.25</div>
+      <div class="c change-up">+182.40 · +0.82%</div>
+      <svg viewBox="0 0 280 60" style="color:hsl(var(--positive))"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="currentColor" stop-opacity="0.25"/><stop offset="100%" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><path d="M0,42 L20,38 L40,40 L60,32 L80,34 L100,28 L120,30 L140,22 L160,24 L180,18 L200,20 L220,14 L240,12 L260,8 L280,6 L280,60 L0,60 Z" fill="url(#g1)"/><path d="M0,42 L20,38 L40,40 L60,32 L80,34 L100,28 L120,30 L140,22 L160,24 L180,18 L200,20 L220,14 L240,12 L260,8 L280,6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <div class="meta"><span>OPEN 22,236</span><span>HIGH 22,448</span><span>LOW 22,210</span></div>
+    </div>
+    <div class="idx-card">
+      <div class="nm">SENSEX</div>
+      <div class="v">73,892.05</div>
+      <div class="c change-up">+612.80 · +0.84%</div>
+      <svg viewBox="0 0 280 60" style="color:hsl(var(--positive))"><path d="M0,40 L20,42 L40,38 L60,30 L80,32 L100,26 L120,22 L140,24 L160,18 L180,20 L200,14 L220,16 L240,10 L260,8 L280,4 L280,60 L0,60 Z" fill="url(#g1)"/><path d="M0,40 L20,42 L40,38 L60,30 L80,32 L100,26 L120,22 L140,24 L160,18 L180,20 L200,14 L220,16 L240,10 L260,8 L280,4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <div class="meta"><span>OPEN 73,280</span><span>HIGH 73,924</span><span>LOW 73,142</span></div>
+    </div>
+    <div class="idx-card">
+      <div class="nm">BANK NIFTY</div>
+      <div class="v">48,210.30</div>
+      <div class="c change-up">+421.10 · +0.88%</div>
+      <svg viewBox="0 0 280 60" style="color:hsl(var(--positive))"><path d="M0,46 L20,42 L40,44 L60,38 L80,32 L100,34 L120,26 L140,28 L160,20 L180,22 L200,16 L220,18 L240,10 L260,12 L280,6 L280,60 L0,60 Z" fill="url(#g1)"/><path d="M0,46 L20,42 L40,44 L60,38 L80,32 L100,34 L120,26 L140,28 L160,20 L180,22 L200,16 L220,18 L240,10 L260,12 L280,6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <div class="meta"><span>OPEN 47,789</span><span>HIGH 48,242</span><span>LOW 47,720</span></div>
+    </div>
+    <div class="idx-card">
+      <div class="nm">NIFTY IT</div>
+      <div class="v">38,124.55</div>
+      <div class="c change-down">−92.40 · −0.24%</div>
+      <svg viewBox="0 0 280 60" style="color:hsl(var(--negative))"><defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="currentColor" stop-opacity="0.22"/><stop offset="100%" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><path d="M0,12 L20,16 L40,14 L60,22 L80,18 L100,28 L120,24 L140,32 L160,28 L180,38 L200,34 L220,42 L240,40 L260,46 L280,42 L280,60 L0,60 Z" fill="url(#g2)"/><path d="M0,12 L20,16 L40,14 L60,22 L80,18 L100,28 L120,24 L140,32 L160,28 L180,38 L200,34 L220,42 L240,40 L260,46 L280,42" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <div class="meta"><span>OPEN 38,217</span><span>HIGH 38,290</span><span>LOW 38,015</span></div>
+    </div>
+    <div class="idx-card">
+      <div class="nm">NIFTY PHARMA</div>
+      <div class="v">19,824.40</div>
+      <div class="c change-up">+82.30 · +0.42%</div>
+      <svg viewBox="0 0 280 60" style="color:hsl(var(--positive))"><path d="M0,38 L20,40 L40,34 L60,36 L80,30 L100,28 L120,32 L140,24 L160,26 L180,20 L200,22 L220,16 L240,18 L260,12 L280,14 L280,60 L0,60 Z" fill="url(#g1)"/><path d="M0,38 L20,40 L40,34 L60,36 L80,30 L100,28 L120,32 L140,24 L160,26 L180,20 L200,22 L220,16 L240,18 L260,12 L280,14" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <div class="meta"><span>OPEN 19,742</span><span>HIGH 19,840</span><span>LOW 19,718</span></div>
+    </div>
+    <div class="idx-card">
+      <div class="nm">NIFTY FMCG</div>
+      <div class="v">54,128.65</div>
+      <div class="c change-up">+228.10 · +0.42%</div>
+      <svg viewBox="0 0 280 60" style="color:hsl(var(--positive))"><path d="M0,42 L20,40 L40,42 L60,36 L80,38 L100,34 L120,36 L140,30 L160,32 L180,26 L200,28 L220,24 L240,26 L260,20 L280,22 L280,60 L0,60 Z" fill="url(#g1)"/><path d="M0,42 L20,40 L40,42 L60,36 L80,38 L100,34 L120,36 L140,30 L160,32 L180,26 L200,28 L220,24 L240,26 L260,20 L280,22" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <div class="meta"><span>OPEN 53,900</span><span>HIGH 54,142</span><span>LOW 53,860</span></div>
+    </div>
+    <div class="idx-card">
+      <div class="nm">NIFTY AUTO</div>
+      <div class="v">22,142.20</div>
+      <div class="c change-up">+186.40 · +0.84%</div>
+      <svg viewBox="0 0 280 60" style="color:hsl(var(--positive))"><path d="M0,46 L20,42 L40,40 L60,42 L80,34 L100,36 L120,28 L140,30 L160,22 L180,24 L200,18 L220,16 L240,12 L260,10 L280,6 L280,60 L0,60 Z" fill="url(#g1)"/><path d="M0,46 L20,42 L40,40 L60,42 L80,34 L100,36 L120,28 L140,30 L160,22 L180,24 L200,18 L220,16 L240,12 L260,10 L280,6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <div class="meta"><span>OPEN 21,956</span><span>HIGH 22,168</span><span>LOW 21,940</span></div>
+    </div>
+    <div class="idx-card">
+      <div class="nm">NIFTY METAL</div>
+      <div class="v">8,914.20</div>
+      <div class="c change-down">−74.80 · −0.84%</div>
+      <svg viewBox="0 0 280 60" style="color:hsl(var(--negative))"><path d="M0,18 L20,22 L40,20 L60,28 L80,24 L100,32 L120,28 L140,36 L160,32 L180,40 L200,36 L220,44 L240,40 L260,46 L280,44 L280,60 L0,60 Z" fill="url(#g2)"/><path d="M0,18 L20,22 L40,20 L60,28 L80,24 L100,32 L120,28 L140,36 L160,32 L180,40 L200,36 L220,44 L240,40 L260,46 L280,44" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <div class="meta"><span>OPEN 8,989</span><span>HIGH 9,002</span><span>LOW 8,872</span></div>
+    </div>
+    <div class="idx-card">
+      <div class="nm">INDIA VIX</div>
+      <div class="v">12.84</div>
+      <div class="c change-down">−0.42 · −3.16%</div>
+      <svg viewBox="0 0 280 60" style="color:hsl(var(--negative))"><path d="M0,14 L20,18 L40,16 L60,24 L80,22 L100,30 L120,28 L140,34 L160,32 L180,40 L200,38 L220,44 L240,42 L260,48 L280,46 L280,60 L0,60 Z" fill="url(#g2)"/><path d="M0,14 L20,18 L40,16 L60,24 L80,22 L100,30 L120,28 L140,34 L160,32 L180,40 L200,38 L220,44 L240,42 L260,48 L280,46" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <div class="meta"><span>Volatility · falling</span><span></span><span>14d low</span></div>
+    </div>
+  </div>
+
+  <section class="saved-section">
+    <div class="flex items-end justify-between mb-4">
+      <div><span class="eyebrow">Saved · backtests</span><h2 style="font-family:var(--font-display);font-size:24px;letter-spacing:-0.01em;margin:4px 0 0;color:hsl(var(--brand-navy))" class="dark-light">Your backtest library</h2></div>
+      <a href="backtesting.html" class="btn btn-primary btn-sm">+ New backtest</a>
+    </div>
+
+    <div class="saved-grid">
+      <div class="saved">
+        <div class="saved-hd"><div><h3>MOMO-BB · NIFTY 50</h3><p class="muted body-sm" style="margin:0">Long when RSI(14) &gt; 55 ∧ price &gt; upper BB(20,2)</p></div><span class="badge badge-gold">Generated</span></div>
+        <svg viewBox="0 0 480 60" style="color:hsl(var(--brand-gold));width:100%"><defs><linearGradient id="ge1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="currentColor" stop-opacity="0.22"/><stop offset="100%" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><path d="M0,48 L40,46 L80,42 L120,38 L160,30 L200,32 L240,24 L280,18 L320,20 L360,12 L400,8 L440,4 L480,2 L480,60 L0,60 Z" fill="url(#ge1)"/><path d="M0,48 L40,46 L80,42 L120,38 L160,30 L200,32 L240,24 L280,18 L320,20 L360,12 L400,8 L440,4 L480,2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        <div class="saved-stats"><div><div class="ey">CAGR</div><div class="v change-up">+38.4%</div></div><div><div class="ey">Sharpe</div><div class="v">1.42</div></div><div><div class="ey">Max DD</div><div class="v change-down">−14.8%</div></div></div>
+        <div class="saved-actions"><a href="backtesting.html" class="btn btn-ghost btn-sm">Open</a><button class="btn btn-ghost btn-sm">Run again</button><button class="btn btn-ghost btn-sm">Share</button><div style="flex:1"></div><span class="muted body-sm">2 days ago</span></div>
+      </div>
+
+      <div class="saved">
+        <div class="saved-hd"><div><h3>RSI Mean-Rev · BANK NIFTY</h3><p class="muted body-sm" style="margin:0">Long when RSI(2) &lt; 10 ∧ EMA(50) trending up; exit at SMA(20)</p></div></div>
+        <svg viewBox="0 0 480 60" style="color:hsl(var(--positive));width:100%"><path d="M0,48 L40,42 L80,46 L120,40 L160,38 L200,42 L240,34 L280,32 L320,28 L360,30 L400,24 L440,22 L480,18 L480,60 L0,60 Z" fill="url(#ge1)"/><path d="M0,48 L40,42 L80,46 L120,40 L160,38 L200,42 L240,34 L280,32 L320,28 L360,30 L400,24 L440,22 L480,18" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        <div class="saved-stats"><div><div class="ey">CAGR</div><div class="v change-up">+14.2%</div></div><div><div class="ey">Sharpe</div><div class="v">0.84</div></div><div><div class="ey">Max DD</div><div class="v change-down">−9.2%</div></div></div>
+        <div class="saved-actions"><a href="backtesting.html" class="btn btn-ghost btn-sm">Open</a><button class="btn btn-ghost btn-sm">Run again</button><button class="btn btn-ghost btn-sm">Share</button><div style="flex:1"></div><span class="muted body-sm">5 days ago</span></div>
+      </div>
+
+      <div class="saved">
+        <div class="saved-hd"><div><h3>VWAP-Cross · NIFTY IT</h3><p class="muted body-sm" style="margin:0">Intraday: long on VWAP cross-up with vol &gt; 1.5× ADV</p></div></div>
+        <svg viewBox="0 0 480 60" style="color:hsl(var(--positive));width:100%"><path d="M0,48 L40,46 L80,40 L120,42 L160,34 L200,32 L240,28 L280,30 L320,22 L360,24 L400,18 L440,16 L480,12 L480,60 L0,60 Z" fill="url(#ge1)"/><path d="M0,48 L40,46 L80,40 L120,42 L160,34 L200,32 L240,28 L280,30 L320,22 L360,24 L400,18 L440,16 L480,12" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        <div class="saved-stats"><div><div class="ey">CAGR</div><div class="v change-up">+22.1%</div></div><div><div class="ey">Sharpe</div><div class="v">1.06</div></div><div><div class="ey">Max DD</div><div class="v change-down">−11.4%</div></div></div>
+        <div class="saved-actions"><a href="backtesting.html" class="btn btn-ghost btn-sm">Open</a><button class="btn btn-ghost btn-sm">Run again</button><button class="btn btn-ghost btn-sm">Share</button><div style="flex:1"></div><span class="muted body-sm">12 days ago</span></div>
+      </div>
+
+      <div class="saved">
+        <div class="saved-hd"><div><h3>Pairs · TCS / INFY</h3><p class="muted body-sm" style="margin:0">Z-score spread mean-reversion; threshold ±2σ</p></div></div>
+        <svg viewBox="0 0 480 60" style="color:hsl(var(--neutral));width:100%"><path d="M0,30 L40,28 L80,34 L120,26 L160,32 L200,24 L240,30 L280,22 L320,28 L360,20 L400,26 L440,18 L480,24 L480,60 L0,60 Z" fill="url(#ge1)"/><path d="M0,30 L40,28 L80,34 L120,26 L160,32 L200,24 L240,30 L280,22 L320,28 L360,20 L400,26 L440,18 L480,24" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        <div class="saved-stats"><div><div class="ey">CAGR</div><div class="v change-up">+8.4%</div></div><div><div class="ey">Sharpe</div><div class="v">1.18</div></div><div><div class="ey">Max DD</div><div class="v change-down">−4.2%</div></div></div>
+        <div class="saved-actions"><a href="backtesting.html" class="btn btn-ghost btn-sm">Open</a><button class="btn btn-ghost btn-sm">Run again</button><button class="btn btn-ghost btn-sm">Share</button><div style="flex:1"></div><span class="muted body-sm">3 wks ago</span></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

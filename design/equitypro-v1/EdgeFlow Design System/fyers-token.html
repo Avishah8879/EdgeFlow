@@ -1,0 +1,124 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fyers token · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.page-hd{padding:24px 0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.page-hd .crumb{font-size:12px;color:hsl(var(--muted-foreground));margin:0 0 6px;font-family:var(--font-mono)}
+.page-hd .crumb a{color:hsl(var(--brand-gold))}
+.page-hd h1{font-family:var(--font-display);font-size:30px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy));display:flex;align-items:center;gap:14px}
+.dark .page-hd h1{color:hsl(38 30% 95%)}
+.page-hd h1 .lg{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#0066FF,#003a99);color:white;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;font-family:var(--font-display)}
+
+.token-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:20px;padding:24px 0 60px}
+
+.tk-card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:22px}
+.tk-card h3{font-family:var(--font-display);font-size:18px;margin:0 0 14px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .tk-card h3{color:hsl(38 30% 95%)}
+
+.tk-row{display:grid;grid-template-columns:160px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid hsl(var(--border));align-items:center}
+.tk-row:last-child{border-bottom:0}
+.tk-row .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground))}
+.tk-row .val{font-family:var(--font-mono);font-size:13px;color:hsl(var(--foreground));word-break:break-all}
+.tk-row .val.secret{font-size:12px;background:hsl(var(--muted));padding:6px 10px;border-radius:var(--radius-sm);border:1px solid hsl(var(--border))}
+
+.tk-meter{display:flex;align-items:center;gap:12px;padding:18px;background:linear-gradient(180deg,hsl(var(--brand-gold)/0.08),transparent);border:1px solid hsl(var(--brand-gold)/0.25);border-radius:var(--radius-md);margin-bottom:18px}
+.tk-meter .clock{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:18px;color:hsl(var(--brand-navy-deep));background:radial-gradient(circle,hsl(var(--brand-gold)/0.3),hsl(var(--brand-gold)/0.05));border:2px solid hsl(var(--brand-gold))}
+.tk-meter .info h4{margin:0;font-size:14px;font-weight:700;color:hsl(var(--foreground))}
+.tk-meter .info p{margin:2px 0 0;font-size:12px;color:hsl(var(--muted-foreground))}
+
+.scopes{display:flex;flex-wrap:wrap;gap:8px}
+.scope{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:var(--radius-pill);background:hsl(var(--positive)/0.1);color:hsl(var(--positive));border:1px solid hsl(var(--positive)/0.3);font-size:11px;font-weight:600;font-family:var(--font-mono)}
+.scope::before{content:"✓";font-weight:700}
+
+.activity li{list-style:none;padding:10px 0;border-bottom:1px solid hsl(var(--border));font-size:12px;display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono)}
+.activity li:last-child{border-bottom:0}
+.activity .when{color:hsl(var(--muted-foreground));font-size:11px}
+
+.danger{margin-top:18px;background:hsl(var(--negative)/0.05);border:1px solid hsl(var(--negative)/0.3);border-radius:var(--radius-md);padding:16px}
+.danger h4{margin:0 0 4px;font-size:13px;color:hsl(var(--negative));font-weight:700}
+.danger p{margin:0 0 12px;font-size:12px;color:hsl(var(--muted-foreground))}
+</style></head>
+<body data-page="oauth" data-screen-label="A6 Fyers Token">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="page-hd"><div class="container">
+  <p class="crumb"><a href="profile.html">Account</a> / <a href="oauth-setup.html">Broker connections</a> / Fyers</p>
+  <h1><span class="lg">F</span>Fyers connection</h1>
+</div></section>
+
+<main class="container">
+  <div class="token-grid">
+    <div>
+      <div class="tk-card">
+        <h3>Token details</h3>
+        <div class="tk-row"><span class="lbl">App ID</span><span class="val">XCAB1J92R-100</span></div>
+        <div class="tk-row"><span class="lbl">Client ID</span><span class="val">DH00284</span></div>
+        <div class="tk-row"><span class="lbl">Access token</span><span class="val secret">eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9·••••••••••••••••••••••••••••••••8a3F<button class="btn btn-quiet btn-sm" style="margin-left:8px">Reveal</button></span></div>
+        <div class="tk-row"><span class="lbl">Issued at</span><span class="val">2026-04-12 09:14:22 IST</span></div>
+        <div class="tk-row"><span class="lbl">Expires at</span><span class="val change-up" style="color:hsl(var(--positive))">2026-04-13 03:32:00 IST</span></div>
+        <div class="tk-row"><span class="lbl">Last refresh</span><span class="val">2026-04-12 09:14:22 IST · auto</span></div>
+        <div class="tk-row"><span class="lbl">Profile</span><span class="val">Aanya Krishnan · DH00284 · Equity, F&amp;O, Currency</span></div>
+      </div>
+
+      <div class="tk-card" style="margin-top:18px">
+        <h3>Scopes granted</h3>
+        <div class="scopes">
+          <span class="scope">profile.read</span>
+          <span class="scope">funds.read</span>
+          <span class="scope">holdings.read</span>
+          <span class="scope">positions.read</span>
+          <span class="scope">orders.read</span>
+          <span class="scope">orders.place</span>
+          <span class="scope">orders.modify</span>
+          <span class="scope">market.quote</span>
+          <span class="scope">market.history</span>
+          <span class="scope">market.depth</span>
+        </div>
+        <p class="muted body-sm" style="margin-top:14px;font-size:12px">EquityPro requests the minimum scope set required for the features you use. To narrow scopes, revoke and re-connect choosing read-only.</p>
+      </div>
+
+      <div class="tk-card danger">
+        <h4>Disconnect this broker</h4>
+        <p>Revokes the token at Fyers and removes it from EquityPro. Holdings sync stops. Active orders placed via API are not cancelled.</p>
+        <div class="flex gap-2"><button class="btn btn-ghost btn-sm">Refresh token</button><button class="btn btn-ghost btn-sm" style="color:hsl(var(--negative));border-color:hsl(var(--negative)/0.4)">Disconnect</button></div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="tk-card">
+        <div class="tk-meter">
+          <div class="clock">18:17</div>
+          <div class="info">
+            <h4>Token healthy</h4>
+            <p>Auto-refresh in 18 h 17 min. No action needed.</p>
+          </div>
+        </div>
+
+        <h3 style="margin-top:6px">Recent activity</h3>
+        <ul class="activity" style="padding:0;margin:0">
+          <li><span><b>Holdings synced</b> · 18 rows</span><span class="when">2 min ago</span></li>
+          <li><span><b>Order placed</b> · RELIANCE +50</span><span class="when">14 min ago</span></li>
+          <li><span><b>LTP poll</b> · 142 symbols</span><span class="when">just now</span></li>
+          <li><span><b>Token refreshed</b> · auto</span><span class="when">9 h ago</span></li>
+          <li><span><b>Profile fetched</b></span><span class="when">9 h ago</span></li>
+          <li><span><b>OAuth grant</b> · scopes ×10</span><span class="when">9 h ago</span></li>
+        </ul>
+      </div>
+
+      <div class="tk-card" style="margin-top:18px">
+        <h3>Quick actions</h3>
+        <div class="flex flex-col gap-2">
+          <a href="portfolio.html" class="btn btn-ghost btn-sm" style="justify-content:flex-start">→ View synced holdings</a>
+          <a href="ft-order-book.html" class="btn btn-ghost btn-sm" style="justify-content:flex-start">→ Order book</a>
+          <a href="developers.html" class="btn btn-ghost btn-sm" style="justify-content:flex-start">→ Use this broker via API</a>
+          <button class="btn btn-ghost btn-sm" style="justify-content:flex-start">→ Download token JSON</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>
