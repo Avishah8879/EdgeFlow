@@ -1,5 +1,4 @@
 import Topbar from "./Topbar";
-import Sidebar from "./Sidebar";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -9,10 +8,9 @@ export default function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-screen bg-background">
       <Topbar />
-      <Sidebar />
-      {/* Main content area: offset by topbar (h-16) and sidebar (w-60, or w-16 when collapsed) */}
-      <main className="pt-16 pl-60 min-h-screen transition-all duration-300">
-        <div className="p-6">
+      {/* Main content: offset by 64px sticky topbar; design-spec 1440px container with 32px gutters */}
+      <main className="pt-16 min-h-screen">
+        <div className="mx-auto max-w-[1440px] px-4 md:px-8 py-6">
           {children}
         </div>
       </main>
