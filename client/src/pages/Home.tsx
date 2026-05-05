@@ -24,7 +24,8 @@ import TabsSection from "@/components/TabsSection";
 import { Link } from "wouter";
 import MarketMoversSection from "@/components/MarketMoversSection";
 import NewsSection from "@/components/NewsSection";
-import MarketStatusBadge from "@/components/MarketStatusBadge";
+import { MarketStatusPill } from "@/components/ui/market-status-pill";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { HeroNumber } from "@/components/HeroNumber";
 import type { CategoryType } from "@/lib/types";
 import { useIndices } from "@/hooks/use-indices";
@@ -37,12 +38,20 @@ import { SEO } from "@/components/SEO";
 import { PAGE_SEO } from "@/lib/seo-config";
 import { generateWebPageSchema } from "@/lib/json-ld";
 
-function SectionLabel({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
+function SectionLabel({
+  children,
+  action,
+  tone = "muted",
+}: {
+  children: React.ReactNode;
+  action?: React.ReactNode;
+  tone?: "muted" | "gold";
+}) {
   return (
     <div className="flex items-baseline justify-between mb-5">
-      <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-medium">
+      <Eyebrow tone={tone} rule={tone === "gold"}>
         {children}
-      </span>
+      </Eyebrow>
       {action}
     </div>
   );
@@ -76,7 +85,7 @@ export default function Home() {
       <div className="min-h-screen bg-background">
         <div className="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-16 space-y-16 md:space-y-20">
 
-          {/* HERO — Today */}
+          {/* HERO — Market Overview */}
           <motion.section
             variants={fadeInUp}
             initial="hidden"
@@ -84,8 +93,10 @@ export default function Home() {
             transition={easeOut}
           >
             <div className="flex items-center gap-3 mb-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground font-medium">Today</p>
-              <MarketStatusBadge />
+              <Eyebrow tone="gold" rule>
+                Market Overview · Today
+              </Eyebrow>
+              <MarketStatusPill />
             </div>
 
             {hero ? (
@@ -98,14 +109,14 @@ export default function Home() {
                   />
                 </h1>
                 <div className="flex items-baseline gap-3 flex-wrap">
-                  <span className="text-base md:text-lg text-muted-foreground font-medium">
+                  <span className="font-display text-base md:text-lg text-muted-foreground font-medium">
                     {hero.name}
                   </span>
                   <span className={cn(
-                    "text-xl md:text-2xl font-medium tabular-nums",
+                    "text-xl md:text-2xl font-mono font-semibold tabular-nums",
                     heroPositive ? "text-positive" : "text-negative",
                   )}>
-                    {heroPositive ? "+" : ""}{hero.change.toFixed(2)} ({heroPositive ? "+" : ""}{hero.changePercent.toFixed(2)}%)
+                    {heroPositive ? "▲ +" : "▼ "}{hero.change.toFixed(2)} ({heroPositive ? "+" : ""}{hero.changePercent.toFixed(2)}%)
                   </span>
                 </div>
               </div>
@@ -207,7 +218,7 @@ export default function Home() {
                 <Link
                   key={screen.id}
                   href={`/screener?expr=${encodeURIComponent(screen.expression)}`}
-                  className="group flex flex-col gap-1.5 rounded-xl border border-border/50 bg-card p-4 hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                  className="group flex flex-col gap-1.5 rounded-xl border border-border/50 bg-card p-4 hover:border-[hsl(var(--brand-gold)/0.5)] hover:shadow-card transition-all duration-fast"
                   data-testid={`link-screen-${screen.id}`}
                 >
                   <div className="flex items-center justify-between">
@@ -249,10 +260,10 @@ export default function Home() {
                 <Link
                   key={feature.href}
                   href={feature.href}
-                  className="group flex flex-col gap-2 rounded-xl border border-border/50 bg-card p-4 hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                  className="group flex flex-col gap-2 rounded-xl border border-border/50 bg-card p-4 hover:border-[hsl(var(--brand-gold)/0.5)] hover:shadow-card transition-all duration-fast"
                 >
                   <div className="flex items-center gap-2">
-                    <feature.icon className="w-4 h-4 text-primary" />
+                    <feature.icon className="w-4 h-4 text-[hsl(var(--brand-gold))]" strokeWidth={1.75} />
                     <span className="text-sm font-semibold text-foreground truncate">{feature.name}</span>
                   </div>
                   <span className="text-xs text-muted-foreground leading-snug">{feature.desc}</span>

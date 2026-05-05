@@ -14,6 +14,8 @@ import { SEO } from "@/components/SEO";
 import { PAGE_SEO } from "@/lib/seo-config";
 import { cn } from "@/lib/utils";
 import { fadeInUp, easeOut } from "@/lib/motion";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { ChipFilter } from "@/components/ui/chip-filter";
 
 const CAP_TABS: { id: CapType | "all"; label: string }[] = [
   { id: "all", label: "All" },
@@ -142,10 +144,12 @@ export default function Stocks() {
             initial="hidden"
             animate="visible"
             transition={easeOut}
-            className="space-y-2"
+            className="space-y-3"
           >
-            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Stocks</p>
-            <h1 className="text-3xl md:text-5xl font-serif italic font-light tracking-tight text-foreground">
+            <Eyebrow tone="gold" rule>
+              Markets
+            </Eyebrow>
+            <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
               Browse the market
             </h1>
             <p className="text-sm text-muted-foreground max-w-md">
@@ -168,24 +172,16 @@ export default function Stocks() {
 
           {/* Cap-type pill chips */}
           <div className="flex gap-2 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-1">
-            {CAP_TABS.map((tab) => {
-              const active = activeCapType === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveCapType(tab.id)}
-                  className={cn(
-                    "shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-colors border",
-                    active
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-card text-muted-foreground border-border/50 hover:border-primary/40 hover:text-foreground",
-                  )}
-                  data-testid={`tab-cap-${tab.id}`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
+            {CAP_TABS.map((tab) => (
+              <ChipFilter
+                key={tab.id}
+                active={activeCapType === tab.id}
+                onClick={() => setActiveCapType(tab.id)}
+                data-testid={`tab-cap-${tab.id}`}
+              >
+                {tab.label}
+              </ChipFilter>
+            ))}
           </div>
 
           {/* List */}

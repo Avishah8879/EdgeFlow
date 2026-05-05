@@ -16,6 +16,8 @@ import { SentimentProvider } from "@/contexts/SentimentContext";
 import { CollapsibleSection } from "@/components/stock-detail/CollapsibleSection";
 import { StockDetailNav, type NavSection } from "@/components/stock-detail/StockDetailNav";
 import { FinancialTable } from "@/components/stock-detail/FinancialTable";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { DeltaBadge } from "@/components/ui/delta-badge";
 import {
   incomeRows,
   balanceRows,
@@ -253,36 +255,55 @@ export default function StockDetail() {
       <div className="min-h-screen bg-background">
         <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-6">
 
-          {/* HEADER */}
-          <header className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 pb-2 border-b border-border/60">
-            <div className="space-y-1.5 min-w-0">
-              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">{companyName}</h1>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                {basic.website && (
-                  <a
-                    href={basic.website.startsWith("http") ? basic.website : `https://${basic.website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 hover:text-primary transition-colors"
-                  >
-                    <Globe className="w-3 h-3" />
-                    {basic.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-                  </a>
-                )}
-                <span className="font-mono">{basic.exchange}: {basic.symbol}</span>
-                {basic.sector && <span>· {basic.sector}</span>}
-                {basic.industry && <span>· {basic.industry}</span>}
+          {/* HEADER — eyebrow + ticker mark + display H1 + price block */}
+          <header className="flex flex-col md:flex-row md:items-start md:justify-between gap-5 pb-4 border-b border-border/60">
+            <div className="flex items-start gap-4 min-w-0">
+              {/* Ticker mark — gradient navy badge with the first 2 letters of the symbol */}
+              <div
+                aria-hidden
+                className="hidden sm:flex shrink-0 h-14 w-14 items-center justify-center rounded-xl border border-[hsl(var(--brand-gold)/0.4)] text-[hsl(var(--brand-gold))] font-mono font-bold text-lg tabular-nums shadow-card"
+                style={{
+                  background:
+                    "linear-gradient(135deg, hsl(var(--brand-navy)) 0%, hsl(var(--brand-navy-deep)) 100%)",
+                }}
+              >
+                {basic.symbol.slice(0, 2).toUpperCase()}
+              </div>
+              <div className="space-y-1.5 min-w-0">
+                <Eyebrow tone="gold">
+                  Stock · {basic.exchange} · {basic.symbol}
+                </Eyebrow>
+                <h1 className="font-display text-2xl md:text-3xl font-bold leading-tight tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+                  {companyName}
+                </h1>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  {basic.website && (
+                    <a
+                      href={basic.website.startsWith("http") ? basic.website : `https://${basic.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 hover:text-[hsl(var(--brand-gold))] transition-colors"
+                    >
+                      <Globe className="w-3 h-3" />
+                      {basic.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                    </a>
+                  )}
+                  {basic.sector && <span>· {basic.sector}</span>}
+                  {basic.industry && <span>· {basic.industry}</span>}
+                </div>
               </div>
             </div>
-            <div className="flex flex-col items-end shrink-0">
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl md:text-3xl font-semibold font-mono tabular-nums text-foreground">
+            <div className="flex flex-col items-start md:items-end shrink-0">
+              <div className="flex items-baseline gap-3">
+                <span className="text-3xl md:text-4xl font-semibold font-mono tabular-nums text-foreground">
                   {formatRupees(currentPrice)}
                 </span>
                 {priceChangePercent != null && (
-                  <span className={cn("text-sm font-semibold tabular-nums", isPositive ? "text-positive" : "text-negative")}>
-                    {isPositive ? "▲" : "▼"} {Math.abs(priceChangePercent).toFixed(2)}%
-                  </span>
+                  <DeltaBadge
+                    value={priceChangePercent}
+                    suffix="%"
+                    direction={isPositive ? "up" : "down"}
+                  />
                 )}
               </div>
               {f.last_updated && (
@@ -318,7 +339,7 @@ export default function StockDetail() {
 
             <div className="rounded-xl border border-border/50 bg-card p-5 space-y-4">
               <div>
-                <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-2">About</h3>
+                <Eyebrow className="mb-2 block">About</Eyebrow>
                 {basic.description ? (
                   <p className="text-sm text-foreground leading-relaxed">{basic.description}</p>
                 ) : (
@@ -326,7 +347,7 @@ export default function StockDetail() {
                 )}
               </div>
               <div>
-                <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Key Points</h3>
+                <Eyebrow className="mb-2 block">Key Points</Eyebrow>
                 <p className="text-sm text-muted-foreground">
                   {basic.industry ? `Operates in ${basic.industry}.` : "—"}
                   {basic.sector ? ` Part of the ${basic.sector} sector.` : ""}
