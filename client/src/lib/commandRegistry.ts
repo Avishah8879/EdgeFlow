@@ -265,17 +265,21 @@ export const commands: Command[] = [
     }
   },
   {
-    id: 'alpha-generation',
-    title: 'Alpha Generation',
-    description: 'Open EquityPro Alpha Generation Lab in a new tab',
-    shortcut: 'ALPHA',
-    aliases: ['ALPHA', 'GEN', 'ALPHAGEN'],
-    keywords: ['alpha', 'generation', 'strategy', 'diffusion', 'ga'],
+    id: 'equitypro-ai',
+    title: 'EquityPro AI',
+    description: 'Open EquityPro AI strategy lab (external) in a new tab',
+    shortcut: 'AI',
+    aliases: ['AI', 'ALPHA', 'EQUITYPRO AI', 'GENERATE ALPHA'],
+    keywords: ['equitypro', 'ai', 'alpha', 'generation', 'strategy', 'backtest', 'external'],
     category: 'Analysis',
     icon: Brain,
     iconColor: 'text-primary',
     action: () => {
-      window.open('https://your-domain.com/alpha-generation', '_blank');
+      // Read at call time so a build-time env change is picked up. Inline import
+      // to avoid a circular dependency with this static command list.
+      import('./external-links').then(({ getEquityProAiUrl }) => {
+        window.open(getEquityProAiUrl(), '_blank', 'noopener,noreferrer');
+      });
     }
   },
   {

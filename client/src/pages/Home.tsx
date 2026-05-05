@@ -19,6 +19,7 @@ import { useWatchlist } from "@/hooks/useWatchlist";
 import { useBulkLTP } from "@/hooks/use-bulk-ltp";
 import { useMarketMovers } from "@/hooks/use-market-movers";
 import { useSavedScreenerResults, useSavedBacktestResults } from "@/hooks/use-saved-results";
+import { getEquityProAiUrl, EXTERNAL_LINK_PROPS } from "@/lib/external-links";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -176,16 +177,18 @@ function WatchlistRail() {
   );
 }
 
-// ─── Alpha CTA ───────────────────────────────────────────────────────
+// ─── EquityPro AI CTA — external, replaces in-platform Alpha Generation ──
 function AlphaCTA() {
   return (
-    <Link
-      href="/alpha-generation"
+    <a
+      href={getEquityProAiUrl()}
+      {...EXTERNAL_LINK_PROPS}
       className="relative block overflow-hidden rounded-xl border border-[hsl(var(--brand-gold)/0.3)] p-5 shadow-card-lg group"
       style={{
         background:
           "linear-gradient(155deg, hsl(var(--brand-navy)), hsl(var(--brand-navy-deep)))",
       }}
+      aria-label="Open EquityPro AI in a new tab"
     >
       <span
         aria-hidden
@@ -198,19 +201,20 @@ function AlphaCTA() {
       />
       <div className="relative">
         <div className="text-[10.5px] font-bold uppercase tracking-uppercase text-[hsl(var(--brand-gold))]">
-          EquityPro AI
+          EquityPro AI · external
         </div>
         <h3 className="font-display text-lg font-bold text-white mt-1.5">
-          Generate alpha for your watchlist
+          Generate alpha for your strategies
         </h3>
         <p className="text-[12.5px] leading-snug text-[hsl(38_30%_88%)] mt-2 mb-3">
-          Run the QIGA backtester across your tickers in parallel. Average runtime ~84s.
+          Build, backtest, and tune AI-driven trading strategies on the EquityPro AI
+          platform. Opens in a new tab.
         </p>
         <span className="inline-flex h-8 items-center rounded-md bg-[hsl(var(--brand-gold))] px-3 text-xs font-semibold text-[hsl(var(--brand-navy-deep))] group-hover:bg-[hsl(var(--brand-gold-bright))] transition-colors duration-fast">
-          Run batch →
+          Open EquityPro AI ↗
         </span>
       </div>
-    </Link>
+    </a>
   );
 }
 

@@ -1,21 +1,21 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ArrowRight } from "lucide-react";
-import { Link } from "wouter";
+import { Sparkles, ExternalLink } from "lucide-react";
+import { getEquityProAiUrl, EXTERNAL_LINK_PROPS } from "@/lib/external-links";
 
 interface GenerateAlphaCardProps {
   ticker: string;
 }
 
 /**
- * GenerateAlphaCard - CTA card to redirect users to Alpha Generation page
+ * GenerateAlphaCard - CTA that opens EquityPro AI in a new tab.
  *
- * Features:
- * - Clickable card that links to /alpha-generation with ticker pre-selected
- * - Does not auto-run optimization - user triggers it manually
- * - Fills remaining space below StockScorecard
+ * Alpha Generation moved out of the platform — this card now redirects
+ * users to the standalone EquityPro AI product (configured via
+ * VITE_EQUITYPRO_AI_URL).
  */
 export default function GenerateAlphaCard({ ticker }: GenerateAlphaCardProps) {
+  const url = `${getEquityProAiUrl()}?ticker=${encodeURIComponent(ticker)}`;
   return (
     <Card className="flex-1 flex flex-col">
       <CardHeader className="pb-3">
@@ -26,15 +26,16 @@ export default function GenerateAlphaCard({ ticker }: GenerateAlphaCardProps) {
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-center space-y-4">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Run AI-powered strategy optimization using {ticker}'s historical data to discover profitable trading conditions.
+          Build, backtest, and tune AI-driven strategies for {ticker} on the
+          EquityPro AI platform. Opens in a new tab.
         </p>
 
-        <Link href={`/alpha-generation?ticker=${encodeURIComponent(ticker)}`}>
+        <a href={url} {...EXTERNAL_LINK_PROPS} aria-label="Open EquityPro AI in a new tab">
           <Button className="w-full gap-2">
-            Generate Strategy
-            <ArrowRight className="w-4 h-4" />
+            Open EquityPro AI
+            <ExternalLink className="w-4 h-4" />
           </Button>
-        </Link>
+        </a>
       </CardContent>
     </Card>
   );

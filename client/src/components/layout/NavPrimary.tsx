@@ -39,7 +39,6 @@ const NAV: NavSection[] = [
       [
         { label: "Expert Screener", href: "/screener", sublabel: "Boolean expressions" },
         { label: "Fundamental Scanner", href: "/equity-screener", sublabel: "Quality + value rules" },
-        { label: "Backtesting", href: "/alpha-generation", sublabel: "QIGA strategy search" },
         { label: "Pattern Search", href: "/pattern-search", sublabel: "Chart pattern detection" },
         { label: "Sector Rotation", href: "/systematic-patterns", sublabel: "RRG rotation map" },
         { label: "Seasonality", href: "/seasonality", sublabel: "Weekly + monthly patterns" },

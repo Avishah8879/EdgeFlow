@@ -37,7 +37,8 @@ const Home = lazy(() => import("@/pages/Home"));
 const StockDetail = lazy(() => import("@/pages/StockDetail"));
 const Stocks = lazy(() => import("@/pages/Stocks"));
 const Screener = lazy(() => import("@/pages/Screener"));
-const StrategyBacktesting = lazy(() => import("@/pages/StrategyBacktesting"));
+// /alpha-generation is no longer a hosted page — it redirects to EquityPro AI (external).
+import { ExternalRedirect } from "@/components/ExternalRedirect";
 const Indices = lazy(() => import("@/pages/Indices"));
 const IndexDetail = lazy(() => import("@/pages/IndexDetail"));
 const TipTease = lazy(() => import("@/pages/TipTease"));
@@ -172,7 +173,9 @@ function AppRoutes() {
         <Route path="/stocks" component={Stocks} />
         <Route path="/stocks/:ticker" component={StockDetail} />
         <Route path="/screener" component={Screener} />
-        <Route path="/alpha-generation" component={StrategyBacktesting} />
+        <Route path="/alpha-generation">
+          {() => <ExternalRedirect kind="equitypro-ai" />}
+        </Route>
         <Route path="/indices" component={Indices} />
         <Route path="/index/:symbol" component={IndexDetail} />
         <Route path="/tip-tease" component={TipTease} />

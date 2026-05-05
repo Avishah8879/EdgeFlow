@@ -1,8 +1,15 @@
 import { Link } from "wouter";
 import { EquityProLogo } from "@/components/EquityProLogo";
+import { getEquityProAiUrl } from "@/lib/external-links";
+
+interface FooterLink {
+  label: string;
+  href: string;
+  external?: boolean;
+}
 
 export default function Footer() {
-  const footerSections = [
+  const footerSections: { title: string; links: FooterLink[] }[] = [
     {
       title: "Products",
       links: [
@@ -14,7 +21,7 @@ export default function Footer() {
       title: "Tools",
       links: [
         { label: "Expert Screener", href: "/screener" },
-        { label: "Alpha Generation", href: "/alpha-generation" },
+        { label: "EquityPro AI ↗", href: getEquityProAiUrl(), external: true },
         { label: "Portfolio", href: "/portfolio" },
       ],
     },
@@ -60,11 +67,22 @@ export default function Footer() {
               <ul className="space-y-2">
                 {section.links.map((link) => (
                   <li key={link.label}>
-                    <Link href={link.href}>
-                      <span className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                    {link.external ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                      >
                         {link.label}
-                      </span>
-                    </Link>
+                      </a>
+                    ) : (
+                      <Link href={link.href}>
+                        <span className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                          {link.label}
+                        </span>
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
