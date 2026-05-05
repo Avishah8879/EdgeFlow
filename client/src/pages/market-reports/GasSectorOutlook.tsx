@@ -109,7 +109,7 @@ export default function GasSectorOutlook() {
             <Calendar className="h-4 w-4" />
             <span>February 6, 2026</span>
           </div>
-          <h1 className="text-3xl font-bold mb-4">
+          <h1 className="font-display text-3xl md:text-5xl font-bold mb-4 tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
             Market Outlook: Gas Sector
           </h1>
 

@@ -34,7 +34,7 @@ export default function AdvancedStrategies() {
             <span>•</span>
             <span>8 min read</span>
           </div>
-          <h1 className="text-3xl font-bold mb-3">The Search for Alpha</h1>
+          <h1 className="font-display text-3xl md:text-5xl font-bold mb-3 tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">The Search for Alpha</h1>
         </header>
 
         {/* Top Disclaimer */}

@@ -61,10 +61,10 @@ export default function FyersTokenUpdate() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-background">
       <div className="w-full max-w-lg space-y-4">
-        <div className="text-center mb-6">
-          <Key className="h-10 w-10 mx-auto text-primary mb-3" />
-          <h1 className="text-2xl font-semibold">Fyers Token Update</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+        <div className="text-center mb-6 space-y-2">
+          <Key className="h-10 w-10 mx-auto text-[hsl(var(--brand-gold))] mb-3" strokeWidth={1.75} />
+          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Fyers Token Update</h1>
+          <p className="text-sm text-muted-foreground">
             Paste today's Fyers access token JSON to enable the Order Book depth feed
           </p>
         </div>

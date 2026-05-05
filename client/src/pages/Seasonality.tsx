@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
@@ -297,9 +298,14 @@ export default function Seasonality() {
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold">Seasonality Analysis</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+        <div className="mb-8 space-y-2">
+          <Eyebrow tone="gold" rule>
+            Analysis
+          </Eyebrow>
+          <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+            Seasonality Analysis
+          </h1>
+          <p className="text-sm text-muted-foreground">
             Analyze weekly and monthly return patterns to identify recurring seasonal trends.
           </p>
         </div>
