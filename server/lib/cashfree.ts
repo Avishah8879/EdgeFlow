@@ -110,6 +110,56 @@ export async function createCashfreeOrder(
 }
 
 /**
+ * Fetch the current state of a Cashfree order.
+ *
+ * Used as a polling fallback when the webhook didn't reach us (common in
+ * dev without a tunnel; rare but real in prod). Authoritative: if Cashfree
+ * says order_status === 'PAID', we should fulfill regardless of webhook.
+ */
+export interface CashfreeOrderStatusResponse {
+  cf_order_id:    string;
+  order_id:       string;
+  order_status:   'ACTIVE' | 'PAID' | 'EXPIRED' | 'TERMINATED' | 'TERMINATION_REQUESTED';
+  order_amount:   number;
+  order_currency: string;
+  payments?: Array<{
+    cf_payment_id:    number | string;
+    payment_status:   'SUCCESS' | 'FAILED' | 'PENDING' | 'USER_DROPPED' | string;
+    payment_amount:   number;
+    payment_currency: string;
+    payment_time:     string;
+  }>;
+}
+
+export async function getCashfreeOrderStatus(
+  orderId: string,
+): Promise<CashfreeOrderStatusResponse> {
+  return cfFetch(`/pg/orders/${encodeURIComponent(orderId)}`, 'GET');
+}
+
+/**
+ * Fetch the list of payments associated with a Cashfree order.
+ * Returns the most recent successful payment record (if any).
+ */
+export async function getLatestSuccessfulPayment(
+  orderId: string,
+): Promise<{ cf_payment_id: string; payment_amount: number; payment_time: string } | null> {
+  const payments: any[] = await cfFetch(
+    `/pg/orders/${encodeURIComponent(orderId)}/payments`,
+    'GET',
+  );
+  const success = (Array.isArray(payments) ? payments : []).find(
+    (p) => p.payment_status === 'SUCCESS',
+  );
+  if (!success) return null;
+  return {
+    cf_payment_id: String(success.cf_payment_id),
+    payment_amount: Number(success.payment_amount),
+    payment_time: String(success.payment_time),
+  };
+}
+
+/**
  * Verify a Cashfree webhook signature.
  *
  * Cashfree signs webhooks with HMAC-SHA256 of the timestamp + raw body

@@ -68,6 +68,47 @@ export function useCheckout() {
   });
 }
 
+export interface VerifyPaymentResponse {
+  status: "paid" | "active" | "expired" | "terminated" | "termination_requested" | string;
+  already_fulfilled: boolean;
+  intent_id: string;
+  cf_payment_id?: string;
+  message?: string;
+}
+
+/**
+ * Manually verify a payment by polling Cashfree's order-status API. Used as
+ * a fallback when the webhook hasn't reached us (common in dev without a
+ * tunnel; rare but real in prod). Idempotent — already-paid intents return
+ * { already_fulfilled: true } without re-crediting.
+ */
+export function useVerifyPayment() {
+  const { token } = useAuth();
+  const baseUrl = getAuthBaseUrl();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (intentId: string): Promise<VerifyPaymentResponse> => {
+      const r = await fetch(`${baseUrl}/api/payments/verify/${intentId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to verify payment");
+      }
+      return (await r.json()).data;
+    },
+    onSuccess: (data) => {
+      if (data.status === "paid") {
+        qc.invalidateQueries({ queryKey: ["coin-wallet", "balance"] });
+        qc.invalidateQueries({ queryKey: ["coin-wallet", "transactions"] });
+        qc.invalidateQueries({ queryKey: ["payment-history"] });
+      }
+    },
+  });
+}
+
 /** Payment history for the current user. */
 export function usePaymentHistory(limit = 10) {
   const { token } = useAuth();

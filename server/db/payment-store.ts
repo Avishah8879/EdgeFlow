@@ -59,6 +59,13 @@ export async function findIntentByCfOrderId(cfOrderId: string): Promise<PaymentI
   );
 }
 
+export async function findIntentById(intentId: string): Promise<PaymentIntent | null> {
+  return queryOne<PaymentIntent>(
+    'SELECT * FROM payment_intents WHERE id = $1',
+    [intentId],
+  );
+}
+
 export async function markIntentPaid(
   intentId: string,
   cfPaymentId: string,

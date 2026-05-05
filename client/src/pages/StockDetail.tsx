@@ -1,7 +1,7 @@
+import { useState } from "react";
 import { useParams, Redirect, Link } from "wouter";
 import { useStockDetail } from "@/hooks/use-stock-detail";
 import { useStockLTP } from "@/hooks/use-stock-ltp";
-import { useShareholding } from "@/hooks/use-shareholding";
 import { SEO } from "@/components/SEO";
 import { PAGE_SEO } from "@/lib/seo-config";
 import { generateStockBreadcrumbSchema, generateFinancialProductSchema } from "@/lib/json-ld";
@@ -13,6 +13,18 @@ import SentimentGauge from "@/components/stock-detail/SentimentGauge";
 import SentimentMetrics from "@/components/stock-detail/SentimentMetrics";
 import SentimentNewsSection from "@/components/stock-detail/SentimentNewsSection";
 import { SentimentProvider } from "@/contexts/SentimentContext";
+import { CollapsibleSection } from "@/components/stock-detail/CollapsibleSection";
+import { StockDetailNav, type NavSection } from "@/components/stock-detail/StockDetailNav";
+import { FinancialTable } from "@/components/stock-detail/FinancialTable";
+import {
+  incomeRows,
+  balanceRows,
+  cashflowRows,
+  ratiosRows,
+} from "@/components/stock-detail/financial-rows";
+import ShareholdingPattern, {
+  ShareholdingViewToggle,
+} from "@/components/stock-detail/ShareholdingPattern";
 import { cn } from "@/lib/utils";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -22,11 +34,6 @@ function formatCrore(value: number | null | undefined): string {
   const cr = value / 1e7;
   if (Math.abs(cr) >= 100000) return `${(cr / 100000).toFixed(2).replace(/\.00$/, "")} L Cr`;
   return `${cr.toLocaleString("en-IN", { maximumFractionDigits: 0 })} Cr`;
-}
-
-function formatNumber(value: number | null | undefined, decimals = 2): string {
-  if (value == null || !Number.isFinite(value)) return "—";
-  return value.toLocaleString("en-IN", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
 function formatPct(value: number | null | undefined, decimals = 2): string {
@@ -39,28 +46,6 @@ function formatRupees(value: number | null | undefined): string {
   return `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 }
 
-// Format JSONB cell values per the field's intent:
-//   "OPM %", "Tax %", "Dividend Payout %"  → integer percent
-//   "EPS in Rs", anything containing "EPS" → 2 decimals
-//   Anything else                          → integer with thousand separators
-//   Very large numbers (>=1e9)             → assumed raw rupees, divided to crores
-function formatTableCell(value: any, field: string): string {
-  if (value == null) return "—";
-  const num = typeof value === "number" ? value : parseFloat(value);
-  if (!Number.isFinite(num)) return typeof value === "string" ? value : "—";
-
-  if (field.trim().endsWith("%")) {
-    return `${Math.round(num)}%`;
-  }
-  if (/eps/i.test(field)) {
-    return num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  // If the value is huge (>= 1B), assume the JSONB stores raw rupees → convert to crores
-  const display = Math.abs(num) >= 1e9 ? num / 1e7 : num;
-  return display.toLocaleString("en-IN", { maximumFractionDigits: 0 });
-}
-
 // ─── small UI primitives ────────────────────────────────────────────────────
 
 function MetricRow({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
@@ -68,121 +53,6 @@ function MetricRow({ label, value, accent = false }: { label: string; value: str
     <div className="flex items-center justify-between gap-3 py-2 border-b border-border/50 last:border-b-0">
       <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
       <span className={cn("text-sm font-mono font-semibold tabular-nums", accent && "text-primary")}>{value}</span>
-    </div>
-  );
-}
-
-function SectionCard({
-  title,
-  subtitle,
-  action,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-xl border border-border/50 bg-card p-5 md:p-6">
-      <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight text-foreground">{title}</h2>
-          {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
-        </div>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-// ─── financial table — used by Quarterly Results, P&L, Balance Sheet, Cash Flows, Ratios ──
-
-function FinancialTable({
-  data,
-  fieldOrder,
-  boldRows = [],
-  emptyMessage,
-}: {
-  data: Record<string, any> | null | undefined;
-  fieldOrder?: string[];
-  boldRows?: string[];
-  emptyMessage: string;
-}) {
-  if (!data || Object.keys(data).length === 0) {
-    return <div className="text-sm text-muted-foreground py-6 text-center">{emptyMessage}</div>;
-  }
-
-  const periods = Object.keys(data).sort();
-  const allFields = new Set<string>();
-  periods.forEach((p) => {
-    const row = data[p];
-    if (row && typeof row === "object") Object.keys(row).forEach((f) => allFields.add(f));
-  });
-
-  // Order fields: explicit fieldOrder first, then alphabetical
-  let fields: string[];
-  if (fieldOrder && fieldOrder.length > 0) {
-    const explicit = fieldOrder.filter((f) => allFields.has(f));
-    const remaining = Array.from(allFields).filter((f) => !explicit.includes(f)).sort();
-    fields = [...explicit, ...remaining];
-  } else {
-    fields = Array.from(allFields).sort();
-  }
-
-  const boldSet = new Set(boldRows);
-
-  return (
-    <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
-      <table className="w-full text-sm border-collapse">
-        <thead>
-          <tr className="border-b border-border/70">
-            <th className="text-left py-2.5 pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap" />
-            {periods.map((p) => (
-              <th key={p} className="text-right py-2.5 px-3 font-medium text-muted-foreground whitespace-nowrap">
-                {p}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {fields.map((field, idx) => {
-            const bold = boldSet.has(field);
-            return (
-              <tr
-                key={field}
-                className={cn(
-                  "border-b border-border/30 last:border-b-0 transition-colors",
-                  idx % 2 === 1 && "bg-muted/20",
-                  "hover:bg-muted/40",
-                )}
-              >
-                <td
-                  className={cn(
-                    "py-2 pr-3 sticky left-0 whitespace-nowrap text-foreground",
-                    idx % 2 === 1 ? "bg-muted/20" : "bg-card",
-                    bold && "font-semibold",
-                  )}
-                >
-                  {field}
-                </td>
-                {periods.map((p) => (
-                  <td
-                    key={p}
-                    className={cn(
-                      "text-right py-2 px-3 font-mono tabular-nums whitespace-nowrap",
-                      bold && "font-semibold",
-                    )}
-                  >
-                    {formatTableCell(data[p]?.[field], field)}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
     </div>
   );
 }
@@ -312,7 +182,7 @@ export default function StockDetail() {
 
   const { data, isLoading, error } = useStockDetail(ticker);
   const { data: ltpData } = useStockLTP(ticker);
-  const { data: shareholding } = useShareholding(ticker, "quarterly");
+  const [shareholdingView, setShareholdingView] = useState<"quarterly" | "yearly">("quarterly");
 
   if (error && !isLoading) return <ErrorState error={error as Error} />;
   if (isLoading || !data) return <LoadingState />;
@@ -352,13 +222,21 @@ export default function StockDetail() {
   const pros = derivePros(f);
   const cons = deriveCons(f);
 
-  // Field ordering for tables (most important rows first)
-  const incomeOrder = ["Sales", "Revenue", "Total Revenue", "Expenses", "Operating Profit", "OPM %", "Other Income", "Interest", "Depreciation", "Profit before tax", "Tax %", "Net Profit", "EPS in Rs"];
-  const balanceOrder = ["Equity Capital", "Reserves", "Borrowings", "Other Liabilities", "Total Liabilities", "Fixed Assets", "CWIP", "Investments", "Other Assets", "Total Assets"];
-  const cashflowOrder = ["Cash from Operating Activity", "Cash from Investing Activity", "Cash from Financing Activity", "Net Cash Flow"];
-  const ratiosOrder = ["Debtor Days", "Inventory Days", "Days Payable", "Cash Conversion Cycle", "Working Capital Days", "ROCE %"];
-
   const announcements = data.external_analyst?.announcements ?? [];
+
+  // Build nav section list. CollapsibleSection handles empty states internally.
+  const navSections: NavSection[] = [
+    { id: "price-action", label: "Price" },
+    { id: "quarterly", label: "Quarterly" },
+    { id: "pnl", label: "P&L" },
+    { id: "balance-sheet", label: "Balance Sheet" },
+    { id: "cash-flows", label: "Cash Flows" },
+    { id: "ratios", label: "Ratios" },
+    { id: "shareholding", label: "Shareholding" },
+    { id: "sentiment", label: "Sentiment" },
+    { id: "news", label: "News" },
+  ];
+  if (announcements.length > 0) navSections.push({ id: "documents", label: "Documents" });
 
   return (
     <>
@@ -373,7 +251,7 @@ export default function StockDetail() {
       />
 
       <div className="min-h-screen bg-background">
-        <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-8">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-6">
 
           {/* HEADER */}
           <header className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 pb-2 border-b border-border/60">
@@ -417,7 +295,6 @@ export default function StockDetail() {
 
           {/* KEY METRICS + ABOUT */}
           <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left: 3x3 metric grid */}
             <div className="rounded-xl border border-border/50 bg-card p-5">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6">
                 <MetricRow label="Market Cap" value={formatCrore(f.market_cap)} />
@@ -439,7 +316,6 @@ export default function StockDetail() {
               </div>
             </div>
 
-            {/* Right: About + Key Points */}
             <div className="rounded-xl border border-border/50 bg-card p-5 space-y-4">
               <div>
                 <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-2">About</h3>
@@ -457,11 +333,6 @@ export default function StockDetail() {
                 </p>
               </div>
             </div>
-          </section>
-
-          {/* CHART */}
-          <section>
-            <PriceChartSection key={ticker} ticker={ticker} />
           </section>
 
           {/* PROS / CONS */}
@@ -499,25 +370,30 @@ export default function StockDetail() {
           </section>
           <p className="text-xs text-muted-foreground -mt-4">* Pros and cons are derived from current fundamentals.</p>
 
+          {/* IN-PAGE NAV (sticky) */}
+          <StockDetailNav sections={navSections} />
+
+          {/* PRICE ACTION */}
+          <CollapsibleSection id="price-action" title="Price Action" defaultOpen>
+            <PriceChartSection key={ticker} ticker={ticker} />
+          </CollapsibleSection>
+
           {/* QUARTERLY RESULTS */}
-          <SectionCard title="Quarterly Results" subtitle="Consolidated figures in Rs. Crores">
+          <CollapsibleSection id="quarterly" title="Quarterly Results" subtitle="Consolidated figures in Rs. Crores" defaultOpen>
             <FinancialTable
               data={data.financials.quarterly_financials}
-              fieldOrder={incomeOrder}
-              boldRows={["Operating Profit", "Profit before tax", "Net Profit"]}
+              rows={incomeRows}
               emptyMessage="Quarterly results not available."
             />
-          </SectionCard>
+          </CollapsibleSection>
 
           {/* PROFIT & LOSS */}
-          <SectionCard title="Profit & Loss" subtitle="Consolidated figures in Rs. Crores">
+          <CollapsibleSection id="pnl" title="Profit & Loss" subtitle="Consolidated figures in Rs. Crores" defaultOpen>
             <FinancialTable
               data={data.financials.income_statement}
-              fieldOrder={incomeOrder}
-              boldRows={["Operating Profit", "Profit before tax", "Net Profit"]}
+              rows={incomeRows}
               emptyMessage="Profit & loss data not available."
             />
-            {/* Compounded growth */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
               <GrowthCard
                 title="Compounded Sales Growth"
@@ -556,125 +432,69 @@ export default function StockDetail() {
                 ]}
               />
             </div>
-          </SectionCard>
+          </CollapsibleSection>
 
           {/* BALANCE SHEET */}
-          <SectionCard title="Balance Sheet" subtitle="Consolidated figures in Rs. Crores">
+          <CollapsibleSection id="balance-sheet" title="Balance Sheet" subtitle="Consolidated figures in Rs. Crores" defaultOpen>
             <FinancialTable
               data={data.financials.balance_sheet}
-              fieldOrder={balanceOrder}
-              boldRows={["Total Liabilities", "Total Assets"]}
+              rows={balanceRows}
               emptyMessage="Balance sheet data not available."
             />
-          </SectionCard>
+          </CollapsibleSection>
 
           {/* CASH FLOWS */}
-          <SectionCard title="Cash Flows" subtitle="Consolidated figures in Rs. Crores">
+          <CollapsibleSection id="cash-flows" title="Cash Flows" subtitle="Consolidated figures in Rs. Crores" defaultOpen={false}>
             <FinancialTable
               data={data.financials.cash_flow}
-              fieldOrder={cashflowOrder}
-              boldRows={["Net Cash Flow"]}
+              rows={cashflowRows}
               emptyMessage="Cash flow data not available."
             />
-          </SectionCard>
+          </CollapsibleSection>
 
           {/* RATIOS */}
-          <SectionCard title="Ratios" subtitle="Consolidated figures">
-            <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="border-b border-border/70">
-                    <th className="text-left py-2.5 pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap" />
-                    <th className="text-right py-2.5 px-3 font-medium text-muted-foreground whitespace-nowrap">Latest</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ratiosOrder.map((label, idx) => {
-                    let value = "—";
-                    if (label === "ROCE %" && f.return_on_assets != null) value = `${Math.round(f.return_on_assets * 100)}%`;
-                    const bold = label === "Cash Conversion Cycle" || label === "ROCE %" || label === "Days Payable";
-                    return (
-                      <tr
-                        key={label}
-                        className={cn(
-                          "border-b border-border/30 last:border-b-0 transition-colors",
-                          idx % 2 === 1 && "bg-muted/20",
-                          "hover:bg-muted/40",
-                        )}
-                      >
-                        <td className={cn(
-                          "py-2 pr-3 sticky left-0 whitespace-nowrap text-foreground",
-                          idx % 2 === 1 ? "bg-muted/20" : "bg-card",
-                          bold && "font-semibold",
-                        )}>
-                          {label}
-                        </td>
-                        <td className={cn("text-right py-2 px-3 font-mono tabular-nums", bold && "font-semibold")}>{value}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </SectionCard>
+          <CollapsibleSection id="ratios" title="Ratios" subtitle="Consolidated figures" defaultOpen={false}>
+            <FinancialTable
+              data={
+                f.return_on_assets != null
+                  ? { Latest: { "ROCE %": Math.round(f.return_on_assets * 100) } }
+                  : null
+              }
+              rows={ratiosRows}
+              emptyMessage="Ratio data not available."
+            />
+          </CollapsibleSection>
 
           {/* SHAREHOLDING PATTERN */}
-          <SectionCard
+          <CollapsibleSection
+            id="shareholding"
             title="Shareholding Pattern"
             subtitle="Numbers in percentages"
+            defaultOpen={false}
+            action={
+              <ShareholdingViewToggle view={shareholdingView} onViewChange={setShareholdingView} />
+            }
           >
-            {!shareholding ? (
-              <div className="text-sm text-muted-foreground py-6 text-center">Loading shareholding…</div>
-            ) : shareholding.data.length === 0 ? (
-              <div className="text-sm text-muted-foreground py-6 text-center">Shareholding data not available.</div>
-            ) : (
-              <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
-                <table className="w-full text-sm border-collapse">
-                  <thead>
-                    <tr className="border-b border-border/70">
-                      <th className="text-left py-2.5 pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap" />
-                      {shareholding.quarters.map((q) => (
-                        <th key={q} className="text-right py-2.5 px-3 font-medium text-muted-foreground whitespace-nowrap">
-                          {q}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {shareholding.data.map((row, idx) => (
-                      <tr
-                        key={row.category}
-                        className={cn(
-                          "border-b border-border/30 last:border-b-0 transition-colors",
-                          idx % 2 === 1 && "bg-muted/20",
-                          "hover:bg-muted/40",
-                        )}
-                      >
-                        <td className={cn(
-                          "py-2 pr-3 sticky left-0 whitespace-nowrap text-foreground",
-                          idx % 2 === 1 ? "bg-muted/20" : "bg-card",
-                        )}>
-                          {row.category}
-                        </td>
-                        {row.values.map((v, i) => (
-                          <td key={i} className="text-right py-2 px-3 font-mono tabular-nums">
-                            {v == null ? "—" : `${v.toFixed(2)}%`}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <p className="text-xs text-muted-foreground mt-3">
-                  * Classifications may have changed across quarters.
-                </p>
+            <ShareholdingPattern ticker={ticker} view={shareholdingView} />
+          </CollapsibleSection>
+
+          {/* SENTIMENT + NEWS */}
+          <SentimentProvider ticker={ticker}>
+            <CollapsibleSection id="sentiment" title="AI Sentiment" defaultOpen={false}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <SentimentGauge />
+                <SentimentMetrics />
               </div>
-            )}
-          </SectionCard>
+            </CollapsibleSection>
+
+            <CollapsibleSection id="news" title="News" defaultOpen={false}>
+              <SentimentNewsSection />
+            </CollapsibleSection>
+          </SentimentProvider>
 
           {/* DOCUMENTS / ANNOUNCEMENTS */}
           {announcements.length > 0 && (
-            <SectionCard title="Documents">
+            <CollapsibleSection id="documents" title="Documents" defaultOpen={false}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {announcements.slice(0, 8).map((a, i) => (
                   <a
@@ -696,22 +516,8 @@ export default function StockDetail() {
                   </a>
                 ))}
               </div>
-            </SectionCard>
+            </CollapsibleSection>
           )}
-
-          {/* SENTIMENT + NEWS (re-added per user request) */}
-          <SentimentProvider ticker={ticker}>
-            <SectionCard title="AI Sentiment">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <SentimentGauge />
-                <SentimentMetrics />
-              </div>
-            </SectionCard>
-
-            <SectionCard title="News">
-              <SentimentNewsSection />
-            </SectionCard>
-          </SentimentProvider>
 
           {/* Footer link back */}
           <div className="pt-2 pb-8">

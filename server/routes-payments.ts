@@ -15,14 +15,17 @@ import {
   createCashfreeOrder,
   verifyWebhookSignature,
   isCashfreeConfigured,
+  getCashfreeOrderStatus,
+  getLatestSuccessfulPayment,
   type CashfreeWebhookPayload,
 } from './lib/cashfree';
 import {
   createPaymentIntent,
   setCashfreeOrderId,
-  findIntentByCfOrderId,
+  findIntentById,
   markIntentPaid,
   listIntentsForUser,
+  type PaymentIntent,
 } from './db/payment-store';
 import { getPackById, getCoinPricing } from './db/coin-store';
 import { getPlanById } from './db/subscription-store';
@@ -133,6 +136,71 @@ router.post('/api/payments/checkout', requireAuth, async (req: Request, res: Res
   }
 });
 
+// ─── Shared fulfillment helper ───────────────────────────────────────────────
+
+/**
+ * Idempotently fulfill a paid intent. Used by both the webhook handler and
+ * the manual `/verify/:intentId` polling endpoint. Returns:
+ *   - 'fulfilled' if this call made the side-effect
+ *   - 'already-fulfilled' if a previous call already did it
+ *
+ * Caller is responsible for verifying the payment is actually SUCCESS before
+ * invoking — this function trusts its inputs.
+ */
+async function fulfillPaidIntent(
+  intent: PaymentIntent,
+  cfPaymentId: string,
+  rawWebhookOrStatus: object,
+): Promise<'fulfilled' | 'already-fulfilled'> {
+  const fulfilmentKey = `paid:${cfPaymentId}`;
+  const claimed = await markIntentPaid(intent.id, cfPaymentId, fulfilmentKey, rawWebhookOrStatus);
+  if (!claimed) return 'already-fulfilled';
+
+  if (intent.kind === 'coin_pack') {
+    const pack = await getPackById(intent.product_id);
+    if (pack) {
+      const totalCoins = pack.coin_amount + pack.bonus_coins;
+      await creditCoins({
+        userId:         intent.user_id,
+        amount:         totalCoins,
+        type:           'purchase',
+        referenceId:    intent.id,
+        idempotencyKey: fulfilmentKey,
+        metadata: { pack_name: pack.name, cf_payment_id: cfPaymentId },
+      });
+    }
+  } else if (intent.kind === 'custom_coins') {
+    const quantity = Number(intent.metadata?.quantity);
+    if (Number.isFinite(quantity) && quantity > 0) {
+      await creditCoins({
+        userId:         intent.user_id,
+        amount:         quantity,
+        type:           'purchase',
+        referenceId:    intent.id,
+        idempotencyKey: fulfilmentKey,
+        metadata: {
+          kind: 'custom_coins',
+          paise_per_coin: intent.metadata?.paise_per_coin,
+          cf_payment_id: cfPaymentId,
+        },
+      });
+    } else {
+      console.error('[PAYMENTS] custom_coins intent missing quantity metadata:', intent.id);
+    }
+  } else if (intent.kind === 'plan') {
+    const plan = await getPlanById(intent.product_id);
+    if (plan) {
+      const subEnd = new Date();
+      const intervalMonths = plan.billing_interval === 'year' ? 12 : 1;
+      subEnd.setMonth(subEnd.getMonth() + intervalMonths);
+      await activateSubscription(intent.user_id, intent.product_id, subEnd);
+    }
+  }
+
+  console.log(`[PAYMENTS] Fulfilled intent ${intent.id} (${intent.kind}: ${intent.product_id})`);
+  return 'fulfilled';
+}
+
 // ─── Webhook ─────────────────────────────────────────────────────────────────
 
 router.post('/api/payments/webhook', async (req: Request, res: Response) => {
@@ -153,85 +221,125 @@ router.post('/api/payments/webhook', async (req: Request, res: Response) => {
   const { payment, order } = payload.data ?? {};
 
   if (!payment || !order) {
-    res.json({ received: true }); // unknown event shape — ack silently
+    res.json({ received: true });
     return;
   }
 
   if (payment.payment_status !== 'SUCCESS') {
-    res.json({ received: true }); // non-success — log but don't fulfil
+    res.json({ received: true });
     return;
   }
 
   try {
-    const intent = await findIntentByCfOrderId(order.order_id);
+    // Cashfree's webhook payload `data.order.order_id` is the merchant's
+    // order_id (= our intent.id), NOT the cf_order_id. Look up by id.
+    const intent = await findIntentById(order.order_id);
     if (!intent) {
-      console.error('[PAYMENTS] No intent found for cf_order_id:', order.order_id);
+      console.error('[PAYMENTS] No intent found for order_id:', order.order_id);
       res.json({ received: true });
       return;
     }
 
-    const fulfilmentKey = `paid:${payment.cf_payment_id}`;
-    const claimed = await markIntentPaid(
-      intent.id,
-      payment.cf_payment_id,
-      fulfilmentKey,
-      payload,
-    );
-
-    if (!claimed) {
-      // Already fulfilled — idempotent ack
-      res.json({ received: true });
-      return;
-    }
-
-    // Apply the side-effect
-    if (intent.kind === 'coin_pack') {
-      const pack = await getPackById(intent.product_id);
-      if (pack) {
-        const totalCoins = pack.coin_amount + pack.bonus_coins;
-        await creditCoins({
-          userId:         intent.user_id,
-          amount:         totalCoins,
-          type:           'purchase',
-          referenceId:    intent.id,
-          idempotencyKey: fulfilmentKey,
-          metadata: { pack_name: pack.name, cf_payment_id: payment.cf_payment_id },
-        });
-      }
-    } else if (intent.kind === 'custom_coins') {
-      const quantity = Number(intent.metadata?.quantity);
-      if (Number.isFinite(quantity) && quantity > 0) {
-        await creditCoins({
-          userId:         intent.user_id,
-          amount:         quantity,
-          type:           'purchase',
-          referenceId:    intent.id,
-          idempotencyKey: fulfilmentKey,
-          metadata: {
-            kind: 'custom_coins',
-            paise_per_coin: intent.metadata?.paise_per_coin,
-            cf_payment_id: payment.cf_payment_id,
-          },
-        });
-      } else {
-        console.error('[PAYMENTS] custom_coins intent missing quantity metadata:', intent.id);
-      }
-    } else if (intent.kind === 'plan') {
-      const plan = await getPlanById(intent.product_id);
-      if (plan) {
-        const subEnd = new Date();
-        const intervalMonths = plan.billing_interval === 'year' ? 12 : 1;
-        subEnd.setMonth(subEnd.getMonth() + intervalMonths);
-        await activateSubscription(intent.user_id, intent.product_id, subEnd);
-      }
-    }
-
-    console.log(`[PAYMENTS] Fulfilled intent ${intent.id} (${intent.kind}: ${intent.product_id})`);
+    await fulfillPaidIntent(intent, payment.cf_payment_id, payload);
     res.json({ received: true });
   } catch (err: any) {
     console.error('[PAYMENTS] webhook error:', err.message);
-    // Respond 200 so Cashfree doesn't keep retrying a logic error
     res.json({ received: true, error: err.message });
+  }
+});
+
+// ─── Manual verify (polling fallback for missed webhooks) ────────────────────
+
+/**
+ * Polls Cashfree's GET /pg/orders/{order_id} for an intent and runs the
+ * same fulfillment path as the webhook if the order is PAID.
+ *
+ * - Authorization: only the intent's owner OR an admin may verify.
+ * - Idempotent: safe to call repeatedly. Already-paid intents return
+ *   { status: 'paid', already_fulfilled: true }.
+ * - Always reflects authoritative Cashfree state, not cached webhook state.
+ */
+router.post('/api/payments/verify/:intentId', requireAuth, async (req: Request, res: Response) => {
+  const intentId = req.params.intentId;
+  if (!intentId) {
+    res.status(400).json({ message: 'intentId required' });
+    return;
+  }
+
+  if (!isCashfreeConfigured()) {
+    res.status(503).json({ message: 'Payment gateway not configured' });
+    return;
+  }
+
+  try {
+    const intent = await findIntentById(intentId);
+    if (!intent) {
+      res.status(404).json({ message: 'Payment intent not found' });
+      return;
+    }
+
+    const isOwner = intent.user_id === req.user!.userId;
+    const role = req.user!.role;
+    const isAdminUser = role === 'admin' || role === 'super_admin';
+    if (!isOwner && !isAdminUser) {
+      res.status(403).json({ message: 'Forbidden' });
+      return;
+    }
+
+    if (intent.status === 'paid') {
+      res.json({
+        data: { status: 'paid', already_fulfilled: true, intent_id: intent.id },
+      });
+      return;
+    }
+
+    // Poll Cashfree for authoritative state
+    const orderStatus = await getCashfreeOrderStatus(intent.id);
+    if (orderStatus.order_status !== 'PAID') {
+      res.json({
+        data: {
+          status: orderStatus.order_status.toLowerCase(),
+          already_fulfilled: false,
+          intent_id: intent.id,
+          message: `Cashfree order_status=${orderStatus.order_status}; nothing to fulfill yet.`,
+        },
+      });
+      return;
+    }
+
+    // PAID — find the successful payment row to grab cf_payment_id
+    let cfPaymentId: string | null = null;
+    if (orderStatus.payments?.length) {
+      const succ = orderStatus.payments.find((p) => p.payment_status === 'SUCCESS');
+      if (succ) cfPaymentId = String(succ.cf_payment_id);
+    }
+    if (!cfPaymentId) {
+      const fallback = await getLatestSuccessfulPayment(intent.id);
+      cfPaymentId = fallback?.cf_payment_id ?? null;
+    }
+    if (!cfPaymentId) {
+      res.status(502).json({
+        message: 'Cashfree reports order as PAID but no SUCCESS payment record found',
+      });
+      return;
+    }
+
+    const result = await fulfillPaidIntent(intent, cfPaymentId, {
+      source: 'verify-poll',
+      order_status: orderStatus,
+    });
+
+    res.json({
+      data: {
+        status: 'paid',
+        already_fulfilled: result === 'already-fulfilled',
+        intent_id: intent.id,
+        cf_payment_id: cfPaymentId,
+      },
+    });
+  } catch (err: any) {
+    console.error('[PAYMENTS] verify error:', err.message);
+    res.status(500).json({ message: err.message || 'Verification failed' });
   }
 });
 

@@ -17,7 +17,7 @@ import {
   useCoinTransactions,
   type CoinTransaction,
 } from "@/hooks/use-coin-wallet";
-import { useCheckout, openCashfreeCheckout } from "@/hooks/use-checkout";
+import { useCheckout, openCashfreeCheckout, useVerifyPayment } from "@/hooks/use-checkout";
 
 const TXN_TYPE_LABEL: Record<CoinTransaction["type"], string> = {
   purchase: "Purchase",
@@ -320,24 +320,42 @@ function LedgerCard() {
 
 export function CoinsTab() {
   const qc = useQueryClient();
+  const verify = useVerifyPayment();
 
-  // If we landed here from a Cashfree redirect (URL contains cf_order_id /
-  // cf_payment_id), refresh balance and ledger. The webhook may already
-  // have credited the coins or be in-flight.
+  // If we landed here from a Cashfree redirect, the URL carries
+  //   ?cf_order_id=<our intent.id>&cf_payment_id=<cashfree's payment id>
+  // (Cashfree's `{order_id}` template substitutes the merchant order_id,
+  //  which is our intent.id — the param name is misleading.)
+  // Don't trust the redirect alone: poll the server's verify endpoint
+  // which calls Cashfree's order-status API and credits if PAID.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const hasCashfreeReturn =
-      params.has("cf_order_id") || params.has("cf_payment_id");
-    if (hasCashfreeReturn) {
-      toast.success("Payment received — coins will appear shortly.");
-      qc.invalidateQueries({ queryKey: ["coin-wallet"] });
-      // Strip the params so a refresh doesn't re-toast.
-      const url = new URL(window.location.href);
-      url.searchParams.delete("cf_order_id");
-      url.searchParams.delete("cf_payment_id");
-      window.history.replaceState(null, "", url.toString());
-    }
-  }, [qc]);
+    const intentId = params.get("cf_order_id");
+    if (!intentId) return;
+
+    // Strip the params first so a refresh doesn't re-trigger.
+    const url = new URL(window.location.href);
+    url.searchParams.delete("cf_order_id");
+    url.searchParams.delete("cf_payment_id");
+    window.history.replaceState(null, "", url.toString());
+
+    verify
+      .mutateAsync(intentId)
+      .then((data) => {
+        if (data.status === "paid" && !data.already_fulfilled) {
+          toast.success("Payment confirmed — coins credited.");
+          qc.invalidateQueries({ queryKey: ["coin-wallet"] });
+        } else if (data.status === "paid" && data.already_fulfilled) {
+          toast.info("Payment already credited.");
+        } else {
+          toast.warning(data.message ?? `Payment status: ${data.status}. Try again in a moment.`);
+        }
+      })
+      .catch((err: any) => {
+        toast.error(err.message ?? "Could not verify payment");
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="space-y-6">

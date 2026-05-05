@@ -329,6 +329,28 @@ const STEPS: HealingStep[] = [
     },
   },
   {
+    name: 'platforms: seed option-flow',
+    run: async () => {
+      const tableThere = await query<{ exists: boolean }>(
+        `SELECT EXISTS (
+           SELECT 1 FROM information_schema.tables WHERE table_name = 'platforms'
+         ) AS exists`,
+      );
+      if (!tableThere.rows[0]?.exists) return false;
+
+      const r = await query(
+        `INSERT INTO platforms (slug, name, description, is_active)
+         VALUES ('option-flow', 'Option Flow', 'Node-based options & equity backtesting platform (separate React + FastAPI app)', TRUE)
+         ON CONFLICT (slug) DO NOTHING`,
+      );
+      if ((r.rowCount ?? 0) > 0) {
+        console.log('[SELF_HEAL]   • Seeded platforms[option-flow]');
+        return true;
+      }
+      return false;
+    },
+  },
+  {
     name: 'feature_costs: seed default catalog',
     run: async () => {
       // Idempotent: rows already present are left untouched. Defensive in
@@ -342,6 +364,9 @@ const STEPS: HealingStep[] = [
         ['portfolio.optimize',       5, 'Portfolio optimizer (Black-Litterman) — per run'],
         ['fundamental_screener.run', 2, 'Fundamental Scanner run (per SSE job)'],
         ['pinescript.generate',      5, 'Pinescript AI code generation (per chat message that produces code)'],
+        ['optionflow.backtest.run',  5, 'Option Flow strategy backtest run (per execution)'],
+        ['optionflow.live.simulate', 5, 'Option Flow live simulator session (per session start)'],
+        ['optionflow.analytics.run', 1, 'Option Flow heavy analytics queries (per request)'],
       ];
       let inserted = 0;
       for (const [key, cost, desc] of defaults) {
