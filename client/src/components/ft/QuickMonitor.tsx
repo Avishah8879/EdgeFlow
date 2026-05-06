@@ -1,29 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip as ChartTooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import { useStockQuote } from '@/hooks/useStockQuote';
 import { cn } from '@/lib/utils';
-import { getCSSColor } from '@/lib/theme-utils';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-interface PriceChartPoint {
-  time: number; // unix seconds
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
-}
-
 interface MarketMover {
   symbol: string;
   name?: string;
@@ -33,6 +14,28 @@ interface MarketMover {
   change_percent?: number;
   changePercent?: number;
   category?: string; // GAINER | LOSER
+}
+
+interface ExtremeRow {
+  symbol: string;
+  name?: string;
+  ltp: number | null;
+  percent_change: number | null;
+  fifty_two_week_high: number | null;
+  fifty_two_week_low: number | null;
+  distance_pct: number | null; // % away from the 52w extreme
+}
+
+interface ExtremesResponse {
+  highs: ExtremeRow[];
+  lows: ExtremeRow[];
+}
+
+interface RankRow {
+  symbol: string;
+  name?: string;
+  ltp: number | null;
+  pct: number | null;
 }
 
 interface FiiDiiRow {
@@ -190,213 +193,52 @@ function QuoteTile({
   );
 }
 
-// ─── Live tick chart cell (NIFTY daily bars; falls back to hourly) ──────────
-function LiveTickCell({ symbol, label }: { symbol: string; label: string }) {
-  const colors = useMemo(
-    () => ({
-      grid: getCSSColor('--border'),
-      axis: getCSSColor('--muted-foreground'),
-      gold: getCSSColor('--brand-gold'),
-      tooltipBg: getCSSColor('--card'),
-      tooltipBorder: getCSSColor('--border'),
-      tooltipText: getCSSColor('--foreground'),
-    }),
-    [],
-  );
-
-  const selectPriceData = (raw: any): PriceChartPoint[] => {
-    const arr = Array.isArray(raw?.price_data)
-      ? raw.price_data
-      : Array.isArray(raw?.data)
-        ? raw.data
-        : Array.isArray(raw)
-          ? raw
-          : [];
-    return arr
-      .filter((p: any) => p && Number.isFinite(p.close))
-      .map((p: any) => ({
-        time: Number(p.time ?? p.timestamp ?? 0),
-        open: Number(p.open ?? 0),
-        high: Number(p.high ?? 0),
-        low: Number(p.low ?? 0),
-        close: Number(p.close ?? 0),
-        volume: Number(p.volume ?? 0),
-      }));
-  };
-
-  // Primary: daily bars over the last month — same source IndexDetail uses,
-  // so we know it has coverage for NIFTY 50 / BANKNIFTY / VIX.
-  const dailyQuery = useQuery<PriceChartPoint[]>({
-    queryKey: [`/api/price-chart/${encodeURIComponent(symbol)}?timeframe=1day&months=1`],
-    refetchInterval: 5 * 60 * 1000,
-    staleTime: 60 * 1000,
-    select: selectPriceData,
-  });
-
-  // Fallback: 1-hour bars over a wider window — only fires if daily was empty.
-  const hourlyEnabled =
-    !dailyQuery.isLoading && (!dailyQuery.data || dailyQuery.data.length === 0);
-  const hourlyQuery = useQuery<PriceChartPoint[]>({
-    queryKey: [`/api/price-chart/${encodeURIComponent(symbol)}?timeframe=1hour&months=1`],
-    enabled: hourlyEnabled,
-    refetchInterval: 60_000,
-    staleTime: 30_000,
-    select: selectPriceData,
-  });
-
-  const usingHourly = hourlyEnabled && (hourlyQuery.data?.length ?? 0) > 0;
-  const data = usingHourly ? hourlyQuery.data : dailyQuery.data;
-  const isLoading = dailyQuery.isLoading || (hourlyEnabled && hourlyQuery.isLoading);
-  const isError = dailyQuery.isError && hourlyQuery.isError;
-
-  const chartData = useMemo(
-    () =>
-      (data ?? []).map((p) => ({
-        ts: p.time,
-        close: p.close,
-        label: new Date(p.time * 1000).toLocaleString('en-IN', {
-          day: '2-digit',
-          month: 'short',
-          ...(usingHourly ? { hour: '2-digit', minute: '2-digit', hour12: false } : {}),
-        }),
-      })),
-    [data, usingHourly],
-  );
-
-  const titleLabel = usingHourly ? '1-hour bars' : 'daily bars';
-  const titleSuffix = `${chartData.length > 0 ? `last ${chartData.length} ${chartData.length === 1 ? 'bar' : 'bars'}` : '—'}`;
-
+// ─── Generic ranking cell ────────────────────────────────────────────────────
+function RankCell({
+  title,
+  rows,
+  isLoading,
+  emptyMessage = 'No data',
+}: {
+  title: string;
+  rows: RankRow[];
+  isLoading: boolean;
+  emptyMessage?: string;
+}) {
   return (
-    <Cell title={`${label} · ${titleLabel} · ${titleSuffix}`} bodyClassName="p-2">
+    <Cell title={title} bodyClassName="p-2 overflow-y-auto">
       {isLoading ? (
         <div className="h-full flex items-center justify-center">
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
         </div>
-      ) : isError || chartData.length === 0 ? (
+      ) : rows.length === 0 ? (
         <div className="h-full flex items-center justify-center text-[11px] text-muted-foreground">
-          Data unavailable
+          {emptyMessage}
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="mn-tick-gradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={colors.gold} stopOpacity={0.3} />
-                <stop offset="100%" stopColor={colors.gold} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} opacity={0.4} />
-            <XAxis
-              dataKey="label"
-              stroke={colors.axis}
-              tick={{ fontSize: 9, fill: colors.axis }}
-              tickLine={false}
-              minTickGap={50}
-            />
-            <YAxis
-              stroke={colors.axis}
-              tick={{ fontSize: 9, fill: colors.axis }}
-              tickLine={false}
-              domain={['auto', 'auto']}
-              tickFormatter={(v: number) =>
-                v.toLocaleString('en-IN', { maximumFractionDigits: 0 })
-              }
-            />
-            <ChartTooltip
-              contentStyle={{
-                backgroundColor: colors.tooltipBg,
-                border: `1px solid ${colors.tooltipBorder}`,
-                borderRadius: 6,
-                fontSize: 10,
-                fontFamily: 'var(--font-mono)',
-              }}
-              labelStyle={{ color: colors.axis }}
-              itemStyle={{ color: colors.tooltipText }}
-              formatter={(v: number) => fmt(v, 2)}
-            />
-            <Area
-              type="monotone"
-              dataKey="close"
-              stroke={colors.gold}
-              strokeWidth={1.5}
-              fill="url(#mn-tick-gradient)"
-              isAnimationActive={false}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      )}
-    </Cell>
-  );
-}
-
-// ─── Top movers cell ─────────────────────────────────────────────────────────
-function MoversCell() {
-  const { data, isLoading } = useQuery<MarketMover[]>({
-    queryKey: ['/api/market-movers'],
-    refetchInterval: 60000,
-    staleTime: 30000,
-    select: (raw: any) => {
-      const arr = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
-      return arr.map(
-        (m: any): MarketMover => ({
-          symbol: m.symbol ?? m.trading_symbol ?? '',
-          name: m.name ?? '',
-          ltp: Number(m.ltp ?? m.price ?? 0),
-          change_percent: Number(m.change_percent ?? m.changePercent ?? m.change_pct ?? 0),
-          category: m.category,
-        }),
-      );
-    },
-  });
-
-  // Combine + sort by absolute change so the most-moved symbols are at top
-  const combined = useMemo(() => {
-    const list = (data ?? [])
-      .filter((m) => Number.isFinite(m.change_percent ?? 0) && (m.symbol?.length ?? 0) > 0)
-      .slice()
-      .sort(
-        (a, b) =>
-          Math.abs(b.change_percent ?? 0) - Math.abs(a.change_percent ?? 0),
-      );
-    return list.slice(0, 9);
-  }, [data]);
-
-  return (
-    <Cell title="Top movers · NSE" bodyClassName="p-2 overflow-y-auto">
-      {isLoading ? (
-        <div className="h-full flex items-center justify-center">
-          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-        </div>
-      ) : combined.length === 0 ? (
-        <div className="h-full flex items-center justify-center text-[11px] text-muted-foreground">
-          No data
-        </div>
-      ) : (
-        <div className="font-mono text-[11px] space-y-0">
-          {combined.map((m) => {
-            const pct = m.change_percent ?? 0;
+        <div className="font-mono text-[10.5px] space-y-0">
+          {rows.map((row) => {
+            const pct = row.pct ?? 0;
             const positive = pct >= 0;
             return (
               <div
-                key={m.symbol}
-                className="flex items-center justify-between py-[3px] border-b border-dashed border-border/40 last:border-b-0"
+                key={row.symbol}
+                className="flex items-center justify-between py-[3px] border-b border-dashed border-border/40 last:border-b-0 gap-1.5"
               >
                 <span className="truncate min-w-0 flex-1">
-                  <span className="font-bold text-foreground">{m.symbol}</span>
-                  {m.name && (
-                    <span className="ml-1.5 text-muted-foreground truncate">
-                      {m.name}
-                    </span>
-                  )}
+                  <span className="font-bold text-foreground">{row.symbol}</span>
                 </span>
                 <span
                   className={cn(
-                    'tabular-nums font-bold flex-shrink-0 ml-2',
+                    'tabular-nums font-bold flex-shrink-0 text-right whitespace-nowrap',
                     positive ? 'text-positive' : 'text-negative',
                   )}
                 >
                   {positive ? '+' : ''}
-                  {pct.toFixed(2)}% · {fmt(m.ltp, 2)}
+                  {pct.toFixed(2)}%
+                </span>
+                <span className="tabular-nums font-semibold flex-shrink-0 text-right text-muted-foreground whitespace-nowrap min-w-[3rem]">
+                  {fmt(row.ltp, 2)}
                 </span>
               </div>
             );
@@ -404,6 +246,131 @@ function MoversCell() {
         </div>
       )}
     </Cell>
+  );
+}
+
+// ─── Movers data hook (shared by Gainers + Losers cells) ─────────────────────
+function useMovers() {
+  return useQuery<MarketMover[]>({
+    queryKey: ['/api/market-movers'],
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+    select: (raw: any) => {
+      const arr = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
+      return arr.map(
+        (m: any): MarketMover => ({
+          symbol: m.symbol ?? m.trading_symbol ?? '',
+          name: m.name ?? '',
+          ltp: Number(m.ltp ?? m.price ?? 0),
+          change_percent: Number(
+            m.change_percent ?? m.changePercent ?? m.change_pct ?? 0,
+          ),
+          category: m.category,
+        }),
+      );
+    },
+  });
+}
+
+function GainersCell() {
+  const { data, isLoading } = useMovers();
+  const rows: RankRow[] = useMemo(() => {
+    return (data ?? [])
+      .filter(
+        (m) =>
+          (m.symbol?.length ?? 0) > 0 &&
+          Number.isFinite(m.change_percent) &&
+          (m.change_percent ?? 0) > 0,
+      )
+      .slice()
+      .sort((a, b) => (b.change_percent ?? 0) - (a.change_percent ?? 0))
+      .slice(0, 10)
+      .map((m) => ({
+        symbol: m.symbol,
+        name: m.name,
+        ltp: m.ltp,
+        pct: m.change_percent ?? 0,
+      }));
+  }, [data]);
+  return <RankCell title="Top gainers · today" rows={rows} isLoading={isLoading} />;
+}
+
+function LosersCell() {
+  const { data, isLoading } = useMovers();
+  const rows: RankRow[] = useMemo(() => {
+    return (data ?? [])
+      .filter(
+        (m) =>
+          (m.symbol?.length ?? 0) > 0 &&
+          Number.isFinite(m.change_percent) &&
+          (m.change_percent ?? 0) < 0,
+      )
+      .slice()
+      .sort((a, b) => (a.change_percent ?? 0) - (b.change_percent ?? 0))
+      .slice(0, 10)
+      .map((m) => ({
+        symbol: m.symbol,
+        name: m.name,
+        ltp: m.ltp,
+        pct: m.change_percent ?? 0,
+      }));
+  }, [data]);
+  return <RankCell title="Top losers · today" rows={rows} isLoading={isLoading} />;
+}
+
+// ─── 52-week extremes hook (shared by Highs + Lows cells) ────────────────────
+function useExtremes() {
+  return useQuery<ExtremesResponse>({
+    queryKey: ['/api/monitor/extremes?limit=10'],
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
+    select: (raw: any): ExtremesResponse => {
+      const payload = raw?.data ?? raw ?? {};
+      return {
+        highs: Array.isArray(payload.highs) ? payload.highs : [],
+        lows: Array.isArray(payload.lows) ? payload.lows : [],
+      };
+    },
+  });
+}
+
+function HighsCell() {
+  const { data, isLoading } = useExtremes();
+  const rows: RankRow[] = useMemo(() => {
+    return (data?.highs ?? []).map((r) => ({
+      symbol: r.symbol,
+      name: r.name ?? undefined,
+      ltp: r.ltp,
+      pct: r.percent_change,
+    }));
+  }, [data]);
+  return (
+    <RankCell
+      title="52-week highs"
+      rows={rows}
+      isLoading={isLoading}
+      emptyMessage="None at 52w high"
+    />
+  );
+}
+
+function LowsCell() {
+  const { data, isLoading } = useExtremes();
+  const rows: RankRow[] = useMemo(() => {
+    return (data?.lows ?? []).map((r) => ({
+      symbol: r.symbol,
+      name: r.name ?? undefined,
+      ltp: r.ltp,
+      pct: r.percent_change,
+    }));
+  }, [data]);
+  return (
+    <RankCell
+      title="52-week lows"
+      rows={rows}
+      isLoading={isLoading}
+      emptyMessage="None at 52w low"
+    />
   );
 }
 
@@ -627,12 +594,18 @@ export function QuickMonitor() {
             <QuoteTile symbol="India VIX" label="INDIA VIX" />
           </div>
 
-          {/* Row 2: tick chart (left) + movers (right) — 320px */}
-          <div className="col-span-12 lg:col-span-7 h-[320px]">
-            <LiveTickCell symbol="Nifty 50" label="NIFTY" />
+          {/* Row 2: 4 ranking tables — Top gainers / losers / 52w highs / lows */}
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3 h-[320px]">
+            <GainersCell />
           </div>
-          <div className="col-span-12 lg:col-span-5 h-[320px]">
-            <MoversCell />
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3 h-[320px]">
+            <LosersCell />
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3 h-[320px]">
+            <HighsCell />
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3 h-[320px]">
+            <LowsCell />
           </div>
 
           {/* Row 3: FII/DII + News + Sector heat — 260px */}

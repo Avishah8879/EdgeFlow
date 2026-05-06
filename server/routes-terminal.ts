@@ -139,6 +139,19 @@ export function registerTerminalRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/monitor/extremes", async (req, res) => {
+    try {
+      const params = new URLSearchParams();
+      if (typeof req.query.limit === 'string') params.set('limit', req.query.limit);
+      if (typeof req.query.proximity_pct === 'string') params.set('proximity_pct', req.query.proximity_pct);
+      const qs = params.toString();
+      const result = await proxyToPython(`/api/monitor/extremes${qs ? `?${qs}` : ''}`, buildPythonOptions(req));
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, '52-week extremes unavailable');
+    }
+  });
+
   // ── Options & Derivatives ──────────────────────────────────────────────
 
   app.get("/api/options/:symbol", async (req, res) => {

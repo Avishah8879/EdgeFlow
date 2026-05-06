@@ -10090,6 +10090,115 @@ async def ft_monitor_sector_heat(
 
 
 # =============================================================================
+# FinTerminal: Monitor — 52-week extremes (highs/lows leaderboard)
+# =============================================================================
+
+@fastapi_app.get("/api/monitor/extremes")
+async def ft_monitor_extremes(
+    limit: int = Query(10, ge=3, le=25),
+    proximity_pct: float = Query(
+        1.0,
+        ge=0.0,
+        le=10.0,
+        description="How close (in %) to the 52-week high/low to count as 'at' the extreme",
+    ),
+):
+    """
+    Stocks at or near 52-week highs / lows. Joins ltp_live with
+    stock_fundamentals.fifty_two_week_high/low and ranks by today's
+    percent_change (gainers first for highs, losers first for lows).
+
+    Returns { highs: [...], lows: [...] }, each row has:
+      symbol, name, ltp, percent_change, fifty_two_week_high,
+      fifty_two_week_low, distance_pct (how far from the extreme).
+    """
+    threshold_high = 1.0 - (proximity_pct / 100.0)  # e.g. 0.99 for 1%
+    threshold_low = 1.0 + (proximity_pct / 100.0)   # e.g. 1.01 for 1%
+
+    def _fetch():
+        conn = None
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                # 52-week highs: LTP within proximity of the stored high
+                cur.execute(
+                    """
+                    SELECT t.symbol,
+                           COALESCE(sf.long_name, t.name) AS name,
+                           ltp.ltp,
+                           ltp.percent_change,
+                           sf.fifty_two_week_high,
+                           sf.fifty_two_week_low,
+                           ((ltp.ltp - sf.fifty_two_week_high) / sf.fifty_two_week_high) * 100.0 AS distance_pct
+                    FROM ltp_live ltp
+                    JOIN tickers t ON t.id = ltp.ticker_id
+                    JOIN stock_fundamentals sf ON sf.ticker_id = t.id
+                    WHERE t.is_active = true
+                      AND sf.fifty_two_week_high IS NOT NULL
+                      AND sf.fifty_two_week_high > 0
+                      AND ltp.ltp IS NOT NULL
+                      AND ltp.ltp >= sf.fifty_two_week_high * %s
+                    ORDER BY ltp.percent_change DESC NULLS LAST
+                    LIMIT %s
+                    """,
+                    [threshold_high, limit],
+                )
+                highs_rows = cur.fetchall()
+
+                # 52-week lows: LTP within proximity of the stored low
+                cur.execute(
+                    """
+                    SELECT t.symbol,
+                           COALESCE(sf.long_name, t.name) AS name,
+                           ltp.ltp,
+                           ltp.percent_change,
+                           sf.fifty_two_week_high,
+                           sf.fifty_two_week_low,
+                           ((ltp.ltp - sf.fifty_two_week_low) / sf.fifty_two_week_low) * 100.0 AS distance_pct
+                    FROM ltp_live ltp
+                    JOIN tickers t ON t.id = ltp.ticker_id
+                    JOIN stock_fundamentals sf ON sf.ticker_id = t.id
+                    WHERE t.is_active = true
+                      AND sf.fifty_two_week_low IS NOT NULL
+                      AND sf.fifty_two_week_low > 0
+                      AND ltp.ltp IS NOT NULL
+                      AND ltp.ltp <= sf.fifty_two_week_low * %s
+                    ORDER BY ltp.percent_change ASC NULLS LAST
+                    LIMIT %s
+                    """,
+                    [threshold_low, limit],
+                )
+                lows_rows = cur.fetchall()
+
+            def to_dict(rows):
+                return [
+                    {
+                        "symbol": r[0],
+                        "name": r[1],
+                        "ltp": float(r[2]) if r[2] is not None else None,
+                        "percent_change": float(r[3]) if r[3] is not None else None,
+                        "fifty_two_week_high": float(r[4]) if r[4] is not None else None,
+                        "fifty_two_week_low": float(r[5]) if r[5] is not None else None,
+                        "distance_pct": float(r[6]) if r[6] is not None else None,
+                    }
+                    for r in rows
+                ]
+
+            return {"highs": to_dict(highs_rows), "lows": to_dict(lows_rows)}
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    try:
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(None, _fetch)
+        return success_response(result)
+    except Exception as exc:
+        logging.exception("Monitor extremes failed")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch extremes: {str(exc)}") from exc
+
+
+# =============================================================================
 # FinTerminal: Stock Comparator Metrics
 # =============================================================================
 
