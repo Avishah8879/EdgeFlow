@@ -143,8 +143,21 @@ function QuoteTile({
   });
 
   const price = quote?.price;
-  const changePct = quote?.changePercent;
   const change = quote?.change;
+  // Indices don't always have percent_change populated in ltp_live, but
+  // change (= ltp - close) is computed downstream. Compute the percent
+  // locally as fallback when API returns 0.
+  const apiPct = quote?.changePercent;
+  const fallbackPct =
+    price != null &&
+    Number.isFinite(price) &&
+    change != null &&
+    Number.isFinite(change) &&
+    Math.abs(price - change) > 0
+      ? (change / (price - change)) * 100
+      : 0;
+  const changePct =
+    apiPct != null && Number.isFinite(apiPct) && apiPct !== 0 ? apiPct : fallbackPct;
   const isPositive = (change ?? 0) >= 0;
 
   return (
@@ -191,14 +204,21 @@ function LiveTickCell({ symbol, label }: { symbol: string; label: string }) {
     [],
   );
 
-  // last ~5 trading days of 1-hour bars
+  // last ~5 trading days of 1-hour bars. Endpoint returns
+  // { ticker, timeframe, price_data: [...] } — note the field is `price_data`
+  // not `data`, so we look there first.
   const { data, isLoading, isError } = useQuery<PriceChartPoint[]>({
-    queryKey: [`/api/price-chart/${symbol}?timeframe=1hour&months=0.25`],
+    queryKey: [`/api/price-chart/${encodeURIComponent(symbol)}?timeframe=1hour&months=0.25`],
     refetchInterval: 60000,
     staleTime: 30000,
     select: (raw: any) => {
-      const arr = raw?.data ?? raw ?? [];
-      if (!Array.isArray(arr)) return [];
+      const arr = Array.isArray(raw?.price_data)
+        ? raw.price_data
+        : Array.isArray(raw?.data)
+          ? raw.data
+          : Array.isArray(raw)
+            ? raw
+            : [];
       return arr
         .filter((p: any) => p && Number.isFinite(p.close))
         .map((p: any) => ({
@@ -551,7 +571,7 @@ export function QuickMonitor() {
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Workspace tab strip */}
-      <div className="flex items-center justify-between px-4 md:px-6 py-2.5 border-b border-border bg-card">
+      <div className="flex items-center justify-between px-4 md:px-6 py-2.5 border-b border-border bg-card flex-shrink-0">
         <h2 className="font-display text-[18px] md:text-[20px] font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground hidden md:block">
           Multi-asset workspace
         </h2>
@@ -574,36 +594,39 @@ export function QuickMonitor() {
         </div>
       </div>
 
-      {/* 12-col × 7-row grid. 3 quote tiles top, 5 panels below. */}
-      <div className="flex-1 grid grid-cols-12 grid-rows-7 gap-1.5 p-1.5 overflow-hidden">
-        {/* Row 1-2: 3 quote tiles */}
-        <div className="col-span-12 sm:col-span-4 row-span-2">
-          <QuoteTile symbol="Nifty 50" label="NIFTY 50" goldBorder />
-        </div>
-        <div className="col-span-12 sm:col-span-4 row-span-2">
-          <QuoteTile symbol="Nifty Bank" label="BANK NIFTY" />
-        </div>
-        <div className="col-span-12 sm:col-span-4 row-span-2">
-          <QuoteTile symbol="India VIX" label="INDIA VIX" />
-        </div>
+      {/* Dashboard grid — 12 cols, auto-flowing rows with sensible min heights.
+          Container scrolls on small viewports rather than squashing cells. */}
+      <div className="flex-1 overflow-y-auto bg-background">
+        <div className="grid grid-cols-12 gap-1.5 p-1.5">
+          {/* Row 1: 3 quote tiles (160px) */}
+          <div className="col-span-12 sm:col-span-4 h-[160px]">
+            <QuoteTile symbol="Nifty 50" label="NIFTY 50" goldBorder />
+          </div>
+          <div className="col-span-12 sm:col-span-4 h-[160px]">
+            <QuoteTile symbol="Nifty Bank" label="BANK NIFTY" />
+          </div>
+          <div className="col-span-12 sm:col-span-4 h-[160px]">
+            <QuoteTile symbol="India VIX" label="INDIA VIX" />
+          </div>
 
-        {/* Row 3-5: tick chart (left) + movers (right) */}
-        <div className="col-span-12 lg:col-span-7 row-span-3">
-          <LiveTickCell symbol="Nifty 50" label="NIFTY" />
-        </div>
-        <div className="col-span-12 lg:col-span-5 row-span-3">
-          <MoversCell />
-        </div>
+          {/* Row 2: tick chart (left) + movers (right) — 320px */}
+          <div className="col-span-12 lg:col-span-7 h-[320px]">
+            <LiveTickCell symbol="Nifty 50" label="NIFTY" />
+          </div>
+          <div className="col-span-12 lg:col-span-5 h-[320px]">
+            <MoversCell />
+          </div>
 
-        {/* Row 6-7: FII/DII + News + Sector heat */}
-        <div className="col-span-12 md:col-span-4 row-span-2">
-          <FiiDiiCell />
-        </div>
-        <div className="col-span-12 md:col-span-4 row-span-2">
-          <NewsCell />
-        </div>
-        <div className="col-span-12 md:col-span-4 row-span-2">
-          <SectorHeatCell />
+          {/* Row 3: FII/DII + News + Sector heat — 260px */}
+          <div className="col-span-12 md:col-span-4 h-[260px]">
+            <FiiDiiCell />
+          </div>
+          <div className="col-span-12 md:col-span-4 h-[260px]">
+            <NewsCell />
+          </div>
+          <div className="col-span-12 md:col-span-4 h-[260px]">
+            <SectorHeatCell />
+          </div>
         </div>
       </div>
     </div>
