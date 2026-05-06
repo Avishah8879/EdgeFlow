@@ -79,15 +79,13 @@ export default function AdminPayments() {
   const intents = data?.data ?? [];
 
   return (
-    <AdminLayout requiredRole="admin">
+    <AdminLayout
+      requiredRole="admin"
+      eyebrow="Admin · Billing"
+      title="Payments"
+      description="Cashfree payment intents — every checkout attempt across users and platforms."
+    >
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-md bg-primary/10"><CreditCard className="h-5 w-5 text-primary" /></div>
-          <div>
-            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Payments</h1>
-            <p className="text-sm text-muted-foreground">Cashfree payment intents — every checkout attempt.</p>
-          </div>
-        </div>
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">

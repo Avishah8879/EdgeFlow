@@ -92,18 +92,13 @@ export default function AdminFeatureCosts() {
   const rows = data?.data ?? [];
 
   return (
-    <AdminLayout requiredRole="admin">
+    <AdminLayout
+      requiredRole="admin"
+      eyebrow="Admin · Wallet"
+      title="Feature costs"
+      description="Coins debited per use of each gated feature. Toggle a feature to Free to skip the gate, or set to Paid to charge the configured cost."
+    >
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-md bg-primary/10"><Settings2 className="h-5 w-5 text-primary" /></div>
-          <div>
-            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Feature Costs</h1>
-            <p className="text-sm text-muted-foreground">
-              Coins debited per use of each gated feature. Toggle a feature to <span className="font-medium">Free</span> to skip the gate entirely;
-              everyone pays the configured cost when set to <span className="font-medium">Paid</span>.
-            </p>
-          </div>
-        </div>
 
         <Card>
           <CardHeader>

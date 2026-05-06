@@ -219,18 +219,14 @@ export default function AdminCoinPacks() {
   const packs = data?.data ?? [];
 
   return (
-    <AdminLayout requiredRole="admin">
+    <AdminLayout
+      requiredRole="admin"
+      eyebrow="Admin · Wallet"
+      title="Coin packs"
+      description="Edit the coin packs that show up on /pricing."
+      rightSlot={<CreatePackDialog />}
+    >
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md bg-primary/10"><Coins className="h-5 w-5 text-primary" /></div>
-            <div>
-              <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Coin Packs</h1>
-              <p className="text-sm text-muted-foreground">Edit the packs that show up on /pricing.</p>
-            </div>
-          </div>
-          <CreatePackDialog />
-        </div>
 
         <CoinPricingCard />
 

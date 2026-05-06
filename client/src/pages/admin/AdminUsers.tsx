@@ -667,14 +667,12 @@ export default function AdminUsers() {
   };
 
   return (
-    <AdminLayout>
+    <AdminLayout
+      eyebrow="Admin · Accounts"
+      title="User management"
+      description="View and manage user accounts, roles, tiers, and access."
+    >
       <div className="space-y-6">
-        <div>
-          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">User Management</h1>
-          <p className="text-muted-foreground mt-1">
-            View and manage user accounts
-          </p>
-        </div>
 
         {/* Filters */}
         <Card>

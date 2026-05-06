@@ -125,14 +125,12 @@ export default function AdminDashboard() {
   const cs = coinStats?.data;
 
   return (
-    <AdminLayout>
+    <AdminLayout
+      eyebrow="Admin · Overview"
+      title="Dashboard"
+      description="Overview of system statistics and health."
+    >
       <div className="space-y-6">
-        <div>
-          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Admin Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            Overview of system statistics and health
-          </p>
-        </div>
 
         {error && (
           <Card className="border-destructive">

@@ -41,19 +41,13 @@ export default function AdminSignupBonus() {
   };
 
   return (
-    <AdminLayout requiredRole="admin">
+    <AdminLayout
+      requiredRole="admin"
+      eyebrow="Admin · Wallet"
+      title="Signup bonus"
+      description="Coins automatically credited to a user's wallet when they create a new account."
+    >
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-md bg-primary/10">
-            <Gift className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Signup Bonus</h1>
-            <p className="text-sm text-muted-foreground">
-              Coins automatically credited to a user's wallet when they create a new account.
-            </p>
-          </div>
-        </div>
 
         <Card>
           <CardHeader>

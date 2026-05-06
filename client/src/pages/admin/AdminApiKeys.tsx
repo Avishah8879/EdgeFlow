@@ -161,15 +161,14 @@ export default function AdminApiKeys() {
   const meta = keysData?.meta;
 
   return (
-    <AdminLayout requiredRole="admin">
+    <AdminLayout
+      requiredRole="admin"
+      eyebrow="Admin · Developer"
+      title="API key management"
+      description="Create and manage API keys for developers and partners."
+    >
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">API Key Management</h1>
-            <p className="text-sm text-muted-foreground">
-              Create and manage API keys for developers and partners.
-            </p>
-          </div>
+        <div className="flex items-center justify-end">
           <Dialog open={createDialogOpen} onOpenChange={(v) => (v ? setCreateDialogOpen(true) : handleCloseCreate())}>
             <DialogTrigger asChild>
               <Button size="sm">

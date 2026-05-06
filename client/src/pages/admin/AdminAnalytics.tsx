@@ -247,15 +247,13 @@ export default function AdminAnalytics() {
   };
 
   return (
-    <AdminLayout>
+    <AdminLayout
+      eyebrow="Admin · Insights"
+      title="Analytics"
+      description="User growth, engagement, and retention metrics."
+    >
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Analytics</h1>
-            <p className="text-muted-foreground mt-1">
-              User growth, engagement, and retention metrics
-            </p>
-          </div>
+        <div className="flex items-center justify-end">
           <Select value={String(days)} onValueChange={(v) => setDays(parseInt(v))}>
             <SelectTrigger className="w-36">
               <SelectValue />

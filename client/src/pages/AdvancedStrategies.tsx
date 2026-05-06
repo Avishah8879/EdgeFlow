@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import {
   ChevronRight,
   ArrowRight,
@@ -27,14 +28,18 @@ export default function AdvancedStrategies() {
         </nav>
 
         {/* Header */}
-        <header className="mb-10">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
-            <span className="bg-accent px-2 py-0.5 rounded">Strategy</span>
+        <header className="mb-10 space-y-3">
+          <Eyebrow tone="gold" rule>
+            Editorial · Strategy
+          </Eyebrow>
+          <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+            The Search for Alpha
+          </h1>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>January 15, 2025</span>
-            <span>•</span>
+            <span>·</span>
             <span>8 min read</span>
           </div>
-          <h1 className="font-display text-3xl md:text-5xl font-bold mb-3 tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">The Search for Alpha</h1>
         </header>
 
         {/* Top Disclaimer */}

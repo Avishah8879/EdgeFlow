@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { Key, CheckCircle2, XCircle, AlertCircle, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -61,11 +62,20 @@ export default function FyersTokenUpdate() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-background">
       <div className="w-full max-w-lg space-y-4">
-        <div className="text-center mb-6 space-y-2">
-          <Key className="h-10 w-10 mx-auto text-[hsl(var(--brand-gold))] mb-3" strokeWidth={1.75} />
-          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Fyers Token Update</h1>
-          <p className="text-sm text-muted-foreground">
-            Paste today's Fyers access token JSON to enable the Order Book depth feed
+        <div className="text-center mb-6 space-y-2.5">
+          <div className="mx-auto h-12 w-12 rounded-full bg-[hsl(var(--brand-gold))]/15 flex items-center justify-center mb-3">
+            <Key className="h-6 w-6 text-[hsl(var(--brand-gold))]" strokeWidth={1.75} />
+          </div>
+          <div className="flex justify-center">
+            <Eyebrow tone="gold" rule>
+              Admin · Broker
+            </Eyebrow>
+          </div>
+          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+            Fyers token update
+          </h1>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+            Paste today's Fyers access token JSON to enable the Order Book depth feed.
           </p>
         </div>
 

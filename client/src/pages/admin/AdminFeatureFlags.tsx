@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AdminLayout } from "@/components/admin";
 import {
   useFeatureFlags,
   useFeatureFlagCategories,
@@ -848,19 +849,18 @@ export default function AdminFeatureFlags() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Feature Flags</h1>
-          <p className="text-muted-foreground">
-            Control feature availability with targeting and gradual rollouts
-          </p>
-        </div>
+    <AdminLayout
+      eyebrow="Admin · Releases"
+      title="Feature flags"
+      description="Control feature availability with targeting and gradual rollouts."
+      rightSlot={
         <Button onClick={handleCreate}>
           <Plus className="h-4 w-4 mr-2" />
-          Create Flag
+          Create flag
         </Button>
-      </div>
+      }
+    >
+      <div className="space-y-6">
 
       {/* Category Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -999,6 +999,7 @@ export default function AdminFeatureFlags() {
         onSave={handleSaveFlag}
         isLoading={createFlag.isPending || updateFlag.isPending}
       />
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

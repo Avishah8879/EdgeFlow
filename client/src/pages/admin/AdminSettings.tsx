@@ -608,22 +608,19 @@ export default function AdminSettings() {
   };
 
   return (
-    <AdminLayout>
+    <AdminLayout
+      eyebrow="Admin · Platform"
+      title="Settings"
+      description="Manage system configuration and global toggles."
+      rightSlot={
+        <Button variant="outline" onClick={() => refetch()}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
+      }
+    >
       <div className="space-y-6">
         <FyersTokenCard />
-
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Settings</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage system configuration and settings
-            </p>
-          </div>
-          <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
 
         {error && (
           <Card className="border-destructive">

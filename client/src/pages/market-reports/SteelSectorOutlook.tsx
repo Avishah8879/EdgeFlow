@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import {
   ChevronRight,
   TrendingUp,
@@ -108,14 +109,17 @@ export default function SteelSectorOutlook() {
         </nav>
 
         {/* Header */}
-        <header className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+        <header className="mb-8 space-y-3">
+          <Eyebrow tone="gold" rule>
+            Sector outlook · Steel
+          </Eyebrow>
+          <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+            Market outlook: Steel sector
+          </h1>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="h-4 w-4" />
             <span>January 12, 2026</span>
           </div>
-          <h1 className="font-display text-3xl md:text-5xl font-bold mb-4 tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
-            Market Outlook: Steel Sector
-          </h1>
 
           {/* Report Metadata */}
           <div className="flex flex-wrap gap-4 text-sm">

@@ -398,22 +398,14 @@ export default function AdminPlatforms() {
   const { data, isLoading, error } = usePlatforms();
 
   return (
-    <AdminLayout requiredRole="admin">
+    <AdminLayout
+      requiredRole="admin"
+      eyebrow="Admin · Federation"
+      title="Platforms"
+      description="Apps that share this auth + coin service. Each platform holds its own API keys."
+      rightSlot={<CreatePlatformDialog />}
+    >
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md bg-primary/10">
-              <Layers className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Platforms</h1>
-              <p className="text-sm text-muted-foreground">
-                Apps that share this auth + coin service. Each platform holds its own API keys.
-              </p>
-            </div>
-          </div>
-          <CreatePlatformDialog />
-        </div>
 
         <Card>
           <CardHeader>

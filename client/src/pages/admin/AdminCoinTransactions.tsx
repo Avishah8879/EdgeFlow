@@ -89,17 +89,13 @@ export default function AdminCoinTransactions() {
   };
 
   return (
-    <AdminLayout requiredRole="admin">
+    <AdminLayout
+      requiredRole="admin"
+      eyebrow="Admin · Wallet"
+      title="Coin transactions"
+      description="All ledger entries across every user and platform."
+    >
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-md bg-primary/10">
-            <Coins className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Coin Transactions</h1>
-            <p className="text-sm text-muted-foreground">All ledger entries across every user and platform.</p>
-          </div>
-        </div>
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">

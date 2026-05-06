@@ -354,17 +354,13 @@ export default function AdminNotifications() {
   };
 
   return (
-    <AdminLayout>
+    <AdminLayout
+      eyebrow="Admin · Comms"
+      title="Notifications"
+      description="Manage system-wide notifications, banners, and templates."
+      rightSlot={<CreateNotificationDialog onCreated={() => refetch()} />}
+    >
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">Notifications</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage system-wide notifications
-            </p>
-          </div>
-          <CreateNotificationDialog onCreated={() => refetch()} />
-        </div>
 
         {error && (
           <Card className="border-destructive">

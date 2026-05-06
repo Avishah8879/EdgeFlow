@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Calendar, ChevronRight, FileText } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { PAGE_SEO } from "@/lib/seo-config";
+import { Eyebrow } from "@/components/ui/eyebrow";
 
 interface MarketReport {
   slug: string;
@@ -36,35 +37,46 @@ export default function MarketReports() {
         description={PAGE_SEO.marketReports.description}
         canonical="/market-reports"
       />
-      <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <header className="mb-10">
-          <h1 className="text-3xl font-bold mb-3">Market Reports</h1>
-          <p className="text-lg text-muted-foreground">
-            Weekly analysis, sector performance, and key market insights
-          </p>
-        </header>
 
-        {/* Reports List */}
-        <div className="space-y-4">
+      {/* Page masthead */}
+      <section className="border-b border-border bg-card">
+        <div className="max-w-5xl mx-auto px-4 md:px-8 py-8 md:py-10">
+          <div className="space-y-2">
+            <Eyebrow tone="gold" rule>
+              Research · Sector outlooks
+            </Eyebrow>
+            <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+              Market reports.
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-2xl">
+              Weekly sector outlooks, analyst perspectives, and key drivers for
+              Indian equities.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-5xl mx-auto px-4 md:px-8 py-8 md:py-10">
+        {/* Reports list */}
+        <div className="space-y-3">
           {marketReports.map((report) => (
             <Link key={report.slug} href={`/market-reports/${report.slug}`}>
-              <Card className="p-5 hover-elevate cursor-pointer group">
+              <Card className="p-5 cursor-pointer group hover:shadow-card transition-shadow duration-base border-border">
                 <div className="flex items-center gap-4">
-                  <div className="rounded-lg bg-primary/10 p-3 shrink-0">
-                    <FileText className="h-5 w-5 text-primary" />
+                  <div className="rounded-lg bg-[hsl(var(--brand-gold))]/15 p-3 shrink-0">
+                    <FileText className="h-5 w-5 text-[hsl(var(--brand-gold))]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-lg font-semibold group-hover:text-primary transition-colors flex items-center gap-2">
+                    <h2 className="font-display text-lg font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground group-hover:text-[hsl(var(--brand-gold))] transition-colors flex items-center gap-2">
                       {report.title}
-                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 group-hover:text-[hsl(var(--brand-gold))] transition-all" />
                     </h2>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                      <Calendar className="h-3.5 w-3.5" />
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5 font-mono">
+                      <Calendar className="h-3 w-3" />
                       {new Date(report.date).toLocaleDateString('en-US', {
                         month: 'long',
                         day: 'numeric',
-                        year: 'numeric'
+                        year: 'numeric',
                       })}
                     </div>
                   </div>
@@ -74,9 +86,8 @@ export default function MarketReports() {
           ))}
         </div>
 
-        {/* Empty state */}
         {marketReports.length === 0 && (
-          <div className="text-center py-16">
+          <div className="text-center py-16 rounded-xl border border-border bg-card">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">No reports yet. Check back soon!</p>
           </div>
