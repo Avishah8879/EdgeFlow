@@ -10026,6 +10026,70 @@ async def ft_compare_chart(
 
 
 # =============================================================================
+# FinTerminal: Monitor — sector heat
+# =============================================================================
+
+@fastapi_app.get("/api/monitor/sector-heat")
+async def ft_monitor_sector_heat(
+    universe: str = Query("NSE", description="Symbol universe — currently always NSE-wide"),
+    limit: int = Query(9, ge=4, le=18, description="How many top sectors to return"),
+):
+    """
+    Aggregate today's percent_change by sector for the sector heatmap cell on
+    the Monitor page. Joins ltp_live → tickers → stock_fundamentals (for sector)
+    and computes the mean percent_change per sector across all stocks where
+    fundamentals carry a sector. Returns sectors sorted by absolute change so
+    the heatmap shows the most-moved sectors first.
+    """
+    _ = universe  # reserved for future filtering (NIFTY 50 / NIFTY 200 / etc.)
+
+    def _fetch():
+        conn = None
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT sf.sector,
+                           AVG(ltp.percent_change)::float AS avg_pct,
+                           COUNT(*) AS member_count
+                    FROM ltp_live ltp
+                    JOIN tickers t ON t.id = ltp.ticker_id
+                    JOIN stock_fundamentals sf ON sf.ticker_id = t.id
+                    WHERE sf.sector IS NOT NULL
+                      AND sf.sector <> ''
+                      AND ltp.percent_change IS NOT NULL
+                      AND t.is_active = true
+                    GROUP BY sf.sector
+                    HAVING COUNT(*) >= 3
+                    ORDER BY ABS(AVG(ltp.percent_change)) DESC
+                    LIMIT %s
+                    """,
+                    [limit],
+                )
+                rows = cur.fetchall()
+            return [
+                {
+                    "sector": row[0],
+                    "avg_change_percent": float(row[1]) if row[1] is not None else 0.0,
+                    "member_count": int(row[2]),
+                }
+                for row in rows
+            ]
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    try:
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(None, _fetch)
+        return list_response(result, {"count": len(result)})
+    except Exception as exc:
+        logging.exception("Monitor sector-heat failed")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch sector heat: {str(exc)}") from exc
+
+
+# =============================================================================
 # FinTerminal: Stock Comparator Metrics
 # =============================================================================
 

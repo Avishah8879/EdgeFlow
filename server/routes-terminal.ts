@@ -126,6 +126,19 @@ export function registerTerminalRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/monitor/sector-heat", async (req, res) => {
+    try {
+      const params = new URLSearchParams();
+      if (typeof req.query.limit === 'string') params.set('limit', req.query.limit);
+      if (typeof req.query.universe === 'string') params.set('universe', req.query.universe);
+      const qs = params.toString();
+      const result = await proxyToPython(`/api/monitor/sector-heat${qs ? `?${qs}` : ''}`, buildPythonOptions(req));
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Sector heat unavailable');
+    }
+  });
+
   // ── Options & Derivatives ──────────────────────────────────────────────
 
   app.get("/api/options/:symbol", async (req, res) => {
