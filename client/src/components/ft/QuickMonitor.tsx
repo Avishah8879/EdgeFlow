@@ -190,7 +190,7 @@ function QuoteTile({
   );
 }
 
-// ─── Live tick chart cell (NIFTY 1-hour bars from ohlc_1hour) ───────────────
+// ─── Live tick chart cell (NIFTY daily bars; falls back to hourly) ──────────
 function LiveTickCell({ symbol, label }: { symbol: string; label: string }) {
   const colors = useMemo(
     () => ({
@@ -204,33 +204,50 @@ function LiveTickCell({ symbol, label }: { symbol: string; label: string }) {
     [],
   );
 
-  // last ~5 trading days of 1-hour bars. Endpoint returns
-  // { ticker, timeframe, price_data: [...] } — note the field is `price_data`
-  // not `data`, so we look there first.
-  const { data, isLoading, isError } = useQuery<PriceChartPoint[]>({
-    queryKey: [`/api/price-chart/${encodeURIComponent(symbol)}?timeframe=1hour&months=0.25`],
-    refetchInterval: 60000,
-    staleTime: 30000,
-    select: (raw: any) => {
-      const arr = Array.isArray(raw?.price_data)
-        ? raw.price_data
-        : Array.isArray(raw?.data)
-          ? raw.data
-          : Array.isArray(raw)
-            ? raw
-            : [];
-      return arr
-        .filter((p: any) => p && Number.isFinite(p.close))
-        .map((p: any) => ({
-          time: Number(p.time ?? p.timestamp ?? 0),
-          open: Number(p.open ?? 0),
-          high: Number(p.high ?? 0),
-          low: Number(p.low ?? 0),
-          close: Number(p.close ?? 0),
-          volume: Number(p.volume ?? 0),
-        }));
-    },
+  const selectPriceData = (raw: any): PriceChartPoint[] => {
+    const arr = Array.isArray(raw?.price_data)
+      ? raw.price_data
+      : Array.isArray(raw?.data)
+        ? raw.data
+        : Array.isArray(raw)
+          ? raw
+          : [];
+    return arr
+      .filter((p: any) => p && Number.isFinite(p.close))
+      .map((p: any) => ({
+        time: Number(p.time ?? p.timestamp ?? 0),
+        open: Number(p.open ?? 0),
+        high: Number(p.high ?? 0),
+        low: Number(p.low ?? 0),
+        close: Number(p.close ?? 0),
+        volume: Number(p.volume ?? 0),
+      }));
+  };
+
+  // Primary: daily bars over the last month — same source IndexDetail uses,
+  // so we know it has coverage for NIFTY 50 / BANKNIFTY / VIX.
+  const dailyQuery = useQuery<PriceChartPoint[]>({
+    queryKey: [`/api/price-chart/${encodeURIComponent(symbol)}?timeframe=1day&months=1`],
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
+    select: selectPriceData,
   });
+
+  // Fallback: 1-hour bars over a wider window — only fires if daily was empty.
+  const hourlyEnabled =
+    !dailyQuery.isLoading && (!dailyQuery.data || dailyQuery.data.length === 0);
+  const hourlyQuery = useQuery<PriceChartPoint[]>({
+    queryKey: [`/api/price-chart/${encodeURIComponent(symbol)}?timeframe=1hour&months=1`],
+    enabled: hourlyEnabled,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+    select: selectPriceData,
+  });
+
+  const usingHourly = hourlyEnabled && (hourlyQuery.data?.length ?? 0) > 0;
+  const data = usingHourly ? hourlyQuery.data : dailyQuery.data;
+  const isLoading = dailyQuery.isLoading || (hourlyEnabled && hourlyQuery.isLoading);
+  const isError = dailyQuery.isError && hourlyQuery.isError;
 
   const chartData = useMemo(
     () =>
@@ -240,16 +257,17 @@ function LiveTickCell({ symbol, label }: { symbol: string; label: string }) {
         label: new Date(p.time * 1000).toLocaleString('en-IN', {
           day: '2-digit',
           month: 'short',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
+          ...(usingHourly ? { hour: '2-digit', minute: '2-digit', hour12: false } : {}),
         }),
       })),
-    [data],
+    [data, usingHourly],
   );
 
+  const titleLabel = usingHourly ? '1-hour bars' : 'daily bars';
+  const titleSuffix = `${chartData.length > 0 ? `last ${chartData.length} ${chartData.length === 1 ? 'bar' : 'bars'}` : '—'}`;
+
   return (
-    <Cell title={`${label} · 1-hour bars · last 5 sessions`} bodyClassName="p-2">
+    <Cell title={`${label} · ${titleLabel} · ${titleSuffix}`} bodyClassName="p-2">
       {isLoading ? (
         <div className="h-full flex items-center justify-center">
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
