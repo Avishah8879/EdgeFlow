@@ -194,58 +194,64 @@ export function NavPrimary() {
             </button>
 
             {open === section.title && section.children && (
+              // Outer wrapper with transparent pt-1.5 bridges the visual gap
+              // between trigger and panel — without this, the cursor crosses
+              // dead space on the way down and onMouseLeave closes the menu.
               <div
-                role="menu"
-                className={cn(
-                  "absolute top-full left-0 mt-1.5 z-50 rounded-lg border border-border bg-popover shadow-card-lg p-3",
-                  section.wide
-                    ? `min-w-[${260 * section.children.length}px] grid gap-1`
-                    : "min-w-[260px]",
-                )}
-                style={
-                  section.wide
-                    ? {
-                        gridTemplateColumns: `repeat(${section.children.length}, minmax(220px, 1fr))`,
-                      }
-                    : undefined
-                }
+                className="absolute top-full left-0 z-50 pt-1.5"
+                role="presentation"
               >
-                {section.children.map((col, ci) => (
-                  <div key={ci} className="flex flex-col gap-0.5">
-                    {col.map((link) => {
-                      const linkActive = isActive(location, link.href);
-                      return (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          className={cn(
-                            "block rounded-sm px-2.5 py-2 transition-colors duration-fast",
-                            linkActive
-                              ? "bg-[hsl(var(--brand-gold)/0.12)]"
-                              : "hover:bg-muted",
-                          )}
-                          onClick={() => setOpen(null)}
-                        >
-                          <div
+                <div
+                  role="menu"
+                  className={cn(
+                    "rounded-lg border border-border bg-popover shadow-card-lg p-3",
+                    section.wide ? "grid gap-1" : "min-w-[260px]",
+                  )}
+                  style={
+                    section.wide
+                      ? {
+                          gridTemplateColumns: `repeat(${section.children.length}, minmax(220px, 1fr))`,
+                        }
+                      : undefined
+                  }
+                >
+                  {section.children.map((col, ci) => (
+                    <div key={ci} className="flex flex-col gap-0.5">
+                      {col.map((link) => {
+                        const linkActive = isActive(location, link.href);
+                        return (
+                          <Link
+                            key={link.href}
+                            href={link.href}
                             className={cn(
-                              "text-[13px] font-semibold",
+                              "block rounded-sm px-2.5 py-2 transition-colors duration-fast",
                               linkActive
-                                ? "text-[hsl(var(--brand-navy))] dark:text-[hsl(var(--brand-gold))]"
-                                : "text-foreground",
+                                ? "bg-[hsl(var(--brand-gold)/0.12)]"
+                                : "hover:bg-muted",
                             )}
+                            onClick={() => setOpen(null)}
                           >
-                            {link.label}
-                          </div>
-                          {link.sublabel && (
-                            <div className="text-[11px] text-muted-foreground mt-0.5">
-                              {link.sublabel}
+                            <div
+                              className={cn(
+                                "text-[13px] font-semibold",
+                                linkActive
+                                  ? "text-[hsl(var(--brand-navy))] dark:text-[hsl(var(--brand-gold))]"
+                                  : "text-foreground",
+                              )}
+                            >
+                              {link.label}
                             </div>
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ))}
+                            {link.sublabel && (
+                              <div className="text-[11px] text-muted-foreground mt-0.5">
+                                {link.sublabel}
+                              </div>
+                            )}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
