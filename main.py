@@ -8596,7 +8596,13 @@ def _ft_get_range_params(range_value: str):
 
 
 def _ft_fetch_symbol_history(symbol: str, period: str, interval: str, include_time: bool = False) -> Dict[str, Any]:
-    """Fetch historical data for a symbol using yfinance."""
+    """Fetch historical data for a symbol using yfinance.
+
+    yfinance returns NaN for half-day holidays / illiquid bars. NaN floats
+    are not valid JSON (FastAPI's default encoder raises ValueError), so we
+    skip rows where any OHLC field is NaN rather than emitting them and
+    blowing up the whole response downstream.
+    """
     try:
         formatted_symbol = _ft_format_symbol(symbol)
         ticker = yf.Ticker(formatted_symbol)
@@ -8610,14 +8616,24 @@ def _ft_fetch_symbol_history(symbol: str, period: str, interval: str, include_ti
                 timestamp_value = date_value.isoformat()
             else:
                 timestamp_value = date_value.strftime("%Y-%m-%d")
+
+            o = row.get("Open")
+            h = row.get("High")
+            l = row.get("Low")
+            c = row.get("Close")
+            v = row.get("Volume")
+            # Drop rows that have any NaN in OHLC — these are yfinance gaps
+            # for missing/half-day sessions and would break JSON serialization.
+            if any(pd.isna(x) for x in (o, h, l, c)):
+                continue
             records.append({
                 "timestamp": timestamp_value,
                 "date": date_value.strftime("%Y-%m-%d"),
-                "open": float(row["Open"]) if "Open" in row else 0,
-                "high": float(row["High"]) if "High" in row else 0,
-                "low": float(row["Low"]) if "Low" in row else 0,
-                "close": float(row["Close"]) if "Close" in row else 0,
-                "volume": int(row["Volume"]) if "Volume" in row and not pd.isna(row["Volume"]) else 0,
+                "open": float(o),
+                "high": float(h),
+                "low": float(l),
+                "close": float(c),
+                "volume": int(v) if v is not None and not pd.isna(v) else 0,
             })
         return {"symbol": symbol.upper(), "data": records}
     except Exception as exc:
