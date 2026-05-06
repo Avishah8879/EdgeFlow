@@ -113,6 +113,19 @@ export function registerTerminalRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/compare/metrics", async (req, res) => {
+    try {
+      const symbols = typeof req.query.symbols === 'string' ? req.query.symbols : '';
+      if (!symbols) return sendError(res, "symbols query param required", undefined, 400);
+      const params = new URLSearchParams({ symbols });
+      if (typeof req.query.benchmark === 'string') params.set('benchmark', req.query.benchmark);
+      const result = await proxyToPython(`/api/compare/metrics?${params.toString()}`, buildPythonOptions(req));
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Comparison metrics unavailable');
+    }
+  });
+
   // ── Options & Derivatives ──────────────────────────────────────────────
 
   app.get("/api/options/:symbol", async (req, res) => {

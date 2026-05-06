@@ -9898,6 +9898,8 @@ async def ft_compare_chart(
         "3M": "3 months",
         "6M": "6 months",
         "1Y": "1 year",
+        "3Y": "3 years",
+        "5Y": "5 years",
     }
     sql_interval = range_map.get(range.upper(), "1 month")
 
@@ -9907,6 +9909,8 @@ async def ft_compare_chart(
         "3M": "3mo",
         "6M": "6mo",
         "1Y": "1y",
+        "3Y": "3y",
+        "5Y": "5y",
     }
     cache_period = period_map.get(range.upper(), "1mo")
 
@@ -9989,6 +9993,254 @@ async def ft_compare_chart(
         return _ft_api_response([], "No historical data available for requested symbols")
 
     return _ft_api_response(results)
+
+
+# =============================================================================
+# FinTerminal: Stock Comparator Metrics
+# =============================================================================
+
+@fastapi_app.get("/api/compare/metrics")
+async def ft_compare_metrics(
+    symbols: str = Query(..., min_length=1),
+    benchmark: str = Query("NIFTY 50"),
+):
+    """
+    Per-symbol metrics for the Stock Comparator page.
+
+    For each symbol returns: live price + change, market cap, P/E (TTM),
+    P/B, ROE, debt/equity, dividend yield, avg daily volume,
+    fifty-two-week high/low, computed 1Y / 3Y / YTD returns, computed 30-day
+    realized volatility, and computed beta vs benchmark (default NIFTY 50).
+
+    Computed fields are derived from `ohlc_daily`. Stored fields come from
+    `stock_fundamentals` and `ltp_live`. Beta is the OLS slope of daily-return
+    regression of stock vs benchmark over the same 1-year window used for the
+    1Y return.
+    """
+    raw_symbols = [s.strip().upper().replace('.NS', '') for s in symbols.split(',') if s.strip()]
+    if not raw_symbols:
+        return list_response([])
+    # Limit to a sane upper bound
+    symbol_list = raw_symbols[:6]
+    benchmark_sym = benchmark.strip().upper().replace('.NS', '')
+
+    def _fetch():
+        conn = None
+        try:
+            conn = get_db_connection()
+
+            # 1) Resolve ticker IDs for all requested symbols + benchmark
+            with conn.cursor() as cur:
+                lookup_syms = list(set(symbol_list + [benchmark_sym]))
+                cur.execute(
+                    "SELECT id, symbol FROM tickers WHERE UPPER(symbol) = ANY(%s) AND is_active = true",
+                    [lookup_syms],
+                )
+                ticker_rows = cur.fetchall()
+            ticker_id_by_sym = {row[1].upper(): row[0] for row in ticker_rows}
+            if not ticker_id_by_sym:
+                return []
+
+            requested_ids = [ticker_id_by_sym[s] for s in symbol_list if s in ticker_id_by_sym]
+            benchmark_id = ticker_id_by_sym.get(benchmark_sym)
+
+            # 2) Fundamentals for requested symbols
+            fundamentals_by_id: dict = {}
+            if requested_ids:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "SELECT ticker_id, long_name, sector, industry, market_cap, "
+                        "trailing_pe, price_to_book, return_on_equity, debt_to_equity, "
+                        "dividend_yield, avg_volume, fifty_two_week_high, fifty_two_week_low "
+                        "FROM stock_fundamentals WHERE ticker_id = ANY(%s)",
+                        [requested_ids],
+                    )
+                    for row in cur.fetchall():
+                        fundamentals_by_id[row[0]] = {
+                            "long_name": row[1],
+                            "sector": row[2],
+                            "industry": row[3],
+                            "market_cap": float(row[4]) if row[4] is not None else None,
+                            "trailing_pe": float(row[5]) if row[5] is not None else None,
+                            "price_to_book": float(row[6]) if row[6] is not None else None,
+                            "return_on_equity": float(row[7]) if row[7] is not None else None,
+                            "debt_to_equity": float(row[8]) if row[8] is not None else None,
+                            "dividend_yield": float(row[9]) if row[9] is not None else None,
+                            "avg_volume": float(row[10]) if row[10] is not None else None,
+                            "fifty_two_week_high": float(row[11]) if row[11] is not None else None,
+                            "fifty_two_week_low": float(row[12]) if row[12] is not None else None,
+                        }
+
+            # 3) LTP for requested symbols
+            ltp_accessor = LTPDataAccessor(conn)
+            ltps = ltp_accessor.get_latest_ltps(requested_ids)
+            ltp_by_id = {row['ticker_id']: row for row in ltps if row}
+
+            # 4) 5-year daily closes for requested symbols + benchmark (single batched query)
+            history_ids = list(set(requested_ids + ([benchmark_id] if benchmark_id else [])))
+            history_by_id: dict = {sid: [] for sid in history_ids}
+            if history_ids:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "SELECT ticker_id, day, close "
+                        "FROM ohlc_daily "
+                        "WHERE ticker_id = ANY(%s) "
+                        "  AND day >= CURRENT_DATE - INTERVAL '5 years' "
+                        "ORDER BY ticker_id, day ASC",
+                        [history_ids],
+                    )
+                    for row in cur.fetchall():
+                        sid, day, close = row[0], row[1], row[2]
+                        if close is not None:
+                            history_by_id[sid].append((day, float(close)))
+
+            # ── helpers ─────────────────────────────────────────────────
+            def pct_return(series, days_back):
+                if len(series) < 2:
+                    return None
+                last_day, last_close = series[-1]
+                if last_close <= 0:
+                    return None
+                # Find the close closest to (last_day - days_back)
+                target_day = last_day - timedelta(days=days_back)
+                candidate = None
+                for d, c in series:
+                    if d <= target_day:
+                        candidate = c
+                    else:
+                        break
+                if candidate is None or candidate <= 0:
+                    return None
+                return (last_close / candidate - 1.0) * 100.0
+
+            def cagr(series, days_back):
+                pct = pct_return(series, days_back)
+                if pct is None:
+                    return None
+                years = days_back / 365.0
+                if years <= 0:
+                    return None
+                growth = 1.0 + pct / 100.0
+                if growth <= 0:
+                    return None
+                return (growth ** (1.0 / years) - 1.0) * 100.0
+
+            def ytd_return(series):
+                if not series:
+                    return None
+                last_day, last_close = series[-1]
+                jan_1 = last_day.replace(month=1, day=1)
+                # First trading day on/after Jan 1
+                anchor = None
+                for d, c in series:
+                    if d >= jan_1:
+                        anchor = c
+                        break
+                if anchor is None or anchor <= 0:
+                    return None
+                return (last_close / anchor - 1.0) * 100.0
+
+            def realized_vol_30d(series):
+                # Annualized 30-day daily-return stddev
+                if len(series) < 21:
+                    return None
+                tail = series[-30:]
+                closes = [c for _, c in tail]
+                returns = [closes[i] / closes[i - 1] - 1.0 for i in range(1, len(closes)) if closes[i - 1] > 0]
+                if len(returns) < 5:
+                    return None
+                mean = sum(returns) / len(returns)
+                var = sum((r - mean) ** 2 for r in returns) / max(1, len(returns) - 1)
+                stddev = var ** 0.5
+                # Annualize from daily → ~252 trading days
+                return stddev * (252 ** 0.5) * 100.0
+
+            def beta_vs(series, bench_series, days_back=365):
+                # OLS slope of daily-return regression of stock vs benchmark
+                # over the trailing `days_back` window.
+                if not series or not bench_series:
+                    return None
+                last_day = min(series[-1][0], bench_series[-1][0])
+                cutoff = last_day - timedelta(days=days_back)
+                # Index by date
+                bmap = {d: c for d, c in bench_series if d > cutoff}
+                pairs = []
+                prev_s = prev_b = None
+                for d, c in series:
+                    if d <= cutoff:
+                        continue
+                    if d not in bmap:
+                        continue
+                    if prev_s is not None and prev_b is not None and prev_s > 0 and prev_b > 0:
+                        pairs.append((c / prev_s - 1.0, bmap[d] / prev_b - 1.0))
+                    prev_s = c
+                    prev_b = bmap[d]
+                if len(pairs) < 30:
+                    return None
+                stock_returns = [p[0] for p in pairs]
+                mkt_returns = [p[1] for p in pairs]
+                mean_s = sum(stock_returns) / len(stock_returns)
+                mean_m = sum(mkt_returns) / len(mkt_returns)
+                cov = sum((stock_returns[i] - mean_s) * (mkt_returns[i] - mean_m) for i in range(len(pairs))) / len(pairs)
+                var_m = sum((r - mean_m) ** 2 for r in mkt_returns) / len(pairs)
+                if var_m <= 0:
+                    return None
+                return cov / var_m
+
+            # ── assemble per-symbol metrics ─────────────────────────────
+            bench_series = history_by_id.get(benchmark_id, []) if benchmark_id else []
+
+            output = []
+            for sym in symbol_list:
+                tid = ticker_id_by_sym.get(sym)
+                if tid is None:
+                    output.append({"symbol": sym, "available": False})
+                    continue
+                series = history_by_id.get(tid, [])
+                fund = fundamentals_by_id.get(tid, {})
+                ltp = ltp_by_id.get(tid, {}) or {}
+
+                last_price = ltp.get('ltp')
+                change_pct = ltp.get('percent_change')
+                # Fallback to last close in series if LTP missing
+                if last_price is None and series:
+                    last_price = series[-1][1]
+
+                output.append({
+                    "symbol": sym,
+                    "available": True,
+                    "long_name": fund.get("long_name"),
+                    "sector": fund.get("sector"),
+                    "last_price": float(last_price) if last_price is not None else None,
+                    "change_percent": float(change_pct) if change_pct is not None else None,
+                    "return_1y": pct_return(series, 365),
+                    "cagr_3y": cagr(series, 365 * 3),
+                    "return_ytd": ytd_return(series),
+                    "fifty_two_week_high": fund.get("fifty_two_week_high"),
+                    "fifty_two_week_low": fund.get("fifty_two_week_low"),
+                    "market_cap": fund.get("market_cap"),
+                    "trailing_pe": fund.get("trailing_pe"),
+                    "price_to_book": fund.get("price_to_book"),
+                    "return_on_equity": fund.get("return_on_equity"),
+                    "debt_to_equity": fund.get("debt_to_equity"),
+                    "dividend_yield": fund.get("dividend_yield"),
+                    "beta_1y": beta_vs(series, bench_series, 365),
+                    "volatility_30d": realized_vol_30d(series),
+                    "avg_volume": fund.get("avg_volume"),
+                })
+
+            return output
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    try:
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(None, _fetch)
+        return list_response(result, {"benchmark": benchmark_sym, "count": len(result)})
+    except Exception as exc:
+        logging.exception("Compare metrics API failed")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch compare metrics: {str(exc)}") from exc
 
 
 # =============================================================================
