@@ -141,11 +141,15 @@ if beat_schedule_enabled:
             "options": {"queue": "periodic", "expires": 4},
         },
 
-        # Options Visualizer - every 30 seconds (exposure, surface, timeseries)
-        "refresh-options-visualizer-30s": {
+        # Options Visualizer ATM-GxOI recorder — every 60 seconds.
+        # Fires whether or not any user has the page open, so the time-series
+        # subplot can show the entire trading day (09:15–15:30 IST) on first
+        # user load. Implemented in celery_tasks.refresh_options_visualizer;
+        # task itself short-circuits outside market hours.
+        "refresh-options-visualizer-60s": {
             "task": "celery_tasks.refresh_options_visualizer",
-            "schedule": 30.0,
-            "options": {"queue": "periodic", "expires": 29},
+            "schedule": 60.0,
+            "options": {"queue": "periodic", "expires": 59},
         },
 
         # =====================================================================

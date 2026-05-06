@@ -351,3 +351,86 @@ def run_sentiment_analysis_task(
             'error': str(e),
             'duration': duration
         }
+
+
+# =============================================================================
+# Options Visualizer — ATM GxOI time-series recorder
+# =============================================================================
+# Beat fires every 60s during NSE market hours (see celery_config.py:
+# beat_schedule['refresh-options-visualizer-60s']). The task short-circuits
+# outside market hours so we don't waste NSE round-trips on weekends or
+# overnight.
+#
+# Each tick fetches the live option chain, computes ATM GxOI via
+# compute_exposures(), and rpush'es the {timestamp, atm_gxoi} point onto the
+# per-day Redis list options_viz:timeseries:{SYMBOL}:{YYYY-MM-DD}. The list
+# expires at next-market-open (TTL set inside append_atm_gxoi), so days
+# rotate cleanly.
+#
+# The opportunistic per-request append in main.py:8929 stays untouched —
+# duplicates are harmless (each rpush is keyed by a fresh timestamp), and
+# it covers any window where Celery beat is briefly down.
+
+import asyncio
+import pytz
+
+try:
+    from option_chain_visualizer import (
+        is_market_hours as _ovz_is_market_hours,
+        compute_exposures as _ovz_compute_exposures,
+        append_atm_gxoi as _ovz_append_atm_gxoi,
+    )
+    from option_chain_live import fetch_nse_index_option_chain as _ovz_fetch_chain
+    _OVZ_AVAILABLE = True
+except ImportError as _ovz_imp_err:
+    _ovz_is_market_hours = None  # type: ignore
+    _ovz_compute_exposures = None  # type: ignore
+    _ovz_append_atm_gxoi = None  # type: ignore
+    _ovz_fetch_chain = None  # type: ignore
+    _OVZ_AVAILABLE = False
+    logger.warning(
+        "Options visualizer recorder disabled — import failed: %s", _ovz_imp_err
+    )
+
+_OVZ_IST = pytz.timezone("Asia/Kolkata")
+_OVZ_SYMBOLS = ("NIFTY", "BANKNIFTY")
+
+
+@celery_app.task(name="celery_tasks.refresh_options_visualizer")
+def refresh_options_visualizer():
+    """Periodic recorder — see comment block above for behavior."""
+    if not _OVZ_AVAILABLE:
+        return {"status": "disabled", "reason": "module_unavailable"}
+
+    if not _ovz_is_market_hours():
+        return {"status": "skipped", "reason": "market_closed"}
+
+    now = datetime.now(_OVZ_IST)
+    written = []
+    errors = {}
+    for symbol in _OVZ_SYMBOLS:
+        try:
+            chain = _ovz_fetch_chain(symbol, None)
+            spot = chain.get("underlying", 0)
+            if not spot:
+                errors[symbol] = "no_spot"
+                continue
+            exposure = _ovz_compute_exposures(chain, spot)
+            atm_gxoi = exposure.get("atm_gxoi")
+            if atm_gxoi is None:
+                errors[symbol] = "no_atm_gxoi"
+                continue
+            asyncio.run(_ovz_append_atm_gxoi(symbol, now, atm_gxoi))
+            written.append(symbol)
+        except Exception as e:
+            errors[symbol] = str(e)
+            logger.exception(
+                "refresh_options_visualizer(%s) failed: %s", symbol, e
+            )
+
+    return {
+        "status": "ok" if written else "error",
+        "written": written,
+        "errors": errors,
+        "ts": now.isoformat(),
+    }
