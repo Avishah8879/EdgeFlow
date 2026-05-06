@@ -6,6 +6,8 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { SEO } from "@/components/SEO";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -398,63 +400,87 @@ export default function Profile() {
         noIndex={true}
       />
       <div className="min-h-screen bg-background">
-        <div className="mx-auto w-full max-w-5xl px-6 py-8 space-y-8">
+        {/* Page masthead — matches design spec: eyebrow + display H1 + muted desc + avatar/identity row */}
+        <section className="border-b border-border bg-card">
+          <div className="mx-auto w-full max-w-5xl px-6 py-8 md:py-10">
+            <div className="space-y-2 mb-6">
+              <Eyebrow tone="gold" rule>
+                Account
+              </Eyebrow>
+              <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+                Profile &amp; settings
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Manage your identity, preferences, billing, and integrations.
+              </p>
+            </div>
 
-          {/* Profile Header */}
-          <div className="flex items-center gap-6">
-          <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center">
-            {user.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt={user.name || user.username || 'Profile'}
-                className="h-24 w-24 rounded-full object-cover"
-              />
-            ) : (
-              <User className="h-12 w-12 text-primary" />
-            )}
-          </div>
-          <div>
-            <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">{user.name || user.username}</h1>
-            <p className="text-muted-foreground mt-1 flex items-center gap-2">
-              {user.email}
-              {user.emailVerified ? (
-                <Badge variant="outline" className="text-positive border-positive">
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                  Verified
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-muted-foreground">
-                  <XCircle className="h-3 w-3 mr-1" />
-                  Unverified
-                </Badge>
-              )}
-            </p>
-            <div className="mt-2 flex items-center gap-2">
-              {isPremium ? (
-                <Badge className="bg-primary">
-                  <Crown className="h-3 w-3 mr-1" />
-                  Premium
-                </Badge>
-              ) : (
-                <Badge variant="secondary">Basic</Badge>
-              )}
-              {isTrialing && (
-                <Badge variant="outline">
-                  <Clock className="h-3 w-3 mr-1" />
-                  Trial
-                </Badge>
-              )}
-              {willExpire && (
-                <Badge variant="destructive">
-                  <AlertTriangle className="h-3 w-3 mr-1" />
-                  Cancelling
-                </Badge>
-              )}
+            {/* Identity row: navy avatar + name/email + tier badges */}
+            <div className="flex items-center gap-5 flex-wrap">
+              <div className="h-20 w-20 rounded-full bg-[hsl(var(--brand-navy))] text-white flex items-center justify-center overflow-hidden flex-shrink-0">
+                {user.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.name || user.username || "Profile"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="font-display text-[28px] font-bold leading-none">
+                    {((user.name || user.username || "U")
+                      .trim()
+                      .split(/\s+/)
+                      .map((s) => s[0])
+                      .join("")
+                      .slice(0, 2) || "U").toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="font-display text-xl font-bold text-foreground truncate">
+                  {user.name || user.username}
+                </div>
+                <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-2 flex-wrap">
+                  <span className="truncate">{user.email}</span>
+                  {user.emailVerified ? (
+                    <Badge variant="outline" className="text-positive border-positive text-[10px] h-5">
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      Verified
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-muted-foreground text-[10px] h-5">
+                      <XCircle className="h-3 w-3 mr-1" />
+                      Unverified
+                    </Badge>
+                  )}
+                </p>
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                  {isPremium ? (
+                    <Badge className="bg-[hsl(var(--brand-gold))] text-white hover:bg-[hsl(var(--brand-gold))]/90">
+                      <Crown className="h-3 w-3 mr-1" />
+                      Premium
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">Basic</Badge>
+                  )}
+                  {isTrialing && (
+                    <Badge variant="outline">
+                      <Clock className="h-3 w-3 mr-1" />
+                      Trial
+                    </Badge>
+                  )}
+                  {willExpire && (
+                    <Badge variant="destructive">
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      Cancelling
+                    </Badge>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <Separator />
+        <div className="mx-auto w-full max-w-5xl px-6 py-8 space-y-8">
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -669,13 +695,19 @@ export default function Profile() {
               </Card>
             </div>
 
-            {/* Subscription Card */}
+            {/* Subscription — gold-accented plan card per design spec */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Subscription
-                </CardTitle>
+                <div className="space-y-1">
+                  <Eyebrow tone="muted">Billing</Eyebrow>
+                  <CardTitle className="font-display text-xl font-bold text-[hsl(var(--brand-navy))] dark:text-foreground flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-[hsl(var(--brand-gold))]" />
+                    Subscription
+                  </CardTitle>
+                  <CardDescription>
+                    Current plan and renewal status.
+                  </CardDescription>
+                </div>
               </CardHeader>
               <CardContent>
                 {subscriptionLoading ? (
@@ -683,46 +715,47 @@ export default function Profile() {
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   </div>
                 ) : (
-                  <div className="grid md:grid-cols-3 gap-6">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Current Plan</p>
-                      <p className="font-medium text-lg flex items-center gap-2">
-                        {isPremium ? (
-                          <>
-                            <Crown className="h-4 w-4 text-primary" />
-                            {subscription?.plan?.name || "Premium"}
-                          </>
-                        ) : (
-                          "Basic (Free)"
+                  <div
+                    className={cn(
+                      "rounded-xl p-5 flex items-center justify-between gap-4 flex-wrap",
+                      isPremium
+                        ? "border border-[hsl(var(--brand-gold))]/40 bg-[hsl(var(--brand-gold))]/5"
+                        : "border border-border bg-muted/20",
+                    )}
+                  >
+                    <div className="min-w-0">
+                      <div className="font-display text-xl font-bold text-[hsl(var(--brand-navy))] dark:text-foreground flex items-center gap-2">
+                        {isPremium && (
+                          <Crown className="h-4 w-4 text-[hsl(var(--brand-gold))]" />
                         )}
+                        {isPremium
+                          ? subscription?.plan?.name || "Premium"
+                          : "Basic · Free"}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {isTrialing && trialEndsAt
+                          ? `Trial · ${getDaysRemaining(trialEndsAt)} days remaining`
+                          : isActive && !isTrialing && subscriptionEndsAt
+                            ? `${willExpire ? "Access until" : "Renews on"} ${formatDate(subscriptionEndsAt)}`
+                            : "Upgrade to unlock unlimited research."}
                       </p>
+                      {isPremium && !willExpire && !isTrialing && (
+                        <p className="text-xs text-positive mt-1.5 flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          All premium features unlocked
+                        </p>
+                      )}
                     </div>
-
-                    {isTrialing && trialEndsAt && (
-                      <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-                        <p className="text-sm font-medium text-primary">Trial Active</p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {getDaysRemaining(trialEndsAt)} days remaining
-                        </p>
-                      </div>
-                    )}
-
-                    {isActive && !isTrialing && subscriptionEndsAt && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          {willExpire ? "Access Until" : "Renews On"}
-                        </p>
-                        <p className="font-medium">{formatDate(subscriptionEndsAt)}</p>
-                      </div>
-                    )}
-
-                    {isPremium && !willExpire && (
-                      <div className="flex items-center">
-                        <p className="text-sm text-positive">
-                          ✓ All premium features unlocked
-                        </p>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {!isPremium && canStartTrial && (
+                        <Button asChild size="sm" className="rounded-full bg-[hsl(var(--brand-gold))] text-white hover:bg-[hsl(var(--brand-gold))]/90">
+                          <Link href="/pricing">Start trial</Link>
+                        </Button>
+                      )}
+                      <Button asChild size="sm" variant="outline" className="rounded-full">
+                        <Link href="/pricing">Manage plan</Link>
+                      </Button>
+                    </div>
                   </div>
                 )}
               </CardContent>

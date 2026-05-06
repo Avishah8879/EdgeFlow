@@ -392,24 +392,28 @@ export default function Screener() {
       />
 
       <div className="min-h-screen bg-background text-foreground">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-12">
-          {/* Header */}
-          <div className="mb-12">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="space-y-3">
-              <Eyebrow tone="gold" rule>
-                Analysis
-              </Eyebrow>
-              <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
-                Find your edge
-              </h1>
-              <p className="text-sm text-muted-foreground max-w-md">
-                Screen NSE stocks with boolean expressions over 24+ technical indicators.
-              </p>
+        {/* Page masthead */}
+        <section className="border-b border-border bg-card">
+          <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 md:py-10">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="space-y-2">
+                <Eyebrow tone="gold" rule>
+                  Expert screener
+                </Eyebrow>
+                <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+                  Find your edge.
+                </h1>
+                <p className="text-sm text-muted-foreground max-w-2xl">
+                  Screen NSE stocks with boolean expressions over 24+ technical
+                  indicators, or use the visual condition builder.
+                </p>
+              </div>
+              <UsageLimitBadge feature="screener" showLabel />
             </div>
-            <UsageLimitBadge feature="screener" showLabel />
           </div>
-        </div>
+        </section>
+
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 md:py-12">
 
         {/* Interrupted session banner */}
         {wasInterrupted && results.length > 0 && (
