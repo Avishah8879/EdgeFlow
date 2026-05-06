@@ -8589,6 +8589,8 @@ def _ft_get_range_params(range_value: str):
         "3M": ("3mo", "1d"),
         "6M": ("6mo", "1d"),
         "1Y": ("1y", "1d"),
+        "3Y": ("3y", "1d"),
+        "5Y": ("5y", "1d"),
     }
     return mappings.get(range_value.upper(), ("1mo", "1d"))
 
@@ -9918,7 +9920,11 @@ async def ft_compare_chart(
     db_symbols_found = set()
     uncached_symbols = list(symbol_list)
 
-    cached_charts = await _ft_redis_cache.get_cached_charts_batch(symbol_list, "1d", cache_period)
+    try:
+        cached_charts = await _ft_redis_cache.get_cached_charts_batch(symbol_list, "1d", cache_period)
+    except Exception as e:
+        print(f"[Chart Compare] cache read failed, continuing: {e}")
+        cached_charts = {}
     for sym in symbol_list:
         if sym in cached_charts and cached_charts[sym]:
             results.append({"symbol": sym, "data": cached_charts[sym]})
@@ -9973,16 +9979,24 @@ async def ft_compare_chart(
     missing_symbols = [sym for sym in symbol_list if sym not in db_symbols_found]
 
     if missing_symbols and _FT_USE_YFINANCE_FALLBACK:
-        period_yf, interval_yf = _ft_get_range_params(range)
-        tasks = [
-            asyncio.to_thread(_ft_fetch_symbol_history, sym, period_yf, interval_yf)
-            for sym in missing_symbols
-        ]
-        fallback_results = await asyncio.gather(*tasks)
+        try:
+            period_yf, interval_yf = _ft_get_range_params(range)
+            tasks = [
+                asyncio.to_thread(_ft_fetch_symbol_history, sym, period_yf, interval_yf)
+                for sym in missing_symbols
+            ]
+            # return_exceptions=True so a single yfinance failure (rate-limit,
+            # bad symbol, network blip) doesn't kill the entire request.
+            fallback_results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        for result in fallback_results:
-            if result["data"]:
-                results.append(result)
+            for idx, result in enumerate(fallback_results):
+                if isinstance(result, BaseException):
+                    print(f"[Chart Compare] yfinance fallback failed for {missing_symbols[idx]}: {result}")
+                    continue
+                if result.get("data"):
+                    results.append(result)
+        except Exception as e:
+            print(f"[Chart Compare] yfinance fallback batch failed: {e}")
 
     found_symbols = {r["symbol"] for r in results}
     for sym in symbol_list:
