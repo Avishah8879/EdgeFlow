@@ -172,15 +172,19 @@ async function fetchSharedBacktest(token: string): Promise<SharedBacktestResult>
 
 function ErrorState({ message }: { message: string }) {
   return (
-    <div className="container max-w-4xl mx-auto py-16 px-4">
+    <div className="max-w-4xl mx-auto py-16 px-4">
       <div className="flex flex-col items-center justify-center text-center">
-        <AlertCircle className="h-16 w-16 text-destructive mb-4" />
-        <h2 className="text-2xl font-semibold mb-2">Result Not Found</h2>
-        <p className="text-muted-foreground mb-6 max-w-md">{message}</p>
+        <div className="h-14 w-14 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+          <AlertCircle className="h-7 w-7 text-destructive" />
+        </div>
+        <h2 className="font-display text-2xl font-bold text-[hsl(var(--brand-navy))] dark:text-foreground mb-2">
+          Result not found
+        </h2>
+        <p className="text-sm text-muted-foreground mb-6 max-w-md">{message}</p>
         <Link href="/">
-          <Button>
+          <Button className="rounded-full bg-[hsl(var(--brand-navy))] text-white hover:bg-[hsl(var(--brand-navy))]/90">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
+            Back to home
           </Button>
         </Link>
       </div>
@@ -190,10 +194,10 @@ function ErrorState({ message }: { message: string }) {
 
 function LoadingState() {
   return (
-    <div className="container max-w-4xl mx-auto py-16 px-4">
-      <div className="flex flex-col items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Loading shared result...</p>
+    <div className="max-w-4xl mx-auto py-16 px-4">
+      <div className="flex flex-col items-center justify-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--brand-gold))]" />
+        <p className="text-sm text-muted-foreground">Loading shared result…</p>
       </div>
     </div>
   );
@@ -206,26 +210,29 @@ function SharedScreenerView({ result }: { result: SharedScreenerResult }) {
     : [];
 
   return (
-    <div className="container max-w-5xl mx-auto py-8 px-4">
-      {/* Header */}
-      <div className="mb-6">
-        <Link href="/">
-          <Button variant="ghost" size="sm" className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Button>
-        </Link>
-
-        <div className="flex items-center gap-3 mb-2">
-          <Search className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">{result.name}</h1>
-          <Badge variant="secondary">Shared Result</Badge>
+    <div className="min-h-screen bg-background">
+      <section className="border-b border-border bg-card">
+        <div className="max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-8">
+          <div className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-uppercase text-[hsl(var(--brand-gold))]">
+              <span className="inline-block h-px w-[18px] shrink-0 bg-[hsl(var(--brand-gold))]" />
+              <Search className="h-3 w-3" />
+              Shared screener
+            </span>
+            <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+              {result.name}
+            </h1>
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <Clock className="h-3 w-3" />
+              Saved{' '}
+              {formatDistanceToNow(new Date(result.created_at), {
+                addSuffix: true,
+              })}
+            </p>
+          </div>
         </div>
-        <p className="text-muted-foreground flex items-center gap-2">
-          <Clock className="h-4 w-4" />
-          Saved {formatDistanceToNow(new Date(result.created_at), { addSuffix: true })}
-        </p>
-      </div>
+      </section>
+      <div className="max-w-5xl mx-auto px-4 md:px-8 py-8">
 
       {/* Expression Card */}
       <Card className="mb-6">
@@ -285,6 +292,7 @@ function SharedScreenerView({ result }: { result: SharedScreenerResult }) {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }
@@ -295,28 +303,39 @@ function SharedBacktestView({ result }: { result: SharedBacktestResult }) {
   const isProfitable = (metrics.total_profit ?? 0) >= 0;
 
   return (
-    <div className="container max-w-5xl mx-auto py-8 px-4">
-      {/* Header */}
-      <div className="mb-6">
-        <Link href="/">
-          <Button variant="ghost" size="sm" className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Button>
-        </Link>
-
-        <div className="flex items-center gap-3 mb-2">
-          <LineChart className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">{result.name}</h1>
-          <Badge variant="outline">{result.ticker}</Badge>
-          <Badge variant="secondary">{result.mode}</Badge>
-          <Badge variant="secondary">Shared Result</Badge>
+    <div className="min-h-screen bg-background">
+      <section className="border-b border-border bg-card">
+        <div className="max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-8">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="space-y-2 min-w-0">
+              <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-uppercase text-[hsl(var(--brand-gold))]">
+                <span className="inline-block h-px w-[18px] shrink-0 bg-[hsl(var(--brand-gold))]" />
+                <LineChart className="h-3 w-3" />
+                Shared backtest
+              </span>
+              <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+                {result.name}
+              </h1>
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Clock className="h-3 w-3" />
+                Saved{' '}
+                {formatDistanceToNow(new Date(result.created_at), {
+                  addSuffix: true,
+                })}
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-mono text-[10.5px] font-bold uppercase tracking-uppercase px-2.5 py-1.5 rounded-full bg-[hsl(var(--brand-navy))] text-white">
+                {result.ticker}
+              </span>
+              <span className="text-[10.5px] font-bold uppercase tracking-uppercase px-2.5 py-1.5 rounded-full bg-muted text-muted-foreground">
+                {result.mode}
+              </span>
+            </div>
+          </div>
         </div>
-        <p className="text-muted-foreground flex items-center gap-2">
-          <Clock className="h-4 w-4" />
-          Saved {formatDistanceToNow(new Date(result.created_at), { addSuffix: true })}
-        </p>
-      </div>
+      </section>
+      <div className="max-w-5xl mx-auto px-4 md:px-8 py-8">
 
       {/* Strategy Condition Card */}
       <Card className="mb-6">
@@ -436,6 +455,7 @@ function SharedBacktestView({ result }: { result: SharedBacktestResult }) {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }

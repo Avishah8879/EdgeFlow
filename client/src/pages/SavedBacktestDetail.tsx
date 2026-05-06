@@ -14,7 +14,6 @@ import { useState } from 'react';
 import { Link, useParams, useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   ArrowLeft,
   Clock,
@@ -25,8 +24,11 @@ import {
   TrendingUp,
   Target,
   Shield,
-  LineChart,
+  Home,
+  ChevronRight,
 } from 'lucide-react';
+import { Eyebrow } from '@/components/ui/eyebrow';
+import { cn } from '@/lib/utils';
 import {
   useSavedBacktestResult,
   useShareBacktestResult,
@@ -47,9 +49,9 @@ export default function SavedBacktestDetail() {
 
   if (isLoading) {
     return (
-      <div className="container max-w-6xl mx-auto py-8 px-4">
+      <div className="max-w-6xl mx-auto py-16 px-4">
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--brand-gold))]" />
         </div>
       </div>
     );
@@ -57,16 +59,19 @@ export default function SavedBacktestDetail() {
 
   if (error || !result) {
     return (
-      <div className="container max-w-6xl mx-auto py-8 px-4">
+      <div className="max-w-6xl mx-auto py-16 px-4">
         <div className="text-center py-16">
-          <h2 className="text-xl font-semibold mb-2">Result not found</h2>
-          <p className="text-muted-foreground mb-4">
-            The backtest result you're looking for doesn't exist or you don't have access to it.
+          <h2 className="font-display text-2xl font-bold text-[hsl(var(--brand-navy))] dark:text-foreground mb-2">
+            Result not found
+          </h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            The backtest result you're looking for doesn't exist or you don't
+            have access to it.
           </p>
           <Link href="/saved-results">
-            <Button>
+            <Button className="rounded-full bg-[hsl(var(--brand-navy))] text-white hover:bg-[hsl(var(--brand-navy))]/90">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Saved Results
+              Back to saved results
             </Button>
           </Link>
         </div>
@@ -100,92 +105,133 @@ export default function SavedBacktestDetail() {
   const equityCurveData = result.equity_curve || [];
 
   return (
-    <div className="container max-w-6xl mx-auto py-8 px-4">
-      {/* Back button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mb-4"
-        onClick={() => navigate('/saved-results')}
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Saved Results
-      </Button>
+    <div className="min-h-screen bg-background">
+      {/* Page masthead */}
+      <section className="border-b border-border bg-card">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-8">
+          <nav className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
+            <Link
+              href="/home"
+              className="hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              <Home className="w-3 h-3" /> Home
+            </Link>
+            <ChevronRight className="w-3 h-3 opacity-40" />
+            <Link
+              href="/saved-results"
+              className="hover:text-foreground transition-colors"
+            >
+              Saved results
+            </Link>
+            <ChevronRight className="w-3 h-3 opacity-40" />
+            <span className="text-foreground font-medium truncate max-w-[200px]">
+              {result.name}
+            </span>
+          </nav>
 
-      {/* Header Card */}
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center gap-3">
-                <LineChart className="h-6 w-6 text-primary" />
-                <CardTitle>{result.name}</CardTitle>
-              </div>
-              <CardDescription className="flex items-center gap-2">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="space-y-1.5 min-w-0">
+              <Eyebrow tone="gold" rule>
+                Saved backtest
+              </Eyebrow>
+              <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+                {result.name}
+              </h1>
+              <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
                 <Clock className="h-3 w-3" />
-                {formatDistanceToNow(new Date(result.created_at), { addSuffix: true })}
+                {formatDistanceToNow(new Date(result.created_at), {
+                  addSuffix: true,
+                })}
                 {result.execution_time_ms && (
                   <>
-                    <span className="text-muted-foreground">•</span>
-                    <span>Optimized in {(result.execution_time_ms / 1000).toFixed(2)}s</span>
+                    <span>·</span>
+                    <span>
+                      Optimized in{' '}
+                      <span className="font-mono tabular-nums">
+                        {(result.execution_time_ms / 1000).toFixed(2)}s
+                      </span>
+                    </span>
                   </>
                 )}
-              </CardDescription>
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-base px-3 py-1">{result.ticker}</Badge>
-              <Badge variant="secondary" className="text-base px-3 py-1">{result.mode}</Badge>
+            <div className="flex flex-shrink-0 items-center gap-1.5">
+              <span className="font-mono text-[10.5px] font-bold uppercase tracking-uppercase px-2.5 py-1.5 rounded-full bg-[hsl(var(--brand-navy))] text-white">
+                {result.ticker}
+              </span>
+              <span className="text-[10.5px] font-bold uppercase tracking-uppercase px-2.5 py-1.5 rounded-full bg-muted text-muted-foreground">
+                {result.mode}
+              </span>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+
+          <div className="mt-5 space-y-3">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Strategy Condition</label>
-              <div className="bg-muted/50 rounded-md p-3 mt-1">
-                <code className="text-sm break-all">{result.strategy_condition}</code>
+              <div className="text-[10.5px] font-bold uppercase tracking-uppercase text-muted-foreground mb-1">
+                Strategy condition
+              </div>
+              <div className="rounded-md bg-muted/40 p-3">
+                <code className="text-[12.5px] font-mono break-all text-foreground">
+                  {result.strategy_condition}
+                </code>
               </div>
             </div>
 
             {result.custom_rules && (
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Custom Rules</label>
-                <div className="bg-muted/50 rounded-md p-3 mt-1">
-                  <code className="text-sm break-all">{result.custom_rules}</code>
+                <div className="text-[10.5px] font-bold uppercase tracking-uppercase text-muted-foreground mb-1">
+                  Custom rules
+                </div>
+                <div className="rounded-md bg-muted/40 p-3">
+                  <code className="text-[12.5px] font-mono break-all text-foreground">
+                    {result.custom_rules}
+                  </code>
                 </div>
               </div>
             )}
-
-            <div className="flex items-center gap-2">
-              {result.is_shared && result.share_token ? (
-                <Button variant="outline" size="sm" onClick={copyShareLink}>
-                  {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                  {copied ? 'Copied' : 'Copy Share Link'}
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleShare}
-                  disabled={shareBacktestMutation.isPending}
-                >
-                  {shareBacktestMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  ) : (
-                    <Share2 className="h-4 w-4 mr-1" />
-                  )}
-                  Share
-                </Button>
-              )}
-              <Link href={`/alpha-generation?ticker=${result.ticker}`}>
-                <Button variant="outline" size="sm">
-                  Run New Backtest
-                </Button>
-              </Link>
-            </div>
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="flex items-center gap-2 mt-4">
+            {result.is_shared && result.share_token ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={copyShareLink}
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                {copied ? 'Copied' : 'Copy share link'}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={handleShare}
+                disabled={shareBacktestMutation.isPending}
+              >
+                {shareBacktestMutation.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                ) : (
+                  <Share2 className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                Share
+              </Button>
+            )}
+            <Link href={`/alpha-generation?ticker=${result.ticker}`}>
+              <Button variant="outline" size="sm" className="rounded-full">
+                Run new backtest
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-6">
 
       {/* TPSL Values for Advanced Mode */}
       {isAdvanced && result.tpsl_values && (
@@ -299,6 +345,7 @@ export default function SavedBacktestDetail() {
       )}
 
       {/* Candlestick chart section - hidden for now, data is being saved but visualization pending */}
+      </div>
     </div>
   );
 }

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Loader2, ShieldCheck, AlertTriangle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { AuthShell } from "@/components/auth/AuthShell";
 
 type CallbackState = {
   status: "processing" | "success" | "error";
@@ -24,7 +24,7 @@ export default function AuthCallback() {
   const [, navigate] = useLocation();
   const [state, setState] = useState<CallbackState>({
     status: "processing",
-    message: "Finalizing secure login...",
+    message: "Finalizing secure login…",
   });
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function AuthCallback() {
         completeOAuthLogin(payload);
         setState({
           status: "success",
-          message: "You are now signed in. Redirecting to Equity Pro...",
+          message: "You are now signed in. Redirecting to your terminal…",
         });
         setTimeout(() => navigate("/home"), 1200);
       } catch (err) {
@@ -94,7 +94,8 @@ export default function AuthCallback() {
       if (!profile) {
         setState({
           status: "error",
-          message: "The identity payload returned by the auth server is invalid.",
+          message:
+            "The identity payload returned by the auth server is invalid.",
         });
         return;
       }
@@ -113,49 +114,74 @@ export default function AuthCallback() {
     });
   }, [authBaseUrl, completeOAuthLogin, navigate]);
 
-  const renderIcon = () => {
-    if (state.status === "processing") {
-      return <Loader2 className="h-10 w-10 animate-spin text-primary" />;
-    }
-    if (state.status === "success") {
-      return <ShieldCheck className="h-12 w-12 text-primary" />;
-    }
-    return <AlertTriangle className="h-12 w-12 text-destructive" />;
-  };
+  const heading =
+    state.status === "processing"
+      ? "Verifying identity"
+      : state.status === "success"
+        ? "Login complete."
+        : "Authentication failed";
 
   return (
-    <div className="flex min-h-[70vh] items-center justify-center bg-background px-4 py-16">
-      <Card className="max-w-lg w-full border-border/60 bg-card/90 text-center shadow-lg">
-        <CardHeader className="flex flex-col items-center gap-4">
-          {renderIcon()}
-          <CardTitle className="text-2xl">
-            {state.status === "processing"
-              ? "Verifying Identity"
-              : state.status === "success"
-                ? "Login Complete"
-                : "Authentication Failed"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <p className="text-muted-foreground">{state.message}</p>
-          {state.status === "error" && (
-            <div className="flex flex-col gap-3">
-              <Button variant="outline" onClick={() => navigate("/login")}>
-                Back to login
-              </Button>
-              <Button
-                onClick={() => {
-                  if (typeof window === "undefined") return;
-                  window.location.href = "/";
-                }}
-                variant="ghost"
-              >
-                Go to landing
-              </Button>
-            </div>
+    <AuthShell
+      asideTagline={
+        <>
+          One last hop —
+          <br />
+          <em className="italic font-bold text-[hsl(var(--brand-gold))]">
+            then back to research.
+          </em>
+        </>
+      }
+    >
+      <div className="flex flex-col items-center gap-5 text-center py-6">
+        <div
+          className={
+            state.status === "error"
+              ? "flex h-16 w-16 items-center justify-center rounded-full bg-destructive/15"
+              : "flex h-16 w-16 items-center justify-center rounded-full bg-[hsl(var(--brand-gold))]/15"
+          }
+        >
+          {state.status === "processing" && (
+            <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--brand-gold))]" />
           )}
-        </CardContent>
-      </Card>
-    </div>
+          {state.status === "success" && (
+            <ShieldCheck className="h-8 w-8 text-[hsl(var(--brand-gold))]" />
+          )}
+          {state.status === "error" && (
+            <AlertTriangle className="h-8 w-8 text-destructive" />
+          )}
+        </div>
+
+        <div>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+            {heading}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-2 max-w-sm">
+            {state.message}
+          </p>
+        </div>
+
+        {state.status === "error" && (
+          <div className="flex flex-col gap-2 w-full pt-2">
+            <Button
+              className="w-full h-11 bg-[hsl(var(--brand-navy))] text-white hover:bg-[hsl(var(--brand-navy))]/90"
+              onClick={() => navigate("/login")}
+            >
+              Back to login
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full h-11"
+              onClick={() => {
+                if (typeof window === "undefined") return;
+                window.location.href = "/";
+              }}
+            >
+              Go to landing
+            </Button>
+          </div>
+        )}
+      </div>
+    </AuthShell>
   );
 }

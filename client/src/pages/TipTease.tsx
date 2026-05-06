@@ -4,14 +4,13 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscriptionStatus } from "@/hooks/use-subscription";
 import { useTipTeaseChat } from "@/hooks/use-tip-tease-chat";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Crown, Sparkles, ArrowRight, Lock } from "lucide-react";
-import { SectionHeader } from "@/components/SectionHeader";
 import HeroSection from "@/components/tip-tease/HeroSection";
 import ChatInterface from "@/components/tip-tease/ChatInterface";
 import { SEO } from "@/components/SEO";
+import { Eyebrow } from "@/components/ui/eyebrow";
 
 /**
  * Premium upgrade prompt for non-premium users.
@@ -30,58 +29,73 @@ function PremiumUpgradePrompt() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
-        <SectionHeader
-          title="Equity Pro AI"
-          description="AI-powered financial insights for Indian markets"
-          size="lg"
-        />
+      <section className="border-b border-border bg-card">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-10">
+          <div className="space-y-2">
+            <Eyebrow tone="gold" rule>
+              Premium feature
+            </Eyebrow>
+            <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+              Equity Pro AI.
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-2xl">
+              AI-powered financial insights for Indian markets — only available
+              to Premium subscribers.
+            </p>
+          </div>
+        </div>
+      </section>
 
-        <div className="flex justify-center mt-12">
-          <Card className="w-full max-w-md text-center">
-            <CardHeader>
-              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <Lock className="w-8 h-8 text-primary" />
-              </div>
-              <CardTitle className="text-2xl">Premium Feature</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <p className="text-muted-foreground">
-                Equity Pro AI is available exclusively for Premium subscribers.
-                Get AI-powered financial insights with unlimited access.
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-16">
+        <div className="flex justify-center">
+          <div className="w-full max-w-md rounded-2xl border border-[hsl(var(--brand-gold))]/40 bg-card p-8 text-center shadow-card-lg">
+            <div className="mx-auto w-14 h-14 rounded-full bg-[hsl(var(--brand-gold))]/15 flex items-center justify-center mb-5">
+              <Lock className="w-6 h-6 text-[hsl(var(--brand-gold))]" />
+            </div>
+            <h2 className="font-display text-2xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground mb-2">
+              Unlock with Premium
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              Equity Pro AI is available exclusively for Premium subscribers.
+              Get unlimited AI-powered financial insights and analysis.
+            </p>
+
+            <ul className="space-y-2.5 text-left mb-7">
+              {[
+                "Unlimited AI conversations",
+                "Real-time market insights",
+                "Personalized stock analysis",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2.5 text-sm">
+                  <span className="flex-shrink-0 w-4 h-4 rounded-full bg-[hsl(var(--brand-gold))]/15 flex items-center justify-center">
+                    <Sparkles className="w-2.5 h-2.5 text-[hsl(var(--brand-gold))]" />
+                  </span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+
+            <Button
+              onClick={handleUpgrade}
+              className="w-full h-11 rounded-full bg-[hsl(var(--brand-gold))] text-white hover:bg-[hsl(var(--brand-gold))]/90 gap-2"
+            >
+              <Crown className="w-4 h-4" />
+              {isAuthenticated ? "Upgrade to Premium" : "Sign up for Premium"}
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+
+            {!isAuthenticated && (
+              <p className="text-xs text-muted-foreground mt-4">
+                Already have an account?{" "}
+                <Link
+                  href="/login?returnUrl=/tip-tease"
+                  className="font-semibold text-[hsl(var(--brand-gold))] hover:underline"
+                >
+                  Log in
+                </Link>
               </p>
-
-              <div className="space-y-3 text-left">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-sm">Unlimited AI conversations</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-sm">Real-time market insights</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-sm">Personalized stock analysis</span>
-                </div>
-              </div>
-
-              <Button onClick={handleUpgrade} className="w-full gap-2">
-                <Crown className="w-4 h-4" />
-                {isAuthenticated ? "Upgrade to Premium" : "Sign Up for Premium"}
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-
-              {!isAuthenticated && (
-                <p className="text-sm text-muted-foreground">
-                  Already have an account?{" "}
-                  <Link href="/login?returnUrl=/tip-tease" className="text-primary hover:underline">
-                    Log in
-                  </Link>
-                </p>
-              )}
-            </CardContent>
-          </Card>
+            )}
+          </div>
         </div>
       </div>
     </div>

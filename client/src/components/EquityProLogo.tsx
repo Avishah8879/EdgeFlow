@@ -10,6 +10,8 @@ type EquityProLogoProps = {
   className?: string;
   size?: "sm" | "md" | "lg";
   iconOnly?: boolean;
+  /** Force white wordmark — use on dark/navy backgrounds where the theme-aware navy-or-gold doesn't read. */
+  forceLight?: boolean;
 };
 
 const SIZES = {
@@ -22,6 +24,7 @@ export function EquityProLogo({
   className = "",
   size = "md",
   iconOnly = false,
+  forceLight = false,
 }: EquityProLogoProps) {
   const dims = SIZES[size] ?? SIZES.md;
 
@@ -52,7 +55,11 @@ export function EquityProLogo({
     >
       {Icon}
       <span
-        className="text-[hsl(var(--brand-navy))] dark:text-[hsl(var(--brand-gold))]"
+        className={
+          forceLight
+            ? "text-white"
+            : "text-[hsl(var(--brand-navy))] dark:text-[hsl(var(--brand-gold))]"
+        }
         style={{
           fontFamily: 'var(--font-sans)',
           fontWeight: 800,

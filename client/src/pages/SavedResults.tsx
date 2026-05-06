@@ -7,10 +7,8 @@
 
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AlertDialog,
@@ -48,6 +46,7 @@ import {
 } from '@/hooks/use-saved-results';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 function EmptyState({ type }: { type: 'screener' | 'backtest' }) {
   const isScreener = type === 'screener';
@@ -56,18 +55,165 @@ function EmptyState({ type }: { type: 'screener' | 'backtest' }) {
   const label = isScreener ? 'Expert Screener' : 'Alpha Generation';
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <BookmarkX className="h-12 w-12 text-muted-foreground mb-4" />
-      <h3 className="text-lg font-medium mb-2">No saved {type} results yet</h3>
-      <p className="text-muted-foreground mb-6 max-w-md">
-        Run a {type === 'screener' ? 'stock screen' : 'backtest'} and save the results to view them here later.
+    <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-border bg-card">
+      <div className="h-14 w-14 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+        <BookmarkX className="h-6 w-6 text-muted-foreground" />
+      </div>
+      <h3 className="font-display text-lg font-bold text-[hsl(var(--brand-navy))] dark:text-foreground mb-2">
+        No saved {type} results yet
+      </h3>
+      <p className="text-sm text-muted-foreground mb-6 max-w-md">
+        Run a {type === 'screener' ? 'stock screen' : 'backtest'} and save the
+        results to view them here later.
       </p>
       <Link href={path}>
-        <Button>
+        <Button className="rounded-full bg-[hsl(var(--brand-navy))] text-white hover:bg-[hsl(var(--brand-navy))]/90">
           <Icon className="h-4 w-4 mr-2" />
           Go to {label}
         </Button>
       </Link>
+    </div>
+  );
+}
+
+function ResultCard({
+  title,
+  subtitle,
+  meta,
+  expression,
+  bodyExtras,
+  detailHref,
+  isShared,
+  shareToken,
+  shareTokenPath,
+  onDelete,
+  onShare,
+}: {
+  title: string;
+  subtitle: string;
+  meta: React.ReactNode;
+  expression: string;
+  bodyExtras?: React.ReactNode;
+  detailHref: string;
+  isShared: boolean;
+  shareToken: string | undefined;
+  shareTokenPath: string;
+  onDelete: () => void;
+  onShare: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const copyShareLink = () => {
+    if (shareToken) {
+      navigator.clipboard.writeText(
+        `${window.location.origin}${shareTokenPath}/${shareToken}`,
+      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success('Share link copied!');
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-card hover:shadow-card transition-shadow duration-base flex flex-col">
+      <Link href={detailHref}>
+        <div className="p-5 cursor-pointer flex-1">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="min-w-0 space-y-1">
+              <h3 className="font-display text-base font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground hover:text-[hsl(var(--brand-gold))] transition-colors truncate">
+                {title}
+              </h3>
+              <p className="text-[11.5px] text-muted-foreground flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {subtitle}
+              </p>
+            </div>
+            <div className="flex flex-shrink-0 items-center gap-1.5">{meta}</div>
+          </div>
+
+          <div className="rounded-md bg-muted/40 p-2.5 mb-3">
+            <code className="text-[11.5px] font-mono break-all text-foreground">
+              {expression}
+            </code>
+          </div>
+
+          {bodyExtras}
+
+          <div className="flex items-center gap-1.5 text-xs text-[hsl(var(--brand-gold))] font-semibold mt-3">
+            <Eye className="h-3.5 w-3.5" />
+            View details
+            <ExternalLink className="h-3 w-3" />
+          </div>
+        </div>
+      </Link>
+
+      <div className="border-t border-border p-3 flex items-center gap-2">
+        {isShared && shareToken ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              copyShareLink();
+            }}
+          >
+            {copied ? (
+              <Check className="h-3.5 w-3.5 mr-1.5" />
+            ) : (
+              <Copy className="h-3.5 w-3.5 mr-1.5" />
+            )}
+            {copied ? 'Copied' : 'Copy link'}
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onShare();
+            }}
+          >
+            <Share2 className="h-3.5 w-3.5 mr-1.5" />
+            Share
+          </Button>
+        )}
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full text-destructive hover:text-destructive hover:border-destructive/40"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+              Delete
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete saved result?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete "{title}". This action cannot be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={onDelete}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }
@@ -81,119 +227,36 @@ function ScreenerResultCard({
   onDelete: () => void;
   onShare: () => void;
 }) {
-  const [copied, setCopied] = useState(false);
-
-  const copyShareLink = () => {
-    if (result.share_token) {
-      navigator.clipboard.writeText(`${window.location.origin}/shared/screener/${result.share_token}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      toast.success('Share link copied!');
-    }
-  };
-
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <Link href={`/saved-results/screener/${result.id}`}>
-        <CardHeader className="pb-3 cursor-pointer">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-base hover:text-primary transition-colors">
-                {result.name}
-              </CardTitle>
-              <CardDescription className="flex items-center gap-2 text-xs">
-                <Clock className="h-3 w-3" />
-                {formatDistanceToNow(new Date(result.created_at), { addSuffix: true })}
-              </CardDescription>
-            </div>
-            <Badge variant="secondary">{result.result_count} matches</Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="cursor-pointer">
-          <div className="space-y-3">
-            <div className="bg-muted/50 rounded-md p-2">
-              <code className="text-xs break-all">{result.expression}</code>
-            </div>
-
-            {result.execution_time_ms && (
-              <p className="text-xs text-muted-foreground">
-                Executed in {(result.execution_time_ms / 1000).toFixed(2)}s
-              </p>
-            )}
-
-            {/* View Matches Link */}
-            {result.result_count > 0 && (
-              <div className="flex items-center gap-2 text-sm text-primary">
-                <Eye className="h-4 w-4" />
-                <span>View {result.result_count} matches</span>
-                <ExternalLink className="h-3 w-3" />
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Link>
-
-      {/* Action buttons - prevent navigation when clicked */}
-      <CardContent className="pt-0">
-        <div className="flex items-center gap-2 pt-2 border-t">
-          {result.is_shared && result.share_token ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                copyShareLink();
-              }}
-            >
-              {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-              {copied ? 'Copied' : 'Copy Link'}
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onShare();
-              }}
-            >
-              <Share2 className="h-4 w-4 mr-1" />
-              Share
-            </Button>
-          )}
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-destructive hover:text-destructive"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete saved result?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete "{result.name}". This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={onDelete} className="bg-destructive hover:bg-destructive/90">
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </CardContent>
-    </Card>
+    <ResultCard
+      title={result.name}
+      subtitle={formatDistanceToNow(new Date(result.created_at), {
+        addSuffix: true,
+      })}
+      meta={
+        <span className="text-[10.5px] font-bold uppercase tracking-uppercase px-2 py-1 rounded-full bg-[hsl(var(--brand-gold))]/15 text-[hsl(var(--brand-gold))]">
+          <span className="font-mono tabular-nums">{result.result_count}</span>{' '}
+          matches
+        </span>
+      }
+      expression={result.expression}
+      bodyExtras={
+        result.execution_time_ms ? (
+          <p className="text-[11px] text-muted-foreground">
+            Executed in{' '}
+            <span className="font-mono tabular-nums">
+              {(result.execution_time_ms / 1000).toFixed(2)}s
+            </span>
+          </p>
+        ) : null
+      }
+      detailHref={`/saved-results/screener/${result.id}`}
+      isShared={result.is_shared}
+      shareToken={result.share_token}
+      shareTokenPath="/shared/screener"
+      onDelete={onDelete}
+      onShare={onShare}
+    />
   );
 }
 
@@ -206,132 +269,67 @@ function BacktestResultCard({
   onDelete: () => void;
   onShare: () => void;
 }) {
-  const [copied, setCopied] = useState(false);
   const metrics = result.metrics || {};
-
-  const copyShareLink = () => {
-    if (result.share_token) {
-      navigator.clipboard.writeText(`${window.location.origin}/shared/backtest/${result.share_token}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      toast.success('Share link copied!');
-    }
-  };
+  const totalProfit = metrics.total_profit ?? 0;
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <Link href={`/saved-results/backtest/${result.id}`}>
-        <CardHeader className="pb-3 cursor-pointer">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-base hover:text-primary transition-colors">
-                {result.name}
-              </CardTitle>
-              <CardDescription className="flex items-center gap-2 text-xs">
-                <Clock className="h-3 w-3" />
-                {formatDistanceToNow(new Date(result.created_at), { addSuffix: true })}
-              </CardDescription>
+    <ResultCard
+      title={result.name}
+      subtitle={formatDistanceToNow(new Date(result.created_at), {
+        addSuffix: true,
+      })}
+      meta={
+        <>
+          <span className="text-[10.5px] font-bold uppercase tracking-uppercase px-2 py-1 rounded-full bg-muted text-muted-foreground font-mono">
+            {result.ticker}
+          </span>
+          <span className="text-[10.5px] font-bold uppercase tracking-uppercase px-2 py-1 rounded-full bg-muted/50 text-muted-foreground">
+            {result.mode}
+          </span>
+        </>
+      }
+      expression={result.strategy_condition}
+      bodyExtras={
+        <div className="grid grid-cols-3 gap-3 text-xs pt-1">
+          <div>
+            <div className="text-[10.5px] uppercase tracking-uppercase font-bold text-muted-foreground">
+              PnL
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">{result.ticker}</Badge>
-              <Badge variant="secondary">{result.mode}</Badge>
+            <div
+              className={cn(
+                'font-mono font-bold tabular-nums mt-0.5',
+                totalProfit >= 0 ? 'text-positive' : 'text-negative',
+              )}
+            >
+              {totalProfit >= 0 ? '+' : ''}
+              {totalProfit.toFixed(2)}%
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="cursor-pointer">
-          <div className="space-y-3">
-            <div className="bg-muted/50 rounded-md p-2">
-              <code className="text-xs break-all">{result.strategy_condition}</code>
+          <div>
+            <div className="text-[10.5px] uppercase tracking-uppercase font-bold text-muted-foreground">
+              Win rate
             </div>
-
-            <div className="grid grid-cols-3 gap-2 text-sm">
-              <div>
-                <span className="text-muted-foreground">PnL:</span>{' '}
-                <span className={(metrics.total_profit ?? 0) >= 0 ? 'text-positive' : 'text-negative'}>
-                  {metrics.total_profit?.toFixed(2)}%
-                </span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Win Rate:</span>{' '}
-                <span>{metrics.win_rate?.toFixed(1)}%</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Trades:</span>{' '}
-                <span>{metrics.num_trades}</span>
-              </div>
-            </div>
-
-            {/* View Details Link */}
-            <div className="flex items-center gap-2 text-sm text-primary">
-              <Eye className="h-4 w-4" />
-              <span>View full results</span>
-              <ExternalLink className="h-3 w-3" />
+            <div className="font-mono font-bold tabular-nums mt-0.5 text-foreground">
+              {metrics.win_rate?.toFixed(1) ?? '—'}%
             </div>
           </div>
-        </CardContent>
-      </Link>
-
-      {/* Action buttons - prevent navigation when clicked */}
-      <CardContent className="pt-0">
-        <div className="flex items-center gap-2 pt-2 border-t">
-          {result.is_shared && result.share_token ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                copyShareLink();
-              }}
-            >
-              {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-              {copied ? 'Copied' : 'Copy Link'}
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onShare();
-              }}
-            >
-              <Share2 className="h-4 w-4 mr-1" />
-              Share
-            </Button>
-          )}
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-destructive hover:text-destructive"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete saved result?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete "{result.name}". This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={onDelete} className="bg-destructive hover:bg-destructive/90">
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <div>
+            <div className="text-[10.5px] uppercase tracking-uppercase font-bold text-muted-foreground">
+              Trades
+            </div>
+            <div className="font-mono font-bold tabular-nums mt-0.5 text-foreground">
+              {metrics.num_trades ?? '—'}
+            </div>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      }
+      detailHref={`/saved-results/backtest/${result.id}`}
+      isShared={result.is_shared}
+      shareToken={result.share_token}
+      shareTokenPath="/shared/backtest"
+      onDelete={onDelete}
+      onShare={onShare}
+    />
   );
 }
 
@@ -339,12 +337,14 @@ export default function SavedResults() {
   const [activeTab, setActiveTab] = useState('screener');
 
   // Screener hooks
-  const { data: screenerData, isLoading: screenerLoading } = useSavedScreenerResults();
+  const { data: screenerData, isLoading: screenerLoading } =
+    useSavedScreenerResults();
   const deleteScreenerMutation = useDeleteScreenerResult();
   const shareScreenerMutation = useShareScreenerResult();
 
   // Backtest hooks
-  const { data: backtestData, isLoading: backtestLoading } = useSavedBacktestResults();
+  const { data: backtestData, isLoading: backtestLoading } =
+    useSavedBacktestResults();
   const deleteBacktestMutation = useDeleteBacktestResult();
   const shareBacktestMutation = useShareBacktestResult();
 
@@ -385,83 +385,90 @@ export default function SavedResults() {
   };
 
   return (
-    <div className="container max-w-5xl mx-auto py-8 px-4">
-      <div className="mb-8 space-y-2">
-        <Eyebrow tone="gold" rule>
-          Library
-        </Eyebrow>
-        <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
-          Saved Results
-        </h1>
-        <p className="text-muted-foreground">
-          View and manage your saved screener and backtest results
-        </p>
+    <div className="min-h-screen bg-background">
+      {/* Page masthead */}
+      <section className="border-b border-border bg-card">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 md:py-10">
+          <div className="space-y-2">
+            <Eyebrow tone="gold" rule>
+              Library
+            </Eyebrow>
+            <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+              Saved results.
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-2xl">
+              View and manage your saved screener runs and strategy backtests.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 md:py-10">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="screener" className="gap-2">
+              <Search className="h-4 w-4" />
+              Screener
+              {screenerData?.total ? (
+                <span className="ml-1 px-1.5 rounded-full bg-muted text-xs font-mono tabular-nums">
+                  {screenerData.total}
+                </span>
+              ) : null}
+            </TabsTrigger>
+            <TabsTrigger value="backtest" className="gap-2">
+              <LineChart className="h-4 w-4" />
+              Backtest
+              {backtestData?.total ? (
+                <span className="ml-1 px-1.5 rounded-full bg-muted text-xs font-mono tabular-nums">
+                  {backtestData.total}
+                </span>
+              ) : null}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="screener">
+            {screenerLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--brand-gold))]" />
+              </div>
+            ) : screenerData?.results.length === 0 ? (
+              <EmptyState type="screener" />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {screenerData?.results.map((result) => (
+                  <ScreenerResultCard
+                    key={result.id}
+                    result={result}
+                    onDelete={() => handleDeleteScreener(result.id)}
+                    onShare={() => handleShareScreener(result.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="backtest">
+            {backtestLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--brand-gold))]" />
+              </div>
+            ) : backtestData?.results.length === 0 ? (
+              <EmptyState type="backtest" />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {backtestData?.results.map((result) => (
+                  <BacktestResultCard
+                    key={result.id}
+                    result={result}
+                    onDelete={() => handleDeleteBacktest(result.id)}
+                    onShare={() => handleShareBacktest(result.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="screener" className="gap-2">
-            <Search className="h-4 w-4" />
-            Screener Results
-            {screenerData?.total ? (
-              <Badge variant="secondary" className="ml-1">
-                {screenerData.total}
-              </Badge>
-            ) : null}
-          </TabsTrigger>
-          <TabsTrigger value="backtest" className="gap-2">
-            <LineChart className="h-4 w-4" />
-            Backtest Results
-            {backtestData?.total ? (
-              <Badge variant="secondary" className="ml-1">
-                {backtestData.total}
-              </Badge>
-            ) : null}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="screener">
-          {screenerLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : screenerData?.results.length === 0 ? (
-            <EmptyState type="screener" />
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {screenerData?.results.map((result) => (
-                <ScreenerResultCard
-                  key={result.id}
-                  result={result}
-                  onDelete={() => handleDeleteScreener(result.id)}
-                  onShare={() => handleShareScreener(result.id)}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="backtest">
-          {backtestLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : backtestData?.results.length === 0 ? (
-            <EmptyState type="backtest" />
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {backtestData?.results.map((result) => (
-                <BacktestResultCard
-                  key={result.id}
-                  result={result}
-                  onDelete={() => handleDeleteBacktest(result.id)}
-                  onShare={() => handleShareBacktest(result.id)}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }

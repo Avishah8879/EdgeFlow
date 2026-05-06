@@ -72,23 +72,26 @@ export default function Developers() {
       />
 
       <div className="min-h-screen bg-background">
-        <div className="mx-auto w-full max-w-5xl px-6 py-8 space-y-8">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-4 flex-wrap">
+        {/* Page masthead */}
+        <section className="border-b border-border bg-card">
+          <div className="mx-auto w-full max-w-6xl px-6 md:px-8 py-8 md:py-10">
             <div className="space-y-2">
               <Eyebrow tone="gold" rule>
-                Settings
+                Settings · API
               </Eyebrow>
               <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
-                Developer API
+                Developer API.
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm text-muted-foreground max-w-2xl">
                 Access EquityPro market data, screener, and analytics
-                programmatically.
+                programmatically. Manage API keys, monitor usage, and explore
+                code examples.
               </p>
             </div>
           </div>
+        </section>
 
+        <div className="mx-auto w-full max-w-6xl px-6 md:px-8 py-8 md:py-10 space-y-6">
           <Tabs defaultValue="keys">
             <TabsList>
               <TabsTrigger value="keys" className="gap-2">
