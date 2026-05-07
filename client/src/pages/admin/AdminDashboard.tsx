@@ -1,119 +1,40 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import {
+  AdminLayout,
+  AdminKpiStrip,
+  AdminKpi,
+  AdminPanel,
+  AdminFeedRow,
+  AdminHealthRow,
+  AdminPill,
+  AdminNumCell,
+} from "@/components/admin";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AdminLayout } from "@/components/admin";
 import { useAdminStats } from "@/hooks/use-admin-stats";
 import { useAdminCoinStats } from "@/hooks/use-coin-wallet";
-import {
-  Users,
-  UserCheck,
-  UserX,
-  Crown,
-  Shield,
-  Activity,
-  AlertCircle,
-  CheckCircle2,
-  XCircle,
-  TrendingUp,
-  LogIn,
-  Coins,
-  Layers,
-  CreditCard,
-  TrendingDown,
-} from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
-function StatCard({
-  title,
-  value,
-  description,
-  icon: Icon,
-  trend,
-}: {
-  title: string;
-  value: string | number;
-  description?: string;
-  icon: React.ComponentType<{ className?: string }>;
-  trend?: { value: number; label: string };
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {description && (
-          <p className="text-xs text-muted-foreground mt-1">{description}</p>
-        )}
-        {trend && (
-          <div className="flex items-center gap-1 mt-2">
-            <TrendingUp className="h-3 w-3 text-positive" />
-            <span className="text-xs text-positive">+{trend.value}</span>
-            <span className="text-xs text-muted-foreground">{trend.label}</span>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+const fmt = new Intl.NumberFormat("en-IN");
+
+function formatINR(paise: number): string {
+  const rupees = paise / 100;
+  if (rupees >= 1_00_00_000) return `₹${(rupees / 1_00_00_000).toFixed(2)} Cr`;
+  if (rupees >= 1_00_000) return `₹${(rupees / 1_00_000).toFixed(1)} L`;
+  return `₹${fmt.format(Math.round(rupees))}`;
 }
 
-function SystemStatusBadge({ status }: { status: "healthy" | "degraded" | "down" }) {
-  const config = {
-    healthy: { icon: CheckCircle2, label: "Healthy", variant: "default" as const, className: "bg-positive text-positive-foreground" },
-    degraded: { icon: AlertCircle, label: "Degraded", variant: "secondary" as const, className: "bg-yellow-500 text-white" },
-    down: { icon: XCircle, label: "Down", variant: "destructive" as const, className: "" },
-  };
-
-  const { icon: Icon, label, variant, className } = config[status];
-
-  return (
-    <Badge variant={variant} className={className}>
-      <Icon className="h-3 w-3 mr-1" />
-      {label}
-    </Badge>
-  );
+function StatusToText(s: "healthy" | "degraded" | "down"): { pct: number; tone: "positive" | "gold" | "negative"; label: string } {
+  if (s === "healthy") return { pct: 100, tone: "positive", label: "100 %" };
+  if (s === "degraded") return { pct: 92, tone: "gold", label: "Degraded" };
+  return { pct: 0, tone: "negative", label: "Down" };
 }
 
-function LoadingSkeleton() {
+function LoadingState() {
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader className="pb-2">
-              <Skeleton className="h-4 w-24" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-16" />
-              <Skeleton className="h-3 w-32 mt-2" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-5 w-32" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-4 w-full" />
-            ))}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-5 w-32" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-6 w-full" />
-            ))}
-          </CardContent>
-        </Card>
+    <div className="space-y-4">
+      <Skeleton className="h-[88px] w-full" />
+      <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-4">
+        <Skeleton className="h-[400px]" />
+        <Skeleton className="h-[400px]" />
       </div>
     </div>
   );
@@ -121,252 +42,234 @@ function LoadingSkeleton() {
 
 export default function AdminDashboard() {
   const { data: stats, isLoading, error } = useAdminStats();
-  const { data: coinStats } = useAdminCoinStats();
-  const cs = coinStats?.data;
+  const { data: coinResp } = useAdminCoinStats();
+  const coins = coinResp?.data;
 
   return (
     <AdminLayout
-      eyebrow="Admin · Overview"
-      title="Dashboard"
-      description="Overview of system statistics and health."
+      eyebrow="Internal · Admin"
+      title="Admin console"
+      description="User management, system health, and feature flags · for EquityPro staff only."
     >
-      <div className="space-y-6">
-
+      <div className="space-y-4">
         {error && (
-          <Card className="border-destructive">
-            <CardContent className="flex items-center gap-3 py-4">
-              <AlertCircle className="h-5 w-5 text-destructive" />
-              <p className="text-destructive">
-                Failed to load statistics: {error.message}
-              </p>
-            </CardContent>
-          </Card>
+          <div className="flex items-center gap-3 p-4 rounded-lg border border-destructive/40 bg-destructive/5 text-destructive">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <p className="text-sm">Failed to load statistics: {error.message}</p>
+          </div>
         )}
 
-        {isLoading ? (
-          <LoadingSkeleton />
-        ) : stats ? (
+        {isLoading || !stats ? (
+          <LoadingState />
+        ) : (
           <>
-            {/* User Stats Grid */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                title="Total Users"
-                value={stats.users.total}
-                icon={Users}
-                trend={{
-                  value: stats.activity.signupsThisWeek,
-                  label: "this week",
-                }}
+            {/* KPI strip — 5 cells, mono numerics, gold accent for revenue */}
+            <AdminKpiStrip cols={5}>
+              <AdminKpi
+                label="Active users · 30d"
+                value={fmt.format(stats.users.active)}
+                delta={`+${stats.activity.signupsThisWeek} WoW`}
+                tone="positive"
               />
-              <StatCard
-                title="Active Users"
-                value={stats.users.active}
-                description={`${stats.users.locked} locked accounts`}
-                icon={UserCheck}
+              <AdminKpi
+                label="Premium users"
+                value={fmt.format(stats.users.byTier.premium)}
+                delta={`${Math.round((stats.users.byTier.premium / Math.max(1, stats.users.total)) * 100)}% of total`}
+                tone="positive"
               />
-              <StatCard
-                title="Premium Users"
-                value={stats.users.byTier.premium}
-                description={`${Math.round((stats.users.byTier.premium / stats.users.total) * 100)}% of total`}
-                icon={Crown}
+              <AdminKpi
+                label="Revenue · 24h"
+                value={coins ? formatINR(coins.revenue_paise_24h) : "—"}
+                delta={coins ? `${fmt.format(coins.paid_24h)} paid · ${fmt.format(coins.pending_intents)} pending` : undefined}
+                accent="gold"
               />
-              <StatCard
-                title="Logins Today"
-                value={stats.activity.loginsToday}
-                description={`${stats.activity.failedLoginsToday} failed attempts`}
-                icon={LogIn}
+              <AdminKpi
+                label="Logins · today"
+                value={fmt.format(stats.activity.loginsToday)}
+                delta={
+                  stats.activity.failedLoginsToday > 0
+                    ? `${fmt.format(stats.activity.failedLoginsToday)} failed`
+                    : "no failures"
+                }
+                tone={stats.activity.failedLoginsToday > 0 ? "negative" : "positive"}
               />
+              <AdminKpi
+                label="Coins · 24h"
+                value={coins ? fmt.format(coins.coins_issued_24h) : "—"}
+                delta={coins ? `${fmt.format(coins.coins_spent_24h)} spent` : undefined}
+              />
+            </AdminKpiStrip>
+
+            {/* Two-column body — recent activity / system health */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-4">
+              <AdminPanel
+                title="Recent activity · 7 days"
+                description="Signups, logins, and rolling totals from the auth database."
+              >
+                <div className="space-y-1">
+                  <AdminFeedRow
+                    marker={`${fmt.format(stats.activity.signupsToday)}`}
+                    title="Signups · today"
+                    sub={`${fmt.format(stats.activity.signupsThisWeek)} this week · ${fmt.format(stats.activity.signupsThisMonth)} this month`}
+                  />
+                  <AdminFeedRow
+                    marker={`${fmt.format(stats.activity.loginsToday)}`}
+                    title="Logins · today"
+                    sub={`${fmt.format(stats.activity.loginsThisWeek)} this week`}
+                  />
+                  {stats.activity.failedLoginsToday > 0 && (
+                    <AdminFeedRow
+                      marker={
+                        <AdminNumCell tone="negative">
+                          {fmt.format(stats.activity.failedLoginsToday)}
+                        </AdminNumCell>
+                      }
+                      title="Failed logins · today"
+                      sub="Review the audit log to spot brute-force patterns."
+                    />
+                  )}
+                  <AdminFeedRow
+                    marker={`${fmt.format(stats.users.locked)}`}
+                    title="Locked accounts"
+                    sub={`${fmt.format(stats.users.emailVerified)} email-verified across the user base`}
+                  />
+                  <AdminFeedRow
+                    marker={`${fmt.format(stats.users.byProvider.google)}`}
+                    title="Google sign-in users"
+                    sub={`${fmt.format(stats.users.byProvider.password)} on password auth`}
+                  />
+                </div>
+              </AdminPanel>
+
+              <AdminPanel
+                title="System health"
+                actions={
+                  <AdminPill
+                    tone={
+                      stats.system.database === "healthy" &&
+                      stats.system.api === "healthy" &&
+                      stats.system.cache === "healthy"
+                        ? "positive"
+                        : "gold"
+                    }
+                    pulse
+                  >
+                    {stats.system.database === "healthy" && stats.system.api === "healthy" && stats.system.cache === "healthy"
+                      ? "All green"
+                      : "Watch"}
+                  </AdminPill>
+                }
+                description={
+                  stats.system.lastCheck
+                    ? `Last checked ${new Date(stats.system.lastCheck).toLocaleTimeString()}`
+                    : undefined
+                }
+              >
+                <div className="space-y-1">
+                  {(() => {
+                    const db = StatusToText(stats.system.database);
+                    return (
+                      <AdminHealthRow label="Database (Postgres)" pct={db.pct} tone={db.tone} value={db.label} />
+                    );
+                  })()}
+                  {(() => {
+                    const cache = StatusToText(stats.system.cache);
+                    return (
+                      <AdminHealthRow label="Cache (Redis)" pct={cache.pct} tone={cache.tone} value={cache.label} />
+                    );
+                  })()}
+                  {(() => {
+                    const api = StatusToText(stats.system.api);
+                    return (
+                      <AdminHealthRow label="API server" pct={api.pct} tone={api.tone} value={api.label} />
+                    );
+                  })()}
+                  <AdminHealthRow label="Active platforms" pct={coins ? Math.round((coins.active_platforms / Math.max(1, coins.total_platforms)) * 100) : 0} value={coins ? `${coins.active_platforms} / ${coins.total_platforms}` : "—"} />
+                </div>
+              </AdminPanel>
             </div>
 
-            {/* Monetization Stats Grid */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                title="Coins Issued (24h)"
-                value={cs?.coins_issued_24h ?? 0}
-                description={`${cs?.active_users_24h ?? 0} active users`}
-                icon={Coins}
-              />
-              <StatCard
-                title="Coins Spent (24h)"
-                value={cs?.coins_spent_24h ?? 0}
-                description={`${cs?.txns_24h ?? 0} ledger entries`}
-                icon={TrendingDown}
-              />
-              <StatCard
-                title="Revenue (24h)"
-                value={cs ? `₹${(cs.revenue_paise_24h / 100).toLocaleString("en-IN")}` : "₹0"}
-                description={`${cs?.paid_24h ?? 0} paid · ${cs?.pending_intents ?? 0} pending`}
-                icon={CreditCard}
-              />
-              <StatCard
-                title="Active Platforms"
-                value={cs?.active_platforms ?? 0}
-                description={`${cs?.total_platforms ?? 0} total registered`}
-                icon={Layers}
-              />
-            </div>
+            {/* Two-column body — user breakdown / verification */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <AdminPanel
+                title="Users by role"
+                description={`${fmt.format(stats.users.total)} total accounts on EquityPro`}
+              >
+                <div className="space-y-1">
+                  <AdminFeedRow
+                    marker={
+                      <AdminNumCell>{fmt.format(stats.users.byRole.user)}</AdminNumCell>
+                    }
+                    title="Regular users"
+                    sub="Standard authenticated users with no admin privileges."
+                  />
+                  <AdminFeedRow
+                    marker={
+                      <AdminNumCell>{fmt.format(stats.users.byRole.moderator)}</AdminNumCell>
+                    }
+                    title="Moderators"
+                    sub="Read-only admin access · audit logs, user lookups."
+                  />
+                  <AdminFeedRow
+                    marker={
+                      <AdminNumCell tone="gold">{fmt.format(stats.users.byRole.admin)}</AdminNumCell>
+                    }
+                    title="Admins"
+                    sub="Full admin write access · user management, settings."
+                  />
+                  <AdminFeedRow
+                    marker={
+                      <AdminNumCell tone="negative">{fmt.format(stats.users.byRole.super_admin)}</AdminNumCell>
+                    }
+                    title="Super admins"
+                    sub="Plus impersonation, role changes, destructive actions."
+                  />
+                </div>
+              </AdminPanel>
 
-            {/* Secondary Stats */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {/* User Breakdown */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">User Breakdown</CardTitle>
-                  <CardDescription>By role and provider</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        Regular Users
-                      </span>
-                      <span className="font-medium">{stats.users.byRole.user}</span>
+              <AdminPanel
+                title="Verification & tier mix"
+                description="Snapshot of verification + paid-plan health."
+              >
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <div className="text-[10.5px] font-bold uppercase tracking-uppercase text-muted-foreground">
+                      Email verified
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        <Shield className="h-4 w-4" />
-                        Moderators
-                      </span>
-                      <span className="font-medium">{stats.users.byRole.moderator}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        <Shield className="h-4 w-4 text-primary" />
-                        Admins
-                      </span>
-                      <span className="font-medium">{stats.users.byRole.admin}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        <Shield className="h-4 w-4 text-destructive" />
-                        Super Admins
-                      </span>
-                      <span className="font-medium">{stats.users.byRole.super_admin}</span>
+                    <AdminNumCell tone="positive" className="text-2xl font-bold block">
+                      {fmt.format(stats.users.emailVerified)}
+                    </AdminNumCell>
+                    <div className="text-xs text-muted-foreground">
+                      {Math.round((stats.users.emailVerified / Math.max(1, stats.users.total)) * 100)}% of total
                     </div>
                   </div>
-                  <div className="border-t pt-4 space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Password Auth</span>
-                      <span className="font-medium">{stats.users.byProvider.password}</span>
+                  <div className="space-y-1">
+                    <div className="text-[10.5px] font-bold uppercase tracking-uppercase text-muted-foreground">
+                      Locked
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Google Auth</span>
-                      <span className="font-medium">{stats.users.byProvider.google}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Recent Activity</CardTitle>
-                  <CardDescription>Signups and logins</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Signups Today</span>
-                      <Badge variant="secondary">{stats.activity.signupsToday}</Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Signups This Week</span>
-                      <Badge variant="secondary">{stats.activity.signupsThisWeek}</Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Signups This Month</span>
-                      <Badge variant="secondary">{stats.activity.signupsThisMonth}</Badge>
+                    <AdminNumCell tone="negative" className="text-2xl font-bold block">
+                      {fmt.format(stats.users.locked)}
+                    </AdminNumCell>
+                    <div className="text-xs text-muted-foreground">
+                      Admin must unlock · /admin/security
                     </div>
                   </div>
-                  <div className="border-t pt-4 space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Logins This Week</span>
-                      <Badge variant="outline">{stats.activity.loginsThisWeek}</Badge>
+                  <div className="space-y-1">
+                    <div className="text-[10.5px] font-bold uppercase tracking-uppercase text-muted-foreground">
+                      Premium rate
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-destructive">Failed Logins Today</span>
-                      <Badge variant="destructive">{stats.activity.failedLoginsToday}</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* System Health */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">System Health</CardTitle>
-                  <CardDescription>
-                    Last checked: {stats.system.lastCheck ? new Date(stats.system.lastCheck).toLocaleTimeString() : "N/A"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-sm">
-                      <Activity className="h-4 w-4" />
-                      Database
-                    </span>
-                    <SystemStatusBadge status={stats.system.database} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-sm">
-                      <Activity className="h-4 w-4" />
-                      Cache (Redis)
-                    </span>
-                    <SystemStatusBadge status={stats.system.cache} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-sm">
-                      <Activity className="h-4 w-4" />
-                      API Server
-                    </span>
-                    <SystemStatusBadge status={stats.system.api} />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Quick Stats */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Verification Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-full bg-positive/10">
-                      <UserCheck className="h-5 w-5 text-positive" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{stats.users.emailVerified}</p>
-                      <p className="text-sm text-muted-foreground">Email Verified</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-full bg-destructive/10">
-                      <UserX className="h-5 w-5 text-destructive" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{stats.users.locked}</p>
-                      <p className="text-sm text-muted-foreground">Locked Accounts</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-full bg-primary/10">
-                      <Crown className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">
-                        {Math.round((stats.users.byTier.premium / stats.users.total) * 100)}%
-                      </p>
-                      <p className="text-sm text-muted-foreground">Premium Rate</p>
+                    <AdminNumCell tone="gold" className="text-2xl font-bold block">
+                      {Math.round((stats.users.byTier.premium / Math.max(1, stats.users.total)) * 100)}%
+                    </AdminNumCell>
+                    <div className="text-xs text-muted-foreground">
+                      {fmt.format(stats.users.byTier.premium)} of {fmt.format(stats.users.total)}
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </AdminPanel>
+            </div>
           </>
-        ) : null}
+        )}
       </div>
     </AdminLayout>
   );
