@@ -543,24 +543,21 @@ export function registerTerminalRoutes(app: Express): void {
 
   app.get("/api/most-active", async (req, res) => {
     try {
-      // Fetch gainers and losers from Python and return combined as most-active
-      const [gainers, losers] = await Promise.all([
-        proxyToPython('/api/market-movers?category=GAINER&limit=10', buildPythonOptions(req)).catch(() => []),
-        proxyToPython('/api/market-movers?category=LOSER&limit=10', buildPythonOptions(req)).catch(() => []),
-      ]);
-      const raw: any[] = [
-        ...(Array.isArray(gainers) ? gainers : (gainers as any)?.data ?? []),
-        ...(Array.isArray(losers) ? losers : (losers as any)?.data ?? []),
-      ];
-      const stocks = raw.map((item: any) => ({
-        symbol: item.symbol ?? '',
-        name: item.name ?? item.symbol ?? '',
-        price: Number(item.ltp ?? item.price ?? 0),
-        change: Number(item.change ?? 0),
-        changePercent: Number(item.change_percent ?? item.changePercent ?? item.change_pct ?? 0),
-        volume: Number(item.volume ?? 0),
-      }));
-      return res.json(stocks);
+      // Forward sort/limit/proximity_pct query params untouched. The Python
+      // endpoint is the source of truth — it joins ltp_live × tickers ×
+      // stock_fundamentals and ranks by the sort param (volume / value /
+      // gainers / losers / high52w / low52w). Strip-and-remap on the Node
+      // side would silently drop fields the new panel needs.
+      const params = new URLSearchParams();
+      if (typeof req.query.sort === 'string') params.set('sort', req.query.sort);
+      if (typeof req.query.limit === 'string') params.set('limit', req.query.limit);
+      if (typeof req.query.proximity_pct === 'string') params.set('proximity_pct', req.query.proximity_pct);
+      const qs = params.toString();
+      const result = await proxyToPython(
+        `/api/most-active${qs ? `?${qs}` : ''}`,
+        buildPythonOptions(req),
+      );
+      return res.json(result);
     } catch {
       return sendDataUnavailable(res, 'Most active stocks unavailable');
     }
