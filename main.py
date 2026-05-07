@@ -10681,13 +10681,16 @@ async def ft_world_indices():
                 release_db_connection(conn)
 
     def _fetch_yf_history(yf_ticker: str):
-        """Fetch ~1Y of daily closes via yfinance with NaN-safe filter."""
+        """Fetch ~1Y of daily closes via yfinance with NaN-safe filter.
+
+        Wrapped to be called inside asyncio.to_thread so the event loop
+        isn't blocked by yfinance's synchronous HTTP calls.
+        """
         try:
             ticker = yf.Ticker(yf_ticker)
             history = ticker.history(period="1y", interval="1d")
             if history is None or history.empty:
                 return None, []
-            # most recent valid bar
             valid = history.dropna(subset=["Close"])
             if valid.empty:
                 return None, []
@@ -10745,45 +10748,64 @@ async def ft_world_indices():
             return []
         return [c for _, c in series[-max_points:]]
 
-    # ── assemble ───────────────────────────────────────────────────────
-    def _fetch_all():
-        out = []
-        for region, members in _WORLD_INDICES_CONFIG.items():
-            session = _world_session_status(region)
-            for symbol, name, yf_ticker in members:
-                quote = {}
-                series = []
-                if yf_ticker is None:
-                    # Indian — use DB
-                    quote = _fetch_db_index(symbol)
-                    series = _fetch_db_history(symbol)
-                else:
-                    # Global — use yfinance
-                    yf_quote, series = _fetch_yf_history(yf_ticker)
-                    if yf_quote:
-                        quote = yf_quote
-                ytd = _ytd_return(series)
-                vol = _vol_30d(series)
-                spark = _build_sparkline(series, 30)
-                out.append({
-                    "symbol": symbol,
-                    "name": name,
-                    "region": region,
-                    "session": session,
-                    "ltp": quote.get("ltp"),
-                    "change": quote.get("change"),
-                    "change_percent": quote.get("change_percent"),
-                    "day_low": quote.get("day_low"),
-                    "day_high": quote.get("day_high"),
-                    "ytd_return": ytd,
-                    "volatility_30d": vol,
-                    "sparkline": spark,
-                })
-        return out
+    # ── per-instrument async fetch ─────────────────────────────────────
+    semaphore = asyncio.Semaphore(5)  # cap concurrent yfinance calls
+
+    async def _fetch_one(region: str, symbol: str, name: str, yf_ticker):
+        session = _world_session_status(region)
+        quote: dict = {}
+        series: list = []
+        try:
+            if yf_ticker is None:
+                # Indian — DB lookup, fast
+                quote = await asyncio.to_thread(_fetch_db_index, symbol)
+                series = await asyncio.to_thread(_fetch_db_history, symbol)
+            else:
+                # Global — yfinance, capped concurrency, hard 6s timeout
+                async with semaphore:
+                    try:
+                        yf_quote, series = await asyncio.wait_for(
+                            asyncio.to_thread(_fetch_yf_history, yf_ticker),
+                            timeout=6.0,
+                        )
+                        if yf_quote:
+                            quote = yf_quote
+                    except asyncio.TimeoutError:
+                        print(f"[world-indices] timeout fetching {yf_ticker}")
+                    except Exception as e:
+                        print(f"[world-indices] error fetching {yf_ticker}: {e}")
+        except Exception as e:
+            print(f"[world-indices] {symbol} failed: {e}")
+
+        return {
+            "symbol": symbol,
+            "name": name,
+            "region": region,
+            "session": session,
+            "ltp": quote.get("ltp"),
+            "change": quote.get("change"),
+            "change_percent": quote.get("change_percent"),
+            "day_low": quote.get("day_low"),
+            "day_high": quote.get("day_high"),
+            "ytd_return": _ytd_return(series),
+            "volatility_30d": _vol_30d(series),
+            "sparkline": _build_sparkline(series, 30),
+        }
 
     try:
-        loop = asyncio.get_running_loop()
-        result = await loop.run_in_executor(None, _fetch_all)
+        # Launch every instrument in parallel; semaphore caps yfinance to 5
+        # concurrent + each call has its own 6s timeout, so the whole batch
+        # is bounded at ~12s total wall clock.
+        tasks = [
+            _fetch_one(region, sym, name, yf)
+            for region, members in _WORLD_INDICES_CONFIG.items()
+            for sym, name, yf in members
+        ]
+        # Use return_exceptions so one slow / failed task doesn't kill the
+        # batch — _fetch_one already swallows yfinance errors per-task and
+        # returns a row with empty data, so this is just belt-and-braces.
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        result = [r for r in results if not isinstance(r, BaseException)]
         payload = list_response(result, {"count": len(result)})
         set_cached(cache_key, payload, 60)
         return payload
