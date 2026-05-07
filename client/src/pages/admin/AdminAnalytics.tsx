@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AdminLayout } from "@/components/admin";
+import { AdminLayout, AdminKpiStrip, AdminKpi } from "@/components/admin";
 import {
   useAdminStats,
   useSignupAnalytics,
@@ -282,37 +282,36 @@ export default function AdminAnalytics() {
         ) : stats ? (
           <>
             {/* Key Metrics */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <MetricCard
-                title="Total Users"
-                value={stats.users.total}
-                icon={Users}
-                trend="neutral"
+            <AdminKpiStrip cols={4}>
+              <AdminKpi
+                label="Total users"
+                value={stats.users.total.toLocaleString()}
               />
-              <MetricCard
-                title="New This Week"
-                value={stats.activity.signupsThisWeek}
-                subValue={`${stats.activity.signupsToday} today`}
-                icon={UserPlus}
-                trend="up"
+              <AdminKpi
+                label="New · this week"
+                value={stats.activity.signupsThisWeek.toLocaleString()}
+                delta={`${stats.activity.signupsToday} today`}
+                tone="positive"
               />
-              <MetricCard
-                title="Active Logins"
-                value={stats.activity.loginsThisWeek}
-                subValue={`${stats.activity.loginsToday} today`}
-                icon={LogIn}
-                trend="up"
+              <AdminKpi
+                label="Active logins"
+                value={stats.activity.loginsThisWeek.toLocaleString()}
+                delta={`${stats.activity.loginsToday} today`}
+                tone="positive"
               />
-              <MetricCard
-                title="Growth Rate"
-                value={stats.users.total > 0
-                  ? Math.round((stats.activity.signupsThisMonth / stats.users.total) * 100)
-                  : 0}
-                subValue="% this month"
-                icon={TrendingUp}
-                trend="up"
+              <AdminKpi
+                label="Growth · 30d"
+                value={`${
+                  stats.users.total > 0
+                    ? Math.round(
+                        (stats.activity.signupsThisMonth / stats.users.total) * 100,
+                      )
+                    : 0
+                }%`}
+                delta="of total user base"
+                accent="gold"
               />
-            </div>
+            </AdminKpiStrip>
 
             <Tabs defaultValue="signups" className="space-y-4">
               <TabsList className="flex-wrap h-auto">
