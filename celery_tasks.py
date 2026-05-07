@@ -434,3 +434,129 @@ def refresh_options_visualizer():
         "errors": errors,
         "ts": now.isoformat(),
     }
+
+
+# =============================================================================
+# Options Chain — OI snapshot recorder (powers the OI Δ column)
+# =============================================================================
+# Beat fires every 5 minutes during NSE market hours. Each tick:
+#   1. Reads the existing `:current` snapshot from Redis.
+#   2. Writes it to `:previous` so it becomes the anchor for OI-delta calc.
+#   3. Fetches the live chain from NSE.
+#   4. Writes a fresh `:current` snapshot.
+#
+# The /api/options/{symbol} handler in main.py reads `:previous` on each
+# request and computes per-strike `oi_delta_ce` / `oi_delta_pe` = current
+# minus 5-minutes-ago. This drives the "OI Δ" column on the rebuilt
+# OptionChainPanel.
+#
+# Redis keys:
+#   options_oi:{SYMBOL}:{EXPIRY}:current   — JSON, TTL = next market open
+#   options_oi:{SYMBOL}:{EXPIRY}:previous  — JSON, same TTL
+#
+# Snapshot JSON shape:
+#   { "timestamp": iso, "expiry": "DD-Mon-YYYY",
+#     "strikes": { "22000": {"ce_oi": int, "pe_oi": int}, ... },
+#     "totals":  { "ce_oi": int, "pe_oi": int } }
+
+import json as _oi_json  # local alias — json already imported elsewhere via helpers
+
+
+def _oi_snapshot_key(symbol: str, expiry: str, slot: str) -> str:
+    return f"options_oi:{symbol.upper()}:{expiry}:{slot}"
+
+
+async def _snapshot_oi_for_symbol(symbol: str) -> dict:
+    """
+    Fetch fresh chain → rotate :current to :previous → write new :current.
+    Async because redis_cache uses redis.asyncio.
+    """
+    if not _OVZ_AVAILABLE:
+        return {"symbol": symbol, "status": "disabled"}
+
+    try:
+        from redis_cache import get_redis
+        from option_chain_visualizer import get_ttl_until_next_market_open
+    except ImportError as e:
+        return {"symbol": symbol, "status": "import_error", "error": str(e)}
+
+    chain = await asyncio.to_thread(_ovz_fetch_chain, symbol, None)
+    expiry = chain.get("expiry")
+    if not expiry:
+        return {"symbol": symbol, "status": "no_expiry"}
+
+    calls = chain.get("calls") or []
+    puts = chain.get("puts") or []
+    if not calls and not puts:
+        return {"symbol": symbol, "status": "empty_chain"}
+
+    strike_map: dict = {}
+    for leg in calls:
+        k = str(int(leg.get("strike", 0)))
+        if k not in strike_map:
+            strike_map[k] = {"ce_oi": 0, "pe_oi": 0}
+        strike_map[k]["ce_oi"] = int(leg.get("openInterest") or 0)
+    for leg in puts:
+        k = str(int(leg.get("strike", 0)))
+        if k not in strike_map:
+            strike_map[k] = {"ce_oi": 0, "pe_oi": 0}
+        strike_map[k]["pe_oi"] = int(leg.get("openInterest") or 0)
+
+    total_ce = sum(s.get("ce_oi", 0) for s in strike_map.values())
+    total_pe = sum(s.get("pe_oi", 0) for s in strike_map.values())
+
+    snapshot = {
+        "timestamp": datetime.now(_OVZ_IST).isoformat(),
+        "expiry": expiry,
+        "strikes": strike_map,
+        "totals": {"ce_oi": total_ce, "pe_oi": total_pe},
+    }
+
+    redis = await get_redis()
+    cur_key = _oi_snapshot_key(symbol, expiry, "current")
+    prev_key = _oi_snapshot_key(symbol, expiry, "previous")
+    ttl = max(60, get_ttl_until_next_market_open())
+
+    # Rotate: existing :current → :previous, then write new :current
+    existing_current = await redis.get(cur_key)
+    if existing_current:
+        await redis.set(prev_key, existing_current, ex=ttl)
+    await redis.set(cur_key, _oi_json.dumps(snapshot), ex=ttl)
+
+    return {
+        "symbol": symbol,
+        "status": "ok",
+        "expiry": expiry,
+        "strike_count": len(strike_map),
+        "total_ce_oi": total_ce,
+        "total_pe_oi": total_pe,
+        "rotated_previous": existing_current is not None,
+    }
+
+
+@celery_app.task(name="celery_tasks.snapshot_options_oi")
+def snapshot_options_oi():
+    """
+    Periodic OI snapshot. Fires every 5 min during NSE hours via beat.
+    Short-circuits outside market hours so we don't spin NSE round-trips
+    overnight or on weekends.
+    """
+    if not _OVZ_AVAILABLE:
+        return {"status": "disabled", "reason": "module_unavailable"}
+    if not _ovz_is_market_hours():
+        return {"status": "skipped", "reason": "market_closed"}
+
+    results = []
+    for symbol in _OVZ_SYMBOLS:
+        try:
+            result = asyncio.run(_snapshot_oi_for_symbol(symbol))
+            results.append(result)
+        except Exception as e:
+            logger.exception("snapshot_options_oi(%s) failed: %s", symbol, e)
+            results.append({"symbol": symbol, "status": "error", "error": str(e)})
+
+    return {
+        "status": "ok",
+        "ts": datetime.now(_OVZ_IST).isoformat(),
+        "results": results,
+    }

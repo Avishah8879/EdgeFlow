@@ -96,6 +96,7 @@ task_routes = {
     "celery_tasks.refresh_hot_quotes": {"queue": "periodic"},
     "celery_tasks.refresh_options_chain": {"queue": "periodic"},
     "celery_tasks.refresh_options_visualizer": {"queue": "periodic"},
+    "celery_tasks.snapshot_options_oi": {"queue": "periodic"},
 }
 
 # =============================================================================
@@ -150,6 +151,18 @@ if beat_schedule_enabled:
             "task": "celery_tasks.refresh_options_visualizer",
             "schedule": 60.0,
             "options": {"queue": "periodic", "expires": 59},
+        },
+
+        # Options Chain OI snapshot — every 5 minutes.
+        # Powers the "OI Δ" column on /options. Each tick rotates the
+        # :current snapshot in Redis to :previous and writes a fresh
+        # :current; main.py:/api/options reads :previous to compute
+        # 5-minute deltas per strike. Task short-circuits outside
+        # market hours.
+        "snapshot-options-oi-5min": {
+            "task": "celery_tasks.snapshot_options_oi",
+            "schedule": 300.0,
+            "options": {"queue": "periodic", "expires": 290},
         },
 
         # =====================================================================

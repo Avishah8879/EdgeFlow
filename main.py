@@ -8833,9 +8833,152 @@ _ft_depth_ws_manager = _FTDepthWSConnectionManager()
 # FinTerminal: Option Chain Endpoints
 # =============================================================================
 
+async def _read_oi_previous_snapshot(symbol: str, expiry: str) -> dict:
+    """
+    Read the `:previous` OI snapshot from Redis (written by the Celery
+    snapshot_options_oi task every 5 min). Returns a strike-keyed dict
+    {"22000": {"ce_oi": N, "pe_oi": N}} or empty dict if missing.
+    """
+    if not expiry:
+        return {}
+    try:
+        from redis_cache import get_redis
+        redis = await get_redis()
+        prev_key = f"options_oi:{symbol.upper()}:{expiry}:previous"
+        raw = await redis.get(prev_key)
+        if not raw:
+            return {}
+        import json as _json
+        snap = _json.loads(raw)
+        return snap.get("strikes") or {}
+    except Exception as e:
+        print(f"[options chain] OI snapshot read failed for {symbol}/{expiry}: {e}")
+        return {}
+
+
+def _compute_chain_summary(chain: dict) -> dict:
+    """
+    Compute per-chain aggregates: ATM strike, PCR, total CE/PE OI, ATM IV,
+    max pain. All purely client-side derivations from the chain rows we
+    already have — no extra fetches.
+
+    max pain: for each strike S, total expiration loss to option writers is
+        sum_{K} call_OI[K] * max(0, S - K) + put_OI[K] * max(0, K - S)
+    The strike S that minimizes that loss is the max-pain strike.
+    """
+    calls = chain.get("calls") or []
+    puts = chain.get("puts") or []
+    underlying = chain.get("underlying")
+
+    if not calls and not puts:
+        return {
+            "atmStrike": None, "atmIV": None, "pcr": None,
+            "totalCallOI": 0, "totalPutOI": 0, "maxPain": None,
+        }
+
+    total_ce_oi = sum(int(c.get("openInterest") or 0) for c in calls)
+    total_pe_oi = sum(int(p.get("openInterest") or 0) for p in puts)
+    pcr = (total_pe_oi / total_ce_oi) if total_ce_oi > 0 else None
+
+    # ATM strike — closest to underlying
+    atm_strike = None
+    atm_iv = None
+    if underlying:
+        all_strikes = {float(c.get("strike") or 0) for c in calls if c.get("strike")}
+        all_strikes |= {float(p.get("strike") or 0) for p in puts if p.get("strike")}
+        all_strikes.discard(0)
+        if all_strikes:
+            atm_strike = min(all_strikes, key=lambda k: abs(k - underlying))
+            # Average CE+PE IV at ATM
+            ivs = []
+            for c in calls:
+                if float(c.get("strike") or 0) == atm_strike:
+                    iv = c.get("impliedVolatility")
+                    if iv:
+                        ivs.append(float(iv))
+            for p in puts:
+                if float(p.get("strike") or 0) == atm_strike:
+                    iv = p.get("impliedVolatility")
+                    if iv:
+                        ivs.append(float(iv))
+            atm_iv = (sum(ivs) / len(ivs)) if ivs else None
+
+    # Max pain — loss to writers minimized at this strike
+    max_pain = None
+    if calls or puts:
+        ce_oi_by_strike: dict = {}
+        pe_oi_by_strike: dict = {}
+        for c in calls:
+            k = float(c.get("strike") or 0)
+            if k > 0:
+                ce_oi_by_strike[k] = int(c.get("openInterest") or 0)
+        for p in puts:
+            k = float(p.get("strike") or 0)
+            if k > 0:
+                pe_oi_by_strike[k] = int(p.get("openInterest") or 0)
+        all_k = sorted(set(list(ce_oi_by_strike.keys()) + list(pe_oi_by_strike.keys())))
+        if all_k:
+            best_strike = None
+            best_loss = float("inf")
+            for s in all_k:
+                loss = 0.0
+                for k_call, oi in ce_oi_by_strike.items():
+                    if s > k_call:
+                        loss += oi * (s - k_call)
+                for k_put, oi in pe_oi_by_strike.items():
+                    if s < k_put:
+                        loss += oi * (k_put - s)
+                if loss < best_loss:
+                    best_loss = loss
+                    best_strike = s
+            max_pain = best_strike
+
+    return {
+        "atmStrike": atm_strike,
+        "atmIV": atm_iv,
+        "pcr": pcr,
+        "totalCallOI": total_ce_oi,
+        "totalPutOI": total_pe_oi,
+        "maxPain": max_pain,
+    }
+
+
+def _annotate_chain_with_oi_delta(chain: dict, prev_strikes: dict) -> dict:
+    """
+    Attach `oiDelta` to each call/put leg = current OI - 5-min-ago OI.
+    Returns a NEW dict (doesn't mutate input).
+    """
+    if not prev_strikes:
+        # No snapshot yet — explicitly None so frontend shows "—" instead of 0
+        for leg in (chain.get("calls") or []):
+            leg["oiDelta"] = None
+        for leg in (chain.get("puts") or []):
+            leg["oiDelta"] = None
+        return chain
+
+    for leg in (chain.get("calls") or []):
+        k = str(int(leg.get("strike") or 0))
+        prev = prev_strikes.get(k)
+        cur_oi = int(leg.get("openInterest") or 0)
+        leg["oiDelta"] = (cur_oi - int(prev.get("ce_oi", 0))) if prev else None
+    for leg in (chain.get("puts") or []):
+        k = str(int(leg.get("strike") or 0))
+        prev = prev_strikes.get(k)
+        cur_oi = int(leg.get("openInterest") or 0)
+        leg["oiDelta"] = (cur_oi - int(prev.get("pe_oi", 0))) if prev else None
+    return chain
+
+
 @fastapi_app.get("/api/options/{symbol}")
 async def ft_get_option_chain(symbol: str, expiry: str = Query(None)):
-    """Fetch option chain data (NIFTY via NSE live scraper, otherwise yfinance)."""
+    """Fetch option chain data (NIFTY/BANKNIFTY via NSE live scraper, otherwise yfinance).
+
+    Response augmentations on top of the raw chain (added during the v2 panel
+    rebuild):
+    - `summary` object: atmStrike, atmIV, pcr, totalCallOI, totalPutOI, maxPain
+    - per-strike `oiDelta`: current OI minus the OI snapshotted 5 minutes ago
+      (None if the snapshot Celery task hasn't yet written one for this expiry)
+    """
     try:
         normalized_symbol = symbol.upper()
         if normalized_symbol in {"NIFTY", "NIFTY 50", "^NSEI", "BANKNIFTY", "NIFTY BANK"}:
@@ -8843,8 +8986,14 @@ async def ft_get_option_chain(symbol: str, expiry: str = Query(None)):
                 return _ft_api_response({
                     "symbol": symbol.upper(), "expiry": None,
                     "availableExpiries": [], "calls": [], "puts": [],
+                    "summary": None,
                 }, "option_chain_live module unavailable")
             live_chain = await asyncio.to_thread(_ft_fetch_nse_index_option_chain, normalized_symbol, expiry)
+            # Annotate with 5-min OI delta from the snapshot Celery writes
+            chain_expiry = live_chain.get("expiry") if isinstance(live_chain, dict) else None
+            prev_strikes = await _read_oi_previous_snapshot(normalized_symbol, chain_expiry) if chain_expiry else {}
+            live_chain = _annotate_chain_with_oi_delta(live_chain, prev_strikes)
+            live_chain["summary"] = _compute_chain_summary(live_chain)
             return _ft_api_response(live_chain, "Live NSE option chain")
 
         formatted_symbol = _ft_format_symbol(symbol)
@@ -8899,7 +9048,11 @@ async def ft_get_option_chain(symbol: str, expiry: str = Query(None)):
             "availableExpiries": available_expiries,
             "calls": [serialize_option(record) for record in calls],
             "puts": [serialize_option(record) for record in puts],
+            "underlying": None,  # yfinance fallback doesn't include spot inline
         }
+        # No OI snapshot for yfinance symbols (cron only covers NIFTY/BANKNIFTY)
+        data = _annotate_chain_with_oi_delta(data, {})
+        data["summary"] = _compute_chain_summary(data)
 
         return _ft_api_response(data)
 
@@ -8911,6 +9064,7 @@ async def ft_get_option_chain(symbol: str, expiry: str = Query(None)):
             "availableExpiries": [],
             "calls": [],
             "puts": [],
+            "summary": None,
         }, f"Option chain unavailable: {str(exc)}")
 
 
