@@ -22,6 +22,7 @@
 | ✅ World indices | `/world-indices` | [WorldIndicesPanel.tsx](EdgeFlow/client/src/components/ft/WorldIndicesPanel.tsx) | (this batch) | 5 regional sections (India / Asia-Pacific / Europe / Americas / Commodities & FX), session badges, sparklines, day range, YTD + 30d vol per index. New `/api/world-indices` endpoint. |
 | ✅ News | `/news` | [TopNewsPanel.tsx](EdgeFlow/client/src/components/ft/TopNewsPanel.tsx) | (this batch) | Featured article + 8 chip filters (All / Market / Earnings / M&A / Economic / General / Bullish / Bearish) + 2-column story list with gradient thumbnails. |
 | ☑️ IPOs | `/ipos` | [IPOPanel.tsx](EdgeFlow/client/src/components/ft/IPOPanel.tsx) | (this batch) | Coming-soon card — backend data feed (calendar, GMP, subscriptions, allotments) not yet built. Lists planned features and points users at adjacent tools. |
+| ✅ Option chain | `/options/:symbol?` | [OptionChainPanel.tsx](EdgeFlow/client/src/components/ft/OptionChainPanel.tsx) | `1b2c590` | Header strip, 4-tile KPI strip (Max Pain / PCR / ATM IV / Total OI), 13-col matrix with ATM gold highlight + ITM tinting + OI bars + OI Δ + Delta-only Greeks, 3 bottom panels (OI Profile / IV Smile / Chain Pulse incl. India VIX). Backend extended `/api/options/{symbol}` with summary + per-leg `oiDelta`. New Celery task `snapshot_options_oi` snapshots OI to Redis every 5 min for delta computation. |
 
 ## Pending (panel internals still original)
 
@@ -47,7 +48,6 @@ _All Markets/Data panels are now rebuilt — see "Done" table above._
 
 | Page | Route | Panel file | Approx. effort | Notes |
 |--|--|--|--|--|
-| ☑️ Option chain | `/options/:symbol?` | [OptionChainPanel.tsx](EdgeFlow/client/src/components/ft/OptionChainPanel.tsx) | L | Big matrix, ATM strike highlight, IV / OI / Greeks columns. |
 | ☑️ Options visualizer | `/options-visualizer/:symbol?` | [OptionsVisualiser.tsx](EdgeFlow/client/src/components/ft/OptionsVisualiser.tsx) | L | 4-row stacked Plotly. Visual chrome + control panel restyling. |
 
 ### Analysis / Tools
