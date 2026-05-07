@@ -10522,9 +10522,399 @@ async def ft_get_rrg_image(
 # FinTerminal: Market Data Extra Endpoints
 # =============================================================================
 
+# =============================================================================
+# FinTerminal: World indices (curated list across 5 regions)
+# =============================================================================
+
+# Curated global benchmarks per region. yfinance ticker → display name.
+# Indian benchmarks come from our DB (ltp_live) for live data; everything
+# else routes through yfinance (NaN-safe fallback already in place).
+_WORLD_INDICES_CONFIG = {
+    "India": [
+        # symbol, name, yfinance ticker (None means use DB lookup by symbol)
+        ("Nifty 50",      "NIFTY 50",        None),
+        ("Nifty Bank",    "BANK NIFTY",      None),
+        ("India VIX",     "INDIA VIX",       None),
+        ("SENSEX",        "BSE SENSEX",      "^BSESN"),
+    ],
+    "Asia-Pacific": [
+        ("NIKKEI",        "Nikkei 225",      "^N225"),
+        ("HSI",           "Hang Seng",       "^HSI"),
+        ("KOSPI",         "KOSPI Composite", "^KS11"),
+        ("AXJO",          "ASX 200",         "^AXJO"),
+    ],
+    "Europe": [
+        ("FTSE",          "FTSE 100",        "^FTSE"),
+        ("DAX",           "DAX",             "^GDAXI"),
+        ("CAC",           "CAC 40",          "^FCHI"),
+        ("STOXX",         "STOXX 600",       "^STOXX"),
+    ],
+    "Americas": [
+        ("SPX",           "S&P 500",         "^GSPC"),
+        ("DJI",           "Dow Jones",       "^DJI"),
+        ("IXIC",          "NASDAQ",          "^IXIC"),
+        ("GSPTSE",        "TSX Composite",   "^GSPTSE"),
+    ],
+    "Commodities & FX": [
+        ("BRENT",         "Brent crude",     "BZ=F"),
+        ("GOLD",          "Gold futures",    "GC=F"),
+        ("USDINR",        "USD / INR",       "INR=X"),
+        ("BTC",           "Bitcoin",         "BTC-USD"),
+    ],
+}
+
+# Approximate market session windows (IST, weekdays only). Used for the
+# session badge — open / pre-market / closed.
+_SESSION_HOURS_IST = {
+    "India":            (datetime.strptime("09:15", "%H:%M").time(), datetime.strptime("15:30", "%H:%M").time()),
+    "Asia-Pacific":     (datetime.strptime("06:00", "%H:%M").time(), datetime.strptime("13:00", "%H:%M").time()),  # rough
+    "Europe":           (datetime.strptime("13:00", "%H:%M").time(), datetime.strptime("21:30", "%H:%M").time()),  # rough
+    "Americas":         (datetime.strptime("19:00", "%H:%M").time(), datetime.strptime("23:59", "%H:%M").time()),  # 9:30am ET → ~19:00 IST
+    "Commodities & FX": None,  # 24h
+}
+
+
+def _world_session_status(region: str) -> str:
+    """Return 'open' | 'closed' | 'pre-market' for the region (rough IST mapping)."""
+    if region == "Commodities & FX":
+        return "open"  # 24h
+    now_ist = get_current_ist_time()
+    weekday = now_ist.weekday()  # 0=Mon, 6=Sun
+    if weekday >= 5:
+        return "closed"
+    hours = _SESSION_HOURS_IST.get(region)
+    if not hours:
+        return "closed"
+    open_t, close_t = hours
+    now_t = now_ist.time()
+    if now_t < open_t:
+        # within 90 minutes of open → pre-market
+        delta_min = (open_t.hour * 60 + open_t.minute) - (now_t.hour * 60 + now_t.minute)
+        return "pre-market" if 0 <= delta_min <= 90 else "closed"
+    if now_t > close_t:
+        return "closed"
+    return "open"
+
+
+@fastapi_app.get("/api/world-indices")
+async def ft_world_indices():
+    """
+    Curated cross-region indices for the World Indices terminal page.
+
+    Indian indices are sourced from our ltp_live table (live, real-time).
+    Global indices route through yfinance (NaN-safe fallback we already
+    hardened). Each row carries a small daily-close sparkline + computed
+    YTD return + 30-day annualized volatility.
+
+    Cached for 60 seconds globally because yfinance is rate-limited.
+    """
+    cache_key = "world_indices:v1"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    # ── helpers ────────────────────────────────────────────────────────
+    def _fetch_db_index(symbol_in_db: str) -> dict:
+        """Live LTP + day range from our ltp_live for an Indian index."""
+        conn = None
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT t.symbol, t.name, ltp.ltp, ltp.percent_change,
+                           ltp.open, ltp.high, ltp.low, ltp.close
+                    FROM ltp_live ltp
+                    JOIN tickers t ON t.id = ltp.ticker_id
+                    WHERE UPPER(t.symbol) = UPPER(%s) AND t.is_active = true
+                    LIMIT 1
+                    """,
+                    [symbol_in_db],
+                )
+                row = cur.fetchone()
+            if not row:
+                return {}
+            sym, _name, ltp_v, pct, op, hi, lo, prev = row
+            ltp_f = float(ltp_v) if ltp_v is not None else None
+            pct_f = float(pct) if pct is not None else None
+            change = None
+            if ltp_f is not None and prev is not None:
+                change = ltp_f - float(prev)
+            return {
+                "ltp": ltp_f,
+                "change": change,
+                "change_percent": pct_f,
+                "day_low": float(lo) if lo is not None else None,
+                "day_high": float(hi) if hi is not None else None,
+            }
+        except Exception as e:
+            print(f"[world-indices] DB index lookup failed for {symbol_in_db}: {e}")
+            return {}
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    def _fetch_db_history(symbol_in_db: str) -> list[float]:
+        """Last ~1 year of daily closes for an Indian index from ohlc_daily."""
+        conn = None
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT od.day, od.close
+                    FROM ohlc_daily od
+                    JOIN tickers t ON t.id = od.ticker_id
+                    WHERE UPPER(t.symbol) = UPPER(%s) AND t.is_active = true
+                      AND od.day >= CURRENT_DATE - INTERVAL '13 months'
+                    ORDER BY od.day ASC
+                    """,
+                    [symbol_in_db],
+                )
+                rows = cur.fetchall()
+            return [(r[0], float(r[1])) for r in rows if r[1] is not None]
+        except Exception as e:
+            print(f"[world-indices] DB history lookup failed for {symbol_in_db}: {e}")
+            return []
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    def _fetch_yf_history(yf_ticker: str):
+        """Fetch ~1Y of daily closes via yfinance with NaN-safe filter."""
+        try:
+            ticker = yf.Ticker(yf_ticker)
+            history = ticker.history(period="1y", interval="1d")
+            if history is None or history.empty:
+                return None, []
+            # most recent valid bar
+            valid = history.dropna(subset=["Close"])
+            if valid.empty:
+                return None, []
+            last_close = float(valid["Close"].iloc[-1])
+            prev_close = float(valid["Close"].iloc[-2]) if len(valid) >= 2 else last_close
+            day_low = float(valid["Low"].iloc[-1]) if not pd.isna(valid["Low"].iloc[-1]) else last_close
+            day_high = float(valid["High"].iloc[-1]) if not pd.isna(valid["High"].iloc[-1]) else last_close
+            change = last_close - prev_close
+            change_pct = (change / prev_close * 100.0) if prev_close > 0 else 0.0
+            series = [(idx.date(), float(row["Close"])) for idx, row in valid.iterrows() if not pd.isna(row["Close"])]
+            return {
+                "ltp": last_close,
+                "change": change,
+                "change_percent": change_pct,
+                "day_low": day_low,
+                "day_high": day_high,
+            }, series
+        except Exception as e:
+            print(f"[world-indices] yfinance lookup failed for {yf_ticker}: {e}")
+            return None, []
+
+    def _ytd_return(series):
+        if not series:
+            return None
+        last_day, last_close = series[-1]
+        # day is a date or datetime
+        if hasattr(last_day, "date"):
+            last_day = last_day.date()
+        jan1 = last_day.replace(month=1, day=1)
+        anchor = None
+        for d, c in series:
+            d_norm = d.date() if hasattr(d, "date") else d
+            if d_norm >= jan1:
+                anchor = c
+                break
+        if anchor is None or anchor <= 0:
+            return None
+        return (last_close / anchor - 1.0) * 100.0
+
+    def _vol_30d(series):
+        if len(series) < 21:
+            return None
+        tail = series[-30:]
+        closes = [c for _, c in tail]
+        rets = [closes[i] / closes[i - 1] - 1.0 for i in range(1, len(closes)) if closes[i - 1] > 0]
+        if len(rets) < 5:
+            return None
+        mean = sum(rets) / len(rets)
+        var = sum((r - mean) ** 2 for r in rets) / max(1, len(rets) - 1)
+        return (var ** 0.5) * (252 ** 0.5) * 100.0
+
+    def _build_sparkline(series, max_points: int = 30):
+        """Return last N closes as a flat list for client-side rendering."""
+        if not series:
+            return []
+        return [c for _, c in series[-max_points:]]
+
+    # ── assemble ───────────────────────────────────────────────────────
+    def _fetch_all():
+        out = []
+        for region, members in _WORLD_INDICES_CONFIG.items():
+            session = _world_session_status(region)
+            for symbol, name, yf_ticker in members:
+                quote = {}
+                series = []
+                if yf_ticker is None:
+                    # Indian — use DB
+                    quote = _fetch_db_index(symbol)
+                    series = _fetch_db_history(symbol)
+                else:
+                    # Global — use yfinance
+                    yf_quote, series = _fetch_yf_history(yf_ticker)
+                    if yf_quote:
+                        quote = yf_quote
+                ytd = _ytd_return(series)
+                vol = _vol_30d(series)
+                spark = _build_sparkline(series, 30)
+                out.append({
+                    "symbol": symbol,
+                    "name": name,
+                    "region": region,
+                    "session": session,
+                    "ltp": quote.get("ltp"),
+                    "change": quote.get("change"),
+                    "change_percent": quote.get("change_percent"),
+                    "day_low": quote.get("day_low"),
+                    "day_high": quote.get("day_high"),
+                    "ytd_return": ytd,
+                    "volatility_30d": vol,
+                    "sparkline": spark,
+                })
+        return out
+
+    try:
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(None, _fetch_all)
+        payload = list_response(result, {"count": len(result)})
+        set_cached(cache_key, payload, 60)
+        return payload
+    except Exception as exc:
+        logging.exception("world-indices failed")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch world indices: {str(exc)}") from exc
+
+
 @fastapi_app.get("/api/most-active")
-async def ft_get_most_active():
-    return _ft_api_response([], "Data unavailable")
+async def ft_get_most_active(
+    sort: str = Query("volume", description="Sort: volume | value | gainers | losers | high52w | low52w"),
+    limit: int = Query(25, ge=5, le=100),
+    proximity_pct: float = Query(1.0, ge=0.0, le=10.0, description="For 52w sorts: how close (in %) to the extreme to count"),
+):
+    """
+    Universal market-activity ranking endpoint backing the Most-active panel.
+    Joins ltp_live × tickers × stock_fundamentals and returns rows ordered per
+    `sort`. Each row carries the data needed for all 6 sub-tabs (volume / value
+    / gainers / losers / 52w high / 52w low) so the frontend can pivot client-
+    side without re-querying.
+
+    Returns per row: symbol, name, sector, ltp, change_percent, volume,
+    value_cr (= ltp * volume / 1e7), fifty_two_week_high/low, band_position
+    (0 at low → 1 at high).
+    """
+    sort_norm = sort.lower().strip()
+
+    sort_clauses = {
+        "volume": "ORDER BY ltp.trade_volume DESC NULLS LAST",
+        "value": "ORDER BY (ltp.ltp * COALESCE(ltp.trade_volume, 0)) DESC NULLS LAST",
+        "gainers": "ORDER BY ltp.percent_change DESC NULLS LAST",
+        "losers": "ORDER BY ltp.percent_change ASC NULLS LAST",
+        "high52w": "ORDER BY ltp.percent_change DESC NULLS LAST",
+        "low52w": "ORDER BY ltp.percent_change ASC NULLS LAST",
+    }
+    order_by = sort_clauses.get(sort_norm, sort_clauses["volume"])
+
+    where_extras = []
+    where_params: list = []
+    if sort_norm == "high52w":
+        where_extras.append(
+            "sf.fifty_two_week_high IS NOT NULL AND sf.fifty_two_week_high > 0 "
+            "AND ltp.ltp >= sf.fifty_two_week_high * %s"
+        )
+        where_params.append(1.0 - (proximity_pct / 100.0))
+    elif sort_norm == "low52w":
+        where_extras.append(
+            "sf.fifty_two_week_low IS NOT NULL AND sf.fifty_two_week_low > 0 "
+            "AND ltp.ltp <= sf.fifty_two_week_low * %s"
+        )
+        where_params.append(1.0 + (proximity_pct / 100.0))
+
+    where_block = ""
+    if where_extras:
+        where_block = " AND " + " AND ".join(where_extras)
+
+    cache_key = f"most_active:{sort_norm}:{limit}:{proximity_pct}"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    def _fetch():
+        conn = None
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                query = f"""
+                    SELECT t.symbol,
+                           COALESCE(sf.long_name, t.name) AS name,
+                           sf.sector,
+                           ltp.ltp,
+                           ltp.percent_change,
+                           ltp.trade_volume AS volume,
+                           sf.fifty_two_week_high,
+                           sf.fifty_two_week_low
+                    FROM ltp_live ltp
+                    JOIN tickers t ON t.id = ltp.ticker_id
+                    LEFT JOIN stock_fundamentals sf ON sf.ticker_id = t.id
+                    WHERE t.is_active = true
+                      AND ltp.ltp IS NOT NULL
+                      AND ltp.trade_volume IS NOT NULL
+                      AND ltp.trade_volume > 0
+                      {where_block}
+                    {order_by}
+                    LIMIT %s
+                """
+                cur.execute(query, where_params + [limit])
+                rows = cur.fetchall()
+
+            output = []
+            for row in rows:
+                symbol, name, sector, ltp_val, pct, vol, hi52, lo52 = row
+                ltp_f = float(ltp_val) if ltp_val is not None else None
+                vol_f = float(vol) if vol is not None else None
+                hi_f = float(hi52) if hi52 is not None else None
+                lo_f = float(lo52) if lo52 is not None else None
+                value_cr = (
+                    (ltp_f * vol_f) / 1e7
+                    if ltp_f is not None and vol_f is not None
+                    else None
+                )
+                band_pos = None
+                if hi_f and lo_f and hi_f > lo_f and ltp_f is not None:
+                    band_pos = max(0.0, min(1.0, (ltp_f - lo_f) / (hi_f - lo_f)))
+                output.append({
+                    "symbol": symbol,
+                    "name": name,
+                    "sector": sector,
+                    "ltp": ltp_f,
+                    "change_percent": float(pct) if pct is not None else None,
+                    "volume": vol_f,
+                    "value_cr": value_cr,
+                    "fifty_two_week_high": hi_f,
+                    "fifty_two_week_low": lo_f,
+                    "band_position": band_pos,
+                })
+            return output
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    try:
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(None, _fetch)
+        payload = list_response(result, {"sort": sort_norm, "count": len(result)})
+        # Cache for 60 seconds (data refreshes every minute)
+        set_cached(cache_key, payload, 60)
+        return payload
+    except Exception as exc:
+        logging.exception("most-active failed")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch most active: {str(exc)}") from exc
 
 
 @fastapi_app.get("/api/52week/{symbol}")

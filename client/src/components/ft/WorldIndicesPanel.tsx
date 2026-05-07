@@ -1,101 +1,265 @@
-import { useState } from 'react';
-import { ArrowUp, ArrowDown, RefreshCw, Globe, Loader2, AlertCircle } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Loader2, AlertCircle, RefreshCw, ArrowUp, ArrowDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { getCSSColor } from '@/lib/theme-utils';
 
-interface MarketIndex {
+// ─── Types ───────────────────────────────────────────────────────────────────
+type Region =
+  | 'India'
+  | 'Asia-Pacific'
+  | 'Europe'
+  | 'Americas'
+  | 'Commodities & FX';
+
+type Session = 'open' | 'closed' | 'pre-market';
+
+interface IndexRow {
   symbol: string;
   name: string;
-  region: 'Americas' | 'Europe' | 'Asia-Pacific';
-  value: number;
-  change: number;
-  changePercent: number;
-  dayLow: number;
-  dayHigh: number;
-  volume?: number;
-  lastUpdate: string;
+  region: Region;
+  session: Session;
+  ltp: number | null;
+  change: number | null;
+  change_percent: number | null;
+  day_low: number | null;
+  day_high: number | null;
+  ytd_return: number | null;
+  volatility_30d: number | null;
+  sparkline: number[];
 }
 
-// No mock sparkline generation - zero tolerance policy
-const generateSparkline = (value: number, changePercent: number): number[] => {
-  // Return empty array - no mock data allowed
-  return [];
+const REGIONS: Region[] = [
+  'India',
+  'Asia-Pacific',
+  'Europe',
+  'Americas',
+  'Commodities & FX',
+];
+
+// ─── Formatters ──────────────────────────────────────────────────────────────
+const fmtPrice = (n: number | null, d = 2) =>
+  n == null || !Number.isFinite(n)
+    ? '—'
+    : n.toLocaleString('en-IN', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+const fmtPct = (n: number | null, d = 2) =>
+  n == null || !Number.isFinite(n) ? '—' : `${n >= 0 ? '+' : ''}${n.toFixed(d)}%`;
+
+const fmtChange = (n: number | null) => {
+  if (n == null || !Number.isFinite(n)) return '—';
+  const sign = n >= 0 ? '+' : '';
+  return `${sign}${n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-// Sparkline component
-const Sparkline = ({ data, isPositive }: { data: number[]; isPositive: boolean }) => {
-  const min = Math.min(...data);
-  const max = Math.max(...data);
+// ─── Sparkline (inline SVG) ──────────────────────────────────────────────────
+function Sparkline({
+  values,
+  positive,
+}: {
+  values: number[];
+  positive: boolean;
+}) {
+  if (!values || values.length < 2) {
+    return <div className="w-[80px] h-[24px]" />;
+  }
+  const min = Math.min(...values);
+  const max = Math.max(...values);
   const range = max - min || 1;
-  
-  const points = data.map((value, i) => {
-    const x = (i / (data.length - 1)) * 100;
-    const y = 100 - ((value - min) / range) * 100;
-    return `${x},${y}`;
-  }).join(' ');
-  
+  const width = 80;
+  const height = 24;
+
+  const points = values
+    .map((v, i) => {
+      const x = (i / (values.length - 1)) * width;
+      const y = height - ((v - min) / range) * height;
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(' ');
+
+  const color = positive ? getCSSColor('--positive') : getCSSColor('--negative');
+
   return (
     <svg
-      width="60"
-      height="20"
-      viewBox="0 0 100 100"
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
-      className={`inline-block ${isPositive ? 'text-positive' : 'text-negative'}`}
+      className="inline-block flex-shrink-0"
     >
       <polyline
         points={points}
         fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
+        stroke={color}
+        strokeWidth={1.5}
         vectorEffect="non-scaling-stroke"
       />
     </svg>
   );
-};
+}
 
+// ─── Day-range bar ───────────────────────────────────────────────────────────
+function DayRangeBar({
+  ltp,
+  low,
+  high,
+}: {
+  ltp: number | null;
+  low: number | null;
+  high: number | null;
+}) {
+  if (
+    ltp == null ||
+    low == null ||
+    high == null ||
+    !(high > low) ||
+    !Number.isFinite(ltp)
+  ) {
+    return null;
+  }
+  const pct = Math.max(0, Math.min(1, (ltp - low) / (high - low))) * 100;
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-[10px] font-mono tabular-nums text-muted-foreground">
+        <span>{fmtPrice(low, 2)}</span>
+        <span>{fmtPrice(high, 2)}</span>
+      </div>
+      <div className="relative h-1 rounded-full bg-muted overflow-hidden">
+        <div
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-2 w-1 bg-[hsl(var(--brand-gold))] rounded-full"
+          style={{ left: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─── Session badge ───────────────────────────────────────────────────────────
+function SessionBadge({ session }: { session: Session }) {
+  const styles: Record<Session, string> = {
+    open: 'bg-[hsl(var(--positive))]/15 text-positive border-[hsl(var(--positive))]/30',
+    'pre-market': 'bg-[hsl(var(--brand-gold))]/15 text-[hsl(var(--brand-gold))] border-[hsl(var(--brand-gold))]/30',
+    closed: 'bg-muted text-muted-foreground border-border',
+  };
+  const labels: Record<Session, string> = {
+    open: 'Open',
+    'pre-market': 'Pre-market',
+    closed: 'Closed',
+  };
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 text-[9.5px] font-bold uppercase tracking-uppercase px-1.5 py-0.5 rounded border',
+        styles[session],
+      )}
+    >
+      {session === 'open' && (
+        <span className="w-1.5 h-1.5 rounded-full bg-positive animate-pulse" />
+      )}
+      {labels[session]}
+    </span>
+  );
+}
+
+// ─── Index card ──────────────────────────────────────────────────────────────
+function IndexCard({ row }: { row: IndexRow }) {
+  const positive = (row.change ?? 0) >= 0;
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 hover:border-[hsl(var(--brand-gold))]/40 hover:shadow-card transition-all duration-base">
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <div className="font-display text-[15px] font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground truncate">
+              {row.symbol}
+            </div>
+            <SessionBadge session={row.session} />
+          </div>
+          <div className="text-[10.5px] text-muted-foreground truncate" title={row.name}>
+            {row.name}
+          </div>
+        </div>
+        <Sparkline values={row.sparkline} positive={positive} />
+      </div>
+
+      <div className="flex items-end justify-between gap-2 mb-3">
+        <div className="font-mono text-[22px] font-bold tabular-nums text-foreground leading-none">
+          {fmtPrice(row.ltp, 2)}
+        </div>
+        <div
+          className={cn(
+            'font-mono text-[12px] font-bold tabular-nums leading-tight text-right',
+            positive ? 'text-positive' : 'text-negative',
+          )}
+        >
+          <div className="flex items-center justify-end gap-1">
+            {positive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+            {fmtChange(row.change)}
+          </div>
+          <div className="mt-0.5">{fmtPct(row.change_percent)}</div>
+        </div>
+      </div>
+
+      <DayRangeBar ltp={row.ltp} low={row.day_low} high={row.day_high} />
+
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-3 pt-3 border-t border-border">
+        <div className="flex justify-between">
+          <span className="text-[10px] uppercase tracking-uppercase font-bold text-muted-foreground">
+            YTD
+          </span>
+          <span
+            className={cn(
+              'font-mono text-[11px] font-bold tabular-nums',
+              row.ytd_return == null
+                ? 'text-muted-foreground'
+                : row.ytd_return >= 0
+                  ? 'text-positive'
+                  : 'text-negative',
+            )}
+          >
+            {fmtPct(row.ytd_return, 1)}
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-[10px] uppercase tracking-uppercase font-bold text-muted-foreground">
+            30d vol
+          </span>
+          <span className="font-mono text-[11px] tabular-nums text-foreground">
+            {row.volatility_30d == null ? '—' : `${row.volatility_30d.toFixed(1)}%`}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Panel ───────────────────────────────────────────────────────────────────
 export function WorldIndicesPanel() {
-  const [selectedRegion, setSelectedRegion] = useState<'all' | 'Americas' | 'Europe' | 'Asia-Pacific'>('all');
+  const [region, setRegion] = useState<'all' | Region>('all');
 
-  const { data: indices, isLoading, isError, refetch } = useQuery<MarketIndex[]>({
-    queryKey: ['/api/indices'],
-    staleTime: 60000, // 1 minute
-    refetchInterval: 60000, // Auto-refresh every minute
-    select: (raw: any): MarketIndex[] => {
-      const arr = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
-      return arr.map((item: any): MarketIndex => ({
-        symbol: item.symbol ?? '',
-        name: item.name ?? item.symbol ?? '',
-        region: (item.region as MarketIndex['region']) ?? 'Asia-Pacific',
-        value: Number(item.value ?? item.ltp ?? item.last_price ?? 0),
-        change: Number(item.change ?? 0),
-        changePercent: Number(item.changePercent ?? item.change_pct ?? item.change_percent ?? 0),
-        dayLow: Number(item.dayLow ?? item.low ?? item.value ?? item.ltp ?? 0),
-        dayHigh: Number(item.dayHigh ?? item.high ?? item.value ?? item.ltp ?? 0),
-        volume: item.volume ? Number(item.volume) : undefined,
-        lastUpdate: item.lastUpdate ?? item.updated_at ?? new Date().toISOString(),
-      }));
-    },
+  const { data, isLoading, isError, refetch, isFetching } = useQuery<IndexRow[]>({
+    queryKey: ['/api/world-indices'],
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+    select: (raw: any) =>
+      Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [],
   });
 
-  const formatVolume = (volume?: number): string => {
-    if (!volume) return 'N/A';
-    if (volume >= 1000000000) return `${(volume / 1000000000).toFixed(1)}B`;
-    if (volume >= 1000000) return `${(volume / 1000000).toFixed(1)}M`;
-    return volume.toLocaleString();
-  };
-
-  const calculateDayProgress = (current: number, low: number, high: number): number => {
-    if (high === low) return 50;
-    return ((current - low) / (high - low)) * 100;
-  };
+  const grouped = useMemo(() => {
+    const out: Partial<Record<Region, IndexRow[]>> = {};
+    for (const row of data ?? []) {
+      if (region !== 'all' && row.region !== region) continue;
+      const r = row.region as Region;
+      if (!out[r]) out[r] = [];
+      out[r]!.push(row);
+    }
+    return out;
+  }, [data, region]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" data-testid="loading-spinner-indices" />
+        <Loader2 className="w-6 h-6 animate-spin text-[hsl(var(--brand-gold))]" />
       </div>
     );
   }
@@ -103,165 +267,83 @@ export function WorldIndicesPanel() {
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 bg-background">
-        <AlertCircle className="w-8 h-8 text-destructive" data-testid="error-icon-indices" />
-        <p className="text-sm text-muted-foreground" data-testid="text-error-message">Failed to load world indices</p>
-        <Button 
-          onClick={() => refetch()} 
-          size="sm"
-          data-testid="button-retry-indices"
-        >
+        <AlertCircle className="w-8 h-8 text-destructive" />
+        <p className="text-sm text-muted-foreground">Failed to load world indices</p>
+        <Button onClick={() => refetch()} size="sm">
           Retry
         </Button>
       </div>
     );
   }
 
-  const filteredIndices = selectedRegion === 'all' 
-    ? indices || []
-    : (indices || []).filter(index => index.region === selectedRegion);
-
-  const groupedIndices = filteredIndices.reduce((acc, index) => {
-    if (!acc[index.region]) {
-      acc[index.region] = [];
-    }
-    acc[index.region].push(index);
-    return acc;
-  }, {} as Record<string, MarketIndex[]>);
-
-  const lastRefresh = new Date();
+  const rows = data ?? [];
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <div className="p-3 border-b border-border">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-primary" />
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">World Indices</span>
-            <span className="text-[10px] text-muted-foreground" data-testid="text-last-update">
-              Last: {lastRefresh.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-            </span>
+    <div className="h-full bg-background overflow-y-auto">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 space-y-5">
+        {/* Region tab strip + refresh */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="inline-flex rounded-full border border-border overflow-hidden bg-card flex-wrap">
+            {(['all', ...REGIONS] as const).map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRegion(r)}
+                className={cn(
+                  'h-8 px-3.5 text-[11.5px] font-bold whitespace-nowrap transition-colors',
+                  region === r
+                    ? 'bg-[hsl(var(--brand-navy))] text-white dark:bg-[hsl(var(--brand-gold))] dark:text-[hsl(var(--brand-navy))]'
+                    : 'text-muted-foreground hover:bg-muted',
+                )}
+              >
+                {r === 'all' ? 'All regions' : r}
+              </button>
+            ))}
           </div>
           <Button
             size="icon"
             variant="ghost"
-            className="h-6 w-6"
+            className="h-7 w-7"
             onClick={() => refetch()}
-            data-testid="button-refresh-indices"
+            disabled={isFetching}
+            title="Refresh"
           >
-            <RefreshCw className="h-3 w-3" />
+            <RefreshCw className={cn('h-3.5 w-3.5', isFetching && 'animate-spin')} />
           </Button>
         </div>
 
-        <Tabs value={selectedRegion} onValueChange={(value: any) => setSelectedRegion(value)}>
-          <TabsList className="grid w-full grid-cols-4 h-7">
-            <TabsTrigger value="all" className="text-[10px] h-6" data-testid="tab-all">All</TabsTrigger>
-            <TabsTrigger value="Americas" className="text-[10px] h-6" data-testid="tab-americas">Americas</TabsTrigger>
-            <TabsTrigger value="Europe" className="text-[10px] h-6" data-testid="tab-europe">Europe</TabsTrigger>
-            <TabsTrigger value="Asia-Pacific" className="text-[10px] h-6" data-testid="tab-asia">Asia-Pacific</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
-      <ScrollArea className="flex-1">
-        <div className="p-3">
-          {Object.entries(groupedIndices).map(([region, regionIndices]) => (
-            <div key={region} className="mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Globe className="w-4 h-4 text-primary" />
-                <span className="text-xs uppercase tracking-wider text-muted-foreground">{region}</span>
-                <div className="flex-1 h-[1px] bg-border"></div>
-              </div>
-
-              {regionIndices.map((index) => {
-                const sparklineData = generateSparkline(index.value, index.changePercent);
-                // Calculate year range estimate (typically 15-30% range)
-                const yearRange = index.value * 0.22;
-                const yearLow = index.value - yearRange / 2;
-                const yearHigh = index.value + yearRange / 2;
-                
-                return (
-                  <div
-                    key={index.symbol}
-                    className="mb-3 p-3 border border-border rounded bg-card hover:bg-accent transition-colors cursor-pointer"
-                    data-testid={`row-index-${index.symbol}`}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-primary font-mono text-sm font-semibold" data-testid={`text-symbol-${index.symbol}`}>
-                            {index.symbol}
-                          </span>
-                          <span className="text-foreground text-sm" data-testid={`text-name-${index.symbol}`}>
-                            {index.name}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 mt-1">
-                          <span className="text-xl font-mono text-foreground" data-testid={`text-value-${index.symbol}`}>
-                            {index.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
-                          <div className={`flex items-center gap-1 ${index.change >= 0 ? 'text-positive' : 'text-negative'}`}>
-                            {index.change >= 0 ? (
-                              <ArrowUp className="h-4 w-4" />
-                            ) : (
-                              <ArrowDown className="h-4 w-4" />
-                            )}
-                            <span className="font-mono text-sm" data-testid={`text-change-${index.symbol}`}>
-                              {index.change >= 0 ? '+' : ''}{index.change.toFixed(2)}
-                            </span>
-                            <span className="font-mono text-sm" data-testid={`text-change-percent-${index.symbol}`}>
-                              ({index.changePercent >= 0 ? '+' : ''}{index.changePercent.toFixed(2)}%)
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Sparkline data={sparklineData} isPositive={index.change >= 0} />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3 text-[10px]">
-                      <div>
-                        <div className="text-muted-foreground uppercase tracking-wider mb-1">Day Range</div>
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-foreground font-mono">
-                            <span data-testid={`text-day-low-${index.symbol}`}>{index.dayLow.toLocaleString()}</span>
-                            <span data-testid={`text-day-high-${index.symbol}`}>{index.dayHigh.toLocaleString()}</span>
-                          </div>
-                          <Progress 
-                            value={calculateDayProgress(index.value, index.dayLow, index.dayHigh)} 
-                            className="h-1"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground uppercase tracking-wider mb-1">52W Range</div>
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-foreground font-mono">
-                            <span data-testid={`text-year-low-${index.symbol}`}>{yearLow.toFixed(2)}</span>
-                            <span data-testid={`text-year-high-${index.symbol}`}>{yearHigh.toFixed(2)}</span>
-                          </div>
-                          <Progress 
-                            value={calculateDayProgress(index.value, yearLow, yearHigh)} 
-                            className="h-1"
-                          />
-                        </div>
-                      </div>
-                      {index.volume && (
-                        <div>
-                          <div className="text-muted-foreground uppercase tracking-wider mb-1">Volume</div>
-                          <div className="text-foreground font-mono" data-testid={`text-volume-${index.symbol}`}>
-                            {formatVolume(index.volume)}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+        {/* Regional sections */}
+        {rows.length === 0 ? (
+          <div className="rounded-xl border border-border bg-card p-12 text-center">
+            <p className="text-sm text-muted-foreground">No index data available</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {REGIONS.map((r) => {
+              const items = grouped[r] ?? [];
+              if (items.length === 0) return null;
+              return (
+                <section key={r}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="font-display text-[13px] font-bold uppercase tracking-uppercase text-[hsl(var(--brand-navy))] dark:text-foreground">
+                      {r}
+                    </span>
+                    <span className="text-[10.5px] font-bold uppercase tracking-uppercase text-muted-foreground">
+                      {items.length} {items.length === 1 ? 'instrument' : 'instruments'}
+                    </span>
+                    <div className="flex-1 h-px bg-border" />
                   </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {items.map((row) => (
+                      <IndexCard key={`${r}-${row.symbol}`} row={row} />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

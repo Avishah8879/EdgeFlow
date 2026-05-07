@@ -18,6 +18,10 @@
 | ✅ Black-Scholes calculator | `/black-scholes` | [BlackScholesPanel.tsx](EdgeFlow/client/src/components/ft/BlackScholesPanel.tsx) | `6937d90` | 340px sidebar with sliders, gold-bordered theoretical-price card, 5-col Greeks row, dual charts, formula card. New IV solver + dividend yield. |
 | ✅ Stock comparator | `/compare` | [GraphComparisonPanel.tsx](EdgeFlow/client/src/components/ft/GraphComparisonPanel.tsx) | `3c40202` | Pill selector, rebased perf chart with 1M-5Y + return-mode tabs, 15-row metrics table, correlation matrix, risk-return scatter. New `/api/compare/metrics` endpoint. |
 | ✅ Monitor (multi-asset workspace) | `/monitor` | [QuickMonitor.tsx](EdgeFlow/client/src/components/ft/QuickMonitor.tsx) | `fa04f6c` | 3 quote tiles + 4 ranking tables (gainers / losers / 52w highs / 52w lows) + FII/DII / News / Sector heat. New `/api/monitor/sector-heat` and `/api/monitor/extremes` endpoints. |
+| ✅ Most active | `/most-active` | [MostActivePanel.tsx](EdgeFlow/client/src/components/ft/MostActivePanel.tsx) | (this batch) | 6 sub-tabs (Volume / Value / Gainers / Losers / 52w high / 52w low), 4 hero cards, Top-25 table with sector + value-cr + 52w-band bar + volume bar. New `/api/most-active` implementation. |
+| ✅ World indices | `/world-indices` | [WorldIndicesPanel.tsx](EdgeFlow/client/src/components/ft/WorldIndicesPanel.tsx) | (this batch) | 5 regional sections (India / Asia-Pacific / Europe / Americas / Commodities & FX), session badges, sparklines, day range, YTD + 30d vol per index. New `/api/world-indices` endpoint. |
+| ✅ News | `/news` | [TopNewsPanel.tsx](EdgeFlow/client/src/components/ft/TopNewsPanel.tsx) | (this batch) | Featured article + 8 chip filters (All / Market / Earnings / M&A / Economic / General / Bullish / Bearish) + 2-column story list with gradient thumbnails. |
+| ☑️ IPOs | `/ipos` | [IPOPanel.tsx](EdgeFlow/client/src/components/ft/IPOPanel.tsx) | (this batch) | Coming-soon card — backend data feed (calendar, GMP, subscriptions, allotments) not yet built. Lists planned features and points users at adjacent tools. |
 
 ## Pending (panel internals still original)
 
@@ -28,12 +32,7 @@ a self-contained per-page rebuild.
 
 ### Markets / Data
 
-| Page | Route | Panel file | Approx. effort | Notes |
-|--|--|--|--|--|
-| ☑️ Most active | `/most-active` | [MostActivePanel.tsx](EdgeFlow/client/src/components/ft/MostActivePanel.tsx) | S | Already a clean table; restyling only. Real data via `/api/most-active`. |
-| ☑️ World indices | `/world-indices` | [WorldIndicesPanel.tsx](EdgeFlow/client/src/components/ft/WorldIndicesPanel.tsx) | M | 12-card grid of global benchmarks. Verify yfinance fallback after recent NaN fix. |
-| ☑️ News | `/news` | [TopNewsPanel.tsx](EdgeFlow/client/src/components/ft/TopNewsPanel.tsx) | S | List view; visual upgrade only. |
-| ☑️ IPOs | `/ipos` | [IPOPanel.tsx](EdgeFlow/client/src/components/ft/IPOPanel.tsx) | M | Tabs (upcoming / open / listed) + table. |
+_All Markets/Data panels are now rebuilt — see "Done" table above._
 
 ### Charts / Trading
 

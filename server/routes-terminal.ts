@@ -152,6 +152,15 @@ export function registerTerminalRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/world-indices", async (req, res) => {
+    try {
+      const result = await proxyToPython(`/api/world-indices`, buildPythonOptions(req));
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'World indices unavailable');
+    }
+  });
+
   // ── Options & Derivatives ──────────────────────────────────────────────
 
   app.get("/api/options/:symbol", async (req, res) => {
