@@ -132,6 +132,7 @@ router.post(
       const session = await createJwtSessionPayload(user, {
         deviceInfo: userAgent,
         ipAddress,
+        platformId: req.platform!.id,
       });
 
       // Tack on the live coin balance so callers don't need a second hop

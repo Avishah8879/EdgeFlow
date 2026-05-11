@@ -21,6 +21,7 @@ logs/
 .env.production
 .env.*.local
 .local/
+.handoff-secrets/
 .python-version
 server/public/
 uploads/

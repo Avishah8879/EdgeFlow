@@ -33,11 +33,13 @@ const defaultOrigins = [
   'http://localhost:5000',  // Production self-origin
   process.env.VITE_GRADIO_BASE_URL,  // Python backend URL
   process.env.VITE_AUTH_BASE_URL,     // Node backend URL (ngrok)
+  process.env.VITE_OPTIONS_TRADING_URL, // OptionsFlow / sibling app origin
 ];
 
-const allowedOrigins = corsOriginsEnv
-  ? corsOriginsEnv.split(',').map(o => o.trim()).filter(Boolean)
-  : defaultOrigins.filter(Boolean);
+const allowedOrigins = Array.from(new Set([
+  ...defaultOrigins.filter(Boolean),
+  ...corsOriginsEnv.split(',').map(o => o.trim()).filter(Boolean),
+]));
 
 console.log('[CORS] Allowed origins:', allowedOrigins);
 console.log('[CORS] CORS_ORIGINS env:', process.env.CORS_ORIGINS);

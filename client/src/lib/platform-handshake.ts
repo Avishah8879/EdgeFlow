@@ -18,9 +18,26 @@
 
 function getTrustedOrigins(): Set<string> {
   const raw = (import.meta.env.VITE_TRUSTED_RETURN_ORIGINS as string | undefined) ?? "";
-  return new Set(
-    raw.split(",").map((s) => s.trim()).filter(Boolean),
-  );
+  const trusted = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  const optionsFlowUrl = (import.meta.env.VITE_OPTIONS_TRADING_URL as string | undefined)?.trim();
+  if (optionsFlowUrl) {
+    try {
+      trusted.push(new URL(optionsFlowUrl).origin);
+    } catch {
+      // Ignore invalid optional config; explicit trusted origins still apply.
+    }
+  }
+  return new Set(trusted);
+}
+
+function isSameHostOptionsFlow(origin: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const url = new URL(origin);
+    return url.hostname === window.location.hostname && url.port === "8088";
+  } catch {
+    return false;
+  }
 }
 
 function isLocalhost(origin: string): boolean {
@@ -43,6 +60,7 @@ export function isTrustedReturnUrl(returnUrl: string): boolean {
 
   const trusted = getTrustedOrigins();
   if (trusted.has(url.origin)) return true;
+  if (isSameHostOptionsFlow(url.origin)) return true;
   if (import.meta.env.DEV && isLocalhost(url.origin)) return true;
   return false;
 }
