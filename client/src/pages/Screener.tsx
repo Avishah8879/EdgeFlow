@@ -79,6 +79,7 @@ export default function Screener() {
   const { trackFeature } = useTracking();
   const startTimeRef = useRef<number | null>(null);
   const trackedSummaryRef = useRef<string | null>(null);
+  const autorunConsumedRef = useRef(false);
 
   // Save mutation
   const saveResultMutation = useSaveScreenerResult();
@@ -277,6 +278,28 @@ export default function Screener() {
       period: "1y",
     });
   };
+
+  useEffect(() => {
+    if (autorunConsumedRef.current || isRunning) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("autorun") !== "1") return;
+
+    const expr = params.get("expr");
+    const decodedExpr = expr ? decodeURIComponent(expr).trim() : expression.trim();
+    if (!decodedExpr) return;
+
+    autorunConsumedRef.current = true;
+    setExpression(decodedExpr);
+    const parsed = parse(decodedExpr, "expert");
+    if (parsed.ok) {
+      setBuilderTree(parsed.tree);
+      lastBuilderCompiledRef.current = compile(parsed.tree);
+      setUnparseableReason(undefined);
+    }
+    startTimeRef.current = Date.now();
+    trackedSummaryRef.current = null;
+    runScreener({ expression: decodedExpr, period: "1y" });
+  }, [expression, isRunning, runScreener]);
 
   // Track feature usage when screener completes
   useEffect(() => {

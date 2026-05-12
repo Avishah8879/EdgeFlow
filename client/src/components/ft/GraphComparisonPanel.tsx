@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, Fragment } from 'react';
+import { useState, useEffect, useMemo, useRef, Fragment } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Plus, X, Info } from 'lucide-react';
+import { Loader2, Plus, X, Info } from 'lucide-react';
 import {
   CartesianGrid,
   Line,
@@ -40,6 +40,7 @@ import { PairRegressionChart } from '@/components/ft/pair-trading/charts/PairReg
 import { ResidualsChart } from '@/components/ft/pair-trading/charts/ResidualsChart';
 import { cn } from '@/lib/utils';
 import { getCSSColor } from '@/lib/theme-utils';
+import { useSymbolSearch } from '@/hooks/useSymbolSearch';
 
 interface DailyPoint {
   date: string;
@@ -134,6 +135,9 @@ const fmtVolM = (v: number | null | undefined) => {
 export function GraphComparisonPanel() {
   const [symbols, setSymbols] = useState<string[]>(['RELIANCE', 'INFY']);
   const [newSymbol, setNewSymbol] = useState('');
+  const [isSymbolSearchOpen, setIsSymbolSearchOpen] = useState(false);
+  const [highlightedSymbolIndex, setHighlightedSymbolIndex] = useState(0);
+  const symbolSearchRef = useRef<HTMLFormElement>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>('1Y');
   const [returnMode, setReturnMode] = useState<ReturnMode>('percent');
   const [pairAnalysisOpen, setPairAnalysisOpen] = useState(false);
@@ -143,6 +147,11 @@ export function GraphComparisonPanel() {
   });
   const [betaMode, setBetaMode] = useState<'auto' | 'manual'>('auto');
   const [manualBetaInput, setManualBetaInput] = useState('1.00');
+  const { data: symbolSearchResults = [], isLoading: isSymbolSearching } = useSymbolSearch(newSymbol);
+  const filteredSymbolSearchResults = useMemo(
+    () => symbolSearchResults.filter((result) => !symbols.includes(result.symbol)),
+    [symbolSearchResults, symbols],
+  );
 
   // Theme-aware chart chrome
   const chartColors = useMemo(
@@ -206,6 +215,22 @@ export function GraphComparisonPanel() {
       return { x: nextX, y: nextY };
     });
   }, [symbols]);
+
+  useEffect(() => {
+    setHighlightedSymbolIndex(0);
+  }, [filteredSymbolSearchResults]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (symbolSearchRef.current && !symbolSearchRef.current.contains(event.target as Node)) {
+        setIsSymbolSearchOpen(false);
+      }
+    };
+    if (isSymbolSearchOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSymbolSearchOpen]);
 
   // ── Series transforms ──────────────────────────────────────────────────
   const seriesMap = useMemo(() => {
@@ -515,14 +540,41 @@ export function GraphComparisonPanel() {
   const pairYValue = pairSelection.y || symbols[1] || symbols[0] || '';
 
   // ── Handlers ───────────────────────────────────────────────────────────
-  const handleAddSymbol = (e: React.FormEvent) => {
-    e.preventDefault();
-    const sym = newSymbol.trim().toUpperCase();
+  const addCompareSymbol = (symbol: string) => {
+    const sym = symbol.trim().toUpperCase();
     if (sym && !symbols.includes(sym) && symbols.length < 5) {
       setSymbols([...symbols, sym]);
       setNewSymbol('');
+      setIsSymbolSearchOpen(false);
+      setHighlightedSymbolIndex(0);
     }
   };
+
+  const handleAddSymbol = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (filteredSymbolSearchResults.length > 0 && highlightedSymbolIndex < filteredSymbolSearchResults.length) {
+      addCompareSymbol(filteredSymbolSearchResults[highlightedSymbolIndex].symbol);
+      return;
+    }
+    addCompareSymbol(newSymbol);
+  };
+
+  const handleSymbolSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      setIsSymbolSearchOpen(false);
+      setNewSymbol('');
+      setHighlightedSymbolIndex(0);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedSymbolIndex((prev) => Math.min(prev + 1, filteredSymbolSearchResults.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedSymbolIndex((prev) => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter') {
+      handleAddSymbol(e);
+    }
+  };
+
   const handleRemoveSymbol = (s: string) => setSymbols(symbols.filter((x) => x !== s));
 
   const colorFor = (idx: number) => `hsl(${PALETTE[idx % PALETTE.length].hsl})`;
@@ -575,14 +627,52 @@ export function GraphComparisonPanel() {
               );
             })}
             {symbols.length < 5 && (
-              <form onSubmit={handleAddSymbol} className="flex items-center gap-2">
+              <form ref={symbolSearchRef} onSubmit={handleAddSymbol} className="relative flex items-center gap-2">
                 <Input
                   placeholder="Add symbol…"
                   value={newSymbol}
-                  onChange={(e) => setNewSymbol(e.target.value)}
-                  className="w-36 h-9 font-mono text-[13px] uppercase"
+                  onChange={(e) => {
+                    setNewSymbol(e.target.value.toUpperCase());
+                    setIsSymbolSearchOpen(true);
+                  }}
+                  onFocus={() => setIsSymbolSearchOpen(true)}
+                  onKeyDown={handleSymbolSearchKeyDown}
+                  className="w-44 h-9 font-mono text-[13px] uppercase"
                   data-testid="input-add-symbol"
                 />
+                {isSymbolSearchOpen && newSymbol.length >= 2 && (
+                  <div className="absolute left-0 top-full z-50 mt-1 w-72 max-h-60 overflow-y-auto rounded-md border border-border bg-card shadow-xl">
+                    {isSymbolSearching ? (
+                      <div className="px-3 py-4 flex items-center justify-center">
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      </div>
+                    ) : filteredSymbolSearchResults.length > 0 ? (
+                      filteredSymbolSearchResults.map((result, idx) => (
+                          <button
+                            key={result.symbol}
+                            type="button"
+                            className={cn(
+                              'w-full px-3 py-2 text-left border-b border-border/50 last:border-b-0 transition-colors',
+                              idx === highlightedSymbolIndex ? 'bg-primary/20' : 'hover:bg-primary/10',
+                            )}
+                            onMouseEnter={() => setHighlightedSymbolIndex(idx)}
+                            onClick={() => addCompareSymbol(result.symbol)}
+                          >
+                            <div className="text-sm font-bold font-mono text-secondary">
+                              {result.symbol}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {result.name}
+                            </div>
+                          </button>
+                        ))
+                    ) : (
+                      <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+                        No results found. Press Enter to add {newSymbol}.
+                      </div>
+                    )}
+                  </div>
+                )}
                 <Button
                   type="submit"
                   size="sm"

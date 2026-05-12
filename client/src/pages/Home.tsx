@@ -18,7 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useBulkLTP } from "@/hooks/use-bulk-ltp";
 import { useMarketMovers } from "@/hooks/use-market-movers";
-import { useSavedScreenerResults, useSavedBacktestResults } from "@/hooks/use-saved-results";
+import { useRecentSavedRuns, useSavedBacktestResults } from "@/hooks/use-saved-results";
 import { getEquityProAiUrl, EXTERNAL_LINK_PROPS } from "@/lib/external-links";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -370,8 +370,29 @@ function LiveFeed() {
 
 // ─── Saved screens rail ──────────────────────────────────────────────
 function SavedScreensRail() {
-  const { data, isLoading } = useSavedScreenerResults(5);
+  const { data, isLoading } = useRecentSavedRuns(5);
   const items = data?.results ?? [];
+  const labelForType = (type: string) => {
+    switch (type) {
+      case "backtest":
+        return "Backtest";
+      case "fundamental-screener":
+        return "Fundamental";
+      case "portfolio-optimizer":
+        return "Portfolio";
+      default:
+        return "Screener";
+    }
+  };
+  const metaForRun = (run: any) => {
+    if (run.type === "portfolio-optimizer") {
+      return `${run.summary?.holdings_count ?? 0} holdings`;
+    }
+    if (run.type === "backtest") {
+      return run.summary?.ticker ?? "Strategy run";
+    }
+    return `${run.summary?.result_count ?? 0} matches`;
+  };
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -398,20 +419,20 @@ function SavedScreensRail() {
             </Link>
           </div>
         ) : (
-          items.slice(0, 5).map((s) => (
+          items.slice(0, 5).map((run) => (
             <Link
-              key={s.id}
-              href={`/saved-results/screener/${s.id}`}
+              key={`${run.type}-${run.id}`}
+              href={run.detail_path}
               className="grid grid-cols-[1fr_auto] gap-3 px-4 py-2.5 border-b last:border-b-0 border-border hover:bg-muted/40 transition-colors duration-fast"
             >
               <div className="min-w-0">
-                <div className="text-[12.5px] font-semibold text-foreground truncate">{s.name}</div>
+                <div className="text-[12.5px] font-semibold text-foreground truncate">{run.name}</div>
                 <div className="text-[11px] text-muted-foreground">
-                  {s.result_count} matches
+                  {metaForRun(run)}
                 </div>
               </div>
               <span className="inline-flex h-6 items-center rounded-pill bg-[hsl(var(--brand-gold)/0.15)] border border-[hsl(var(--brand-gold)/0.35)] px-2.5 text-[10.5px] font-bold text-[hsl(38_60%_38%)] dark:text-[hsl(var(--brand-gold))]">
-                Run
+                {labelForType(run.type)}
               </span>
             </Link>
           ))

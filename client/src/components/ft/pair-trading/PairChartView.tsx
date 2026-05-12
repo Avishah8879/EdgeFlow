@@ -51,10 +51,17 @@ export function PairChartView({
   pvalue,
   onBack,
 }: Props) {
-  const symbolsKey = `${xSymbol},${ySymbol}`;
+  const symbolsKey = useMemo(() => `${xSymbol},${ySymbol}`, [xSymbol, ySymbol]);
+  const pairSeriesPath = useMemo(() => {
+    const params = new URLSearchParams({
+      symbols: symbolsKey,
+      lookback_days: String(lookbackDays),
+    });
+    return `/api/pair-trading/pair-series?${params.toString()}`;
+  }, [symbolsKey, lookbackDays]);
 
   const { data, isLoading } = useQuery<PairSeriesEntry[]>({
-    queryKey: [`/api/pair-trading/pair-series?symbols=${symbolsKey}&lookback_days=${lookbackDays}`],
+    queryKey: [pairSeriesPath],
     enabled: !!xSymbol && !!ySymbol,
     select: (raw: any): PairSeriesEntry[] => {
       const arr = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];

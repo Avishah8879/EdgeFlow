@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useTheme } from "next-themes";
 import {
   LineChart,
@@ -6,7 +6,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as ChartTooltip,
   ResponsiveContainer,
   ScatterChart,
   Scatter,
@@ -18,15 +18,36 @@ import {
 import {
   Loader2,
   AlertCircle,
+  Bookmark,
+  FolderOpen,
+  Info,
   Plus,
   Trash2,
   TrendingUp,
   Search,
+  Upload,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useSymbolSearch } from "@/hooks/useSymbolSearch";
+import { useSavePortfolioOptimizerResult } from "@/hooks/use-saved-results";
 import {
   usePortfolioOptimizer,
   type PortfolioHolding,
@@ -34,6 +55,8 @@ import {
 } from "@/hooks/usePortfolioOptimizer";
 import { getCSSColor } from "@/lib/theme-utils";
 import { RRGChart } from "@/components/ft/RRGChart";
+import { Link } from "wouter";
+import { toast } from "sonner";
 
 const COLORS = {
   primary: "#00FF00",
@@ -68,6 +91,13 @@ export function PortfolioOptimizerPanel() {
   const [holdings, setHoldings] = useState<PortfolioHolding[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saveName, setSaveName] = useState("");
+  const [lastSubmittedHoldings, setLastSubmittedHoldings] = useState<PortfolioHolding[]>([]);
+  const startedAtRef = useRef<number | null>(null);
+  const autorunConsumedRef = useRef(false);
+  const csvInputRef = useRef<HTMLInputElement | null>(null);
+  const saveResultMutation = useSavePortfolioOptimizerResult();
 
   // Search hook
   const { data: searchResults, isLoading: isSearching } =
@@ -123,10 +153,149 @@ export function PortfolioOptimizerPanel() {
       return;
     }
 
+    startedAtRef.current = Date.now();
+    setLastSubmittedHoldings(validHoldings);
     submit({
       holdings: validHoldings,
     });
   }, [holdings, submit]);
+
+  useEffect(() => {
+    if (autorunConsumedRef.current || isLoading) return;
+    const params = new URLSearchParams(window.location.search);
+    const holdingsParam = params.get("holdings");
+    if (!holdingsParam) return;
+
+    let parsedHoldings: PortfolioHolding[];
+    try {
+      const raw = JSON.parse(decodeURIComponent(holdingsParam));
+      if (!Array.isArray(raw)) return;
+      parsedHoldings = raw
+        .map((item: any) => ({
+          symbol: String(item.symbol || "").replace(/\.(NS|BO)$/i, "").toUpperCase(),
+          name: item.name ? String(item.name) : undefined,
+          quantity: Number(item.quantity),
+        }))
+        .filter((item) => item.symbol && Number.isFinite(item.quantity) && item.quantity > 0);
+    } catch {
+      toast.error("Could not load saved portfolio configuration");
+      return;
+    }
+
+    if (parsedHoldings.length < 2) return;
+
+    autorunConsumedRef.current = true;
+    setHoldings(parsedHoldings);
+    setLastSubmittedHoldings(parsedHoldings);
+
+    if (params.get("autorun") === "1") {
+      startedAtRef.current = Date.now();
+      submit({ holdings: parsedHoldings });
+    }
+  }, [isLoading, submit]);
+
+  const handleSave = useCallback(async () => {
+    if (!saveName.trim()) {
+      toast.error("Please enter a name for the result");
+      return;
+    }
+
+    if (!result) {
+      toast.error("No result to save");
+      return;
+    }
+
+    try {
+      await saveResultMutation.mutateAsync({
+        name: saveName.trim(),
+        holdings: lastSubmittedHoldings.length > 0 ? lastSubmittedHoldings : holdings.filter((h) => h.quantity > 0),
+        params: {
+          risk_free_rate: result.risk_free_rate,
+          rebalance_frequency: result.optimal_rebalance_frequency,
+        },
+        result,
+        executionTimeMs: startedAtRef.current ? Date.now() - startedAtRef.current : undefined,
+      });
+      toast.success("Portfolio result saved successfully");
+      setSaveDialogOpen(false);
+      setSaveName("");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save result");
+    }
+  }, [holdings, lastSubmittedHoldings, result, saveName, saveResultMutation]);
+
+  const parsePortfolioCsv = useCallback((text: string): PortfolioHolding[] => {
+    const rows = text
+      .split(/\r?\n/)
+      .map((row) => row.trim())
+      .filter(Boolean)
+      .map((row) => row.split(",").map((cell) => cell.trim().replace(/^"|"$/g, "")));
+
+    if (rows.length < 2) {
+      throw new Error("CSV must include a header row and at least two holdings");
+    }
+
+    const headers = rows[0].map((header) => header.toLowerCase());
+    const symbolIndex = headers.indexOf("symbol");
+    const weightIndex = headers.findIndex((header) => ["weight", "weight%", "quantity", "allocation"].includes(header));
+    const nameIndex = headers.indexOf("name");
+
+    if (symbolIndex === -1 || weightIndex === -1) {
+      throw new Error("CSV must have symbol and weight columns");
+    }
+
+    const parsed = rows.slice(1).map((row) => {
+      const symbol = (row[symbolIndex] || "").replace(/\.(NS|BO)$/i, "").toUpperCase();
+      const quantity = Number.parseFloat((row[weightIndex] || "").replace("%", ""));
+      const name = nameIndex >= 0 ? row[nameIndex] : undefined;
+
+      if (!/^[A-Z0-9&-]+$/.test(symbol) || !Number.isFinite(quantity) || quantity <= 0) {
+        throw new Error("Each row needs a valid symbol and positive weight");
+      }
+
+      return { symbol, name, quantity };
+    });
+
+    const bySymbol = new Map<string, PortfolioHolding>();
+    for (const holding of parsed) {
+      bySymbol.set(holding.symbol, holding);
+    }
+
+    if (bySymbol.size < 2) {
+      throw new Error("Portfolio must include at least two unique holdings");
+    }
+
+    return Array.from(bySymbol.values());
+  }, []);
+
+  const handleCsvUpload = useCallback(
+    (file: File | null) => {
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = parsePortfolioCsv(String(reader.result || ""));
+          const total = parsed.reduce((sum, holding) => sum + holding.quantity, 0);
+          setHoldings(parsed);
+          reset();
+          toast.success(`Loaded ${parsed.length} holdings from CSV`, {
+            description: Math.abs(total - 100) > 1 ? `Weights total ${total.toFixed(1)}%.` : undefined,
+          });
+        } catch (error: any) {
+          toast.error(error.message || "Invalid portfolio CSV");
+        } finally {
+          if (csvInputRef.current) csvInputRef.current.value = "";
+        }
+      };
+      reader.onerror = () => {
+        toast.error("Could not read CSV file");
+        if (csvInputRef.current) csvInputRef.current.value = "";
+      };
+      reader.readAsText(file);
+    },
+    [parsePortfolioCsv, reset]
+  );
 
   const validHoldingsCount = holdings.filter((h) => h.quantity > 0).length;
   const canSubmit = validHoldingsCount >= 2 && !isLoading;
@@ -152,6 +321,56 @@ export function PortfolioOptimizerPanel() {
               Reset
             </Button>
           )}
+        </div>
+
+        {/* CSV Upload */}
+        <div className="mb-2 flex items-center gap-2">
+          <input
+            ref={csvInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(event) => handleCsvUpload(event.target.files?.[0] ?? null)}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 gap-2"
+            onClick={() => csvInputRef.current?.click()}
+          >
+            <Upload className="h-3.5 w-3.5" />
+            Upload CSV
+          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  aria-label="CSV format"
+                >
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" align="start" className="max-w-xs text-xs">
+                <div className="space-y-2">
+                  <p className="font-semibold">CSV format</p>
+                  <pre className="rounded bg-muted px-2 py-1 font-mono text-[11px] leading-relaxed">
+{`symbol,weight
+RELIANCE,40
+TCS,30
+INFY,30`}
+                  </pre>
+                  <p className="text-muted-foreground">
+                    Header required. You can use weight, weight%, quantity, or allocation.
+                  </p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         {/* Stock Search */}
@@ -315,6 +534,70 @@ export function PortfolioOptimizerPanel() {
       {/* Results */}
       {result && <OptimizationResults result={result} />}
 
+      {result && (
+        <div className="p-3 border-t border-border bg-positive/10">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <span className="text-sm text-positive">Optimization complete.</span>
+            <div className="flex items-center gap-2">
+              <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Bookmark className="h-4 w-4" />
+                    Save Results
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Save Portfolio Optimizer Result</DialogTitle>
+                    <DialogDescription>
+                      Name this optimizer run so you can revisit the allocation later.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="portfolio-save-name">Name</Label>
+                      <Input
+                        id="portfolio-save-name"
+                        placeholder="e.g., Long-term core allocation"
+                        value={saveName}
+                        onChange={(e) => setSaveName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSave();
+                        }}
+                      />
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Holdings: {(lastSubmittedHoldings.length > 0 ? lastSubmittedHoldings : holdings).filter((h) => h.quantity > 0).length}
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSave} disabled={saveResultMutation.isPending}>
+                      {saveResultMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        "Save"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              <Link href="/saved-results">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <FolderOpen className="h-4 w-4" />
+                  View Saved
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Empty State */}
       {!result && !isLoading && holdings.length === 0 && (
         <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-6">
@@ -333,7 +616,7 @@ export function PortfolioOptimizerPanel() {
 }
 
 // Results Component
-function OptimizationResults({ result }: { result: OptimizationResult }) {
+export function OptimizationResults({ result }: { result: OptimizationResult }) {
   // Theme-aware chart chrome — re-resolve when light/dark theme changes
   const { resolvedTheme } = useTheme();
   const chartColors = useMemo(
@@ -441,7 +724,7 @@ function OptimizationResults({ result }: { result: OptimizationResult }) {
                     tickFormatter={(v) => v.toFixed(1)}
                     domain={["auto", "auto"]}
                   />
-                  <Tooltip
+                  <ChartTooltip
                     contentStyle={{
                       backgroundColor: chartColors.tooltipBg,
                       border: `1px solid ${chartColors.tooltipBorder}`,
@@ -540,7 +823,7 @@ function OptimizationResults({ result }: { result: OptimizationResult }) {
                     },
                   }}
                 />
-                <Tooltip
+                <ChartTooltip
                   contentStyle={{
                     backgroundColor: chartColors.tooltipBg,
                     border: `1px solid ${chartColors.tooltipBorder}`,
@@ -638,7 +921,7 @@ function OptimizationResults({ result }: { result: OptimizationResult }) {
                     tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
                     domain={[0, 1]}
                   />
-                  <Tooltip
+                  <ChartTooltip
                     contentStyle={{
                       backgroundColor: chartColors.tooltipBg,
                       border: `1px solid ${chartColors.tooltipBorder}`,

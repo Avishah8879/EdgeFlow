@@ -47,6 +47,8 @@ from datetime import datetime, timedelta, timezone
 import atexit
 from contextlib import contextmanager
 
+logger = logging.getLogger(__name__)
+
 from Strat_optimizer_tpsl import run_optimization as run_tpsl_optimization, run_optimization_from_dataframe as run_tpsl_optimization_from_df
 from expert_screener import (
     run_screener as run_expert_screener,
@@ -94,6 +96,12 @@ from server.sankey import get_sankey_data, get_available_years
 env_file = '.env.production' if os.getenv('NODE_ENV') == 'production' else '.env'
 load_dotenv(env_file, override=True)
 print(f"[ENV] Loaded environment from: {env_file}")
+
+for _proxy_key in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
+    _proxy_value = os.getenv(_proxy_key, "")
+    if "127.0.0.1:9" in _proxy_value or "localhost:9" in _proxy_value:
+        os.environ.pop(_proxy_key, None)
+        logging.warning("[ENV] Ignored dead local proxy setting from %s", _proxy_key)
 
 # Worker-aware pool sizing: Divide total pool by number of workers
 # Total target: minconn=5, maxconn=100 across all workers (reduced for faster startup)
@@ -3178,6 +3186,8 @@ async def startup_event():
     else:
         logging.warning(f"[STARTUP] Redis not available ({time.time() - t0:.2f}s)")
 
+    await _ft_init_asyncpg_pool()
+
     # Initialize Fear & Greed Index cache (run in background to avoid blocking)
     t0 = time.time()
     logging.info("[STARTUP] Step 2/4: Initializing Fear & Greed Index cache (background)...")
@@ -3229,6 +3239,7 @@ async def shutdown_event():
     # Other workers can continue serving streams if available.
 
     # Cleanup database pool
+    await _ft_close_asyncpg_pool()
     cleanup_pool()
     logging.info("Shutdown complete")
 
@@ -8690,9 +8701,53 @@ def _ft_fetch_yfinance_quote(symbol: str) -> Optional[Dict[str, Any]]:
 
 
 # --- FinTerminal asyncpg pool (separate from EdgeFlow's psycopg2 pool) ---
-# This pool is None by default; set it externally if asyncpg is available
-# and a connection to the same DB is needed by FinTerminal endpoints.
 _ft_asyncpg_pool = None
+
+
+async def _ft_init_asyncpg_pool():
+    """Attach FinTerminal async endpoints to the same Postgres database."""
+    global _ft_asyncpg_pool
+    if _ft_asyncpg_pool is not None:
+        return
+    if _asyncpg is None:
+        logger.warning("[FinTerminal DB] asyncpg is not installed; DB-backed FT routes disabled")
+        return
+
+    required = ("host", "port", "database", "user", "password")
+    missing = [key for key in required if not DB_CONFIG.get(key)]
+    if missing:
+        logger.warning("[FinTerminal DB] Missing DB config keys: %s", ", ".join(missing))
+        return
+
+    try:
+        _ft_asyncpg_pool = await _asyncpg.create_pool(
+            host=DB_CONFIG["host"],
+            port=int(DB_CONFIG["port"]),
+            database=DB_CONFIG["database"],
+            user=DB_CONFIG["user"],
+            password=DB_CONFIG["password"],
+            min_size=int(os.getenv("FT_ASYNCPG_MIN_SIZE", "1")),
+            max_size=int(os.getenv("FT_ASYNCPG_MAX_SIZE", "5")),
+            command_timeout=float(os.getenv("FT_ASYNCPG_COMMAND_TIMEOUT", "30")),
+        )
+        logger.info("[FinTerminal DB] asyncpg pool initialized")
+    except Exception:
+        _ft_asyncpg_pool = None
+        logger.exception("[FinTerminal DB] Failed to initialize asyncpg pool")
+
+
+async def _ft_close_asyncpg_pool():
+    """Close the FinTerminal asyncpg pool during FastAPI shutdown."""
+    global _ft_asyncpg_pool
+    if _ft_asyncpg_pool is None:
+        return
+    try:
+        await _ft_asyncpg_pool.close()
+        logger.info("[FinTerminal DB] asyncpg pool closed")
+    except Exception:
+        logger.exception("[FinTerminal DB] Failed to close asyncpg pool")
+    finally:
+        _ft_asyncpg_pool = None
 
 
 # =============================================================================
@@ -9341,7 +9396,7 @@ async def ft_submit_portfolio_optimization(payload: PortfolioOptimizeRequest):
             # Synchronous fallback — run directly
             from portfolio_optimizer import run_full_optimization
             job_id = str(uuid.uuid4())
-            result = await run_full_optimization(None, cleaned_holdings)
+            result = await run_full_optimization(_ft_asyncpg_pool, cleaned_holdings)
             return _ft_api_response({
                 "job_id": job_id,
                 "status": "completed",
@@ -11016,7 +11071,7 @@ async def ft_get_most_active(
     if where_extras:
         where_block = " AND " + " AND ".join(where_extras)
 
-    cache_key = f"most_active:{sort_norm}:{limit}:{proximity_pct}"
+    cache_key = f"most_active:v2:{sort_norm}:{limit}:{proximity_pct}"
     cached = get_cached(cache_key)
     if cached is not None:
         return cached
@@ -11027,6 +11082,19 @@ async def ft_get_most_active(
             conn = get_db_connection()
             with conn.cursor() as cur:
                 query = f"""
+                    WITH latest_ltp AS (
+                        SELECT DISTINCT ON (ticker_id)
+                               ticker_id,
+                               ltp,
+                               percent_change,
+                               trade_volume,
+                               timestamp
+                        FROM ltp_live
+                        WHERE ltp IS NOT NULL
+                          AND trade_volume IS NOT NULL
+                          AND trade_volume > 0
+                        ORDER BY ticker_id, timestamp DESC
+                    )
                     SELECT t.symbol,
                            COALESCE(sf.long_name, t.name) AS name,
                            sf.sector,
@@ -11035,13 +11103,10 @@ async def ft_get_most_active(
                            ltp.trade_volume AS volume,
                            sf.fifty_two_week_high,
                            sf.fifty_two_week_low
-                    FROM ltp_live ltp
+                    FROM latest_ltp ltp
                     JOIN tickers t ON t.id = ltp.ticker_id
                     LEFT JOIN stock_fundamentals sf ON sf.ticker_id = t.id
                     WHERE t.is_active = true
-                      AND ltp.ltp IS NOT NULL
-                      AND ltp.trade_volume IS NOT NULL
-                      AND ltp.trade_volume > 0
                       {where_block}
                     {order_by}
                     LIMIT %s
@@ -12044,6 +12109,43 @@ async def pattern_search_api(
         pool.putconn(conn)
 
     set_cached(cache_key, patterns, 900)  # 15 min TTL
+    return patterns
+
+
+@fastapi_app.get("/api/price-pattern-search", tags=["Technical Analysis"])
+async def price_pattern_search_api(
+    pattern: str = Query("all"),
+    timeframe: str = Query("1D"),
+    confidence: int = Query(70, ge=50, le=100),
+    symbol: str = Query(""),
+):
+    """
+    Scan stocks for candle and price-action patterns.
+
+    Returns a plain JSON array (no envelope) to mirror /api/pattern-search.
+    """
+    from server.price_pattern_detector import scan_price_patterns
+
+    symbol_filter = unquote(symbol).strip().upper()
+    cache_key = f"price_pattern_search:v1:{pattern}:{timeframe}:{confidence}:{symbol_filter or 'all'}"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    pool = get_db_pool()
+    conn = pool.getconn()
+    try:
+        patterns = scan_price_patterns(
+            conn,
+            pattern_filter=pattern,
+            timeframe=timeframe,
+            min_confidence=confidence,
+            symbol_filter=symbol_filter or None,
+        )
+    finally:
+        pool.putconn(conn)
+
+    set_cached(cache_key, patterns, 120)
     return patterns
 
 

@@ -468,6 +468,13 @@ export function StockChart({ symbol, initialTimeframe = '1m', hideToolbar = fals
     previousPrice = quote.previousClose || 0;
     change = quote.change || 0;
     changePercent = quote.changePercent || 0;
+
+    if (change !== 0 && changePercent === 0) {
+      const derivedPrevious = previousPrice > 0 ? previousPrice : currentPrice - change;
+      if (derivedPrevious > 0) {
+        changePercent = (change / derivedPrevious) * 100;
+      }
+    }
   } else if (transformedData.length > 0) {
     // Quote API failed but we have chart data - calculate from chart
     const lastPoint = transformedData[transformedData.length - 1];
@@ -486,6 +493,22 @@ export function StockChart({ symbol, initialTimeframe = '1m', hideToolbar = fals
   // Use real data from API, show only available fields
   const yearHigh = week52Data?.high52Week;
   const yearLow = week52Data?.low52Week;
+  const latestCandle = sortedChartData[sortedChartData.length - 1];
+  const hasValue = (value: number | null | undefined) =>
+    value !== null && value !== undefined && Number.isFinite(value) && value !== 0;
+  const headerOhlcv = {
+    open: hasValue(quote?.open) ? quote!.open : latestCandle?.open,
+    high: hasValue(quote?.high) ? quote!.high : latestCandle?.high,
+    low: hasValue(quote?.low) ? quote!.low : latestCandle?.low,
+    volume: hasValue(quote?.volume) ? quote!.volume : latestCandle?.volume,
+  };
+
+  if (quote) {
+    quote.open = headerOhlcv.open ?? quote.open;
+    quote.high = headerOhlcv.high ?? quote.high;
+    quote.low = headerOhlcv.low ?? quote.low;
+    quote.volume = headerOhlcv.volume ?? quote.volume;
+  }
 
   const toggleIndicator = (indicator: string) => {
     setSelectedIndicators((prev) => {

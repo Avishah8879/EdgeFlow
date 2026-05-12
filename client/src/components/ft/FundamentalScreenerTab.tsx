@@ -1,13 +1,25 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Loader2, PlayCircle, X, Info, Sparkles } from "lucide-react";
+import { Bookmark, FolderOpen, Loader2, PlayCircle, X, Info, Sparkles } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useFundamentalScreener } from "@/hooks/use-fundamental-screener";
+import { useSaveFundamentalScreenerResult } from "@/hooks/use-saved-results";
 import { CoinGateAlert } from "@/components/CoinGateAlert";
 import type { FundamentalResult } from "@/hooks/use-fundamental-screener";
 import { ModeToggle, type ScreenerMode } from "@/components/screener/ModeToggle";
@@ -15,6 +27,8 @@ import { ConditionBuilder } from "@/components/screener/ConditionBuilder";
 import { compile, isEmpty } from "@/lib/screener/compile";
 import { parse } from "@/lib/screener/parse";
 import type { BuilderTree } from "@/lib/screener/types";
+import { Link } from "wouter";
+import { toast } from "sonner";
 
 const fundamentalPresets = [
   {
@@ -103,14 +117,26 @@ export function FundamentalScreenerTab() {
   });
   const [unparseableReason, setUnparseableReason] = useState<string | undefined>();
   const lastBuilderCompiledRef = useRef<string>("");
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saveName, setSaveName] = useState("");
+  const startTimeRef = useRef<number | null>(null);
+  const autorunConsumedRef = useRef(false);
+  const saveResultMutation = useSaveFundamentalScreenerResult();
 
   // Hydrate builder from current expression on mount
   useEffect(() => {
-    const result = parse(expression, "fundamental");
+    const params = new URLSearchParams(window.location.search);
+    const urlExpression = params.get("expr");
+    const initialExpression = urlExpression ? decodeURIComponent(urlExpression) : expression;
+    if (urlExpression) {
+      setExpression(initialExpression);
+    }
+
+    const result = parse(initialExpression, "fundamental");
     if (result.ok) {
       setBuilderTree(result.tree);
       setUnparseableReason(undefined);
-      lastBuilderCompiledRef.current = expression;
+      lastBuilderCompiledRef.current = initialExpression;
     } else {
       setUnparseableReason(result.reason);
     }
@@ -198,7 +224,62 @@ export function FundamentalScreenerTab() {
   const handleRun = () => {
     const expr = expression.trim();
     if (!expr) return;
+    startTimeRef.current = Date.now();
     runScreener(expr);
+  };
+
+  useEffect(() => {
+    if (autorunConsumedRef.current || isRunning) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("autorun") !== "1") return;
+
+    const exprParam = params.get("expr");
+    const expr = exprParam ? decodeURIComponent(exprParam).trim() : expression.trim();
+    if (!expr) return;
+
+    autorunConsumedRef.current = true;
+    setExpression(expr);
+    const parsed = parse(expr, "fundamental");
+    if (parsed.ok) {
+      setBuilderTree(parsed.tree);
+      setUnparseableReason(undefined);
+      lastBuilderCompiledRef.current = expr;
+    }
+    startTimeRef.current = Date.now();
+    runScreener(expr);
+  }, [expression, isRunning, runScreener]);
+
+  const handleSave = async () => {
+    if (!saveName.trim()) {
+      toast.error("Please enter a name for the result");
+      return;
+    }
+
+    if (!summary || results.length === 0) {
+      toast.error("No results to save");
+      return;
+    }
+
+    try {
+      await saveResultMutation.mutateAsync({
+        name: saveName.trim(),
+        expression: expression.trim(),
+        resultCount: summary.matched,
+        matchingSymbols: results.map((row) => ({
+          symbol: row.symbol,
+          companyName: row.companyName,
+          sector: row.sector,
+          industry: row.industry,
+          fundamentals: row.fundamentals,
+        })),
+        executionTimeMs: startTimeRef.current ? Date.now() - startTimeRef.current : undefined,
+      });
+      toast.success("Results saved successfully");
+      setSaveDialogOpen(false);
+      setSaveName("");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save results");
+    }
   };
 
   return (
@@ -377,6 +458,73 @@ export function FundamentalScreenerTab() {
               </tbody>
             </table>
           </ScrollArea>
+        </div>
+      )}
+
+      {!isRunning && summary && results.length > 0 && (
+        <div className="rounded-lg border border-positive/40 bg-positive/10 p-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <span className="text-sm text-positive">
+              Scan complete. Found {summary.matched} {summary.matched === 1 ? "match" : "matches"} out of {summary.universe} stocks.
+            </span>
+            <div className="flex items-center gap-2">
+              <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Bookmark className="h-4 w-4" />
+                    Save Results
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Save Fundamental Scanner Results</DialogTitle>
+                    <DialogDescription>
+                      Give this scanner run a name to save it in your library.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="fundamental-save-name">Name</Label>
+                      <Input
+                        id="fundamental-save-name"
+                        placeholder="e.g., Low debt quality stocks"
+                        value={saveName}
+                        onChange={(e) => setSaveName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSave();
+                        }}
+                      />
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <p>Expression: <code className="bg-muted px-1 rounded">{expression}</code></p>
+                      <p>Results: {summary.matched} matches</p>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSave} disabled={saveResultMutation.isPending}>
+                      {saveResultMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        "Save"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              <Link href="/saved-results">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <FolderOpen className="h-4 w-4" />
+                  View Saved
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       )}
 

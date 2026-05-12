@@ -408,7 +408,7 @@ export default function AdvancedStrategies() {
             </div>
             <Link href="/alpha-generation">
               <Button size="lg" className="gap-2">
-                Try Alpha Generation
+                EquityPro AI
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>

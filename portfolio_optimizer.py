@@ -141,6 +141,42 @@ async def fetch_price_data(symbols: List[str]) -> pd.DataFrame:
     return prices
 
 
+async def fetch_price_data_from_db(pool: asyncpg.Pool, symbols: List[str]) -> pd.DataFrame:
+    """Fetch historical closes from ohlc_daily using the app's Postgres data."""
+    if pool is None:
+        raise ValueError("Database pool is not available")
+
+    symbols_upper = [s.upper() for s in symbols]
+    query = """
+        SELECT t.symbol, d.day, d.close
+        FROM tickers t
+        JOIN ohlc_daily d ON d.ticker_id = t.id
+        WHERE UPPER(t.symbol) = ANY($1::text[])
+          AND d.day >= $2::date
+        ORDER BY d.day ASC
+    """
+
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(query, symbols_upper, pd.Timestamp(IS_START).date())
+
+    if not rows:
+        raise ValueError("No portfolio price history found in database")
+
+    frame = pd.DataFrame(
+        [{"date": row["day"], "symbol": f"{row['symbol'].upper()}.NS", "close": float(row["close"])} for row in rows]
+    )
+    prices = frame.pivot(index="date", columns="symbol", values="close").sort_index()
+    prices.index = pd.to_datetime(prices.index)
+    missing = [f"{symbol}.NS" for symbol in symbols_upper if f"{symbol}.NS" not in prices.columns]
+    if missing:
+        raise ValueError(f"Missing portfolio history for: {', '.join(missing)}")
+    if prices.loc[IS_START:IS_END].dropna(how="all").empty:
+        raise ValueError(f"Database portfolio history does not cover training window {IS_START} to {IS_END}")
+
+    logger.info("Fetched %s DB price rows for %s symbols", len(prices), len(symbols))
+    return prices
+
+
 async def get_current_prices(
     pool: asyncpg.Pool,
     symbols: List[str]
@@ -230,8 +266,12 @@ async def run_full_optimization(
 
     logger.info(f"Current allocation: {user_current_allocation}")
 
-    # Fetch price data
-    prices = await fetch_price_data(symbols)
+    # Fetch price data. Prefer the app database so local/live behavior matches.
+    try:
+        prices = await fetch_price_data_from_db(pool, symbols)
+    except Exception as exc:
+        logger.warning("Database price fetch failed, falling back to yfinance: %s", exc)
+        prices = await fetch_price_data(symbols)
 
     # Calculate returns (matching optimiser_portfolio.py)
     returns_all = prices.pct_change().dropna(how="all")

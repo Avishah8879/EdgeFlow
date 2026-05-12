@@ -46,6 +46,8 @@ const Developers = lazy(() => import("@/pages/Developers"));
 const SavedResults = lazy(() => import("@/pages/SavedResults"));
 const SavedScreenerDetail = lazy(() => import("@/pages/SavedScreenerDetail"));
 const SavedBacktestDetail = lazy(() => import("@/pages/SavedBacktestDetail"));
+const SavedFundamentalScreenerDetail = lazy(() => import("@/pages/SavedFundamentalScreenerDetail"));
+const SavedPortfolioOptimizerDetail = lazy(() => import("@/pages/SavedPortfolioOptimizerDetail"));
 const SharedResult = lazy(() => import("@/pages/SharedResult"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Blog = lazy(() => import("@/pages/Blog"));
@@ -76,6 +78,7 @@ const OrderBook = lazy(() => import("@/pages/ft/OrderBook"));
 const BlackScholes = lazy(() => import("@/pages/ft/BlackScholes"));
 const EquityScreener = lazy(() => import("@/pages/ft/EquityScreener"));
 const PatternSearch = lazy(() => import("@/pages/ft/PatternSearch"));
+const PricePattern = lazy(() => import("@/pages/ft/PricePattern"));
 const SystematicPatterns = lazy(() => import("@/pages/ft/SystematicPatterns"));
 const Compare = lazy(() => import("@/pages/ft/Compare"));
 const PairTrading = lazy(() => import("@/pages/ft/PairTrading"));
@@ -183,6 +186,8 @@ function AppRoutes() {
         <Route path="/saved-results" component={SavedResults} />
         <Route path="/saved-results/screener/:id" component={SavedScreenerDetail} />
         <Route path="/saved-results/backtest/:id" component={SavedBacktestDetail} />
+        <Route path="/saved-results/fundamental-screener/:id" component={SavedFundamentalScreenerDetail} />
+        <Route path="/saved-results/portfolio-optimizer/:id" component={SavedPortfolioOptimizerDetail} />
         <Route path="/profile" component={Profile} />
         <Route path="/blog" component={Blog} />
         <Route path="/blog/advanced-strategies" component={AdvancedStrategies} />
@@ -205,6 +210,7 @@ function AppRoutes() {
         <Route path="/black-scholes" component={BlackScholes} />
         <Route path="/equity-screener" component={EquityScreener} />
         <Route path="/pattern-search" component={PatternSearch} />
+        <Route path="/price-pattern" component={PricePattern} />
         <Route path="/systematic-patterns" component={SystematicPatterns} />
         <Route path="/seasonality" component={Seasonality} />
         <Route path="/compare" component={Compare} />

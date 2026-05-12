@@ -33,16 +33,25 @@ import {
   Loader2,
   BookmarkX,
   Eye,
+  PlayCircle,
 } from 'lucide-react';
 import {
   useSavedScreenerResults,
   useSavedBacktestResults,
+  useSavedFundamentalScreenerResults,
+  useSavedPortfolioOptimizerResults,
   useDeleteScreenerResult,
   useDeleteBacktestResult,
+  useDeleteFundamentalScreenerResult,
+  useDeletePortfolioOptimizerResult,
   useShareScreenerResult,
   useShareBacktestResult,
+  useShareFundamentalScreenerResult,
+  useSharePortfolioOptimizerResult,
   SavedScreenerResult,
   SavedBacktestResult,
+  SavedFundamentalScreenerResult,
+  SavedPortfolioOptimizerResult,
 } from '@/hooks/use-saved-results';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -86,6 +95,7 @@ function ResultCard({
   isShared,
   shareToken,
   shareTokenPath,
+  runHref,
   onDelete,
   onShare,
 }: {
@@ -98,6 +108,7 @@ function ResultCard({
   isShared: boolean;
   shareToken: string | undefined;
   shareTokenPath: string;
+  runHref?: string;
   onDelete: () => void;
   onShare: () => void;
 }) {
@@ -182,6 +193,20 @@ function ResultCard({
           </Button>
         )}
 
+        {runHref && (
+          <Link href={runHref}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full text-[hsl(var(--brand-gold))] hover:text-[hsl(var(--brand-gold))] hover:border-[hsl(var(--brand-gold)/0.45)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <PlayCircle className="h-3.5 w-3.5 mr-1.5" />
+              Run
+            </Button>
+          </Link>
+        )}
+
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
@@ -254,6 +279,7 @@ function ScreenerResultCard({
       isShared={result.is_shared}
       shareToken={result.share_token}
       shareTokenPath="/shared/screener"
+      runHref={`/screener?expr=${encodeURIComponent(result.expression)}&autorun=1`}
       onDelete={onDelete}
       onShare={onShare}
     />
@@ -327,6 +353,96 @@ function BacktestResultCard({
       isShared={result.is_shared}
       shareToken={result.share_token}
       shareTokenPath="/shared/backtest"
+      runHref="/alpha-generation"
+      onDelete={onDelete}
+      onShare={onShare}
+    />
+  );
+}
+
+function FundamentalResultCard({
+  result,
+  onDelete,
+  onShare,
+}: {
+  result: SavedFundamentalScreenerResult;
+  onDelete: () => void;
+  onShare: () => void;
+}) {
+  return (
+    <ResultCard
+      title={result.name}
+      subtitle={formatDistanceToNow(new Date(result.created_at), {
+        addSuffix: true,
+      })}
+      meta={
+        <span className="text-[10.5px] font-bold uppercase tracking-uppercase px-2 py-1 rounded-full bg-[hsl(var(--brand-gold))]/15 text-[hsl(var(--brand-gold))]">
+          <span className="font-mono tabular-nums">{result.result_count}</span>{' '}
+          matches
+        </span>
+      }
+      expression={result.expression}
+      bodyExtras={
+        result.execution_time_ms ? (
+          <p className="text-[11px] text-muted-foreground">
+            Executed in{' '}
+            <span className="font-mono tabular-nums">
+              {(result.execution_time_ms / 1000).toFixed(2)}s
+            </span>
+          </p>
+        ) : null
+      }
+      detailHref={`/saved-results/fundamental-screener/${result.id}`}
+      isShared={result.is_shared}
+      shareToken={result.share_token}
+      shareTokenPath="/shared/fundamental-screener"
+      runHref={`/equity-screener?expr=${encodeURIComponent(result.expression)}&autorun=1`}
+      onDelete={onDelete}
+      onShare={onShare}
+    />
+  );
+}
+
+function PortfolioResultCard({
+  result,
+  onDelete,
+  onShare,
+}: {
+  result: SavedPortfolioOptimizerResult;
+  onDelete: () => void;
+  onShare: () => void;
+}) {
+  const holdings = Array.isArray(result.holdings) ? result.holdings : [];
+  const expression = holdings.map((h: any) => `${h.symbol} ${h.quantity}%`).join(' · ');
+
+  return (
+    <ResultCard
+      title={result.name}
+      subtitle={formatDistanceToNow(new Date(result.created_at), {
+        addSuffix: true,
+      })}
+      meta={
+        <span className="text-[10.5px] font-bold uppercase tracking-uppercase px-2 py-1 rounded-full bg-muted text-muted-foreground">
+          <span className="font-mono tabular-nums">{holdings.length}</span>{' '}
+          holdings
+        </span>
+      }
+      expression={expression || 'Portfolio optimizer run'}
+      bodyExtras={
+        result.execution_time_ms ? (
+          <p className="text-[11px] text-muted-foreground">
+            Computed in{' '}
+            <span className="font-mono tabular-nums">
+              {(result.execution_time_ms / 1000).toFixed(2)}s
+            </span>
+          </p>
+        ) : null
+      }
+      detailHref={`/saved-results/portfolio-optimizer/${result.id}`}
+      isShared={result.is_shared}
+      shareToken={result.share_token}
+      shareTokenPath="/shared/portfolio-optimizer"
+      runHref={`/portfolio-optimizer?holdings=${encodeURIComponent(JSON.stringify(holdings))}&autorun=1`}
       onDelete={onDelete}
       onShare={onShare}
     />
@@ -347,6 +463,18 @@ export default function SavedResults() {
     useSavedBacktestResults();
   const deleteBacktestMutation = useDeleteBacktestResult();
   const shareBacktestMutation = useShareBacktestResult();
+
+  // Fundamental scanner hooks
+  const { data: fundamentalData, isLoading: fundamentalLoading } =
+    useSavedFundamentalScreenerResults();
+  const deleteFundamentalMutation = useDeleteFundamentalScreenerResult();
+  const shareFundamentalMutation = useShareFundamentalScreenerResult();
+
+  // Portfolio optimizer hooks
+  const { data: portfolioData, isLoading: portfolioLoading } =
+    useSavedPortfolioOptimizerResults();
+  const deletePortfolioMutation = useDeletePortfolioOptimizerResult();
+  const sharePortfolioMutation = useSharePortfolioOptimizerResult();
 
   const handleDeleteScreener = async (id: string) => {
     try {
@@ -378,6 +506,42 @@ export default function SavedResults() {
   const handleShareBacktest = async (id: string) => {
     try {
       await shareBacktestMutation.mutateAsync(id);
+      toast.success('Share link generated');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to share');
+    }
+  };
+
+  const handleDeleteFundamental = async (id: string) => {
+    try {
+      await deleteFundamentalMutation.mutateAsync(id);
+      toast.success('Result deleted');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete');
+    }
+  };
+
+  const handleShareFundamental = async (id: string) => {
+    try {
+      await shareFundamentalMutation.mutateAsync(id);
+      toast.success('Share link generated');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to share');
+    }
+  };
+
+  const handleDeletePortfolio = async (id: string) => {
+    try {
+      await deletePortfolioMutation.mutateAsync(id);
+      toast.success('Result deleted');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete');
+    }
+  };
+
+  const handleSharePortfolio = async (id: string) => {
+    try {
+      await sharePortfolioMutation.mutateAsync(id);
       toast.success('Share link generated');
     } catch (error: any) {
       toast.error(error.message || 'Failed to share');
@@ -424,6 +588,24 @@ export default function SavedResults() {
                 </span>
               ) : null}
             </TabsTrigger>
+            <TabsTrigger value="fundamental" className="gap-2">
+              <Search className="h-4 w-4" />
+              Fundamental
+              {fundamentalData?.total ? (
+                <span className="ml-1 px-1.5 rounded-full bg-muted text-xs font-mono tabular-nums">
+                  {fundamentalData.total}
+                </span>
+              ) : null}
+            </TabsTrigger>
+            <TabsTrigger value="portfolio" className="gap-2">
+              <LineChart className="h-4 w-4" />
+              Portfolio
+              {portfolioData?.total ? (
+                <span className="ml-1 px-1.5 rounded-full bg-muted text-xs font-mono tabular-nums">
+                  {portfolioData.total}
+                </span>
+              ) : null}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="screener">
@@ -462,6 +644,48 @@ export default function SavedResults() {
                     result={result}
                     onDelete={() => handleDeleteBacktest(result.id)}
                     onShare={() => handleShareBacktest(result.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="fundamental">
+            {fundamentalLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--brand-gold))]" />
+              </div>
+            ) : fundamentalData?.results.length === 0 ? (
+              <EmptyState type="screener" />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {fundamentalData?.results.map((result) => (
+                  <FundamentalResultCard
+                    key={result.id}
+                    result={result}
+                    onDelete={() => handleDeleteFundamental(result.id)}
+                    onShare={() => handleShareFundamental(result.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="portfolio">
+            {portfolioLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--brand-gold))]" />
+              </div>
+            ) : portfolioData?.results.length === 0 ? (
+              <EmptyState type="backtest" />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {portfolioData?.results.map((result) => (
+                  <PortfolioResultCard
+                    key={result.id}
+                    result={result}
+                    onDelete={() => handleDeletePortfolio(result.id)}
+                    onShare={() => handleSharePortfolio(result.id)}
                   />
                 ))}
               </div>

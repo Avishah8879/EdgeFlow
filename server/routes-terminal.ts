@@ -488,6 +488,24 @@ export function registerTerminalRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/price-pattern-search", async (req, res) => {
+    try {
+      const params = new URLSearchParams();
+      if (typeof req.query.pattern === 'string') params.set('pattern', req.query.pattern);
+      if (typeof req.query.timeframe === 'string') params.set('timeframe', req.query.timeframe);
+      if (typeof req.query.confidence === 'string') params.set('confidence', req.query.confidence);
+      if (typeof req.query.symbol === 'string') params.set('symbol', req.query.symbol);
+      const result = await proxyToPython(
+        `/api/price-pattern-search?${params.toString()}`,
+        buildPythonOptions(req, { timeout: 60000 })
+      );
+      const patterns = Array.isArray(result) ? result : (result as any)?.data ?? [];
+      return res.json(patterns);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Price pattern search unavailable');
+    }
+  });
+
   app.get("/api/seasonality/:ticker", async (req, res) => {
     try {
       const { ticker } = req.params;
