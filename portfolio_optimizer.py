@@ -114,6 +114,54 @@ def ann_sharpe(rets: pd.Series, ppy: int) -> float:
     return (ann_ret - RISK_FREE_RATE) / ann_vol
 
 
+def choose_training_window(returns: pd.DataFrame) -> Tuple[str, str, str]:
+    """
+    Choose an in-sample window that actually exists in the local/live DB.
+
+    The reference notebook used 2018-2020, but the production OHLC table may
+    start later. If that old window is too sparse, use the first three years of
+    available history and leave the remaining history as out-of-sample.
+    """
+    if returns.empty:
+        raise ValueError("No return history available for optimization")
+
+    hardcoded_window = returns.loc[IS_START:IS_END]
+    if len(hardcoded_window) >= 260:
+        return IS_START, IS_END, OOS_START
+
+    first_date = pd.Timestamp(returns.index.min()).normalize()
+    last_date = pd.Timestamp(returns.index.max()).normalize()
+    if first_date >= last_date:
+        raise ValueError("Insufficient date range for portfolio optimization")
+
+    preferred_end = first_date + pd.DateOffset(years=3)
+    latest_allowed_end = last_date - pd.DateOffset(years=1)
+    train_end = min(preferred_end, latest_allowed_end)
+
+    if train_end <= first_date:
+        span_days = max((last_date - first_date).days, 1)
+        train_end = first_date + pd.Timedelta(days=int(span_days * 0.6))
+
+    training_rows = returns.loc[first_date:train_end]
+    if len(training_rows.resample("M").apply(lambda x: (1 + x).prod() - 1)) < FREQ_MAP["M"] + 2:
+        raise ValueError(
+            f"Insufficient portfolio history: available {first_date.date()} to {last_date.date()}"
+        )
+
+    oos_start = train_end + pd.Timedelta(days=1)
+    logger.info(
+        "Using dynamic optimizer window: train=%s to %s, oos_start=%s",
+        first_date.date(),
+        train_end.date(),
+        oos_start.date(),
+    )
+    return (
+        first_date.strftime("%Y-%m-%d"),
+        train_end.strftime("%Y-%m-%d"),
+        oos_start.strftime("%Y-%m-%d"),
+    )
+
+
 # =============================================================================
 # DATA FETCHING
 # =============================================================================
@@ -278,13 +326,14 @@ async def run_full_optimization(
     returns = returns_all[selected_tickers].dropna()
 
     logger.info(f"Returns data: {len(returns)} rows, {returns.columns.tolist()}")
+    train_start, train_end, oos_start = choose_training_window(returns)
 
     # Optimize rebalance frequency (matching optimiser_portfolio.py)
     logger.info("Optimizing rebalance frequency...")
     is_sharpes = {}
     for f in FREQ_MAP:
         try:
-            rets, _ = backtest(returns, f, IS_START, IS_END)
+            rets, _ = backtest(returns, f, train_start, train_end)
             if len(rets) > 0:
                 is_sharpes[f] = ann_sharpe(rets, FREQ_MAP[f])
         except Exception as e:
@@ -297,7 +346,7 @@ async def run_full_optimization(
     logger.info(f"Optimal rebalance frequency: {best_freq}")
 
     # Full run (matching optimiser_portfolio.py)
-    full_rets, full_weights = backtest(returns, best_freq, IS_START, OOS_END)
+    full_rets, full_weights = backtest(returns, best_freq, train_start, OOS_END)
     equity = (1 + full_rets).cumprod()
 
     logger.info(f"Backtest complete: {len(equity)} periods, final equity: {equity.iloc[-1]:.4f}")
@@ -415,7 +464,7 @@ async def run_full_optimization(
         },
         'optimal_rebalance_frequency': best_freq,
         'risk_free_rate': RISK_FREE_RATE,
-        'oos_start': OOS_START,  # For train/test split line on equity curve
+        'oos_start': oos_start,  # For train/test split line on equity curve
         'computed_at': datetime.utcnow().isoformat() + 'Z'
     }
 

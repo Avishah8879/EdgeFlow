@@ -10,6 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Search, TrendingUp, TrendingDown, Activity, ChevronDown } from 'lucide-react';
+import {
+  PatternChartExpansion,
+  type PatternChartInput,
+} from '@/components/ft/pattern-search/PatternChartExpansion';
 
 interface PricePattern {
   id: string;
@@ -59,6 +63,19 @@ function getConfidenceColor(confidence: number) {
   if (confidence >= 85) return 'text-green-500';
   if (confidence >= 70) return 'text-yellow-500';
   return 'text-red-500';
+}
+
+function toPatternChartInput(pattern: PricePattern): PatternChartInput {
+  return {
+    symbol: pattern.symbol,
+    companyName: pattern.companyName,
+    patternType: pattern.patternType,
+    confidence: pattern.confidence,
+    startDate: pattern.detectedAt,
+    endDate: pattern.detectedAt,
+    breakoutDirection: pattern.direction,
+    description: pattern.description,
+  };
 }
 
 export function PricePatternPanel() {
@@ -220,18 +237,11 @@ export function PricePatternPanel() {
                     </button>
                     {isExpanded && (
                       <div className="px-3 pb-3 border-t border-primary/20">
-                        <div className="pt-3 space-y-2">
-                          <div className="rounded border border-border bg-background p-3">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <div>
-                                <div className="text-sm font-semibold">{pattern.patternType}</div>
-                                <div className="text-xs text-muted-foreground">{pattern.description}</div>
-                              </div>
-                              <Badge variant="outline" className="text-[10px]">
-                                Live scan
-                              </Badge>
-                            </div>
-                          </div>
+                        <div className="pt-3">
+                          <PatternChartExpansion
+                            pattern={toPatternChartInput(pattern)}
+                            height={340}
+                          />
                         </div>
                       </div>
                     )}
