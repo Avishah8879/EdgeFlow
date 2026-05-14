@@ -18,7 +18,6 @@ import { AppShell } from "@/components/layout";
 import { AuthGuard } from "@/components/AuthGuard";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ImpersonationBanner } from "@/components/ImpersonationBanner";
-import { NotificationBanner } from "@/components/NotificationBanner";
 import { PrivacyConsentBanner } from "@/components/PrivacyConsentBanner";
 
 // ── Pages loaded immediately ───────────────────────────────────────────────
@@ -316,7 +315,6 @@ function App() {
                   <JsonLd data={[generateOrganizationSchema(), generateWebSiteSchema()]} />
                   <AdminUpdatesListener />
                   <ImpersonationBanner />
-                  <NotificationBanner />
                   <ScrollToTop>
                     <Router />
                   </ScrollToTop>

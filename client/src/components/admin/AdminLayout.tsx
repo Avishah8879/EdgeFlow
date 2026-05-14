@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { AdminNav } from "./AdminNav";
 import { AdminGuard } from "@/components/AdminGuard";
+import { NotificationBanner } from "@/components/NotificationBanner";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import type { UserRole } from "@/lib/auth";
 
@@ -44,6 +45,7 @@ export function AdminLayout({
   return (
     <AdminGuard requiredRole={requiredRole}>
       <div className="min-h-screen bg-background">
+        <NotificationBanner />
         <AdminNav userRole={userRole} />
         <div className="ml-64 min-h-[calc(100vh-4rem)] flex flex-col">
           {title && (
