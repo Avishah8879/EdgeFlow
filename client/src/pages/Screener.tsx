@@ -20,6 +20,7 @@ import ExpressionBuilder from "@/components/expert-screener/ExpressionBuilder";
 import SampleTemplates from "@/components/expert-screener/SampleTemplates";
 import MyTemplates from "@/components/expert-screener/MyTemplates";
 import SaveTemplateDialog from "@/components/expert-screener/SaveTemplateDialog";
+import { EXPERT_SAMPLE_TEMPLATES } from "@/lib/screener/expert-sample-templates";
 import ProgressIndicator from "@/components/expert-screener/ProgressIndicator";
 import ResultsTable from "@/components/expert-screener/ResultsTable";
 import { ModeToggle, type ScreenerMode } from "@/components/screener/ModeToggle";
@@ -111,7 +112,10 @@ export default function Screener() {
   } = useExpertScreener();
 
   // Real-time expression validation (disabled while a screener run is active).
-  const validation = useExpressionValidation(expression, !isRunning);
+  // Explicit variant="expert" per the no-silent-defaults convention. The
+  // hook accepts undefined (defaults to expert server-side), but every Expert
+  // callsite spells it out so future consumers can't misread the intent.
+  const validation = useExpressionValidation(expression, !isRunning, "expert");
   // Combined disable check used by both Run buttons (Builder + Expression mode).
   const runDisabled =
     !expression.trim() || validation.isValidating || !validation.isValid;
@@ -476,6 +480,7 @@ export default function Screener() {
         {/* Sample Templates */}
         <div className="mb-12">
           <SampleTemplates
+            templates={EXPERT_SAMPLE_TEMPLATES}
             onTemplateSelect={handleTemplateSelect}
             disabled={isRunning}
           />
@@ -484,6 +489,7 @@ export default function Screener() {
         {/* My Templates (user-saved) */}
         <div className="mb-12">
           <MyTemplates
+            screenerType="expert"
             onLoad={handleTemplateSelect}
             onRename={(t) => {
               setEditingTemplate(t);
@@ -753,6 +759,7 @@ export default function Screener() {
           if (!next) setEditingTemplate(null);
         }}
         expression={expression.trim()}
+        screenerType="expert"
         validation={validation}
         initial={
           editingTemplate

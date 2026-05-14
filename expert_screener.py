@@ -1101,6 +1101,29 @@ def audit_identifiers(expression: str) -> Tuple[Set[str], Set[str]]:
     return known, unknown
 
 
+def audit_fundamental_identifiers(expression: str) -> Tuple[Set[str], Set[str]]:
+    """
+    Fundamental-variant counterpart to audit_identifiers. Walks the AST and
+    classifies each Name against `FUNDAMENTAL_VARIABLES` (defined in
+    server/fundamental_screener.py — the canonical list of fundamental
+    fields the run path supports).
+
+    Returns (known, unknown). Lazy import avoids a load-time cycle with
+    fundamental_screener.py (which already lazy-imports ConditionEvaluator
+    from this module).
+    """
+    # Lazy import: fundamental_screener.py lazy-imports ConditionEvaluator
+    # from us, so a top-level import here would form a cycle in some
+    # interpreter load orders. Imported once per call is cheap and safe.
+    from fundamental_screener import FUNDAMENTAL_VARIABLES
+    valid = set(FUNDAMENTAL_VARIABLES.keys())
+    tree = ast.parse(expression, mode="eval")
+    names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
+    known = names & valid
+    unknown = names - valid
+    return known, unknown
+
+
 def parse_expression(
     condition_expr: str,
 ) -> Tuple[

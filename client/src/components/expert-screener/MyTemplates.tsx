@@ -22,10 +22,13 @@ import { toast } from "sonner";
 import {
   useUserTemplates,
   useDeleteUserTemplate,
+  type ScreenerType,
   type UserScreenerTemplate,
 } from "@/hooks/use-user-templates";
 
 interface MyTemplatesProps {
+  /** Which screener's templates to list — Expert or Fundamental. */
+  screenerType: ScreenerType;
   /** Called when the user clicks Load on a saved card. */
   onLoad: (expression: string) => void;
   /** Called when the user clicks Rename. Parent owns the SaveTemplateDialog. */
@@ -33,9 +36,14 @@ interface MyTemplatesProps {
   disabled?: boolean;
 }
 
-export default function MyTemplates({ onLoad, onRename, disabled = false }: MyTemplatesProps) {
-  const { data: templates, isLoading, error } = useUserTemplates();
-  const deleteMutation = useDeleteUserTemplate();
+export default function MyTemplates({
+  screenerType,
+  onLoad,
+  onRename,
+  disabled = false,
+}: MyTemplatesProps) {
+  const { data: templates, isLoading, error } = useUserTemplates(screenerType);
+  const deleteMutation = useDeleteUserTemplate(screenerType);
   const [confirmDelete, setConfirmDelete] = useState<UserScreenerTemplate | null>(null);
 
   async function handleDelete() {

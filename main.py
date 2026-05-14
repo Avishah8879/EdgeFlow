@@ -56,6 +56,7 @@ from expert_screener import (
     get_all_ticker_symbols,
     ConditionEvaluator,
     audit_identifiers,
+    audit_fundamental_identifiers,
     cache_indicator_value,
     cache_indicator_values,
     get_cached_indicator_value,
@@ -3254,6 +3255,9 @@ class ExpertScreenerRequest(BaseModel):
     expression: str
     symbols: Optional[List[str]] = None
     period: str = "1y"
+    # Used only by the validate endpoint to pick the right identifier audit.
+    # Run paths ignore this — they have separate endpoints per variant.
+    variant: Optional[str] = None  # "expert" (default) | "fundamental"
 
 
 # ==================== Helper Functions ====================
@@ -7761,15 +7765,22 @@ async def get_expert_screener_universe():
 @fastapi_app.post("/api/expert-screener/validate", tags=["Technical Analysis"])
 async def validate_expert_screener_expression(payload: ExpertScreenerRequest):
     """
-    Validate an expert screener expression without running it.
+    Validate a screener expression without running it.
+
+    Body:
+        expression: required string.
+        variant: optional, "expert" (default) | "fundamental". Selects which
+                 identifier audit to apply. The AST-level check is the same
+                 for both — only the recognised-identifier set differs.
 
     Returns:
         {valid, expression, error?, unknown_identifiers}
         - AST check via ConditionEvaluator (catches syntax errors,
-          disallowed Python nodes).
-        - Identifier audit via audit_identifiers (catches names the
-          screener's parser wouldn't recognise — those would silently
-          produce zero-result screens at runtime).
+          disallowed Python nodes). Same for both variants.
+        - Identifier audit via audit_identifiers (expert) or
+          audit_fundamental_identifiers (fundamental) — catches names the
+          screener's parser wouldn't recognise, which would silently
+          produce zero-result screens at runtime.
         valid is true only when both pass. unknown_identifiers is always
         present (empty list when none) so consumers don't need to handle
         a missing field.
@@ -7777,6 +7788,11 @@ async def validate_expert_screener_expression(payload: ExpertScreenerRequest):
     expression = (payload.expression or "").strip()
     if not expression:
         raise HTTPException(status_code=400, detail="Expression is required")
+
+    variant = (payload.variant or "expert").strip().lower()
+    if variant not in {"expert", "fundamental"}:
+        raise HTTPException(status_code=400, detail=f"Unknown variant: {variant}")
+    audit_fn = audit_fundamental_identifiers if variant == "fundamental" else audit_identifiers
 
     # AST-level check
     try:
@@ -7791,7 +7807,7 @@ async def validate_expert_screener_expression(payload: ExpertScreenerRequest):
 
     # Identifier audit (only if AST passed)
     try:
-        _known, unknown = audit_identifiers(expression)
+        _known, unknown = audit_fn(expression)
     except (ValueError, SyntaxError) as e:
         # Shouldn't happen — AST already passed — but stay defensive.
         return success_response({

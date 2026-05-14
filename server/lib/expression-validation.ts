@@ -14,21 +14,28 @@ import { pythonBackendUrl } from './python-backend-url';
 
 const FETCH_TIMEOUT_MS = 5_000;
 
+export type ScreenerVariant = 'expert' | 'fundamental';
+
 export interface ValidateResult {
   valid: boolean;
   error?: string;
   unknownIdentifiers: string[];
 }
 
-export async function validateExpression(expression: string): Promise<ValidateResult> {
+export async function validateExpression(
+  expression: string,
+  variant?: ScreenerVariant,
+): Promise<ValidateResult> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
+    const body: Record<string, unknown> = { expression };
+    if (variant) body.variant = variant;
     const res = await fetch(`${pythonBackendUrl()}/api/expert-screener/validate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ expression }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     });
 

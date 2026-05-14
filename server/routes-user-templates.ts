@@ -26,20 +26,39 @@ const EXPRESSION_MAX = 2000;
 const DEFAULT_CAP = 5;
 const UNIQUE_VIOLATION = '23505';
 
+type ScreenerType = 'expert' | 'fundamental';
+const VALID_SCREENER_TYPES: ReadonlySet<ScreenerType> = new Set(['expert', 'fundamental']);
+const CAP_CONFIG_KEY: Record<ScreenerType, string> = {
+  expert: 'user_screener_templates_max',
+  fundamental: 'user_fundamental_templates_max',
+};
+
+function parseScreenerType(raw: unknown): ScreenerType | { error: string } {
+  // Default to expert for back-compat with existing callers that don't send it.
+  if (raw === undefined || raw === null || raw === '') return 'expert';
+  if (typeof raw !== 'string') return { error: 'screenerType must be a string' };
+  const v = raw.toLowerCase();
+  if (!VALID_SCREENER_TYPES.has(v as ScreenerType)) {
+    return { error: `Unknown screenerType: ${raw}` };
+  }
+  return v as ScreenerType;
+}
+
 interface UserTemplateRow {
   id: string;
   user_id: string;
   name: string;
   description: string | null;
   expression: string;
+  screener_type: ScreenerType;
   created_at: string;
   updated_at: string;
 }
 
-async function getCap(): Promise<number> {
+async function getCap(screenerType: ScreenerType): Promise<number> {
   const row = await queryOne<{ value: string }>(
     `SELECT value FROM system_config WHERE key = $1`,
-    ['user_screener_templates_max'],
+    [CAP_CONFIG_KEY[screenerType]],
   );
   return parseInt(row?.value || String(DEFAULT_CAP), 10) || DEFAULT_CAP;
 }
@@ -78,14 +97,16 @@ function fieldErrors(body: { name?: unknown; description?: unknown; expression?:
 
 /**
  * Run the expression through FastAPI's validate endpoint. Returns null on
- * success, or { status, body } the caller should return directly.
+ * success, or { status, body } the caller should return directly. The
+ * `variant` is forwarded so the identifier audit picks the right set.
  */
 async function checkExpression(
   expression: string,
+  screenerType: ScreenerType,
 ): Promise<null | { status: number; body: Record<string, unknown> }> {
   let result;
   try {
-    result = await validateExpression(expression);
+    result = await validateExpression(expression, screenerType);
   } catch (err: any) {
     console.error('[USER-TEMPLATES] Validation service unreachable:', err?.message);
     return {
@@ -107,7 +128,8 @@ async function checkExpression(
 
 /**
  * GET /api/expert-screener/user-templates
- * List current user's templates, newest first.
+ * Query: screenerType (optional, "expert" default | "fundamental")
+ * Lists current user's templates of the requested type, newest first.
  */
 router.get(
   '/user-templates',
@@ -115,12 +137,17 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.userId;
+      const screenerType = parseScreenerType(req.query.screenerType);
+      if (typeof screenerType !== 'string') {
+        res.status(400).json({ message: screenerType.error });
+        return;
+      }
       const result = await query<UserTemplateRow>(
-        `SELECT id, user_id, name, description, expression, created_at, updated_at
+        `SELECT id, user_id, name, description, expression, screener_type, created_at, updated_at
          FROM user_screener_templates
-         WHERE user_id = $1
+         WHERE user_id = $1 AND screener_type = $2
          ORDER BY created_at DESC`,
-        [userId],
+        [userId, screenerType],
       );
       res.json({ templates: result.rows, count: result.rowCount });
     } catch (error: any) {
@@ -132,7 +159,8 @@ router.get(
 
 /**
  * POST /api/expert-screener/user-templates
- * Body: { name, description?, expression }
+ * Body: { name, description?, expression, screenerType? }
+ *   screenerType defaults to "expert" for back-compat.
  */
 router.post(
   '/user-templates',
@@ -140,6 +168,11 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.userId;
+      const screenerType = parseScreenerType(req.body?.screenerType);
+      if (typeof screenerType !== 'string') {
+        res.status(400).json({ message: screenerType.error });
+        return;
+      }
       const errs = fieldErrors({
         name: req.body?.name,
         description: req.body?.description,
@@ -157,11 +190,12 @@ router.post(
       const description = trimOrUndef(req.body.description) ?? null;
       const expression = String(req.body.expression).trim();
 
-      // Cap check
-      const cap = await getCap();
+      // Cap check — scoped to the screener type, independent caps per type.
+      const cap = await getCap(screenerType);
       const countRow = await queryOne<{ count: string }>(
-        `SELECT COUNT(*) AS count FROM user_screener_templates WHERE user_id = $1`,
-        [userId],
+        `SELECT COUNT(*) AS count FROM user_screener_templates
+         WHERE user_id = $1 AND screener_type = $2`,
+        [userId, screenerType],
       );
       const currentCount = parseInt(countRow?.count || '0', 10);
       if (currentCount >= cap) {
@@ -171,8 +205,8 @@ router.post(
         return;
       }
 
-      // Expression validation via FastAPI
-      const validationError = await checkExpression(expression);
+      // Expression validation via FastAPI (variant-aware audit).
+      const validationError = await checkExpression(expression, screenerType);
       if (validationError) {
         res.status(validationError.status).json(validationError.body);
         return;
@@ -181,10 +215,10 @@ router.post(
       // Insert
       try {
         const row = await queryOne<UserTemplateRow>(
-          `INSERT INTO user_screener_templates (user_id, name, description, expression)
-           VALUES ($1, $2, $3, $4)
-           RETURNING id, user_id, name, description, expression, created_at, updated_at`,
-          [userId, name, description, expression],
+          `INSERT INTO user_screener_templates (user_id, name, description, expression, screener_type)
+           VALUES ($1, $2, $3, $4, $5)
+           RETURNING id, user_id, name, description, expression, screener_type, created_at, updated_at`,
+          [userId, name, description, expression, screenerType],
         );
         res.status(201).json(row);
       } catch (error: any) {
@@ -216,6 +250,17 @@ router.patch(
       const userId = req.user!.userId;
       const id = req.params.id;
 
+      // Optional screenerType assertion from caller (query OR body). When
+      // provided, the row's screener_type must match — prevents a caller from
+      // one screener's UI mutating a different screener's row by id alone.
+      const callerType = parseScreenerType(
+        req.query.screenerType ?? req.body?.screenerType,
+      );
+      if (typeof callerType !== 'string') {
+        res.status(400).json({ message: callerType.error });
+        return;
+      }
+
       const errs = fieldErrors({
         name: req.body?.name,
         description: req.body?.description,
@@ -227,10 +272,10 @@ router.patch(
       }
 
       const existing = await queryOne<UserTemplateRow>(
-        `SELECT id, user_id, name, description, expression, created_at, updated_at
+        `SELECT id, user_id, name, description, expression, screener_type, created_at, updated_at
          FROM user_screener_templates
-         WHERE id = $1 AND user_id = $2`,
-        [id, userId],
+         WHERE id = $1 AND user_id = $2 AND screener_type = $3`,
+        [id, userId, callerType],
       );
       if (!existing) {
         res.status(404).json({ message: 'Template not found' });
@@ -258,7 +303,8 @@ router.patch(
       if (req.body?.expression !== undefined) {
         newExpression = String(req.body.expression).trim();
         if (newExpression !== existing.expression) {
-          const validationError = await checkExpression(newExpression);
+          // Validate against the row's own screener type — PATCH never changes the variant.
+          const validationError = await checkExpression(newExpression, existing.screener_type);
           if (validationError) {
             res.status(validationError.status).json(validationError.body);
             return;
@@ -281,7 +327,7 @@ router.patch(
           `UPDATE user_screener_templates
            SET ${updates.join(', ')}
            WHERE id = $${p++} AND user_id = $${p++}
-           RETURNING id, user_id, name, description, expression, created_at, updated_at`,
+           RETURNING id, user_id, name, description, expression, screener_type, created_at, updated_at`,
           params,
         );
         if (!row) {
@@ -315,9 +361,20 @@ router.delete(
     try {
       const userId = req.user!.userId;
       const id = req.params.id;
+      // Scope by screener_type too — a caller asserts which variant they
+      // think they're deleting. Prevents "Expert UI deletes Fundamental row
+      // by id" surprises. Defaults to "expert" for back-compat with any
+      // legacy caller that doesn't supply the query param.
+      const callerType = parseScreenerType(req.query.screenerType);
+      if (typeof callerType !== 'string') {
+        res.status(400).json({ message: callerType.error });
+        return;
+      }
       const result = await query(
-        `DELETE FROM user_screener_templates WHERE id = $1 AND user_id = $2 RETURNING id`,
-        [id, userId],
+        `DELETE FROM user_screener_templates
+         WHERE id = $1 AND user_id = $2 AND screener_type = $3
+         RETURNING id`,
+        [id, userId, callerType],
       );
       if (result.rowCount === 0) {
         res.status(404).json({ message: 'Template not found' });

@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import {
   useCreateUserTemplate,
   useUpdateUserTemplate,
+  type ScreenerType,
   type UserTemplateMutationError,
 } from "@/hooks/use-user-templates";
 import type { ExpressionValidation } from "@/hooks/use-expression-validation";
@@ -26,6 +27,8 @@ interface SaveTemplateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   expression: string;
+  /** Which screener the new template belongs to. Sent in the POST body. */
+  screenerType: ScreenerType;
   /** Parent's validation state (PR 1.5 hook output). Re-used here — not re-run. */
   validation: ExpressionValidation;
   /** If provided, dialog opens in "edit" mode and PATCHes instead of POSTs. */
@@ -36,6 +39,7 @@ export default function SaveTemplateDialog({
   open,
   onOpenChange,
   expression,
+  screenerType,
   validation,
   initial,
 }: SaveTemplateDialogProps) {
@@ -44,8 +48,8 @@ export default function SaveTemplateDialog({
   const [description, setDescription] = useState("");
   const [serverError, setServerError] = useState<UserTemplateMutationError | null>(null);
 
-  const createMutation = useCreateUserTemplate();
-  const updateMutation = useUpdateUserTemplate();
+  const createMutation = useCreateUserTemplate(screenerType);
+  const updateMutation = useUpdateUserTemplate(screenerType);
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   // Reset/prefill on open.
@@ -86,6 +90,7 @@ export default function SaveTemplateDialog({
           name: name.trim(),
           description: description.trim() || null,
           expression,
+          screenerType,
         });
         toast.success("Template saved");
       }

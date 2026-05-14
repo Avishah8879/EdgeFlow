@@ -3,6 +3,8 @@ import { getApiBaseUrl } from "@/lib/api-config";
 
 const DEBOUNCE_MS = 300;
 
+export type ScreenerVariant = "expert" | "fundamental";
+
 export interface ExpressionValidation {
   /** True only when we have a definite positive result from the backend. */
   isValid: boolean;
@@ -51,6 +53,7 @@ const EMPTY_RESULT: ExpressionValidation = {
 export function useExpressionValidation(
   expression: string,
   enabled: boolean = true,
+  variant?: ScreenerVariant,
 ): ExpressionValidation {
   const [state, setState] = useState<ExpressionValidation>(EMPTY_RESULT);
 
@@ -76,10 +79,12 @@ export function useExpressionValidation(
       setState((prev) => ({ ...prev, isValidating: true }));
 
       const baseUrl = getApiBaseUrl();
+      const payload: Record<string, unknown> = { expression: trimmed };
+      if (variant) payload.variant = variant;
       fetch(`${baseUrl}/api/expert-screener/validate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ expression: trimmed }),
+        body: JSON.stringify(payload),
         signal: controller.signal,
       })
         .then(async (res) => {
@@ -115,7 +120,7 @@ export function useExpressionValidation(
       clearTimeout(timer);
       controller.abort();
     };
-  }, [expression, enabled]);
+  }, [expression, enabled, variant]);
 
   return state;
 }

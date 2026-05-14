@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Bookmark, FolderOpen, Loader2, PlayCircle, X, Info, Sparkles } from "lucide-react";
+import { Bookmark, FolderOpen, Loader2, PlayCircle, X, Info } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,25 +29,17 @@ import { parse } from "@/lib/screener/parse";
 import type { BuilderTree } from "@/lib/screener/types";
 import { Link } from "wouter";
 import { toast } from "sonner";
+import SampleTemplates from "@/components/expert-screener/SampleTemplates";
+import MyTemplates from "@/components/expert-screener/MyTemplates";
+import SaveTemplateDialog from "@/components/expert-screener/SaveTemplateDialog";
+import { FUNDAMENTAL_SAMPLE_TEMPLATES } from "@/lib/screener/fundamental-sample-templates";
+import { useExpressionValidation } from "@/hooks/use-expression-validation";
+import type { UserScreenerTemplate } from "@/hooks/use-user-templates";
 
-const fundamentalPresets = [
-  {
-    label: "Value Pick",
-    value: "trailing_pe < 15 and price_to_book < 2 and dividend_yield > 1",
-  },
-  {
-    label: "Growth Monster",
-    value: "earnings_growth > 20 and revenue_growth > 15 and return_on_equity > 15",
-  },
-  {
-    label: "Low Debt Quality",
-    value: "debt_to_equity < 0.5 and current_ratio > 1.5 and profit_margin > 10",
-  },
-  {
-    label: "Large Cap Dividend",
-    value: "market_cap > 50000000000 and dividend_yield > 2 and payout_ratio < 60",
-  },
-];
+// The legacy hard-coded `fundamentalPresets` chip array was replaced in PR 3
+// by FUNDAMENTAL_SAMPLE_TEMPLATES (5 card-style templates, rendered via the
+// shared <SampleTemplates>). Audit trail of the swap is in
+// client/src/lib/screener/fundamental-sample-templates.ts.
 
 const variableCheatsheet = [
   { cat: "Valuation", vars: "market_cap, trailing_pe, forward_pe, price_to_book, price_to_sales, peg_ratio, enterprise_value" },
@@ -108,7 +100,8 @@ function friendlyName(key: string): string {
 }
 
 export function FundamentalScreenerTab() {
-  const [expression, setExpression] = useState(fundamentalPresets[0].value);
+  // Seed with the first sample template's expression — same data, new module.
+  const [expression, setExpression] = useState(FUNDAMENTAL_SAMPLE_TEMPLATES[0].expression);
   const [mode, setMode] = useState<ScreenerMode>("builder");
   const [builderTree, setBuilderTree] = useState<BuilderTree>({
     kind: "group",
@@ -119,6 +112,9 @@ export function FundamentalScreenerTab() {
   const lastBuilderCompiledRef = useRef<string>("");
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveName, setSaveName] = useState("");
+  // Save-as-Template dialog (PR 3) — distinct from the Save-Results dialog above.
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<UserScreenerTemplate | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const autorunConsumedRef = useRef(false);
   const saveResultMutation = useSaveFundamentalScreenerResult();
@@ -179,7 +175,10 @@ export function FundamentalScreenerTab() {
       setUnparseableReason(undefined);
       lastBuilderCompiledRef.current = exprStr;
     } else {
+      // Mirror Expert's PR 1 behaviour: flip to Expression mode so the user
+      // sees their expression rather than an empty builder + note.
       setUnparseableReason(result.reason);
+      setMode("expression");
     }
   };
 
@@ -193,6 +192,11 @@ export function FundamentalScreenerTab() {
     runScreener,
     cancelScreener,
   } = useFundamentalScreener();
+
+  // Real-time expression validation (PR 1.5 hook, fundamental variant).
+  const validation = useExpressionValidation(expression, !isRunning, "fundamental");
+  const runDisabled =
+    !expression.trim() || validation.isValidating || !validation.isValid;
 
   const [sortKey, setSortKey] = useState<string>("market_cap");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -284,6 +288,25 @@ export function FundamentalScreenerTab() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Sample Templates — replaces the legacy fundamentalPresets chips.
+          Layout mirrors Expert's /expert-screener pattern. */}
+      <SampleTemplates
+        templates={FUNDAMENTAL_SAMPLE_TEMPLATES}
+        onTemplateSelect={loadPresetIntoBuilder}
+        disabled={isRunning}
+      />
+
+      {/* My Templates (user-saved Fundamental templates) */}
+      <MyTemplates
+        screenerType="fundamental"
+        onLoad={loadPresetIntoBuilder}
+        onRename={(t) => {
+          setEditingTemplate(t);
+          setSaveTemplateOpen(true);
+        }}
+        disabled={isRunning}
+      />
+
       {/* Mode toggle row */}
       <div className="flex items-center justify-between">
         <ModeToggle mode={mode} onChange={handleModeChange} />
@@ -311,36 +334,51 @@ export function FundamentalScreenerTab() {
             />
           )}
 
-          {/* Presets */}
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {fundamentalPresets.map((preset) => (
-              <Button
-                key={preset.label}
-                variant="outline"
-                size="sm"
-                className="h-7 text-[10px]"
-                onClick={() => loadPresetIntoBuilder(preset.value)}
-              >
-                <Sparkles className="w-3 h-3 mr-1" />
-                {preset.label}
-              </Button>
-            ))}
-          </div>
-
-          {/* Run / Cancel */}
-          <div className="mt-3 flex gap-2">
+          {/* Run / Cancel / Save-as-Template — chips removed in PR 3 (replaced by <SampleTemplates>) */}
+          <div className="mt-3 flex flex-wrap gap-2">
             {isRunning ? (
               <Button variant="destructive" size="sm" onClick={cancelScreener}>
                 <X className="w-3.5 h-3.5 mr-1" />
                 Cancel
               </Button>
             ) : (
-              <Button size="sm" onClick={handleRun} disabled={!expression.trim()}>
+              <Button
+                size="sm"
+                onClick={handleRun}
+                disabled={runDisabled}
+                aria-busy={validation.isValidating}
+              >
                 <PlayCircle className="w-3.5 h-3.5 mr-1" />
                 Run Screener
               </Button>
             )}
+            {!isRunning && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setEditingTemplate(null);
+                  setSaveTemplateOpen(true);
+                }}
+                disabled={runDisabled}
+                className="gap-1.5"
+              >
+                <Bookmark className="h-3.5 w-3.5" />
+                Save as Template
+              </Button>
+            )}
           </div>
+
+          {/* Inline validation error / offline note */}
+          {validation.error && (
+            <div className="mt-2 text-xs text-destructive">{validation.error}</div>
+          )}
+          {validation.isOffline && !validation.error && (
+            <div className="mt-2 text-[11px] text-muted-foreground">
+              Validation offline — Run will still try.
+            </div>
+          )}
         </div>
 
         {/* Cheatsheet + stats */}
@@ -534,6 +572,27 @@ export function FundamentalScreenerTab() {
           No stocks matched the expression.
         </div>
       )}
+
+      {/* Save as Template dialog (PR 3) — single instance, used for both create and rename. */}
+      <SaveTemplateDialog
+        open={saveTemplateOpen}
+        onOpenChange={(next) => {
+          setSaveTemplateOpen(next);
+          if (!next) setEditingTemplate(null);
+        }}
+        expression={expression.trim()}
+        screenerType="fundamental"
+        validation={validation}
+        initial={
+          editingTemplate
+            ? {
+                id: editingTemplate.id,
+                name: editingTemplate.name,
+                description: editingTemplate.description,
+              }
+            : undefined
+        }
+      />
     </div>
   );
 }
