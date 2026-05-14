@@ -56,16 +56,34 @@ function greeting() {
 }
 
 // ─── Top indices strip ───────────────────────────────────────────────
+// Below `sm` (640px): horizontal-scroll swipeable strip (6 snap-points).
+// `sm` and up: 2-col grid; `md`: 3-col; `lg+`: 6-col. The same outer wrapper
+// switches `display` from flex (mobile) to grid (sm+) so one tile component
+// services both modes.
 function IndicesStrip() {
   const { data, isLoading } = useIndices({ limit: 6 });
   const indices = data?.data ?? [];
 
+  // Tile styling adapts: on narrow widths cells need a min-width so they
+  // remain readable while scrolling; on sm+ they fill grid cells and use
+  // the existing shared-border treatment.
+  const tileBase =
+    "p-4 shrink-0 min-w-[140px] snap-start " +
+    "sm:shrink sm:min-w-0 " +
+    "sm:border-r sm:last:border-r-0 sm:border-b lg:border-b-0 sm:border-border";
+
+  const containerCls =
+    "flex overflow-x-auto snap-x snap-mandatory gap-3 px-3 py-1 " +
+    "sm:overflow-visible sm:snap-none sm:gap-0 sm:px-0 sm:py-0 " +
+    "sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 " +
+    "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+
   if (isLoading) {
     return (
       <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <div className={containerCls}>
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="p-4 border-r last:border-r-0 border-b lg:border-b-0 border-border">
+            <div key={i} className={cn(tileBase, "rounded-md sm:rounded-none")}>
               <Skeleton className="h-3 w-16 mb-2" />
               <Skeleton className="h-5 w-24 mb-1" />
               <Skeleton className="h-3 w-12" />
@@ -78,14 +96,17 @@ function IndicesStrip() {
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+      <div className={containerCls}>
         {indices.slice(0, 6).map((idx) => {
           const positive = idx.changePercent >= 0;
           return (
             <Link
               key={idx.id}
               href={`/index/${encodeURIComponent(idx.symbol)}`}
-              className="p-4 border-r last:border-r-0 border-b lg:border-b-0 border-border hover:bg-muted/30 transition-colors duration-fast"
+              className={cn(
+                tileBase,
+                "border border-border rounded-md sm:border-0 sm:rounded-none hover:bg-muted/30 transition-colors duration-fast",
+              )}
             >
               <div className="text-[10.5px] font-bold uppercase tracking-uppercase text-muted-foreground truncate">
                 {idx.name}
@@ -247,7 +268,7 @@ function SectorHeatmap() {
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-3 border-b border-border gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-3 border-b border-border">
         <div>
           <Eyebrow className="block">Top movers · Heatmap</Eyebrow>
           <h3 className="text-sm font-bold mt-0.5">NSE 200 · today</h3>
@@ -652,19 +673,25 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          // Classic 3-col
+          // Classic — 1/2/3-column grid that reflows continuously across widths.
+          // Mobile priority order (when the wrappers collapse via display:contents)
+          // is set by `order-N` on each rail; on lg+ the wrappers become flex
+          // columns and `order-none` restores natural source order so the desktop
+          // visual is identical to before.
+          //   Mobile order: Watchlist (2) → Heatmap (3) → Movers (4) →
+          //   LiveFeed (5) → QuickScreens (6) → AlphaCTA (99 = last).
           <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[280px_1fr_320px] gap-5 items-start">
-            <div className="flex flex-col gap-5">
-              <WatchlistRail />
-              <AlphaCTA />
+            <div className="contents lg:flex lg:flex-col lg:gap-5">
+              <div className="order-2 lg:order-none"><WatchlistRail /></div>
+              <div className="order-[99] lg:order-none"><AlphaCTA /></div>
             </div>
-            <div className="flex flex-col gap-5">
-              <SectorHeatmap />
-              <TopMoversSplit />
-              <LiveFeed />
-              <QuickScreens />
+            <div className="contents lg:flex lg:flex-col lg:gap-5">
+              <div className="order-3 lg:order-none"><SectorHeatmap /></div>
+              <div className="order-4 lg:order-none"><TopMoversSplit /></div>
+              <div className="order-5 lg:order-none"><LiveFeed /></div>
+              <div className="order-6 lg:order-none"><QuickScreens /></div>
             </div>
-            <div className="hidden xl:flex flex-col gap-5">
+            <div className="hidden xl:flex xl:flex-col xl:gap-5">
               <SavedScreensRail />
               <RecentBacktestsRail />
             </div>
