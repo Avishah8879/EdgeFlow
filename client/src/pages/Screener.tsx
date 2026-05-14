@@ -18,6 +18,8 @@ import {
 import { useUrlState } from "@/hooks/use-url-state";
 import ExpressionBuilder from "@/components/expert-screener/ExpressionBuilder";
 import SampleTemplates from "@/components/expert-screener/SampleTemplates";
+import MyTemplates from "@/components/expert-screener/MyTemplates";
+import SaveTemplateDialog from "@/components/expert-screener/SaveTemplateDialog";
 import ProgressIndicator from "@/components/expert-screener/ProgressIndicator";
 import ResultsTable from "@/components/expert-screener/ResultsTable";
 import { ModeToggle, type ScreenerMode } from "@/components/screener/ModeToggle";
@@ -25,6 +27,8 @@ import { ConditionBuilder } from "@/components/screener/ConditionBuilder";
 import { compile, isEmpty } from "@/lib/screener/compile";
 import { parse } from "@/lib/screener/parse";
 import type { BuilderTree } from "@/lib/screener/types";
+import { useExpressionValidation } from "@/hooks/use-expression-validation";
+import type { UserScreenerTemplate } from "@/hooks/use-user-templates";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
@@ -68,6 +72,9 @@ export default function Screener() {
   const lastBuilderCompiledRef = useRef<string>("");
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveName, setSaveName] = useState("");
+  // Save-as-Template dialog (PR 2) — distinct from the Save-Results dialog above.
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<UserScreenerTemplate | null>(null);
 
   // State persistence tracking
   const [hasRestoredFromStorage, setHasRestoredFromStorage] = useState(false);
@@ -102,6 +109,15 @@ export default function Screener() {
     restoreFromStorage,
     reset,
   } = useExpertScreener();
+
+  // Real-time expression validation (disabled while a screener run is active).
+  const validation = useExpressionValidation(expression, !isRunning);
+  // Combined disable check used by both Run buttons (Builder + Expression mode).
+  const runDisabled =
+    !expression.trim() || validation.isValidating || !validation.isValid;
+  // Surface the validation error first, then the legacy validationError
+  // (only set on empty-on-submit backstop in handleRun).
+  const displayError = validation.error || validationError;
 
   // URL state synchronization for expression
   const { syncToUrl } = useUrlState({
@@ -242,7 +258,10 @@ export default function Screener() {
       lastBuilderCompiledRef.current = compile(r.tree);
       setUnparseableReason(undefined);
     } else {
+      // Builder can't render this shape — flip to Expression mode so the user
+      // sees their expression rather than an empty builder + note.
       setUnparseableReason(r.reason);
+      setMode("expression");
     }
   };
 
@@ -462,6 +481,18 @@ export default function Screener() {
           />
         </div>
 
+        {/* My Templates (user-saved) */}
+        <div className="mb-12">
+          <MyTemplates
+            onLoad={handleTemplateSelect}
+            onRename={(t) => {
+              setEditingTemplate(t);
+              setSaveTemplateOpen(true);
+            }}
+            disabled={isRunning}
+          />
+        </div>
+
         {/* Mode toggle */}
         <div className="mb-3 flex items-center justify-between">
           <ModeToggle
@@ -519,13 +550,14 @@ export default function Screener() {
                 unparseableReason={unparseableReason}
               />
               {/* Run/Cancel buttons (reuse existing handlers) */}
-              <div className="mt-4 flex gap-3">
+              <div className="mt-4 flex gap-3 flex-wrap">
                 {!isRunning ? (
                   <button
                     type="button"
                     className="run-button"
                     onClick={handleRun}
-                    disabled={!expression.trim() || Boolean(validationError)}
+                    disabled={runDisabled}
+                    aria-busy={validation.isValidating}
                   >
                     <span className="run-button-content">
                       Run Expert Screener
@@ -536,9 +568,29 @@ export default function Screener() {
                     Cancel Screening
                   </Button>
                 )}
+                {!isRunning && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingTemplate(null);
+                      setSaveTemplateOpen(true);
+                    }}
+                    disabled={runDisabled}
+                    className="gap-2"
+                  >
+                    <Bookmark className="h-4 w-4" />
+                    Save as Template
+                  </Button>
+                )}
               </div>
-              {validationError && (
-                <div className="mt-2 text-sm text-destructive">{validationError}</div>
+              {displayError && (
+                <div className="mt-2 text-sm text-destructive">{displayError}</div>
+              )}
+              {validation.isOffline && !displayError && (
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Validation offline — Run will still try.
+                </div>
               )}
             </div>
           ) : (
@@ -548,7 +600,10 @@ export default function Screener() {
             onRun={handleRun}
             onCancel={handleCancel}
             isRunning={isRunning}
-            validationError={validationError || error || undefined}
+            runDisabled={runDisabled}
+            isValidating={validation.isValidating}
+            isOffline={validation.isOffline}
+            validationError={displayError || error || undefined}
           />
           )}
         </div>
@@ -689,6 +744,26 @@ export default function Screener() {
         )}
       </div>
       </div>
+
+      {/* Save as Template dialog (PR 2) — single instance, used for both create and rename. */}
+      <SaveTemplateDialog
+        open={saveTemplateOpen}
+        onOpenChange={(next) => {
+          setSaveTemplateOpen(next);
+          if (!next) setEditingTemplate(null);
+        }}
+        expression={expression.trim()}
+        validation={validation}
+        initial={
+          editingTemplate
+            ? {
+                id: editingTemplate.id,
+                name: editingTemplate.name,
+                description: editingTemplate.description,
+              }
+            : undefined
+        }
+      />
     </>
   );
 }

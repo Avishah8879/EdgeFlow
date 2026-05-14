@@ -39,8 +39,15 @@ import {
   type ApiKey,
 } from './db/api-key-store';
 import { getRedis } from './lib/redis';
+import { pythonBackendUrl } from './lib/python-backend-url';
 
 const router = Router();
+
+// IANA timezone names: letters, digits, '_', '/', '+', '-'. Postgres rejects anything else.
+const IANA_TZ_RE = /^[A-Za-z][A-Za-z0-9_+\-/]{0,63}$/;
+function resolveTz(raw: unknown): string {
+  return typeof raw === 'string' && IANA_TZ_RE.test(raw) ? raw : 'UTC';
+}
 
 // ============================================================================
 // SYSTEM HEALTH CHECK UTILITY
@@ -63,7 +70,7 @@ async function checkSystemHealth(): Promise<SystemHealth> {
 
   // Use direct Python backend URL for server-to-server health checks
   // VITE_GRADIO_BASE_URL may point to nginx (e.g. localhost:81) which doesn't route /health/*
-  const pythonBackendUrl = process.env.PYTHON_BACKEND_URL || 'http://localhost:7860';
+  const pyUrl = pythonBackendUrl();
 
   // Check Node.js auth database (PostgreSQL)
   try {
@@ -78,7 +85,7 @@ async function checkSystemHealth(): Promise<SystemHealth> {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3000);
-    const cacheRes = await fetch(`${pythonBackendUrl}/health/cache`, {
+    const cacheRes = await fetch(`${pyUrl}/health/cache`, {
       signal: controller.signal,
     });
     clearTimeout(timeout);
@@ -98,7 +105,7 @@ async function checkSystemHealth(): Promise<SystemHealth> {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3000);
-    const apiRes = await fetch(`${pythonBackendUrl}/health/db`, {
+    const apiRes = await fetch(`${pyUrl}/health/db`, {
       signal: controller.signal,
     });
     clearTimeout(timeout);
@@ -260,34 +267,45 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const days = Math.min(parseInt(req.query.days as string) || 30, 90);
+      const tz = resolveTz(req.query.tz);
 
+      // Bucket by viewer's local calendar day (not UTC) so "today" lines up with the viewer's wall clock.
       const result = await query(`
+        WITH bounds AS (
+          SELECT (date_trunc('day', NOW() AT TIME ZONE $1) - make_interval(days => $2 - 1))::date AS start_day,
+                 date_trunc('day', NOW() AT TIME ZONE $1)::date AS end_day
+        )
         SELECT
-          DATE(created_at) as date,
+          to_char(date_trunc('day', created_at AT TIME ZONE $1), 'YYYY-MM-DD') as date,
           COUNT(*) as count,
           COUNT(*) FILTER (WHERE tier = 'premium') as premium_count,
           COUNT(*) FILTER (WHERE provider = 'google') as google_count
-        FROM users
-        WHERE created_at >= NOW() - INTERVAL '${days} days'
-        GROUP BY DATE(created_at)
-        ORDER BY date ASC
-      `);
+        FROM users, bounds
+        WHERE (created_at AT TIME ZONE $1)::date BETWEEN bounds.start_day AND bounds.end_day
+        GROUP BY 1
+        ORDER BY 1 ASC
+      `, [tz, days]);
 
-      // Fill in missing days with zeros
-      const data: { date: string; count: number; premium: number; google: number }[] = [];
-      const today = new Date();
-      for (let i = days - 1; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-        const row = result.rows.find((r: any) => r.date.toISOString().split('T')[0] === dateStr);
-        data.push({
-          date: dateStr,
+      const rowsByDate = new Map<string, any>();
+      for (const r of result.rows) rowsByDate.set(r.date, r);
+
+      // Generate the day list in the requested TZ so a viewer never sees a future-dated bar.
+      const nowParts = await query(
+        `SELECT to_char(date_trunc('day', NOW() AT TIME ZONE $1) - make_interval(days => g), 'YYYY-MM-DD') AS d
+         FROM generate_series(0, $2 - 1) AS g
+         ORDER BY g DESC`,
+        [tz, days]
+      );
+
+      const data = nowParts.rows.map((d: any) => {
+        const row = rowsByDate.get(d.d);
+        return {
+          date: d.d,
           count: row ? parseInt(row.count) : 0,
           premium: row ? parseInt(row.premium_count) : 0,
           google: row ? parseInt(row.google_count) : 0,
-        });
-      }
+        };
+      });
 
       res.json({ data });
     } catch (error: any) {
@@ -308,37 +326,46 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const days = Math.min(parseInt(req.query.days as string) || 30, 90);
+      const tz = resolveTz(req.query.tz);
 
       const result = await query(`
+        WITH bounds AS (
+          SELECT (date_trunc('day', NOW() AT TIME ZONE $1) - make_interval(days => $2 - 1))::date AS start_day,
+                 date_trunc('day', NOW() AT TIME ZONE $1)::date AS end_day
+        )
         SELECT
-          DATE(created_at) as date,
+          to_char(date_trunc('day', created_at AT TIME ZONE $1), 'YYYY-MM-DD') as date,
           COUNT(*) as total,
           COUNT(*) FILTER (WHERE success = true) as success_count,
           COUNT(*) FILTER (WHERE success = false) as failed_count,
           COUNT(DISTINCT user_id) FILTER (WHERE success = true) as unique_users
-        FROM auth_logs
+        FROM auth_logs, bounds
         WHERE event_type IN ('login', 'failed_login')
-          AND created_at >= NOW() - INTERVAL '${days} days'
-        GROUP BY DATE(created_at)
-        ORDER BY date ASC
-      `);
+          AND (created_at AT TIME ZONE $1)::date BETWEEN bounds.start_day AND bounds.end_day
+        GROUP BY 1
+        ORDER BY 1 ASC
+      `, [tz, days]);
 
-      // Fill in missing days with zeros
-      const data: { date: string; total: number; success: number; failed: number; uniqueUsers: number }[] = [];
-      const today = new Date();
-      for (let i = days - 1; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-        const row = result.rows.find((r: any) => r.date.toISOString().split('T')[0] === dateStr);
-        data.push({
-          date: dateStr,
+      const rowsByDate = new Map<string, any>();
+      for (const r of result.rows) rowsByDate.set(r.date, r);
+
+      const dayList = await query(
+        `SELECT to_char(date_trunc('day', NOW() AT TIME ZONE $1) - make_interval(days => g), 'YYYY-MM-DD') AS d
+         FROM generate_series(0, $2 - 1) AS g
+         ORDER BY g DESC`,
+        [tz, days]
+      );
+
+      const data = dayList.rows.map((d: any) => {
+        const row = rowsByDate.get(d.d);
+        return {
+          date: d.d,
           total: row ? parseInt(row.total) : 0,
           success: row ? parseInt(row.success_count) : 0,
           failed: row ? parseInt(row.failed_count) : 0,
           uniqueUsers: row ? parseInt(row.unique_users) : 0,
-        });
-      }
+        };
+      });
 
       res.json({ data });
     } catch (error: any) {
@@ -429,52 +456,53 @@ router.get(
   requireModerator,
   async (req: Request, res: Response) => {
     try {
-      // Monthly growth for the past 12 months
+      const tz = resolveTz(req.query.tz);
+
+      // Monthly growth for the past 12 months — bucketed in viewer TZ so month boundaries match local calendar.
       const monthlyResult = await query(`
         SELECT
-          DATE_TRUNC('month', created_at) as month,
+          to_char(date_trunc('month', created_at AT TIME ZONE $1), 'YYYY-MM') as month,
           COUNT(*) as signups,
           COUNT(*) FILTER (WHERE tier = 'premium') as premium_signups
         FROM users
-        WHERE created_at >= NOW() - INTERVAL '12 months'
-        GROUP BY DATE_TRUNC('month', created_at)
-        ORDER BY month ASC
-      `);
+        WHERE (created_at AT TIME ZONE $1) >= date_trunc('month', NOW() AT TIME ZONE $1) - INTERVAL '11 months'
+        GROUP BY 1
+        ORDER BY 1 ASC
+      `, [tz]);
 
-      // Calculate cumulative totals
       let cumulative = 0;
       const monthlyData = monthlyResult.rows.map((row: any) => {
         cumulative += parseInt(row.signups);
         return {
-          month: row.month.toISOString().slice(0, 7),
+          month: row.month,
           signups: parseInt(row.signups),
           premium: parseInt(row.premium_signups),
           cumulative,
         };
       });
 
-      // Week-over-week growth
+      // Week-over-week growth — week-starts are also in viewer TZ.
       const wowResult = await query(`
         WITH weekly AS (
           SELECT
-            DATE_TRUNC('week', created_at) as week,
+            to_char(date_trunc('week', created_at AT TIME ZONE $1), 'YYYY-MM-DD') as week,
             COUNT(*) as count
           FROM users
-          WHERE created_at >= NOW() - INTERVAL '8 weeks'
-          GROUP BY DATE_TRUNC('week', created_at)
-          ORDER BY week
+          WHERE (created_at AT TIME ZONE $1) >= date_trunc('week', NOW() AT TIME ZONE $1) - INTERVAL '8 weeks'
+          GROUP BY 1
+          ORDER BY 1
         )
         SELECT
           week,
           count,
           LAG(count) OVER (ORDER BY week) as prev_count
         FROM weekly
-      `);
+      `, [tz]);
 
       const weeklyGrowth = wowResult.rows
         .filter((row: any) => row.prev_count !== null)
         .map((row: any) => ({
-          week: row.week.toISOString().split('T')[0],
+          week: row.week,
           count: parseInt(row.count),
           growth: row.prev_count > 0
             ? Math.round(((row.count - row.prev_count) / row.prev_count) * 100)
@@ -3849,16 +3877,27 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const days = parseInt(req.query.days as string) || 7;
+      const tz = resolveTz(req.query.tz);
 
-      // Page views by page
+      // ─── Time-spent source of truth ───────────────────────────────────────
+      // effective_duration excludes NULL duration_seconds (in-progress / lost beacons)
+      //   so unmeasured pageviews don't pad sums, AND so sum/count share a denominator
+      //   (avg × count = sum, naturally).
+      // 1800s (30 min) cap per pageview suppresses forgotten tabs / idle windows.
+      // Same rule used by /analytics/user-time-stats; do not diverge.
+
+      // Page views by page (table on Pages tab) — unified time rule.
       const byPage = await query(`
         SELECT
           page_path as "pagePath",
           COUNT(*) as "viewCount",
           COUNT(DISTINCT user_id) as "uniqueUsers",
           COUNT(DISTINCT session_id) as "uniqueSessions",
-          AVG(NULLIF(duration_seconds, 0))::numeric(10,2) as "avgDurationSeconds",
-          MAX(duration_seconds) as "maxDurationSeconds"
+          (
+            SUM(LEAST(duration_seconds, 1800)) FILTER (WHERE duration_seconds IS NOT NULL)::numeric(12,2)
+            / NULLIF(COUNT(*) FILTER (WHERE duration_seconds IS NOT NULL), 0)
+          )::numeric(10,2) as "avgDurationSeconds",
+          MAX(LEAST(duration_seconds, 1800)) FILTER (WHERE duration_seconds IS NOT NULL) as "maxDurationSeconds"
         FROM page_views
         WHERE created_at >= NOW() - INTERVAL '${days} days'
         GROUP BY page_path
@@ -3866,18 +3905,22 @@ router.get(
         LIMIT 50
       `);
 
-      // Page views over time (daily)
+      // Page views over time (daily, viewer TZ).
       const overTime = await query(`
+        WITH bounds AS (
+          SELECT (date_trunc('day', NOW() AT TIME ZONE $1) - make_interval(days => $2 - 1))::date AS start_day,
+                 date_trunc('day', NOW() AT TIME ZONE $1)::date AS end_day
+        )
         SELECT
-          DATE(created_at) as date,
+          to_char(date_trunc('day', created_at AT TIME ZONE $1), 'YYYY-MM-DD') as date,
           COUNT(*) as "pageViews",
           COUNT(DISTINCT user_id) as "uniqueUsers",
           COUNT(DISTINCT session_id) as "uniqueSessions"
-        FROM page_views
-        WHERE created_at >= NOW() - INTERVAL '${days} days'
-        GROUP BY DATE(created_at)
-        ORDER BY date ASC
-      `);
+        FROM page_views, bounds
+        WHERE (created_at AT TIME ZONE $1)::date BETWEEN bounds.start_day AND bounds.end_day
+        GROUP BY 1
+        ORDER BY 1 ASC
+      `, [tz, days]);
 
       // Device breakdown
       const byDevice = await query(`
@@ -3903,17 +3946,20 @@ router.get(
         LIMIT 10
       `);
 
-      // Average time on each page
+      // Average time on each page — unified rule, capped & NULL-excluded.
       const timeByPage = await query(`
         SELECT
           page_path as "pagePath",
-          AVG(NULLIF(duration_seconds, 0))::numeric(10,2) as "avgDuration",
-          COUNT(*) FILTER (WHERE duration_seconds > 0) as "sessionsWithDuration"
+          (
+            SUM(LEAST(duration_seconds, 1800))::numeric(12,2)
+            / NULLIF(COUNT(*), 0)
+          )::numeric(10,2) as "avgDuration",
+          COUNT(*) as "sessionsWithDuration"
         FROM page_views
         WHERE created_at >= NOW() - INTERVAL '${days} days'
           AND duration_seconds IS NOT NULL
         GROUP BY page_path
-        HAVING COUNT(*) FILTER (WHERE duration_seconds > 0) >= 5
+        HAVING COUNT(*) >= 5
         ORDER BY "avgDuration" DESC
         LIMIT 20
       `);
@@ -4158,91 +4204,174 @@ router.get(
     try {
       const days = parseInt(req.query.days as string) || 7;
 
-      // Time spent per user (logged in users only)
+      // ─── Time-spent: single source of truth ───────────────────────────────
+      // Effective duration for ONE pageview =
+      //   • LEAST(duration_seconds, 1800)  when duration_seconds IS NOT NULL
+      //   • EXCLUDED entirely when duration_seconds IS NULL
+      //
+      // Rationale:
+      //   - NULL means the /page-leave beacon never landed (in-progress page,
+      //     tab crash, mobile pagehide skipped). Imputing a fake number would
+      //     pad totals with non-measurements; dropping the row keeps the
+      //     denominator and numerator on the same set so:
+      //         avg_time_per_page = total_time / measured_pageviews   exactly.
+      //   - 1800s (30 min) cap suppresses forgotten/idle tabs from dominating.
+      //   - "Page Views" displayed to the admin still COUNT(*) all rows (incl.
+      //     NULLs) because that count answers "how many pages did this user
+      //     visit?", not "how much time did we measure?".
+      // Any change to this rule MUST be mirrored in /analytics/page-stats.
+
       const userTimeStats = await query(`
+        WITH eff AS (
+          SELECT
+            pv.user_id,
+            pv.page_path,
+            pv.session_id,
+            pv.created_at,
+            pv.duration_seconds,
+            CASE
+              WHEN pv.duration_seconds IS NULL THEN NULL
+              ELSE LEAST(pv.duration_seconds, 1800)
+            END AS effective_duration
+          FROM page_views pv
+          WHERE pv.created_at >= NOW() - INTERVAL '${days} days'
+            AND pv.user_id IS NOT NULL
+        )
         SELECT
-          pv.user_id as "userId",
+          eff.user_id as "userId",
           u.email as "userEmail",
           u.username as "userName",
           u.avatar_url as "avatarUrl",
           COUNT(*) as "pageViews",
-          COUNT(DISTINCT pv.page_path) as "uniquePages",
-          SUM(COALESCE(pv.duration_seconds, 0))::numeric(10,2) as "totalTimeSeconds",
-          AVG(NULLIF(pv.duration_seconds, 0))::numeric(10,2) as "avgTimePerPage",
-          MAX(pv.created_at) as "lastActivity",
-          MIN(pv.created_at) as "firstActivity"
-        FROM page_views pv
-        JOIN users u ON pv.user_id = u.id
-        WHERE pv.created_at >= NOW() - INTERVAL '${days} days'
-          AND pv.user_id IS NOT NULL
-        GROUP BY pv.user_id, u.email, u.username, u.avatar_url
+          COUNT(*) FILTER (WHERE eff.effective_duration IS NOT NULL) as "measuredPageViews",
+          COUNT(DISTINCT eff.page_path) as "uniquePages",
+          COALESCE(SUM(eff.effective_duration), 0)::numeric(12,2) as "totalTimeSeconds",
+          (
+            SUM(eff.effective_duration)::numeric(12,2)
+            / NULLIF(COUNT(*) FILTER (WHERE eff.effective_duration IS NOT NULL), 0)
+          )::numeric(10,2) as "avgTimePerPage",
+          MAX(eff.created_at) as "lastActivity",
+          MIN(eff.created_at) as "firstActivity"
+        FROM eff
+        JOIN users u ON eff.user_id = u.id
+        GROUP BY eff.user_id, u.email, u.username, u.avatar_url
         ORDER BY "totalTimeSeconds" DESC NULLS LAST
         LIMIT 100
       `);
 
-      // Get top pages per user (top 5 pages by time for each user)
+      // Top 5 pages by time per user — same effective_duration rule.
+      // We also surface totalPagesCount + totalPagesTime so the UI can render
+      //   "Top 5 of N pages — accounts for X of Y" without re-querying.
       const topPagesPerUser = await query(`
-        WITH user_page_time AS (
+        WITH eff AS (
           SELECT
             user_id,
             page_path,
-            SUM(COALESCE(duration_seconds, 0))::numeric(10,2) as total_time,
-            COUNT(*) as view_count,
-            ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY SUM(COALESCE(duration_seconds, 0)) DESC) as rn
+            CASE WHEN duration_seconds IS NULL THEN NULL ELSE LEAST(duration_seconds, 1800) END AS effective_duration
           FROM page_views
           WHERE created_at >= NOW() - INTERVAL '${days} days'
             AND user_id IS NOT NULL
+        ),
+        user_page_time AS (
+          SELECT
+            user_id,
+            page_path,
+            COALESCE(SUM(effective_duration), 0)::numeric(12,2) as total_time,
+            COUNT(*) as view_count,
+            ROW_NUMBER() OVER (
+              PARTITION BY user_id
+              ORDER BY COALESCE(SUM(effective_duration), 0) DESC
+            ) as rn
+          FROM eff
           GROUP BY user_id, page_path
         )
         SELECT
           user_id as "userId",
           page_path as "pagePath",
           total_time as "totalTime",
-          view_count as "viewCount"
+          view_count as "viewCount",
+          rn
         FROM user_page_time
         WHERE rn <= 5
         ORDER BY user_id, rn
       `);
 
-      // Session breakdown per user
-      const sessionStats = await query(`
-        SELECT
-          pv.user_id as "userId",
-          COUNT(DISTINCT pv.session_id) as "sessionCount",
-          AVG(session_duration.total_time)::numeric(10,2) as "avgSessionDuration",
-          MAX(session_duration.total_time)::numeric(10,2) as "maxSessionDuration"
-        FROM page_views pv
-        LEFT JOIN (
+      // Per-user page totals (across ALL pages, for the footer note).
+      const userPageTotals = await query(`
+        WITH eff AS (
           SELECT
-            session_id,
-            SUM(COALESCE(duration_seconds, 0)) as total_time
+            user_id,
+            page_path,
+            CASE WHEN duration_seconds IS NULL THEN NULL ELSE LEAST(duration_seconds, 1800) END AS effective_duration
           FROM page_views
           WHERE created_at >= NOW() - INTERVAL '${days} days'
-          GROUP BY session_id
-        ) session_duration ON pv.session_id = session_duration.session_id
-        WHERE pv.created_at >= NOW() - INTERVAL '${days} days'
-          AND pv.user_id IS NOT NULL
-        GROUP BY pv.user_id
+            AND user_id IS NOT NULL
+        ),
+        per_page AS (
+          SELECT user_id, page_path, COALESCE(SUM(effective_duration), 0)::numeric(12,2) AS page_total
+          FROM eff
+          GROUP BY user_id, page_path
+        )
+        SELECT
+          user_id as "userId",
+          COUNT(*) as "totalPagesCount",
+          COALESCE(SUM(page_total), 0)::numeric(12,2) as "totalPagesTime"
+        FROM per_page
+        GROUP BY user_id
       `);
 
-      // Total time overview
+      // Session breakdown per user — same rule applied at session level.
+      const sessionStats = await query(`
+        WITH eff AS (
+          SELECT
+            user_id,
+            session_id,
+            CASE WHEN duration_seconds IS NULL THEN NULL ELSE LEAST(duration_seconds, 1800) END AS effective_duration
+          FROM page_views
+          WHERE created_at >= NOW() - INTERVAL '${days} days'
+        ),
+        session_duration AS (
+          SELECT session_id, COALESCE(SUM(effective_duration), 0)::numeric(12,2) AS total_time
+          FROM eff
+          GROUP BY session_id
+        )
+        SELECT
+          eff.user_id as "userId",
+          COUNT(DISTINCT eff.session_id) as "sessionCount",
+          AVG(session_duration.total_time)::numeric(10,2) as "avgSessionDuration",
+          MAX(session_duration.total_time)::numeric(10,2) as "maxSessionDuration"
+        FROM eff
+        LEFT JOIN session_duration ON eff.session_id = session_duration.session_id
+        WHERE eff.user_id IS NOT NULL
+        GROUP BY eff.user_id
+      `);
+
+      // Platform overview — derives from the same rule, so per-user totals
+      //   sum to totalPlatformTime exactly, and avgPageTime = total/measured.
       const overview = await query(`
+        WITH eff AS (
+          SELECT
+            CASE WHEN duration_seconds IS NULL THEN NULL ELSE LEAST(duration_seconds, 1800) END AS effective_duration,
+            user_id
+          FROM page_views
+          WHERE created_at >= NOW() - INTERVAL '${days} days'
+            AND user_id IS NOT NULL
+        )
         SELECT
           COUNT(DISTINCT user_id) as "activeUsers",
-          SUM(COALESCE(duration_seconds, 0))::numeric(10,2) as "totalPlatformTime",
-          AVG(NULLIF(duration_seconds, 0))::numeric(10,2) as "avgPageTime",
-          COUNT(*) as "totalPageViews"
-        FROM page_views
-        WHERE created_at >= NOW() - INTERVAL '${days} days'
-          AND user_id IS NOT NULL
+          COALESCE(SUM(effective_duration), 0)::numeric(12,2) as "totalPlatformTime",
+          (
+            SUM(effective_duration)::numeric(12,2)
+            / NULLIF(COUNT(*) FILTER (WHERE effective_duration IS NOT NULL), 0)
+          )::numeric(10,2) as "avgPageTime",
+          COUNT(*) as "totalPageViews",
+          COUNT(*) FILTER (WHERE effective_duration IS NOT NULL) as "measuredPageViews"
+        FROM eff
       `);
 
-      // Group top pages by user for easier frontend consumption
       const pagesByUser: Record<string, { pagePath: string; totalTime: number; viewCount: number }[]> = {};
       topPagesPerUser.rows.forEach((row: any) => {
-        if (!pagesByUser[row.userId]) {
-          pagesByUser[row.userId] = [];
-        }
+        if (!pagesByUser[row.userId]) pagesByUser[row.userId] = [];
         pagesByUser[row.userId].push({
           pagePath: row.pagePath,
           totalTime: parseFloat(row.totalTime) || 0,
@@ -4250,7 +4379,14 @@ router.get(
         });
       });
 
-      // Merge session stats into user time stats
+      const userPageTotalsMap: Record<string, { totalPagesCount: number; totalPagesTime: number }> = {};
+      userPageTotals.rows.forEach((row: any) => {
+        userPageTotalsMap[row.userId] = {
+          totalPagesCount: parseInt(row.totalPagesCount) || 0,
+          totalPagesTime: parseFloat(row.totalPagesTime) || 0,
+        };
+      });
+
       const sessionStatsMap: Record<string, any> = {};
       sessionStats.rows.forEach((row: any) => {
         sessionStatsMap[row.userId] = {
@@ -4260,21 +4396,26 @@ router.get(
         };
       });
 
-      // Combine all data
-      const users = userTimeStats.rows.map((row: any) => ({
-        userId: row.userId,
-        userEmail: row.userEmail,
-        userName: row.userName,
-        avatarUrl: row.avatarUrl,
-        pageViews: parseInt(row.pageViews),
-        uniquePages: parseInt(row.uniquePages),
-        totalTimeSeconds: parseFloat(row.totalTimeSeconds) || 0,
-        avgTimePerPage: parseFloat(row.avgTimePerPage) || 0,
-        lastActivity: row.lastActivity,
-        firstActivity: row.firstActivity,
-        topPages: pagesByUser[row.userId] || [],
-        sessions: sessionStatsMap[row.userId] || { sessionCount: 0, avgSessionDuration: 0, maxSessionDuration: 0 },
-      }));
+      const users = userTimeStats.rows.map((row: any) => {
+        const totals = userPageTotalsMap[row.userId] || { totalPagesCount: 0, totalPagesTime: 0 };
+        return {
+          userId: row.userId,
+          userEmail: row.userEmail,
+          userName: row.userName,
+          avatarUrl: row.avatarUrl,
+          pageViews: parseInt(row.pageViews),
+          measuredPageViews: parseInt(row.measuredPageViews) || 0,
+          uniquePages: parseInt(row.uniquePages),
+          totalTimeSeconds: parseFloat(row.totalTimeSeconds) || 0,
+          avgTimePerPage: parseFloat(row.avgTimePerPage) || 0,
+          lastActivity: row.lastActivity,
+          firstActivity: row.firstActivity,
+          topPages: pagesByUser[row.userId] || [],
+          totalPagesCount: totals.totalPagesCount,
+          totalPagesTime: totals.totalPagesTime,
+          sessions: sessionStatsMap[row.userId] || { sessionCount: 0, avgSessionDuration: 0, maxSessionDuration: 0 },
+        };
+      });
 
       res.json({
         users,
@@ -4283,11 +4424,13 @@ router.get(
           totalPlatformTime: parseFloat(overview.rows[0].totalPlatformTime) || 0,
           avgPageTime: parseFloat(overview.rows[0].avgPageTime) || 0,
           totalPageViews: parseInt(overview.rows[0].totalPageViews) || 0,
+          measuredPageViews: parseInt(overview.rows[0].measuredPageViews) || 0,
         } : {
           activeUsers: 0,
           totalPlatformTime: 0,
           avgPageTime: 0,
           totalPageViews: 0,
+          measuredPageViews: 0,
         },
       });
     } catch (error: any) {

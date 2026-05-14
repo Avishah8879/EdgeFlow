@@ -1056,6 +1056,51 @@ def get_nse_top_100_symbols() -> List[str]:
     return get_all_ticker_symbols()
 
 
+# Identifier-shape patterns recognised by parse_expression below. Kept as
+# module-level compiled regexes so audit_identifiers (used by the validate
+# endpoint) sees exactly what the runtime parser would accept. If you add a
+# new identifier shape to parse_expression, mirror it here.
+_IDENT_RESERVED_NAMES = {"close", "volume", "liquidity", "open", "high", "low"}
+_IDENT_PATTERNS = [
+    re.compile(r"^(macd_line|macd_signal|macd_histogram)(_shift_\d+)?$"),
+    re.compile(r"^supertrend_direction_\d+_[\d_]+(_shift_\d+)?$"),
+    re.compile(r"^(atr|ema|sma|rsi)_\d+(_shift_\d+)?$"),
+    re.compile(r"^bb_(upper|middle|lower)_\d+_[\d_]+(_shift_\d+)?$"),
+    re.compile(r"^supertrend_\d+_[\d_]+(_shift_\d+)?$"),
+    re.compile(r"^high_\d+_[A-Z](_shift_\d+)?$"),
+    re.compile(r"^low_\d+_[A-Z](_shift_\d+)?$"),
+]
+
+
+def audit_identifiers(expression: str) -> Tuple[Set[str], Set[str]]:
+    """
+    Walk the expression AST and classify each Name node as recognised by the
+    screener parser (`parse_expression`) or unknown. Returns (known, unknown).
+
+    A name is "known" if it matches one of `_IDENT_PATTERNS` or is a reserved
+    bare name (close, volume, liquidity, open, high, low). Anything else is
+    "unknown" — at runtime parse_expression would silently skip it, producing
+    misleading zero-result screens. The validate endpoint uses this to refuse
+    such expressions up front.
+
+    Raises SyntaxError / ValueError on malformed expressions (caller decides
+    how to surface — typically as a separate AST-level failure).
+    """
+    tree = ast.parse(expression, mode="eval")
+    names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
+    known: Set[str] = set()
+    unknown: Set[str] = set()
+    for name in names:
+        if name in _IDENT_RESERVED_NAMES:
+            known.add(name)
+            continue
+        if any(p.match(name) for p in _IDENT_PATTERNS):
+            known.add(name)
+        else:
+            unknown.add(name)
+    return known, unknown
+
+
 def parse_expression(
     condition_expr: str,
 ) -> Tuple[

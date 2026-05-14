@@ -1,7 +1,6 @@
 import { useMemo } from "react";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ConditionGroup, createCondition, newId } from "./ConditionGroup";
 import { compile, isEmpty } from "@/lib/screener/compile";
 import type { BuilderTree, Variant } from "@/lib/screener/types";
@@ -45,14 +44,15 @@ export function ConditionBuilder({
   return (
     <div className="space-y-3">
       {unparseableReason && (
-        <Alert variant="default" className="border-yellow-500/40 bg-yellow-500/10">
-          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-          <AlertDescription className="text-xs">
-            <span className="font-semibold text-yellow-500">This expression is too complex to render visually.</span>{" "}
-            Edit it in Expression mode or click below to start fresh.
-            <div className="mt-1 text-[10px] text-muted-foreground font-mono">({unparseableReason})</div>
-          </AlertDescription>
-        </Alert>
+        <div className="rounded-md border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          This expression uses syntax the visual builder can&apos;t render. Edit it in Expression mode.
+          <details className="mt-1">
+            <summary className="cursor-pointer text-[10px] uppercase tracking-wider opacity-70 hover:opacity-100">
+              Why?
+            </summary>
+            <div className="mt-1 text-[10px] font-mono">{unparseableReason}</div>
+          </details>
+        </div>
       )}
 
       {empty ? (

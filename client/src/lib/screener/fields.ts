@@ -166,5 +166,25 @@ export function resolveFieldName(
     }
   }
 
+  // Expert: high_<N>_<F> / low_<N>_<F> (frequencies D/W/M/Y) — mirrors the
+  // backend parser at expert_screener.py:1192/1209. Synthesised as a suffixOnly
+  // FieldDef so compileField round-trips it back as-is.
+  if (variant === "expert") {
+    const hl = name.match(/^(high|low)_(\d+)_([DWMY])$/);
+    if (hl) {
+      const [, side, period, freq] = hl;
+      const freqLabel: Record<string, string> = { D: "Day", W: "Week", M: "Month", Y: "Year" };
+      const sideLabel = side === "high" ? "High" : "Low";
+      return {
+        def: {
+          name,
+          label: `${period}-${freqLabel[freq]} ${sideLabel}`,
+          group: side === "high" ? "Range Highs/Lows" : "Range Highs/Lows",
+          suffixOnly: true,
+        },
+      };
+    }
+  }
+
   return null;
 }

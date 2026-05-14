@@ -13,8 +13,14 @@
  *   factor     := number | field_name | '(' arith_expr ')'
  *   field_name := ident with optional '_shift_<n>' suffix
  *
+ * A leading '(' is ambiguous: it can wrap a boolean sub-expression (atom level)
+ * OR an arithmetic operand of an outer comparison (factor level). parseAtom
+ * disambiguates by peeking at the token immediately after the matching ')':
+ * if it's a comparison or arithmetic operator, the parens are an arith operand
+ * and we route through parseComparison (which handles '(arith)' via parseFactor).
+ *
  * Returns {ok:false, reason} on any unsupported construct (not, function calls, **,
- * identifiers we don't recognise). Callers should show the "too complex" banner.
+ * identifiers we don't recognise). Callers should fall back to Expression mode.
  */
 
 import { compile } from "./compile";
@@ -155,6 +161,28 @@ class Parser {
     return t;
   }
 
+  // Assumes the current token is "(". Scans forward to find the matching ")"
+  // and returns the token immediately after it (or null if no match).
+  // Used by parseAtom to disambiguate boolean-wrap parens from arith-operand parens.
+  private peekAfterMatchingParen(): Token | null {
+    if (this.peek().type !== "lparen") return null;
+    let depth = 0;
+    for (let i = this.pos; i < this.tokens.length; i++) {
+      const t = this.tokens[i];
+      if (t.type === "lparen") {
+        depth++;
+      } else if (t.type === "rparen") {
+        depth--;
+        if (depth === 0) {
+          return this.tokens[i + 1] ?? null;
+        }
+      } else if (t.type === "eof") {
+        return null;
+      }
+    }
+    return null;
+  }
+
   // expr := or_expr
   parseExpr(): Clause {
     const clause = this.parseOr();
@@ -192,11 +220,28 @@ class Parser {
   }
 
   // atom := '(' expr ')' | comparison
+  // A leading '(' is ambiguous: peek past the matching ')' to decide. If what
+  // follows is a cmp/arith operator, the parens open an arith operand of an
+  // outer comparison — route through parseComparison so parseFactor can consume
+  // the '(' as a factor. Otherwise, treat the '(' as wrapping a boolean clause.
   private parseAtom(): Clause {
     if (this.consume("not")) {
       throw new ParseError("The 'not' operator is not supported in the visual builder");
     }
-    if (this.consume("lparen")) {
+    if (this.peek().type === "lparen") {
+      const after = this.peekAfterMatchingParen();
+      const opensArithOperand =
+        after !== null &&
+        (after.type === "cmp" ||
+          (after.type === "op" &&
+            (after.value === "+" ||
+              after.value === "-" ||
+              after.value === "*" ||
+              after.value === "/")));
+      if (opensArithOperand) {
+        return this.parseComparison();
+      }
+      this.consume("lparen");
       const inner = this.parseOr();
       this.expect("rparen");
       return inner;

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Activity, BarChart3 } from "lucide-react";
+import { TrendingUp, Activity, BarChart3, Crosshair, Minimize2, LineChart, TrendingDown, Rocket } from "lucide-react";
 
 interface Template {
   id: string;
@@ -30,6 +30,41 @@ const templates: Template[] = [
     description: "Price reclaiming prior highs on rising RSI",
     expression: "(close > 0.9 * high_52_W) and (ema_20 > ema_50)",
     icon: <BarChart3 className="w-5 h-5 text-primary" />,
+  },
+  {
+    id: "golden_cross",
+    name: "Golden Cross Setup",
+    description: "Classic bullish crossover with liquidity confirmation",
+    expression: "(ema_50 > ema_200) and (close > ema_50) and (liquidity > 500000000)",
+    icon: <Crosshair className="w-5 h-5 text-primary" />,
+  },
+  {
+    id: "volatility_squeeze",
+    name: "Volatility Squeeze",
+    description: "Tight Bollinger Bands signaling a potential breakout",
+    expression: "((bb_upper_20_2 - bb_lower_20_2) / bb_middle_20_2 < 0.1) and (close > sma_50)",
+    icon: <Minimize2 className="w-5 h-5 text-primary" />,
+  },
+  {
+    id: "macd_bullish_crossover",
+    name: "MACD Bullish Crossover",
+    description: "Momentum shift catching early trend reversals",
+    expression: "(macd_line > macd_signal) and (macd_histogram > 0) and (close > ema_50) and (rsi_14 > 50)",
+    icon: <LineChart className="w-5 h-5 text-primary" />,
+  },
+  {
+    id: "oversold_reversal",
+    name: "Oversold Reversal",
+    description: "Deeply oversold names showing signs of a bounce",
+    expression: "(rsi_14 < 30) and (close > low_20_D) and (liquidity > 100000000)",
+    icon: <TrendingDown className="w-5 h-5 text-primary" />,
+  },
+  {
+    id: "ath_momentum",
+    name: "ATH Momentum",
+    description: "Stocks at new highs with stacked moving averages",
+    expression: "(close >= high_52_W) and (close > ema_20) and (ema_20 > ema_50) and (ema_50 > ema_200)",
+    icon: <Rocket className="w-5 h-5 text-primary" />,
   },
 ];
 

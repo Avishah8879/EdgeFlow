@@ -2,6 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 import { getAuthBaseUrl } from "@/lib/api-config";
 
+// Browser-detected IANA timezone, e.g. "Asia/Kolkata". Used for date-bucketed
+// admin analytics so a viewer in IST sees a May-13 bar for activity that
+// happened May-13 IST, not the UTC date the row was stored under.
+function getBrowserTz(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    return "UTC";
+  }
+}
+
 // Types for admin dashboard statistics
 export interface UserStats {
   total: number;
@@ -359,15 +370,19 @@ export interface GrowthData {
 export function useSignupAnalytics(days: number = 30) {
   const { token } = useAuth();
   const baseUrl = getAuthBaseUrl();
+  const tz = getBrowserTz();
 
   return useQuery<{ data: SignupDataPoint[] }>({
-    queryKey: ["admin-analytics-signups", days],
+    queryKey: ["admin-analytics-signups", days, tz],
     queryFn: async () => {
-      const response = await fetch(`${baseUrl}/api/admin/analytics/signups?days=${days}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${baseUrl}/api/admin/analytics/signups?days=${days}&tz=${encodeURIComponent(tz)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -387,15 +402,19 @@ export function useSignupAnalytics(days: number = 30) {
 export function useLoginAnalytics(days: number = 30) {
   const { token } = useAuth();
   const baseUrl = getAuthBaseUrl();
+  const tz = getBrowserTz();
 
   return useQuery<{ data: LoginDataPoint[] }>({
-    queryKey: ["admin-analytics-logins", days],
+    queryKey: ["admin-analytics-logins", days, tz],
     queryFn: async () => {
-      const response = await fetch(`${baseUrl}/api/admin/analytics/logins?days=${days}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${baseUrl}/api/admin/analytics/logins?days=${days}&tz=${encodeURIComponent(tz)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -443,15 +462,19 @@ export function useRetentionAnalytics() {
 export function useGrowthAnalytics() {
   const { token } = useAuth();
   const baseUrl = getAuthBaseUrl();
+  const tz = getBrowserTz();
 
   return useQuery<GrowthData>({
-    queryKey: ["admin-analytics-growth"],
+    queryKey: ["admin-analytics-growth", tz],
     queryFn: async () => {
-      const response = await fetch(`${baseUrl}/api/admin/analytics/growth`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${baseUrl}/api/admin/analytics/growth?tz=${encodeURIComponent(tz)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -668,12 +691,13 @@ export function useActiveUsers(minutesAgo: number = 5) {
 export function usePageStats(days: number = 7) {
   const { token } = useAuth();
   const baseUrl = getAuthBaseUrl();
+  const tz = getBrowserTz();
 
   return useQuery<PageStatsData>({
-    queryKey: ["admin-page-stats", days],
+    queryKey: ["admin-page-stats", days, tz],
     queryFn: async () => {
       const response = await fetch(
-        `${baseUrl}/api/admin/analytics/page-stats?days=${days}`,
+        `${baseUrl}/api/admin/analytics/page-stats?days=${days}&tz=${encodeURIComponent(tz)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -808,12 +832,15 @@ export interface UserTimeStats {
   userName: string | null;
   avatarUrl: string | null;
   pageViews: number;
+  measuredPageViews: number;
   uniquePages: number;
   totalTimeSeconds: number;
   avgTimePerPage: number;
   lastActivity: string;
   firstActivity: string;
   topPages: UserTopPage[];
+  totalPagesCount: number;
+  totalPagesTime: number;
   sessions: UserSessionStats;
 }
 
@@ -822,6 +849,7 @@ export interface UserTimeOverview {
   totalPlatformTime: number;
   avgPageTime: number;
   totalPageViews: number;
+  measuredPageViews: number;
 }
 
 export interface UserTimeStatsData {

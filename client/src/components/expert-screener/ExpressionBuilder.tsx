@@ -10,6 +10,12 @@ interface ExpressionBuilderProps {
   onRun: () => void;
   onCancel: () => void;
   isRunning: boolean;
+  /** Combined disabled gate from the parent (validation + empty + isValidating). */
+  runDisabled?: boolean;
+  /** True while a validation fetch is in flight. */
+  isValidating?: boolean;
+  /** True if validation could not reach the backend. */
+  isOffline?: boolean;
   validationError?: string;
 }
 
@@ -19,13 +25,22 @@ export default function ExpressionBuilder({
   onRun,
   onCancel,
   isRunning,
+  runDisabled,
+  isValidating,
+  isOffline,
   validationError,
 }: ExpressionBuilderProps) {
   const [isFocused, setIsFocused] = useState(false);
 
+  // Fall back to the legacy gate when the parent doesn't pass runDisabled.
+  const isRunDisabled =
+    runDisabled !== undefined
+      ? runDisabled
+      : !expression.trim() || Boolean(validationError);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Run on Ctrl+Enter
-    if (e.ctrlKey && e.key === "Enter" && !isRunning && expression.trim()) {
+    // Run on Ctrl+Enter — respect the same disabled gate as the button.
+    if (e.ctrlKey && e.key === "Enter" && !isRunning && !isRunDisabled) {
       onRun();
     }
   };
@@ -66,6 +81,11 @@ export default function ExpressionBuilder({
           <AlertDescription>{validationError}</AlertDescription>
         </Alert>
       )}
+      {isOffline && !validationError && (
+        <p className="text-xs text-muted-foreground">
+          Validation offline — Run will still try.
+        </p>
+      )}
 
       <div className="flex gap-4">
         {!isRunning ? (
@@ -73,7 +93,8 @@ export default function ExpressionBuilder({
             type="button"
             className="run-button"
             onClick={onRun}
-            disabled={!expression.trim() || Boolean(validationError)}
+            disabled={isRunDisabled}
+            aria-busy={isValidating}
           >
             <span className="run-button-content">
               <Play className="w-4 h-4" />

@@ -55,6 +55,7 @@ from expert_screener import (
     run_screener_streaming,
     get_all_ticker_symbols,
     ConditionEvaluator,
+    audit_identifiers,
     cache_indicator_value,
     cache_indicator_values,
     get_cached_indicator_value,
@@ -7763,24 +7764,58 @@ async def validate_expert_screener_expression(payload: ExpertScreenerRequest):
     Validate an expert screener expression without running it.
 
     Returns:
-        Validation result with error message if invalid
+        {valid, expression, error?, unknown_identifiers}
+        - AST check via ConditionEvaluator (catches syntax errors,
+          disallowed Python nodes).
+        - Identifier audit via audit_identifiers (catches names the
+          screener's parser wouldn't recognise — those would silently
+          produce zero-result screens at runtime).
+        valid is true only when both pass. unknown_identifiers is always
+        present (empty list when none) so consumers don't need to handle
+        a missing field.
     """
     expression = (payload.expression or "").strip()
     if not expression:
         raise HTTPException(status_code=400, detail="Expression is required")
 
+    # AST-level check
     try:
         ConditionEvaluator(expression)
-        return success_response({
-            "valid": True,
-            "expression": expression
-        })
-    except ValueError as e:
+    except (ValueError, SyntaxError) as e:
         return success_response({
             "valid": False,
             "expression": expression,
-            "error": str(e)
+            "error": str(e),
+            "unknown_identifiers": [],
         })
+
+    # Identifier audit (only if AST passed)
+    try:
+        _known, unknown = audit_identifiers(expression)
+    except (ValueError, SyntaxError) as e:
+        # Shouldn't happen — AST already passed — but stay defensive.
+        return success_response({
+            "valid": False,
+            "expression": expression,
+            "error": str(e),
+            "unknown_identifiers": [],
+        })
+
+    if unknown:
+        unknown_sorted = sorted(unknown)
+        names = ", ".join(unknown_sorted)
+        return success_response({
+            "valid": False,
+            "expression": expression,
+            "error": f"Unknown identifier{'s' if len(unknown_sorted) > 1 else ''}: {names}",
+            "unknown_identifiers": unknown_sorted,
+        })
+
+    return success_response({
+        "valid": True,
+        "expression": expression,
+        "unknown_identifiers": [],
+    })
 
 
 @fastapi_app.get("/api/expert-screener/templates", tags=["Technical Analysis"])
@@ -7809,6 +7844,36 @@ async def get_expert_screener_templates():
             "name": "52W Breakout Watch",
             "description": "Price reclaiming prior highs on rising RSI",
             "expression": "(close > 0.9 * high_52_W) and (ema_20 > ema_50)"
+        },
+        {
+            "id": "golden_cross",
+            "name": "Golden Cross Setup",
+            "description": "Classic bullish crossover with liquidity confirmation",
+            "expression": "(ema_50 > ema_200) and (close > ema_50) and (liquidity > 500000000)"
+        },
+        {
+            "id": "volatility_squeeze",
+            "name": "Volatility Squeeze",
+            "description": "Tight Bollinger Bands signaling a potential breakout",
+            "expression": "((bb_upper_20_2 - bb_lower_20_2) / bb_middle_20_2 < 0.1) and (close > sma_50)"
+        },
+        {
+            "id": "macd_bullish_crossover",
+            "name": "MACD Bullish Crossover",
+            "description": "Momentum shift catching early trend reversals",
+            "expression": "(macd_line > macd_signal) and (macd_histogram > 0) and (close > ema_50) and (rsi_14 > 50)"
+        },
+        {
+            "id": "oversold_reversal",
+            "name": "Oversold Reversal",
+            "description": "Deeply oversold names showing signs of a bounce",
+            "expression": "(rsi_14 < 30) and (close > low_20_D) and (liquidity > 100000000)"
+        },
+        {
+            "id": "ath_momentum",
+            "name": "ATH Momentum",
+            "description": "Stocks at new highs with stacked moving averages",
+            "expression": "(close >= high_52_W) and (close > ema_20) and (ema_20 > ema_50) and (ema_50 > ema_200)"
         }
     ]
 

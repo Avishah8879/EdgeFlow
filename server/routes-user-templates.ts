@@ -1,0 +1,334 @@
+/**
+ * User Screener Templates Routes
+ *
+ * CRUD for per-user saved Expert Screener expression templates.
+ * - GET    /api/expert-screener/user-templates           list newest-first
+ * - POST   /api/expert-screener/user-templates           create
+ * - PATCH  /api/expert-screener/user-templates/:id       rename / edit
+ * - DELETE /api/expert-screener/user-templates/:id       remove
+ *
+ * Schema: migrations/031_user_screener_templates.sql
+ * Cap: read from system_config key `user_screener_templates_max` (defaults 5).
+ * Validation: POST + PATCH (when expression changes) forward the expression
+ * to FastAPI's /api/expert-screener/validate via validateExpression().
+ */
+
+import { Router, Request, Response } from 'express';
+import { query, queryOne } from './db/auth-connection';
+import { requireAuth } from './middleware/auth';
+import { validateExpression } from './lib/expression-validation';
+
+const router = Router();
+
+const NAME_MAX = 120;
+const DESCRIPTION_MAX = 280;
+const EXPRESSION_MAX = 2000;
+const DEFAULT_CAP = 5;
+const UNIQUE_VIOLATION = '23505';
+
+interface UserTemplateRow {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  expression: string;
+  created_at: string;
+  updated_at: string;
+}
+
+async function getCap(): Promise<number> {
+  const row = await queryOne<{ value: string }>(
+    `SELECT value FROM system_config WHERE key = $1`,
+    ['user_screener_templates_max'],
+  );
+  return parseInt(row?.value || String(DEFAULT_CAP), 10) || DEFAULT_CAP;
+}
+
+function trimOrUndef(v: unknown): string | undefined {
+  if (typeof v !== 'string') return undefined;
+  const t = v.trim();
+  return t.length > 0 ? t : undefined;
+}
+
+function fieldErrors(body: { name?: unknown; description?: unknown; expression?: unknown }) {
+  const errs: string[] = [];
+  if (body.name !== undefined) {
+    if (typeof body.name !== 'string' || !body.name.trim()) {
+      errs.push('name is required');
+    } else if (body.name.length > NAME_MAX) {
+      errs.push(`name must be ${NAME_MAX} characters or fewer`);
+    }
+  }
+  if (body.description !== undefined && body.description !== null) {
+    if (typeof body.description !== 'string') {
+      errs.push('description must be a string');
+    } else if (body.description.length > DESCRIPTION_MAX) {
+      errs.push(`description must be ${DESCRIPTION_MAX} characters or fewer`);
+    }
+  }
+  if (body.expression !== undefined) {
+    if (typeof body.expression !== 'string' || !body.expression.trim()) {
+      errs.push('expression is required');
+    } else if (body.expression.length > EXPRESSION_MAX) {
+      errs.push(`expression must be ${EXPRESSION_MAX} characters or fewer`);
+    }
+  }
+  return errs;
+}
+
+/**
+ * Run the expression through FastAPI's validate endpoint. Returns null on
+ * success, or { status, body } the caller should return directly.
+ */
+async function checkExpression(
+  expression: string,
+): Promise<null | { status: number; body: Record<string, unknown> }> {
+  let result;
+  try {
+    result = await validateExpression(expression);
+  } catch (err: any) {
+    console.error('[USER-TEMPLATES] Validation service unreachable:', err?.message);
+    return {
+      status: 503,
+      body: { message: 'Validation service unavailable, try again.' },
+    };
+  }
+  if (!result.valid) {
+    return {
+      status: 400,
+      body: {
+        message: result.error || 'Invalid expression',
+        unknownIdentifiers: result.unknownIdentifiers,
+      },
+    };
+  }
+  return null;
+}
+
+/**
+ * GET /api/expert-screener/user-templates
+ * List current user's templates, newest first.
+ */
+router.get(
+  '/user-templates',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const result = await query<UserTemplateRow>(
+        `SELECT id, user_id, name, description, expression, created_at, updated_at
+         FROM user_screener_templates
+         WHERE user_id = $1
+         ORDER BY created_at DESC`,
+        [userId],
+      );
+      res.json({ templates: result.rows, count: result.rowCount });
+    } catch (error: any) {
+      console.error('[USER-TEMPLATES] List error:', error.message);
+      res.status(500).json({ message: 'Failed to list templates' });
+    }
+  },
+);
+
+/**
+ * POST /api/expert-screener/user-templates
+ * Body: { name, description?, expression }
+ */
+router.post(
+  '/user-templates',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const errs = fieldErrors({
+        name: req.body?.name,
+        description: req.body?.description,
+        expression: req.body?.expression,
+      });
+      // POST requires all three; description is optional but only if absent.
+      if (req.body?.name === undefined) errs.unshift('name is required');
+      if (req.body?.expression === undefined) errs.unshift('expression is required');
+      if (errs.length > 0) {
+        res.status(400).json({ message: errs[0] });
+        return;
+      }
+
+      const name = String(req.body.name).trim();
+      const description = trimOrUndef(req.body.description) ?? null;
+      const expression = String(req.body.expression).trim();
+
+      // Cap check
+      const cap = await getCap();
+      const countRow = await queryOne<{ count: string }>(
+        `SELECT COUNT(*) AS count FROM user_screener_templates WHERE user_id = $1`,
+        [userId],
+      );
+      const currentCount = parseInt(countRow?.count || '0', 10);
+      if (currentCount >= cap) {
+        res.status(400).json({
+          message: `You've reached the limit of ${cap} saved templates. Delete one to save another.`,
+        });
+        return;
+      }
+
+      // Expression validation via FastAPI
+      const validationError = await checkExpression(expression);
+      if (validationError) {
+        res.status(validationError.status).json(validationError.body);
+        return;
+      }
+
+      // Insert
+      try {
+        const row = await queryOne<UserTemplateRow>(
+          `INSERT INTO user_screener_templates (user_id, name, description, expression)
+           VALUES ($1, $2, $3, $4)
+           RETURNING id, user_id, name, description, expression, created_at, updated_at`,
+          [userId, name, description, expression],
+        );
+        res.status(201).json(row);
+      } catch (error: any) {
+        if (error?.code === UNIQUE_VIOLATION) {
+          res.status(409).json({
+            message: `You already have a template named '${name}'.`,
+          });
+          return;
+        }
+        throw error;
+      }
+    } catch (error: any) {
+      console.error('[USER-TEMPLATES] Create error:', error.message);
+      res.status(500).json({ message: 'Failed to save template' });
+    }
+  },
+);
+
+/**
+ * PATCH /api/expert-screener/user-templates/:id
+ * Body: { name?, description?, expression? }
+ * Re-validates expression only if it actually changes.
+ */
+router.patch(
+  '/user-templates/:id',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const id = req.params.id;
+
+      const errs = fieldErrors({
+        name: req.body?.name,
+        description: req.body?.description,
+        expression: req.body?.expression,
+      });
+      if (errs.length > 0) {
+        res.status(400).json({ message: errs[0] });
+        return;
+      }
+
+      const existing = await queryOne<UserTemplateRow>(
+        `SELECT id, user_id, name, description, expression, created_at, updated_at
+         FROM user_screener_templates
+         WHERE id = $1 AND user_id = $2`,
+        [id, userId],
+      );
+      if (!existing) {
+        res.status(404).json({ message: 'Template not found' });
+        return;
+      }
+
+      const updates: string[] = [];
+      const params: unknown[] = [];
+      let p = 1;
+
+      let newName: string | undefined;
+      if (req.body?.name !== undefined) {
+        newName = String(req.body.name).trim();
+        updates.push(`name = $${p++}`);
+        params.push(newName);
+      }
+      if (req.body?.description !== undefined) {
+        const desc = req.body.description === null
+          ? null
+          : trimOrUndef(req.body.description) ?? null;
+        updates.push(`description = $${p++}`);
+        params.push(desc);
+      }
+      let newExpression: string | undefined;
+      if (req.body?.expression !== undefined) {
+        newExpression = String(req.body.expression).trim();
+        if (newExpression !== existing.expression) {
+          const validationError = await checkExpression(newExpression);
+          if (validationError) {
+            res.status(validationError.status).json(validationError.body);
+            return;
+          }
+        }
+        updates.push(`expression = $${p++}`);
+        params.push(newExpression);
+      }
+
+      if (updates.length === 0) {
+        res.status(400).json({ message: 'No fields to update' });
+        return;
+      }
+
+      updates.push(`updated_at = NOW()`);
+      params.push(id, userId);
+
+      try {
+        const row = await queryOne<UserTemplateRow>(
+          `UPDATE user_screener_templates
+           SET ${updates.join(', ')}
+           WHERE id = $${p++} AND user_id = $${p++}
+           RETURNING id, user_id, name, description, expression, created_at, updated_at`,
+          params,
+        );
+        if (!row) {
+          res.status(404).json({ message: 'Template not found' });
+          return;
+        }
+        res.json(row);
+      } catch (error: any) {
+        if (error?.code === UNIQUE_VIOLATION && newName) {
+          res.status(409).json({
+            message: `You already have a template named '${newName}'.`,
+          });
+          return;
+        }
+        throw error;
+      }
+    } catch (error: any) {
+      console.error('[USER-TEMPLATES] Update error:', error.message);
+      res.status(500).json({ message: 'Failed to update template' });
+    }
+  },
+);
+
+/**
+ * DELETE /api/expert-screener/user-templates/:id
+ */
+router.delete(
+  '/user-templates/:id',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const id = req.params.id;
+      const result = await query(
+        `DELETE FROM user_screener_templates WHERE id = $1 AND user_id = $2 RETURNING id`,
+        [id, userId],
+      );
+      if (result.rowCount === 0) {
+        res.status(404).json({ message: 'Template not found' });
+        return;
+      }
+      res.json({ message: 'Template deleted' });
+    } catch (error: any) {
+      console.error('[USER-TEMPLATES] Delete error:', error.message);
+      res.status(500).json({ message: 'Failed to delete template' });
+    }
+  },
+);
+
+export default router;
