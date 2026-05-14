@@ -211,6 +211,7 @@ export default function StockDetail() {
   const currentPrice = ltpData?.ltp ?? f.current_price;
   const priceChangePercent = ltpData?.percent_change ?? f.price_change_percent;
   const isPositive = priceChangePercent != null && priceChangePercent >= 0;
+  const lastUpdatedAt = ltpData?.timestamp ?? f.last_updated;
 
   const companyName = (() => {
     const longName = basic.long_name;
@@ -338,9 +339,9 @@ export default function StockDetail() {
                     />
                   )}
                 </div>
-                {(ltpData?.timestamp ?? f.last_updated) && (
+                {lastUpdatedAt && (
                   <span className="text-[10.5px] text-muted-foreground mt-1.5 font-bold uppercase tracking-uppercase">
-                    Updated {new Date(ltpData?.timestamp ?? f.last_updated).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    Updated {new Date(lastUpdatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                   </span>
                 )}
               </div>
