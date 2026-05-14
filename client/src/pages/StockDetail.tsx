@@ -338,9 +338,9 @@ export default function StockDetail() {
                     />
                   )}
                 </div>
-                {f.last_updated && (
+                {(ltpData?.timestamp ?? f.last_updated) && (
                   <span className="text-[10.5px] text-muted-foreground mt-1.5 font-bold uppercase tracking-uppercase">
-                    Updated {new Date(f.last_updated).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    Updated {new Date(ltpData?.timestamp ?? f.last_updated).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                   </span>
                 )}
               </div>
