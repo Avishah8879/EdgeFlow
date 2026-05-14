@@ -24,14 +24,19 @@ import { PrivacyConsentBanner } from "@/components/PrivacyConsentBanner";
 import NotFound from "@/pages/not-found";
 import AuthCallback from "@/pages/AuthCallback";
 
-// `/` redirects: authed → /home, unauthed → /login. The marketing
-// Landing page is no longer reachable — gating is universal.
-function RootRedirect() {
-  const { isAuthenticated } = useAuth();
-  return <Redirect to={isAuthenticated ? "/home" : "/login"} />;
+// `/` renders the Landing marketing page for unauthenticated visitors;
+// authenticated users are redirected to /home. The brief auth-resolve
+// window shows the PageLoader spinner so authenticated users never
+// flash the landing page on cold load.
+function RootRoute() {
+  const { isAuthenticated, status } = useAuth();
+  if (status === "loading") return <PageLoader />;
+  if (isAuthenticated) return <Redirect to="/home" />;
+  return <Landing />;
 }
 
 // ── Equity Pro core pages (lazy) ───────────────────────────────────────────
+const Landing = lazy(() => import("@/pages/Landing"));
 const Home = lazy(() => import("@/pages/Home"));
 const StockDetail = lazy(() => import("@/pages/StockDetail"));
 const Stocks = lazy(() => import("@/pages/Stocks"));
@@ -134,15 +139,23 @@ function AdminUpdatesListener() {
 
 // Paths that render WITHOUT the AppShell (no sidebar/topbar) AND
 // are exempt from authentication. Keep this list minimal — only auth
-// flows, legal pages, and integration callbacks belong here.
-//   - "/"               → always redirects via <RootRedirect/>, never renders content
-//   - "/login" etc.     → auth flows must be reachable while logged out
-//   - "/privacy"        → legal page, kept public
-//   - "/fyers-token"    → broker integration callback
+// flows, legal pages, marketing content, and integration callbacks belong here.
+//   - "/"                 → <RootRoute/>: renders <Landing/> for unauthed visitors,
+//                           redirects authenticated users to /home
+//   - "/login" etc.       → auth flows must be reachable while logged out
+//   - "/privacy"          → legal page, kept public
+//   - "/blog", "/market-reports" → public marketing content (no authed data,
+//                           no AppShell-dependent chrome)
+//   - "/fyers-token"      → broker integration callback
 const BARE_PATHS = new Set([
   "/", "/login", "/signup", "/forgot-password",
   "/auth/callback", "/auth/oauth-setup", "/privacy",
   "/fyers-token",
+  "/blog", "/blog/advanced-strategies",
+  "/market-reports",
+  "/market-reports/steel-sector-outlook",
+  "/market-reports/gas-sector-outlook",
+  "/market-reports/healthcare-sector-outlook",
 ]);
 
 function AppRoutes() {
@@ -159,7 +172,7 @@ function AppRoutes() {
         >
       <Switch>
         {/* ── Public/bare routes ──────────────────────────── */}
-        <Route path="/" component={RootRedirect} />
+        <Route path="/" component={RootRoute} />
         <Route path="/login" component={EquityProLogin} />
         <Route path="/signup" component={EquityProSignup} />
         <Route path="/forgot-password" component={EquityProForgotPassword} />

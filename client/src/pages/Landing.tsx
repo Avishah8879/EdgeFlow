@@ -78,12 +78,19 @@ export default function Landing() {
               <span className="text-foreground">Flow</span>
             </span>
           </Link>
-          <Link href="/home">
-            <Button size="sm" className="gap-1.5">
-              <Terminal className="h-3.5 w-3.5" />
-              Launch Terminal
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/login">
+              <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground">
+                Sign in
+              </Button>
+            </Link>
+            <Link href="/signup">
+              <Button size="sm" className="gap-1.5">
+                <Terminal className="h-3.5 w-3.5" />
+                Get started
+              </Button>
+            </Link>
+          </div>
         </header>
 
         {/* Hero */}
@@ -107,16 +114,16 @@ export default function Landing() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/home">
+            <Link href="/signup">
               <Button size="lg" className="gap-2 px-8 py-6 text-base font-semibold shadow-[0_0_20px_rgba(0,191,255,0.3)]">
-                Launch Terminal
+                Create free account
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/chart">
+            <Link href="/login">
               <Button size="lg" variant="outline" className="gap-2 px-8 py-6 text-base border-primary/30 hover:border-primary/60">
-                <LineChart className="h-4 w-4" />
-                View Charts
+                <Terminal className="h-4 w-4" />
+                Sign in
               </Button>
             </Link>
           </div>
@@ -168,11 +175,11 @@ export default function Landing() {
             <h2 className="text-3xl font-bold mb-4">Ready to trade smarter?</h2>
             <p className="text-muted-foreground mb-8 text-lg">
               Access all 64 feature pages — charts, screeners, options, AI analysis,
-              and more. No account required to explore.
+              and more. Free to sign up.
             </p>
-            <Link href="/home">
+            <Link href="/signup">
               <Button size="lg" className="gap-2 px-10 py-6 text-base font-semibold shadow-[0_0_30px_rgba(0,191,255,0.25)]">
-                Open Dashboard
+                Create free account
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
