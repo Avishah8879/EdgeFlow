@@ -9,8 +9,7 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, TrendingUp, TrendingDown, Activity, ChevronDown, LineChart, ScanLine } from 'lucide-react';
+import { Search, TrendingUp, TrendingDown, Activity, ChevronDown } from 'lucide-react';
 import { PatternChartExpansion } from '@/components/ft/pattern-search/PatternChartExpansion';
 
 interface KeyPoint {
@@ -97,7 +96,7 @@ export function PatternSearchPanel() {
     return 'text-red-500';
   };
 
-  const renderPatternResults = (variant: 'pattern-chart' | 'price-pattern') => (
+  const renderPatternResults = () => (
     <ScrollArea className="h-full">
       {isLoading ? (
         <div className="text-center py-4 text-muted-foreground">Searching for patterns...</div>
@@ -106,12 +105,11 @@ export function PatternSearchPanel() {
       ) : (
         <div className="space-y-2 pr-2">
           {filteredPatterns.map((pattern) => {
-            const expansionId = `${variant}:${pattern.id}`;
-            const isExpanded = expandedId === expansionId;
+            const isExpanded = expandedId === pattern.id;
             return (
               <Card
-                key={expansionId}
-                data-testid={`${variant}-${pattern.id}`}
+                key={pattern.id}
+                data-testid={`pattern-chart-${pattern.id}`}
                 className={`transition-colors ${
                   isExpanded ? 'bg-primary/5 border-primary' : 'hover:bg-primary/5'
                 }`}
@@ -119,7 +117,7 @@ export function PatternSearchPanel() {
                 <button
                   type="button"
                   className="w-full text-left p-3 cursor-pointer"
-                  onClick={() => setExpandedId(isExpanded ? null : expansionId)}
+                  onClick={() => setExpandedId(isExpanded ? null : pattern.id)}
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-3">
@@ -128,11 +126,6 @@ export function PatternSearchPanel() {
                         <Badge variant="outline" className="text-[10px]">
                           {pattern.patternType}
                         </Badge>
-                        {variant === 'price-pattern' && (
-                          <Badge variant="secondary" className="text-[10px]">
-                            Price
-                          </Badge>
-                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         {getDirectionIcon(pattern.breakoutDirection)}
@@ -243,35 +236,12 @@ export function PatternSearchPanel() {
         </div>
       </Card>
 
-      <Tabs defaultValue="pattern-chart" className="flex-1 min-h-0 flex flex-col">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <TabsList className="h-9">
-            <TabsTrigger value="pattern-chart" className="gap-1.5 text-xs">
-              <ScanLine className="h-3.5 w-3.5" />
-              Pattern Chart
-            </TabsTrigger>
-            <TabsTrigger value="price-pattern" className="gap-1.5 text-xs">
-              <LineChart className="h-3.5 w-3.5" />
-              Price Pattern
-            </TabsTrigger>
-          </TabsList>
-          <div className="text-sm text-muted-foreground">
-            Found {filteredPatterns.length} patterns
-          </div>
-        </div>
-
-        <TabsContent value="pattern-chart" className="mt-0 flex-1 min-h-0">
-          <Card className="h-full p-4 bg-card/50 border-primary/20 overflow-hidden">
-            {renderPatternResults('pattern-chart')}
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="price-pattern" className="mt-0 flex-1 min-h-0">
-          <Card className="h-full p-4 bg-card/50 border-primary/20 overflow-hidden">
-            {renderPatternResults('price-pattern')}
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <div className="mb-2 text-sm text-muted-foreground">
+        Found {filteredPatterns.length} patterns
+      </div>
+      <Card className="flex-1 min-h-0 p-4 bg-card/50 border-primary/20 overflow-hidden">
+        {renderPatternResults()}
+      </Card>
     </div>
   );
 }
