@@ -22,6 +22,7 @@ import {
   PatternChartExpansion,
   type PatternChartInput,
   type PatternKeyPoint,
+  type PatternOccurrence,
 } from '@/components/ft/pattern-search/PatternChartExpansion';
 
 interface PricePattern {
@@ -37,6 +38,9 @@ interface PricePattern {
   patternStart?: string;
   patternEnd?: string;
   keyPoints?: PatternKeyPoint[];
+  // Up to OCCURRENCE_CAP firings, most-recent-first; [0] mirrors the
+  // top-level card fields. Absent for legacy/price-action single signals.
+  occurrences?: PatternOccurrence[];
 }
 
 interface PricePatternTypeEntry {
@@ -77,9 +81,15 @@ function getConfidenceColor(confidence: number) {
   return 'text-red-500';
 }
 
-function toPatternChartInput(pattern: PricePattern): PatternChartInput {
+function toPatternChartInput(
+  pattern: PricePattern,
+  timeframe: string,
+  selectedPatternType: string,
+): PatternChartInput {
   // Multi-bar patterns set patternStart/patternEnd; single-bar patterns omit
-  // them and the chart highlights a single day at detectedAt.
+  // them and the chart highlights a single day at detectedAt. `timeframe`
+  // drives the chart's history window; `occurrences` adds historical markers;
+  // `selectedPatternType` ('all' or a specific name) drives adaptive labels.
   return {
     symbol: pattern.symbol,
     companyName: pattern.companyName,
@@ -90,6 +100,9 @@ function toPatternChartInput(pattern: PricePattern): PatternChartInput {
     breakoutDirection: pattern.direction,
     description: pattern.description,
     keyPoints: pattern.keyPoints,
+    occurrences: pattern.occurrences,
+    timeframe,
+    selectedPatternType,
   };
 }
 
@@ -281,7 +294,7 @@ export function PricePatternPanel() {
                       <div className="px-3 pb-3 border-t border-primary/20">
                         <div className="pt-3">
                           <PatternChartExpansion
-                            pattern={toPatternChartInput(pattern)}
+                            pattern={toPatternChartInput(pattern, timeframe, patternType)}
                             height={340}
                           />
                         </div>
