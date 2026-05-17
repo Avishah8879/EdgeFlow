@@ -3,7 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +21,7 @@ import { Search, TrendingUp, TrendingDown, Activity, ChevronDown } from 'lucide-
 import {
   PatternChartExpansion,
   type PatternChartInput,
+  type PatternKeyPoint,
 } from '@/components/ft/pattern-search/PatternChartExpansion';
 
 interface PricePattern {
@@ -25,21 +34,24 @@ interface PricePattern {
   direction: 'bullish' | 'bearish' | 'neutral';
   signalStrength: number;
   description: string;
+  patternStart?: string;
+  patternEnd?: string;
+  keyPoints?: PatternKeyPoint[];
 }
 
-const pricePatternTypes = [
-  'all',
-  'Gap Up',
-  'Gap Down',
-  'Strong Bullish Candle',
-  'Strong Bearish Candle',
-  'Consecutive Green Candles',
-  'Consecutive Red Candles',
-  'Near Day High',
-  'Near Day Low',
-  'Breakout above Previous Day High',
-  'Breakdown below Previous Day Low',
-];
+interface PricePatternTypeEntry {
+  name: string;
+  rare: boolean;
+}
+
+interface PricePatternTypeGroup {
+  label: string;
+  types: PricePatternTypeEntry[];
+}
+
+interface PricePatternTypesResponse {
+  groups: PricePatternTypeGroup[];
+}
 
 const timeframes = [
   { value: '1D', label: '1 Day' },
@@ -66,15 +78,18 @@ function getConfidenceColor(confidence: number) {
 }
 
 function toPatternChartInput(pattern: PricePattern): PatternChartInput {
+  // Multi-bar patterns set patternStart/patternEnd; single-bar patterns omit
+  // them and the chart highlights a single day at detectedAt.
   return {
     symbol: pattern.symbol,
     companyName: pattern.companyName,
     patternType: pattern.patternType,
     confidence: pattern.confidence,
-    startDate: pattern.detectedAt,
-    endDate: pattern.detectedAt,
+    startDate: pattern.patternStart ?? pattern.detectedAt,
+    endDate: pattern.patternEnd ?? pattern.detectedAt,
     breakoutDirection: pattern.direction,
     description: pattern.description,
+    keyPoints: pattern.keyPoints,
   };
 }
 
@@ -85,6 +100,15 @@ export function PricePatternPanel() {
   const [symbolFilter, setSymbolFilter] = useState('');
   const [submittedSymbolFilter, setSubmittedSymbolFilter] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Backend-canonical dropdown catalogue (groups + per-pattern `rare` flag).
+  const { data: typesData } = useQuery<PricePatternTypesResponse>({
+    queryKey: ['/api/price-pattern-types'],
+    staleTime: 60 * 60 * 1000, // 1h — only changes on deploy
+  });
+  const groups = typesData?.groups ?? [];
+  const allTypes = groups.flatMap((g) => g.types);
+  const selectedTypeMeta = allTypes.find((t) => t.name === patternType);
 
   const params = new URLSearchParams({
     pattern: patternType,
@@ -111,10 +135,16 @@ export function PricePatternPanel() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {pricePatternTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type === 'all' ? 'All Patterns' : type}
-                    </SelectItem>
+                  <SelectItem value="all">All Patterns</SelectItem>
+                  {groups.map((group) => (
+                    <SelectGroup key={group.label}>
+                      <SelectLabel>{group.label}</SelectLabel>
+                      {group.types.map((t) => (
+                        <SelectItem key={t.name} value={t.name}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>
@@ -183,7 +213,15 @@ export function PricePatternPanel() {
           {isLoading ? (
             <div className="text-center py-4 text-muted-foreground">Searching for price patterns...</div>
           ) : patterns.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">No patterns found</div>
+            <div className="text-center py-4 text-muted-foreground">
+              No patterns found
+              {selectedTypeMeta?.rare && (
+                <div className="mt-2 text-xs">
+                  {selectedTypeMeta.name} is a rare pattern — try a longer
+                  timeframe (3M / 1M), or check back during high-volatility periods.
+                </div>
+              )}
+            </div>
           ) : (
             <div className="space-y-2 pr-2">
               {patterns.map((pattern) => {
@@ -224,9 +262,13 @@ export function PricePatternPanel() {
                             <span className={getConfidenceColor(pattern.confidence)}>
                               {pattern.confidence}% confidence
                             </span>
-                            <span className="text-muted-foreground">
-                              Signal strength: {pattern.signalStrength}%
-                            </span>
+                            {/* Signal strength is directional — incoherent for
+                                neutral patterns (Doji), so suppress there. */}
+                            {pattern.direction !== 'neutral' && (
+                              <span className="text-muted-foreground">
+                                Signal strength: {pattern.signalStrength}%
+                              </span>
+                            )}
                             <span className="text-muted-foreground font-mono">
                               {pattern.detectedAt}
                             </span>

@@ -488,6 +488,18 @@ export function registerTerminalRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/price-pattern-types", async (req, res) => {
+    try {
+      const result = await proxyToPython(
+        `/api/price-pattern-types`,
+        buildPythonOptions(req, { timeout: 15000 })
+      );
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Price pattern types unavailable');
+    }
+  });
+
   app.get("/api/price-pattern-search", async (req, res) => {
     try {
       const params = new URLSearchParams();

@@ -12193,6 +12193,26 @@ async def pattern_search_api(
     return patterns
 
 
+@fastapi_app.get("/api/price-pattern-types", tags=["Technical Analysis"])
+async def price_pattern_types_api():
+    """
+    Return the grouped pattern-type metadata consumed by the dropdown on
+    /price-pattern. Single source of truth: backend defines the catalogue,
+    the frontend renders it. The `rare` flag drives the empty-state hint
+    when a scan returns zero results for an uncommon pattern.
+    """
+    from server.price_pattern_detector import PRICE_PATTERN_GROUPS
+
+    cache_key = "price_pattern_types:v1"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    payload = {"groups": PRICE_PATTERN_GROUPS}
+    set_cached(cache_key, payload, 300)
+    return payload
+
+
 @fastapi_app.get("/api/price-pattern-search", tags=["Technical Analysis"])
 async def price_pattern_search_api(
     pattern: str = Query("all"),
