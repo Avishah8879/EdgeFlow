@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { readStoredSession } from "@/lib/auth";
 import { maybeRedirectToCallingPlatform } from "@/lib/platform-handshake";
 import { SEO } from "@/components/SEO";
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -25,6 +26,8 @@ export default function EquityProLogin() {
     isAuthenticated,
     token,
     refreshToken,
+    logout,
+    authBaseUrl,
   } = useAuth();
   const [, navigate] = useLocation();
   const [form, setForm] = useState<FormState>({
@@ -32,6 +35,7 @@ export default function EquityProLogin() {
     password: "",
   });
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [checkingSession, setCheckingSession] = useState(false);
   const isSubmitting = status === "loading";
 
   useEffect(() => {
@@ -41,19 +45,50 @@ export default function EquityProLogin() {
   }, [error]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      // Cross-platform handshake first — if the URL carries
-      // `?platform=&returnUrl=` and returnUrl is an absolute external URL
-      // on a trusted origin, bounce there with the JWT in query params.
-      if (maybeRedirectToCallingPlatform(token, refreshToken)) return;
+    if (!isAuthenticated || !token) return;
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    setCheckingSession(true);
+
+    (async () => {
+      let revoked = false;
+      try {
+        const res = await fetch(`${authBaseUrl}/auth/v3/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        // 401 = token revoked/invalid AND the interceptor's silent
+        // /auth/v2/refresh also failed. Any other status or a network
+        // error: proceed; a genuinely dead token is caught downstream.
+        if (res.status === 401) revoked = true;
+      } catch {
+        revoked = false;
+      }
+      if (cancelled) return;
+
+      if (revoked) {
+        await logout(); // clears localStorage + session
+        if (!cancelled) setCheckingSession(false);
+        return; // re-render shows the form
+      }
+
+      // Valid (or interceptor silently refreshed). Forward the freshest
+      // persisted tokens — the closure `token` may be the rotated-out one.
+      const fresh = readStoredSession();
+      const fwdToken = fresh?.token ?? token;
+      const fwdRefresh = fresh?.refreshToken ?? refreshToken;
+      if (maybeRedirectToCallingPlatform(fwdToken, fwdRefresh)) return;
 
       const searchParams = new URLSearchParams(window.location.search);
       const returnUrl = searchParams.get("returnUrl");
       const destination = returnUrl ? decodeURIComponent(returnUrl) : "/home";
-      const timeout = setTimeout(() => navigate(destination), 800);
-      return () => clearTimeout(timeout);
-    }
-  }, [isAuthenticated, navigate, token, refreshToken]);
+      timeoutId = setTimeout(() => navigate(destination), 800);
+    })();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isAuthenticated, token, refreshToken, authBaseUrl, navigate, logout]);
 
   const handleChange =
     (key: keyof FormState) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,6 +117,17 @@ export default function EquityProLogin() {
       setFeedback(message);
     }
   };
+
+  if (isAuthenticated && checkingSession) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Checking session…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
