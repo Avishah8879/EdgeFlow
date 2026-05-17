@@ -3010,15 +3010,16 @@ def build_analyst_hub_payload(ticker: str) -> Dict[str, Any]:
 
 # ==================== FastAPI Setup ====================
 class AllowFrameMiddleware(BaseHTTPMiddleware):
+    """Strips X-Frame-Options and sets `frame-ancestors *` so this app can be
+    iframe-embedded. CORS is intentionally NOT handled here — CORSMiddleware
+    (configured below with an explicit allowlist) owns the Access-Control-*
+    headers. Embedding is governed by framing headers, not CORS."""
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
         for header_key in list(response.headers.keys()):
             if header_key.lower() == "x-frame-options":
                 del response.headers[header_key]
         response.headers["Content-Security-Policy"] = "frame-ancestors *"
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "*"
         return response
 
 

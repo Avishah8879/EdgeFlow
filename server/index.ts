@@ -28,9 +28,15 @@ app.use(helmet({
 // Enable CORS with explicit allowed origins
 // Parse CORS_ORIGINS from environment, or use defaults
 const corsOriginsEnv = process.env.CORS_ORIGINS || '';
+const isProduction = process.env.NODE_ENV === 'production';
 const defaultOrigins = [
-  'http://localhost:5173',  // Vite dev server
-  'http://localhost:5000',  // Production self-origin
+  // Loopback dev origins — only trusted outside production
+  ...(!isProduction
+    ? [
+        'http://localhost:5173',  // Vite dev server
+        'http://localhost:5000',  // Local self-origin
+      ]
+    : []),
   process.env.VITE_GRADIO_BASE_URL,  // Python backend URL
   process.env.VITE_AUTH_BASE_URL,     // Node backend URL (ngrok)
   process.env.VITE_OPTIONS_TRADING_URL, // OptionsFlow / sibling app origin
