@@ -425,9 +425,19 @@ router.post('/v2/refresh', tokenRefreshRateLimiter, async (req: Request, res: Re
       return res.status(403).json({ message: 'Account deactivated' });
     }
 
-    // Revoke old session before creating new one
-    // This prevents duplicate session issues if multiple refreshes happen concurrently
-    await revokeSessionByRefreshTokenV2(refreshToken, 'token_refresh');
+    // Revoke old session before creating new one.
+    // This prevents duplicate session issues if multiple refreshes happen concurrently.
+    // The revoke only matches a *live* session, so a count of 0 means this refresh
+    // token's session was already revoked (logout / prior rotation) — reject instead
+    // of minting a new session, otherwise logout never actually ends the lineage and
+    // a still-cryptographically-valid refresh-token JWT resurrects a dead session.
+    const revokedCount = await revokeSessionByRefreshTokenV2(refreshToken, 'token_refresh');
+    if (revokedCount === 0) {
+      return res.status(401).json({
+        message: 'Invalid refresh token',
+        code: 'INVALID_REFRESH_TOKEN',
+      });
+    }
 
     // Log token refresh
     await logAuthEventV2({

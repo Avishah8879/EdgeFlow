@@ -545,12 +545,18 @@ export async function revokeSessionV2(
 
 /**
  * Revoke a session by refresh token
- * Used during token refresh to clean up the old session
+ * Used during token refresh to clean up the old session.
+ *
+ * Returns the number of rows actually revoked. The UPDATE only matches a
+ * *live* session (`revoked = FALSE`), so a return of 0 means the refresh
+ * token's session was already revoked (logout, prior rotation) or never
+ * existed. Callers can treat 0 as "this refresh token is no longer valid"
+ * and reject, instead of minting a fresh session from a dead lineage.
  */
 export async function revokeSessionByRefreshTokenV2(
   refreshToken: string,
   reason: string = 'token_refresh'
-): Promise<void> {
+): Promise<number> {
   const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
 
   const sql = `
@@ -559,7 +565,8 @@ export async function revokeSessionByRefreshTokenV2(
     WHERE refresh_token_hash = $2 AND revoked = FALSE
   `;
 
-  await query(sql, [reason, refreshTokenHash]);
+  const result = await query(sql, [reason, refreshTokenHash]);
+  return Number(result.rowCount ?? 0);
 }
 
 /**
