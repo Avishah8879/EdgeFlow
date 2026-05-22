@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "YRC": 202503.0,
+      "co_code": 301.0,
+      "PayableDays": 21.499874161865336,
+      "InventoryDays": 69.9364658329247,
+      "ReceivableDays": 21.107963115580674,
+      "FixedCapitals_Sales": 0.274511295902431
+    }
+  ]
+}

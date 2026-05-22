@@ -1,0 +1,69 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "PERC_SH": 0.0,
+      "COLL_CTRY": "US",
+      "COLL_NAME": "E I Du Pont",
+      "COLL_Country": "United States"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "PERC_SH": 0.0,
+      "COLL_CTRY": "US",
+      "COLL_NAME": "U O P Process International Inc.",
+      "COLL_Country": "United States"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "PERC_SH": 0.0,
+      "COLL_CTRY": "UK",
+      "COLL_NAME": "Imperial Chemical Industries",
+      "COLL_Country": "United Kingdom"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "PERC_SH": 0.0,
+      "COLL_CTRY": "UK",
+      "COLL_NAME": "John Brown Engineers",
+      "COLL_Country": "United Kingdom"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "PERC_SH": 0.0,
+      "COLL_CTRY": "HO",
+      "COLL_NAME": "Lummus Crest Bv",
+      "COLL_Country": "Holland"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "PERC_SH": 0.0,
+      "COLL_CTRY": "CA",
+      "COLL_NAME": "Du Pont Inc",
+      "COLL_Country": "Canada"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "PERC_SH": 0.0,
+      "COLL_CTRY": "IT",
+      "COLL_NAME": "Sinco Engineering",
+      "COLL_Country": "Italy"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "PERC_SH": 0.0,
+      "COLL_CTRY": "CA",
+      "COLL_NAME": "Novacor",
+      "COLL_Country": "Canada"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "PERC_SH": 0.0,
+      "COLL_CTRY": "US",
+      "COLL_NAME": "Geon Co",
+      "COLL_Country": "United States"
+    }
+  ]
+}

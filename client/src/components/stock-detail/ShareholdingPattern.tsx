@@ -323,8 +323,68 @@ export default function ShareholdingPattern({ ticker, view }: ShareholdingPatter
 
   if (!data) return null;
 
+  // Snapshot bars (Phase C addition per design's Section 13 layout).
+  // Latest quarter's percentages, 4 standard rows + conditional Government when pct > 0.
+  // Existing line chart + breakdown table preserved below per locked principle.
+  // Non-standard categories (anything outside the 5 CATEGORY_KEYS) continue to
+  // appear in the historical line chart only — they don't surface as snapshot bars.
+  const latestSnapshot = (() => {
+    const labelMap: Record<CategoryKey, string> = {
+      Promoters: "Promoter",
+      FIIs: "FII",
+      DIIs: "DII",
+      Public: "Public",
+      Government: "Government",
+    };
+    const orderedKeys: CategoryKey[] = ["Promoters", "FIIs", "DIIs", "Public", "Government"];
+    return orderedKeys
+      .map((key) => {
+        const row = data.data.find((d) => d.category === key);
+        const pct = row?.values?.[0];
+        return { key, label: labelMap[key], pct: typeof pct === "number" ? pct : null, color: colors[key] };
+      })
+      .filter((r) => {
+        // 4 standard rows always (Promoter/FII/DII/Public) even if pct is null/zero —
+        // a missing Promoter % typically means a data gap, not a real 0%.
+        // Government row hides unless pct > 0 (most non-PSU tickers have 0%).
+        if (r.key === "Government") return r.pct != null && r.pct > 0;
+        return true;
+      });
+  })();
+
   return (
     <div className="space-y-6">
+      {/* Snapshot bars — latest quarter at a glance */}
+      {latestSnapshot.length > 0 && data.quarters.length > 0 && (
+        <div className="space-y-2.5">
+          <h3 className="text-xs uppercase tracking-wide text-muted-foreground">
+            As of {data.quarters[0]}
+          </h3>
+          <div className="space-y-2">
+            {latestSnapshot.map((row) => (
+              <div
+                key={row.key}
+                className="grid grid-cols-[100px_1fr_60px] items-center gap-3"
+              >
+                <span className="text-sm text-muted-foreground">{row.label}</span>
+                <div className="h-2 rounded-full bg-muted/40 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-300"
+                    style={{
+                      width: row.pct != null ? `${Math.min(100, Math.max(0, row.pct))}%` : "0%",
+                      backgroundColor: row.color,
+                    }}
+                  />
+                </div>
+                <span className="text-sm font-mono tabular-nums text-right text-foreground">
+                  {row.pct != null ? `${row.pct.toFixed(2)} %` : "—"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Line Chart */}
       {data.chart_data.length > 1 && (
         <div className="h-[300px] w-full">

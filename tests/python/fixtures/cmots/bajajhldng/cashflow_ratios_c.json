@@ -1,0 +1,16 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "YRC": 202503.0,
+      "co_code": 50.0,
+      "CashFlowPerShare": -175.81977601389335,
+      "FreeCashFlowYield": -0.01408882947506323,
+      "PricetoFreeCashFlow": -70.97821730115815,
+      "FreeCashFlowperShare": -1955.3067867447758,
+      "PricetoCashFlowRatio": -70.92550440524131,
+      "Salestocashflowratio": -0.3497720722009853
+    }
+  ]
+}

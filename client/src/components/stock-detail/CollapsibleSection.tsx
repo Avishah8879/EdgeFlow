@@ -11,11 +11,19 @@ interface CollapsibleSectionProps {
   defaultOpen?: boolean;
   children: ReactNode;
   className?: string;
+  /**
+   * When false, the toggle UI is removed entirely. Header renders as a
+   * plain heading (no chevron, no click target, no hover state); body is
+   * always visible. Use for redesigned pages that follow an always-expanded
+   * layout pattern (per Stock Detail redesign §7 q11 lock 2026-05-18).
+   * Default: true (legacy collapsible behavior preserved).
+   */
+  collapsible?: boolean;
 }
 
 const SET_ALL_EVENT = "stock-detail:set-all";
 
-export function CollapsibleSection({
+function CollapsibleSectionImpl({
   id,
   title,
   subtitle,
@@ -23,7 +31,7 @@ export function CollapsibleSection({
   defaultOpen = true,
   children,
   className,
-}: CollapsibleSectionProps) {
+}: Omit<CollapsibleSectionProps, "collapsible">) {
   const [open, setOpen] = useLocalStorage<boolean>(`stock-detail:section:${id}`, defaultOpen);
 
   useEffect(() => {
@@ -98,6 +106,44 @@ export function CollapsibleSection({
       </div>
     </section>
   );
+}
+
+function StaticSectionImpl({
+  id,
+  title,
+  subtitle,
+  action,
+  children,
+  className,
+}: Omit<CollapsibleSectionProps, "collapsible" | "defaultOpen">) {
+  return (
+    <section
+      id={id}
+      className={cn(
+        "rounded-xl border border-border/50 bg-card scroll-mt-20",
+        className,
+      )}
+    >
+      <header className="flex items-start justify-between gap-3 px-5 md:px-6 pt-4 pb-3">
+        <div className="min-w-0">
+          <h2 className="text-lg md:text-xl font-semibold tracking-tight text-foreground">{title}</h2>
+          {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+        </div>
+        {action && <div className="shrink-0">{action}</div>}
+      </header>
+      <div className="px-5 md:px-6 pb-5 md:pb-6">{children}</div>
+    </section>
+  );
+}
+
+export function CollapsibleSection({
+  collapsible = true,
+  ...rest
+}: CollapsibleSectionProps) {
+  if (collapsible) {
+    return <CollapsibleSectionImpl {...rest} />;
+  }
+  return <StaticSectionImpl {...rest} />;
 }
 
 export function dispatchSetAllSections(open: boolean): void {

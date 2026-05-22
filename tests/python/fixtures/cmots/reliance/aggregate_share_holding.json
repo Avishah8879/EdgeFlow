@@ -1,0 +1,226 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "YRC": 202603,
+      "Others": 2.4307000000000016,
+      "Retail": 8.3566,
+      "co_code": 476.0,
+      "Promoters": 49.9993,
+      "MutualFund": 9.7817,
+      "ForeignInstitution": 18.6658,
+      "OtherDomesticInstitution": 10.765899999999998
+    },
+    {
+      "YRC": 202512,
+      "Others": 2.4594000000000023,
+      "Retail": 8.2657,
+      "co_code": 476.0,
+      "Promoters": 50.0063,
+      "MutualFund": 9.5239,
+      "ForeignInstitution": 19.0852,
+      "OtherDomesticInstitution": 10.6595
+    },
+    {
+      "YRC": 202509,
+      "Others": 2.5075000000000074,
+      "Retail": 8.5022,
+      "co_code": 476.0,
+      "Promoters": 50.0106,
+      "MutualFund": 9.6612,
+      "ForeignInstitution": 18.6479,
+      "OtherDomesticInstitution": 10.670600000000002
+    },
+    {
+      "YRC": 202506,
+      "Others": 2.4461000000000013,
+      "Retail": 8.4762,
+      "co_code": 476.0,
+      "Promoters": 50.0696,
+      "MutualFund": 9.3174,
+      "ForeignInstitution": 19.2063,
+      "OtherDomesticInstitution": 10.4844
+    },
+    {
+      "YRC": 202503,
+      "Others": 2.515900000000002,
+      "Retail": 8.8581,
+      "co_code": 476.0,
+      "Promoters": 50.1072,
+      "MutualFund": 9.2144,
+      "ForeignInstitution": 19.0638,
+      "OtherDomesticInstitution": 10.240599999999999
+    },
+    {
+      "YRC": 202412,
+      "Others": 2.602400000000003,
+      "Retail": 9.0097,
+      "co_code": 476.0,
+      "Promoters": 50.135,
+      "MutualFund": 9.1443,
+      "ForeignInstitution": 19.1548,
+      "OtherDomesticInstitution": 9.9538
+    },
+    {
+      "YRC": 202410,
+      "Others": 2.5302000000000078,
+      "Retail": 8.75,
+      "co_code": 476.0,
+      "Promoters": 50.24,
+      "MutualFund": 8.5624,
+      "ForeignInstitution": 20.1653,
+      "OtherDomesticInstitution": 9.752099999999999
+    },
+    {
+      "YRC": 202409,
+      "Others": 2.2077000000000027,
+      "Retail": 8.576,
+      "co_code": 476.0,
+      "Promoters": 50.2417,
+      "MutualFund": 8.0311,
+      "ForeignInstitution": 21.2915,
+      "OtherDomesticInstitution": 9.652
+    },
+    {
+      "YRC": 202406,
+      "Others": 2.1421999999999883,
+      "Retail": 8.3736,
+      "co_code": 476.0,
+      "Promoters": 50.3281,
+      "MutualFund": 7.8374,
+      "ForeignInstitution": 21.7464,
+      "OtherDomesticInstitution": 9.572300000000002
+    },
+    {
+      "YRC": 202403,
+      "Others": 2.150199999999998,
+      "Retail": 8.3889,
+      "co_code": 476.0,
+      "Promoters": 50.312,
+      "MutualFund": 7.5043,
+      "ForeignInstitution": 22.0559,
+      "OtherDomesticInstitution": 9.5887
+    },
+    {
+      "YRC": 202312,
+      "Others": 2.2334999999999923,
+      "Retail": 8.652099999999999,
+      "co_code": 476.0,
+      "Promoters": 50.2958,
+      "MutualFund": 6.9698,
+      "ForeignInstitution": 22.1361,
+      "OtherDomesticInstitution": 9.712700000000002
+    },
+    {
+      "YRC": 202309,
+      "Others": 2.2572000000000116,
+      "Retail": 8.8042,
+      "co_code": 476.0,
+      "Promoters": 50.2656,
+      "MutualFund": 6.5565,
+      "ForeignInstitution": 22.5996,
+      "OtherDomesticInstitution": 9.5169
+    },
+    {
+      "YRC": 202306,
+      "Others": 2.2386999999999944,
+      "Retail": 8.5989,
+      "co_code": 476.0,
+      "Promoters": 50.3852,
+      "MutualFund": 6.4524,
+      "ForeignInstitution": 22.5502,
+      "OtherDomesticInstitution": 9.7746
+    },
+    {
+      "YRC": 202303,
+      "Others": 2.2399000000000058,
+      "Retail": 8.7192,
+      "co_code": 476.0,
+      "Promoters": 50.4097,
+      "MutualFund": 6.3411,
+      "ForeignInstitution": 22.4923,
+      "OtherDomesticInstitution": 9.797799999999999
+    },
+    {
+      "YRC": 202212,
+      "Others": 2.2301000000000215,
+      "Retail": 8.4425,
+      "co_code": 476.0,
+      "Promoters": 50.493,
+      "MutualFund": 5.8132,
+      "ForeignInstitution": 23.4931,
+      "OtherDomesticInstitution": 9.5281
+    },
+    {
+      "YRC": 202209,
+      "Others": 3.1494,
+      "Retail": 8.597999999999999,
+      "co_code": 476.0,
+      "Promoters": 50.5671,
+      "MutualFund": 5.6819,
+      "ForeignInstitution": 23.5812,
+      "OtherDomesticInstitution": 8.4224
+    },
+    {
+      "YRC": 202206,
+      "Others": 4.675300000000007,
+      "Retail": 8.6514,
+      "co_code": 476.0,
+      "Promoters": 50.6152,
+      "MutualFund": 5.6418,
+      "ForeignInstitution": 23.8963,
+      "OtherDomesticInstitution": 6.5200000000000005
+    },
+    {
+      "YRC": 202203,
+      "Others": 4.646900000000002,
+      "Retail": 8.7136,
+      "co_code": 476.0,
+      "Promoters": 50.6647,
+      "MutualFund": 5.1925,
+      "ForeignInstitution": 24.2326,
+      "OtherDomesticInstitution": 6.5497000000000005
+    },
+    {
+      "YRC": 202112,
+      "Others": 4.650900000000007,
+      "Retail": 8.7833,
+      "co_code": 476.0,
+      "Promoters": 50.6146,
+      "MutualFund": 4.8171,
+      "ForeignInstitution": 24.7488,
+      "OtherDomesticInstitution": 6.3853
+    },
+    {
+      "YRC": 202109,
+      "Others": 4.519899999999993,
+      "Retail": 8.616200000000001,
+      "co_code": 476.0,
+      "Promoters": 50.6126,
+      "MutualFund": 4.6016,
+      "ForeignInstitution": 25.4086,
+      "OtherDomesticInstitution": 6.2411
+    },
+    {
+      "YRC": 202106,
+      "Others": 4.546399999999991,
+      "Retail": 8.969999999999999,
+      "co_code": 476.0,
+      "Promoters": 50.5885,
+      "MutualFund": 4.6927,
+      "ForeignInstitution": 25.1111,
+      "OtherDomesticInstitution": 6.0912999999999995
+    },
+    {
+      "YRC": 202103,
+      "Others": 4.517799999999994,
+      "Retail": 8.891200000000001,
+      "co_code": 476.0,
+      "Promoters": 50.5837,
+      "MutualFund": 4.4332,
+      "ForeignInstitution": 25.6607,
+      "OtherDomesticInstitution": 5.9134
+    }
+  ]
+}

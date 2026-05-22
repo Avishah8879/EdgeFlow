@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "YRC": 202503.0,
+      "CO_CODE": 50.0,
+      "Return_ROE": 9.61466480890716,
+      "Return_ROCE": 9.629070267441598,
+      "Return_ROCE_EBIT": 6749.3099999999995,
+      "Return_ROE_Networth": 72669.06,
+      "Return_ROA_NetProfit": 6520.67,
+      "Return_ROE_NetProfit": 6520.67,
+      "Return_ReturnOnAssets": 11956.853396901073,
+      "Return_ROA_TotalFixedAssets": 35.72,
+      "Return_ROCE_CapitalEmployed": 75123.9
+    }
+  ]
+}

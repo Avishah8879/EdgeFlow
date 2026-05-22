@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "EPS": 68.53188929001203,
+      "YRC": 202503,
+      "co_code": 301,
+      "PATGrowth": 68.92,
+      "EBITGrowth": 55.51,
+      "EBITDAGrowth": 53.01,
+      "NetSalesGrowth": 10.88
+    }
+  ]
+}

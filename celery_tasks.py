@@ -378,14 +378,20 @@ try:
     from option_chain_visualizer import (
         is_market_hours as _ovz_is_market_hours,
         compute_exposures as _ovz_compute_exposures,
+        compute_atm_straddle as _ovz_compute_atm_straddle,
         append_atm_gxoi as _ovz_append_atm_gxoi,
+        append_minute_bar as _ovz_append_minute_bar,
+        cache_exposure_data as _ovz_cache_exposure_data,
     )
     from option_chain_live import fetch_nse_index_option_chain as _ovz_fetch_chain
     _OVZ_AVAILABLE = True
 except ImportError as _ovz_imp_err:
     _ovz_is_market_hours = None  # type: ignore
     _ovz_compute_exposures = None  # type: ignore
+    _ovz_compute_atm_straddle = None  # type: ignore
     _ovz_append_atm_gxoi = None  # type: ignore
+    _ovz_append_minute_bar = None  # type: ignore
+    _ovz_cache_exposure_data = None  # type: ignore
     _ovz_fetch_chain = None  # type: ignore
     _OVZ_AVAILABLE = False
     logger.warning(
@@ -420,7 +426,32 @@ def refresh_options_visualizer():
             if atm_gxoi is None:
                 errors[symbol] = "no_atm_gxoi"
                 continue
-            asyncio.run(_ovz_append_atm_gxoi(symbol, now, atm_gxoi))
+
+            # Run all per-tick async writes inside one event loop:
+            #   1. Legacy GxOI list (kept for backward compatibility).
+            #   2. Minute-bar hash carrying GxOI + ATM straddle + LTPs;
+            #      drives the rebuilt /timeseries endpoint that powers the
+            #      GxOI_ATM and ATM-straddle subplots.
+            #   3. Exposure cache so the on-demand /exposure handler can
+            #      serve from Redis without independently hitting NSE.
+            straddle = _ovz_compute_atm_straddle(
+                chain, spot, exposure.get("atm_strike")
+            )
+            bar = {
+                "atm_gxoi": atm_gxoi,
+                "atm_strike": exposure.get("atm_strike"),
+                "spot": spot,
+                "atm_straddle": straddle.get("atm_straddle", 0),
+                "ce_ltp": straddle.get("ce_ltp", 0),
+                "pe_ltp": straddle.get("pe_ltp", 0),
+            }
+
+            async def _write_all():
+                await _ovz_append_atm_gxoi(symbol, now, atm_gxoi)
+                await _ovz_append_minute_bar(symbol, now, bar)
+                await _ovz_cache_exposure_data(symbol, exposure)
+
+            asyncio.run(_write_all())
             written.append(symbol)
         except Exception as e:
             errors[symbol] = str(e)
@@ -560,3 +591,24 @@ def snapshot_options_oi():
         "ts": datetime.now(_OVZ_IST).isoformat(),
         "results": results,
     }
+
+
+# ─── CMOTS RGX Research sync ─────────────────────────────────────────────────
+
+from server.cmots_sync import run_full_sync_sync
+
+
+@celery_app.task(
+    bind=True,
+    name='cmots.sync',
+    time_limit=18 * 3600,         # 18h hard (PROD-token full universe projects ~14h)
+    soft_time_limit=int(17.5 * 3600),  # 17.5h soft (raises SoftTimeLimitExceeded)
+)
+def cmots_sync_task(self):
+    """Full CMOTS RGX Research sync — raw cache only (§4).
+
+    Owns one long-running async run inside the Celery worker. Returns a summary
+    dict matching ``server.cmots_sync.run_full_sync``. Progress is observable
+    via ``cmots_sync_state`` (singleton row, autocommit-updated).
+    """
+    return run_full_sync_sync()

@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "lname": "Reliance Industries Ltd",
+      "PE_TTM": 41.95,
+      "EPS_Qtr": 5.48,
+      "EPS_TTM": 32.4,
+      "co_code": 476.0,
+      "PE_Yearly": 48.93,
+      "EBITDA_Qtr": 15319.0,
+      "EPS_Yearly": 26.06,
+      "DivYield_TTM": 0.44,
+      "EBITDA_Yearly": 74163.0,
+      "Pat_Growth_Qtr": -21.008939974457217,
+      "Pat_Growth_TTM": 24.357665475582778,
+      "DivYield_Yearly": 0.004313607807480599,
+      "Pat_Growth_Yearly": -16.126730412444697,
+      "QuickRatio_Yearly": 0.5333388147930171,
+      "CurrentRatio_Yearly": 0.71,
+      "NetSales_Growth_Qtr": 17.063970284770946,
+      "NetSales_Growth_TTM": -2.26152945110554,
+      "DebtEquityRatio_Yearly": 0.39,
+      "NetSales_Growth_Yearly": -3.1151965328853355
+    }
+  ]
+}

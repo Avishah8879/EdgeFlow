@@ -1,0 +1,20 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "RSI": 45.99,
+      "MACD": 183.2430600000007,
+      "co_code": 50.0,
+      "WilliamsR": -95.50129,
+      "WildersDMI_ADX": 51.37154,
+      "MACD_12_26_9_Days": -6.763869999999542,
+      "CommodityChannelIndex": -61.68984,
+      "Lower2sigmaBollingerBand": 9951.4354,
+      "Upper2sigmaBollingerBand": 10680.07833,
+      "StochasticOscillatorFastK": 39.3036,
+      "StochasticOscillatorSlowD": 57.2408,
+      "StochasticOscillatorSlowK": 4.49871
+    }
+  ]
+}

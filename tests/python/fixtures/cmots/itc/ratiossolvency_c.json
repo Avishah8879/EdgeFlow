@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "yrc": 202503.0,
+      "co_code": 301.0,
+      "solvency_currentratio": 3.0315898476012606,
+      "solvency_interestcoverageratio": 598.5796715490457,
+      "solvency_totaldebttoequityratio": 0.0007057710445418342,
+      "solvency_currentratio_currentasset": 43893.28,
+      "solvency_interestcoverageratio_ebit": 26972.0,
+      "solvency_currentratio_currentliabilities": 14334.11,
+      "solvency_totaldebttoequityratio_networth": 70397.94,
+      "solvency_totaldebttoequityratio_totaldebt": 91.26,
+      "solvency_interestcoverageratio_interestpayments": 45.06
+    }
+  ]
+}

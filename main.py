@@ -3179,6 +3179,20 @@ async def startup_event():
     logging.info("=" * 60)
     logging.info("STARTUP INITIATED")
     logging.info("=" * 60)
+    # Surface the DB target prominently. This is the FIRST diagnostic to
+    # check when any "data is empty / wrong" report comes in — never infer
+    # the connection target from anecdotal evidence again (see §9 cache
+    # poisoning post-mortem). The cmots_accessor module reads through
+    # _get_db_connection_target() at every call, so this banner reflects
+    # the target the live CMOTS accessors will hit.
+    logging.info(
+        "[STARTUP] Database target: DB_NAME=%r DB_HOST=%r DB_PORT=%r DB_USER=%r",
+        os.environ.get("DB_NAME"),
+        os.environ.get("DB_HOST"),
+        os.environ.get("DB_PORT", "5432"),
+        os.environ.get("DB_USER"),
+    )
+    logging.info("=" * 60)
 
     # Initialize Redis connection
     t0 = time.time()
@@ -6661,6 +6675,30 @@ async def shareholding_pattern_api(
 
         logging.info(f"[API] /api/shareholding/{ticker} START (view={view})")
 
+        # CMOTS-first branch (§8): if the ticker is covered by the CMOTS
+        # pipeline, serve a scraper-shape response built from
+        # cmots_shareholding. Falls through to the existing Selenium
+        # scraper for uncovered tickers — frontend contract unchanged.
+        from server.cmots_accessor import (
+            has_cmots_data as cmots_has_data,
+            get_shareholding_cmots_in_scraper_shape,
+        )
+        if await asyncio.to_thread(cmots_has_data, ticker):
+            logging.info(f"[API] /api/shareholding/{ticker} → CMOTS branch")
+            cmots_result = await asyncio.to_thread(
+                get_shareholding_cmots_in_scraper_shape, ticker, view,
+            )
+            if cmots_result.get("success"):
+                # Bypass screener.in cache key — CMOTS has its own invalidation
+                # at sync-end via delete_pattern("cmots:*").
+                return cmots_result
+            # CMOTS branch returned no data (rare — covered ticker with
+            # empty cmots_shareholding); fall through to scraper as a
+            # belt-and-braces fallback.
+            logging.info(
+                f"[API] /api/shareholding/{ticker} CMOTS empty → fallback to scraper"
+            )
+
         # Check cache
         cache_key = make_shareholding_key(ticker, view)
         cached = get_cached(cache_key)
@@ -6686,6 +6724,348 @@ async def shareholding_pattern_api(
             status_code=500,
             detail=f"Failed to fetch shareholding data: {str(exc)}",
         ) from exc
+
+
+# =============================================================================
+# CMOTS — read-side accessor routes (§8)
+# =============================================================================
+#
+# 11 GET routes for per-ticker CMOTS data + 1 sector-medians route.
+# All wrap accessors in ``server.cmots_accessor`` and return via
+# ``success_response(data=...)``. Empty-shape returns flow through unchanged
+# (the accessor layer enforces "never 404, never naked None").
+#
+# 3 admin POST/GET routes for sync triggering + status, gated on the
+# X-Admin-Secret header per the plan §3 spec.
+
+
+# Allowed parameter values — validation rejects anything else with 400.
+_CMOTS_STATEMENT_TYPES = ("standalone", "consolidated")
+_CMOTS_REPORTS = ("profit_loss", "balance_sheet", "cash_flow", "quarterly", "yearly")
+_CMOTS_RATIO_PERIODS = ("yearly", "quarterly", "daily")
+_CMOTS_DOC_TYPES = (
+    "director_report", "chairman_report", "auditor_report",
+    "notes_to_account", "mda",
+)
+
+
+# Admin-secret dependency: separate from the existing ``verify_admin_key``
+# (which uses ``X-Admin-Key`` for the older /api/system/* endpoints).
+# CMOTS admin routes use ``X-Admin-Secret`` per plan §3 spec. The pattern
+# below explicitly requires BOTH the env-var AND the header to be non-empty
+# before comparing — so an unset ``ADMIN_SECRET_KEY`` cannot accidentally
+# admit empty/None requests.
+async def require_cmots_admin(x_admin_secret: str = Header(None, alias="X-Admin-Secret")):
+    """Verify ``X-Admin-Secret`` header matches ``ADMIN_SECRET_KEY``.
+
+    Returns 401 if header missing, header empty, env var unset/empty, or
+    values don't match. Both sides must be truthy strings before equality
+    is even considered.
+    """
+    expected = os.getenv("ADMIN_SECRET_KEY")
+    if not expected:
+        # Defensive: refuse to admit anything when the env var is unset.
+        # Without this check, a missing env var + missing header would both
+        # be None and pass an equality check.
+        raise HTTPException(
+            status_code=503,
+            detail="Admin endpoint disabled: ADMIN_SECRET_KEY env var unset",
+        )
+    if not x_admin_secret or x_admin_secret != expected:
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized: valid X-Admin-Secret header required",
+        )
+
+
+# --- Read routes ---------------------------------------------------------
+
+
+@fastapi_app.get("/api/tickers/{symbol}/has-cmots-data", tags=["CMOTS"])
+async def cmots_has_data_api(symbol: str):
+    """Boolean check: does this ticker have CMOTS coverage?
+    Never raises; returns ``{has_cmots_data: bool}``."""
+    from server.cmots_accessor import has_cmots_data
+    result = await asyncio.to_thread(has_cmots_data, symbol)
+    return success_response(data={"has_cmots_data": bool(result)})
+
+
+@fastapi_app.get("/api/tickers/{symbol}/screener", tags=["CMOTS"])
+async def cmots_screener_bundle_api(symbol: str):
+    """Composite ScreenerBundle for a ticker (§9.6). Returns empty-shaped
+    bundle for uncovered tickers — frontend gets a renderable response either way."""
+    from server.cmots_accessor import get_screener_bundle
+    bundle = await asyncio.to_thread(get_screener_bundle, symbol)
+    return success_response(data=bundle)
+
+
+@fastapi_app.get(
+    "/api/tickers/{symbol}/financials/{statement_type}/{report}",
+    tags=["CMOTS"],
+)
+async def cmots_financials_api(symbol: str, statement_type: str, report: str):
+    """WideTable for one statement. Empty WideTable for uncovered tickers
+    OR when ``(statement_type, report)`` has no data."""
+    if statement_type.lower() not in _CMOTS_STATEMENT_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"statement_type must be one of {_CMOTS_STATEMENT_TYPES}",
+        )
+    if report.lower() not in _CMOTS_REPORTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"report must be one of {_CMOTS_REPORTS}",
+        )
+    from server.cmots_accessor import get_financial_statements
+    wt = await asyncio.to_thread(
+        get_financial_statements, symbol, statement_type.lower(), report.lower(),
+    )
+    return success_response(data=wt)
+
+
+@fastapi_app.get("/api/tickers/{symbol}/ratios/{period}", tags=["CMOTS"])
+async def cmots_ratios_api(symbol: str, period: str):
+    """Ratios: WideTable for yearly/quarterly, flat dict for daily."""
+    if period.lower() not in _CMOTS_RATIO_PERIODS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"period must be one of {_CMOTS_RATIO_PERIODS}",
+        )
+    from server.cmots_accessor import get_ratios
+    r = await asyncio.to_thread(get_ratios, symbol, period.lower())
+    return success_response(data=r)
+
+
+@fastapi_app.get("/api/tickers/{symbol}/shareholding", tags=["CMOTS"])
+async def cmots_shareholding_api(symbol: str):
+    """CMOTS shareholding pivot (WideTable shape). The legacy
+    ``/api/shareholding/{ticker}`` endpoint serves the scraper-shape
+    response — this endpoint is the CMOTS-native WideTable view for new
+    §9 panels."""
+    from server.cmots_accessor import get_shareholding
+    wt = await asyncio.to_thread(get_shareholding, symbol)
+    return success_response(data=wt)
+
+
+@fastapi_app.get("/api/tickers/{symbol}/corporate-actions", tags=["CMOTS"])
+async def cmots_corp_actions_api(
+    symbol: str,
+    type: str | None = Query(None, description="Optional action_type filter"),
+):
+    """Corporate-action events. Optional ``?type=dividend`` filter."""
+    from server.cmots_accessor import get_corporate_actions
+    rows = await asyncio.to_thread(get_corporate_actions, symbol, type)
+    return success_response(data=rows)
+
+
+@fastapi_app.get("/api/tickers/{symbol}/narratives/{doc_type}", tags=["CMOTS"])
+async def cmots_narratives_api(symbol: str, doc_type: str):
+    """Narrative documents (Director Report, MDA, etc.)."""
+    if doc_type.lower() not in _CMOTS_DOC_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"doc_type must be one of {_CMOTS_DOC_TYPES}",
+        )
+    from server.cmots_accessor import get_narratives
+    rows = await asyncio.to_thread(get_narratives, symbol, doc_type.lower())
+    return success_response(data=rows)
+
+
+@fastapi_app.get("/api/tickers/{symbol}/announcements", tags=["CMOTS"])
+async def cmots_announcements_api(
+    symbol: str,
+    with_ratings_only: bool = Query(False, description="Filter to rating events"),
+):
+    """BSE/NSE announcements timeline. Optional ``?with_ratings_only=true``."""
+    from server.cmots_accessor import get_announcements
+    rows = await asyncio.to_thread(get_announcements, symbol, with_ratings_only)
+    return success_response(data=rows)
+
+
+@fastapi_app.get("/api/tickers/{symbol}/pros-cons", tags=["CMOTS"])
+async def cmots_pros_cons_api(symbol: str):
+    """§9.3 pros/cons rule engine output: ``[{type, label, detail}, ...]``."""
+    from server.cmots_accessor import get_pros_cons
+    rows = await asyncio.to_thread(get_pros_cons, symbol)
+    return success_response(data=rows)
+
+
+@fastapi_app.get("/api/tickers/{symbol}/credit-ratings", tags=["CMOTS"])
+async def cmots_credit_ratings_api(symbol: str):
+    """§9.4 credit-rating events (subset of announcements with agency+rating
+    extracted)."""
+    from server.cmots_accessor import get_credit_ratings
+    rows = await asyncio.to_thread(get_credit_ratings, symbol)
+    return success_response(data=rows)
+
+
+@fastapi_app.get("/api/sectors/{sector}/medians", tags=["CMOTS"])
+async def cmots_sector_medians_api(sector: str):
+    """§9.2 sector medians for the sector-comparison panel.
+    Process-wide in-memory cache; invalidated at sync-end."""
+    from server.cmots_accessor import get_sector_medians
+    sector_decoded = unquote(sector)
+    medians = await asyncio.to_thread(get_sector_medians, sector_decoded)
+    return success_response(data=medians)
+
+
+# --- Admin routes (require X-Admin-Secret) -------------------------------
+
+
+def _cmots_admin_db_cursor():
+    """Open a direct psycopg2 cursor for admin endpoints using DB_* env at
+    call time. Matches the accessor module's pattern (and bypasses the
+    module-level pool, which is initialized once at import time and can't
+    pick up environment changes — important for test environments that
+    repoint DB_* at TEST_DB_*)."""
+    from server.cmots_accessor import _open_cursor
+    return _open_cursor()
+
+
+@fastapi_app.post(
+    "/api/admin/cmots/sync",
+    dependencies=[Depends(require_cmots_admin)],
+    tags=["CMOTS Admin"],
+)
+async def cmots_admin_sync_api():
+    """Enqueue the ``cmots.sync`` Celery task. Returns immediately with
+    ``{task_id, sync_state}``. Rejects with 409 if a sync is already
+    in flight (``cmots_sync_state.status = 'running'``)."""
+    try:
+        conn, cur = _cmots_admin_db_cursor()
+        try:
+            cur.execute(
+                "SELECT id, status, started_at, finished_at, total, done, failed, current "
+                "FROM cmots_sync_state WHERE id = 1"
+            )
+            current_state = cur.fetchone()
+        finally:
+            cur.close()
+            conn.close()
+    except Exception as exc:  # noqa: BLE001
+        logging.exception("[CMOTS-ADMIN] sync-state read failed")
+        raise HTTPException(status_code=500, detail=f"Failed to read sync state: {exc}") from exc
+
+    if current_state and current_state.get("status") == "running":
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "CMOTS sync already in progress",
+                "sync_state": _serialize_sync_state_row(current_state),
+            },
+        )
+
+    # Enqueue via Celery. The task is registered in celery_tasks.py.
+    try:
+        from celery_app import celery_app as celery_app_instance
+        result = celery_app_instance.send_task("cmots.sync")
+        task_id = result.id
+    except Exception as exc:  # noqa: BLE001
+        logging.exception("[CMOTS-ADMIN] Celery dispatch failed")
+        raise HTTPException(
+            status_code=503,
+            detail=f"Failed to enqueue cmots.sync task: {exc}",
+        ) from exc
+
+    return success_response(data={
+        "task_id":    task_id,
+        "sync_state": _serialize_sync_state_row(current_state),
+    })
+
+
+@fastapi_app.get(
+    "/api/admin/cmots/sync-state",
+    dependencies=[Depends(require_cmots_admin)],
+    tags=["CMOTS Admin"],
+)
+async def cmots_admin_sync_state_api():
+    """Return the ``cmots_sync_state`` singleton row for progress polling."""
+    try:
+        conn, cur = _cmots_admin_db_cursor()
+        try:
+            cur.execute(
+                "SELECT id, status, total, done, failed, current, started_at, finished_at "
+                "FROM cmots_sync_state WHERE id = 1"
+            )
+            row = cur.fetchone()
+        finally:
+            cur.close()
+            conn.close()
+        return success_response(data=_serialize_sync_state_row(row))
+    except Exception as exc:  # noqa: BLE001
+        logging.exception("[CMOTS-ADMIN] sync-state read failed")
+        raise HTTPException(status_code=500, detail=f"Failed to read sync state: {exc}") from exc
+
+
+@fastapi_app.get(
+    "/api/admin/cmots/coverage",
+    dependencies=[Depends(require_cmots_admin)],
+    tags=["CMOTS Admin"],
+)
+async def cmots_admin_coverage_api(
+    limit: int = Query(200, ge=1, le=3500, description="Max rows"),
+    offset: int = Query(0, ge=0),
+):
+    """Paginated list of CMOTS-covered tickers
+    ``[{co_code, symbol, name, last_synced_at}, ...]``."""
+    try:
+        conn, cur = _cmots_admin_db_cursor()
+        try:
+            cur.execute(
+                """
+                SELECT co_code, symbol, name, cmots_last_synced_at, cmots_disabled
+                  FROM tickers
+                 WHERE has_cmots_data = TRUE
+                   AND co_code IS NOT NULL
+                 ORDER BY co_code ASC
+                 LIMIT %s OFFSET %s
+                """,
+                (limit, offset),
+            )
+            rows = cur.fetchall()
+            cur.execute(
+                "SELECT count(*) AS n FROM tickers WHERE has_cmots_data = TRUE AND co_code IS NOT NULL"
+            )
+            total = cur.fetchone()["n"]
+        finally:
+            cur.close()
+            conn.close()
+        return success_response(
+            data={
+                "tickers": [
+                    {
+                        "co_code":         r["co_code"],
+                        "symbol":          r["symbol"],
+                        "name":            r["name"],
+                        "last_synced_at":  r["cmots_last_synced_at"].isoformat() if r["cmots_last_synced_at"] else None,
+                        "cmots_disabled":  bool(r["cmots_disabled"]),
+                    }
+                    for r in rows
+                ],
+                "total":  total,
+                "limit":  limit,
+                "offset": offset,
+            }
+        )
+    except Exception as exc:  # noqa: BLE001
+        logging.exception("[CMOTS-ADMIN] coverage read failed")
+        raise HTTPException(status_code=500, detail=f"Failed to read coverage: {exc}") from exc
+
+
+def _serialize_sync_state_row(row: dict | None) -> dict:
+    """Render a ``cmots_sync_state`` row dict for JSON response."""
+    if not row:
+        return {"status": "never_run", "total": 0, "done": 0, "failed": 0}
+    return {
+        "id":          row.get("id"),
+        "status":      row.get("status"),
+        "total":       row.get("total"),
+        "done":        row.get("done"),
+        "failed":      row.get("failed"),
+        "current":     row.get("current"),
+        "started_at":  row["started_at"].isoformat() if row.get("started_at") else None,
+        "finished_at": row["finished_at"].isoformat() if row.get("finished_at") else None,
+    }
 
 
 @fastapi_app.get("/api/stock-analysis/{ticker}/pdf", tags=["Stock Detail"])
@@ -8528,9 +8908,12 @@ except ImportError:
 try:
     from option_chain_visualizer import (
         compute_exposures as _ft_compute_exposures,
+        compute_atm_straddle as _ft_compute_atm_straddle,
         build_iv_surface as _ft_build_iv_surface,
         append_atm_gxoi as _ft_append_atm_gxoi,
         get_atm_gxoi_timeseries as _ft_get_atm_gxoi_timeseries,
+        append_minute_bar as _ft_append_minute_bar,
+        get_minute_bars as _ft_get_minute_bars,
         append_surface_snapshot as _ft_append_surface_snapshot,
         get_surface_history as _ft_get_surface_history,
         cache_exposure_data as _ft_cache_exposure_data,
@@ -8541,9 +8924,12 @@ try:
     )
 except ImportError:
     _ft_compute_exposures = None  # type: ignore
+    _ft_compute_atm_straddle = None  # type: ignore
     _ft_build_iv_surface = None  # type: ignore
     _ft_append_atm_gxoi = None  # type: ignore
     _ft_get_atm_gxoi_timeseries = None  # type: ignore
+    _ft_append_minute_bar = None  # type: ignore
+    _ft_get_minute_bars = None  # type: ignore
     _ft_append_surface_snapshot = None  # type: ignore
     _ft_get_surface_history = None  # type: ignore
     _ft_cache_exposure_data = None  # type: ignore
@@ -9239,6 +9625,24 @@ async def ft_get_options_exposure(symbol: str, expiry: str = Query(None)):
         except Exception as e:
             logging.warning(f"Failed to append ATM GxOI: {e}")
 
+        # Idempotent minute-bar write so dev/test environments without Celery beat
+        # still accumulate a time series. Worker writes the same key — last writer
+        # for a given HH:MM minute wins and that's fine.
+        if _ft_append_minute_bar is not None and _ft_compute_atm_straddle is not None:
+            try:
+                straddle = _ft_compute_atm_straddle(chain, spot, exposure_data.get("atm_strike"))
+                bar = {
+                    "atm_gxoi": exposure_data.get("atm_gxoi", 0),
+                    "atm_strike": exposure_data.get("atm_strike"),
+                    "spot": spot,
+                    "atm_straddle": straddle.get("atm_straddle", 0),
+                    "ce_ltp": straddle.get("ce_ltp", 0),
+                    "pe_ltp": straddle.get("pe_ltp", 0),
+                }
+                asyncio.ensure_future(_ft_append_minute_bar(normalized, now, bar))
+            except Exception as e:
+                logging.warning(f"Failed to append minute bar: {e}")
+
         await _ft_cache_exposure_data(normalized, exposure_data)
 
         return _ft_api_response(exposure_data, "Exposure data calculated")
@@ -9250,23 +9654,56 @@ async def ft_get_options_exposure(symbol: str, expiry: str = Query(None)):
 
 @fastapi_app.get("/api/options-visualizer/timeseries/{symbol}")
 async def ft_get_options_timeseries(symbol: str, date: str = Query(None)):
-    """Get ATM GxOI time series for current or specified trading session."""
+    """
+    1-minute bars for the current (or specified) trading session.
+
+    Returns ATM GxOI + ATM straddle in one payload. Both series share the
+    same minute grid sourced from `options_viz:minute_bar:{SYMBOL}:{YYYY-MM-DD}`.
+    """
     try:
         normalized = symbol.upper()
         if normalized not in {"NIFTY", "BANKNIFTY"}:
             return _ft_api_error("Only NIFTY and BANKNIFTY supported", 400)
 
-        if _ft_get_atm_gxoi_timeseries is None or _ft_viz_is_market_hours is None:
+        if _ft_get_minute_bars is None or _ft_viz_is_market_hours is None:
             return _ft_api_error("option_chain_visualizer module unavailable", 503)
 
-        history = await _ft_get_atm_gxoi_timeseries(normalized, date)
+        bars = await _ft_get_minute_bars(normalized, date)
+
+        # Map minute bars to the wire shape. `timestamp` keeps the existing
+        # contract used by the 2D chart's GxOI line; new fields drive the 5th
+        # subplot (ATM straddle).
+        #
+        # Straddle is emitted as `null` when both legs have zero LTP — that is
+        # the early-session signature of "no trades have printed yet on the
+        # ATM CE/PE today" (NSE resets lastPrice to 0 at session start). Plotly
+        # breaks the line on null, so the straddle plot starts at the first
+        # minute that actually has prints rather than dipping to 0 at 09:15.
+        # GxOI is left untouched — its inputs (OI carry-forward + Greeks from
+        # quotes) are valid from 09:15.
+        data = []
+        for bar in bars:
+            if not bar.get("ts"):
+                continue
+            ce_ltp = bar.get("ce_ltp", 0) or 0
+            pe_ltp = bar.get("pe_ltp", 0) or 0
+            no_prints_yet = ce_ltp == 0 and pe_ltp == 0
+            data.append({
+                "timestamp": bar.get("ts"),
+                "atm_gxoi": bar.get("atm_gxoi", 0),
+                "atm_straddle": None if no_prints_yet else bar.get("atm_straddle", 0),
+                "atm_strike": bar.get("atm_strike"),
+                "spot": bar.get("spot", 0),
+                "ce_ltp": ce_ltp,
+                "pe_ltp": pe_ltp,
+            })
 
         return _ft_api_response({
             "symbol": normalized,
-            "data": history,
+            "data": data,
             "is_market_open": _ft_viz_is_market_hours(),
             "date": date or datetime.now(_FT_IST).strftime("%Y-%m-%d"),
-        }, "ATM GxOI time series")
+        }, "Options visualizer minute bars")
 
     except Exception as e:
         print(f"Options timeseries error for {symbol}: {e}")

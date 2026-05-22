@@ -1,0 +1,86 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "name": "Uti Mutual Funds",
+      "co_code": 301.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "name": "Nippon Life India Trustee Mutual Funds",
+      "co_code": 301.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "name": "Parag Parikh Flexi Cap Mutual Funds",
+      "co_code": 301.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "name": "Sbi Mutual Funds",
+      "co_code": 301.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "name": "Icici Prudential Mutual Funds",
+      "co_code": 301.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "name": "The New India Assurance Company Limited",
+      "co_code": 301.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "name": "General Insurance Corporation Of India",
+      "co_code": 301.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "name": "Life Insurance Corporation Of India",
+      "co_code": 301.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "name": "Nps Trust (various Pension Funds)",
+      "co_code": 301.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "name": "Specified Undertaking Of The Unit Trust Of India",
+      "co_code": 301.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Minal Bajaj",
+      "co_code": 50.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Neelima Bajaj Swamy",
+      "co_code": 50.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Suman Jain",
+      "co_code": 50.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Niraj Bajaj",
+      "co_code": 50.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Kumud Bajaj",
+      "co_code": 50.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Rajivnayan Bajaj",
+      "co_code": 50.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Sanjivnayan Bajaj",
+      "co_code": 50.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Kiran Bajaj",
+      "co_code": 50.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Shekhar Bajaj",
+      "co_code": 50.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Manish Kejriwal",
+      "co_code": 50.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    }
+  ]
+}

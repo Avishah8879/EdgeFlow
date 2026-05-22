@@ -1,0 +1,584 @@
+%% EdgeFlow / EquityPro — Target schema ER diagram
+%% Companion to db-target-schema.md and db-target-schema.sql.
+%% Auth DB tables are intentionally omitted (separate Postgres instance).
+
+erDiagram
+
+    %% ============================================================
+    %% MASTER / REFERENCE LAYER
+    %% ============================================================
+
+    companies ||--o{ scrips : "has listings"
+    companies ||--o{ corporate_actions : "subject of"
+    companies ||--o{ financial_statements : "owns"
+    companies ||--o{ key_ratios : "owns"
+    companies ||--o{ shareholding_pattern : "disclosed"
+    companies ||--o{ shareholding_individual : "disclosed"
+    companies ||--o{ analyst_recommendations : "covered by"
+    companies ||--o{ earnings_estimates : "estimated"
+    companies ||--o{ corporate_announcements : "files"
+    companies ||--o{ news_article_tags : "tagged in"
+    companies ||--o{ stock_scorecard : "scored"
+    companies ||--o{ reverse_dcf_estimates : "valued"
+    companies ||--o| companies : "merged_into"
+
+    scrips ||--o{ instruments : "EQUITY/ETF/BOND"
+    scrips ||--o{ scrip_segments : "history"
+    scrips ||--o{ scrip_segment_change_log : "audit"
+    scrips ||--o{ corporate_actions : "applies to"
+    scrips ||--o{ corporate_action_adjustments : "factors"
+    scrips ||--o{ index_constituents : "member of"
+    scrips ||--o{ ltp_snapshot : "current"
+    scrips ||--o{ bhavcopy_eod : "EOD"
+    scrips ||--o{ delivery_data : "delivery"
+
+    indices ||--o{ instruments : "INDEX"
+    indices ||--o{ index_constituents : "constituents"
+    indices ||--o{ index_eod : "EOD"
+    indices ||--o{ index_ohlc_1min : "intraday"
+    indices ||--o| indices : "TR_index"
+
+    mf_amcs ||--o{ mf_schemes : "manages"
+    mf_schemes ||--o{ instruments : "MF"
+
+    instruments ||--o{ instrument_identifiers : "vendor ids"
+    instruments ||--o{ instruments : "FUTURE/OPTION underlying"
+
+    %% ============================================================
+    %% CORPORATE ACTIONS + ANNOUNCEMENTS
+    %% ============================================================
+
+    corporate_actions ||--o{ corporate_action_adjustments : "drives"
+    corporate_actions ||--o| corporate_actions : "superseded_by"
+
+    corporate_announcements ||--o| quarterly_announcements : "earnings detail"
+    corporate_announcements ||--o| announcement_performance : "post-event drift"
+
+    %% ============================================================
+    %% TIME-SERIES LAYER
+    %% ============================================================
+
+    fno_contracts ||--o{ fno_eod : "EOD"
+    fno_contracts ||--o{ oi_snapshot_5min : "OI history"
+
+    %% F&O 1-minute and tick are explicitly OFF-Postgres
+    %% (DuckDB-on-R2 Parquet — see db-target-schema.md §3.4)
+
+    %% ============================================================
+    %% FUNDAMENTALS
+    %% ============================================================
+
+    line_item_dictionary ||--o{ cmots_line_item_mapping : "maps to"
+    %% financial_statements.line_item_code is a LOOSE FK (no constraint)
+    %% to allow new CMOTS lines to land before dictionary seed.
+
+    financial_statements }o--|| companies : "co_code"
+    key_ratios            }o--|| companies : "co_code"
+
+    %% Materialised views (shown for completeness; not real entities)
+    %% financial_summary_latest    — pivot of financial_statements
+    %% key_ratios_latest_wide      — pivot of key_ratios
+    %% analyst_consensus_latest    — pivot of analyst_recommendations
+
+    brokers ||--o{ analyst_recommendations : "issues"
+    earnings_estimates ||--o{ eps_revisions : "drives"
+
+    %% ============================================================
+    %% NEWS
+    %% ============================================================
+
+    news_articles ||--o{ news_article_tags : "tagged with"
+    %% news_article_tags is a junction; CHECK constraint enforces
+    %% exactly one of {instrument_id, co_code, index_id, sector}
+    %% is non-NULL per row.
+
+    %% ============================================================
+    %% MARKET-WIDE SIGNALS
+    %% ============================================================
+
+    %% pcr_data, vix_signals, fii_dii_flows are dimension-keyed
+    %% standalone tables (no FK to masters because symbols like
+    %% 'NIFTY', 'BANKNIFTY', 'ALL' are conceptual, not scrips).
+
+    %% ============================================================
+    %% LEGACY BRIDGE
+    %% ============================================================
+
+    %% tickers (legacy) ─── 1:1 ─── instruments
+    %% via instruments.legacy_ticker_id and tickers.instrument_id
+    %% during transition. tickers becomes a view in Phase 6.
+
+    %% ============================================================
+    %% ENTITY ATTRIBUTE BLOCKS
+    %% ============================================================
+
+    companies {
+        INTEGER co_code PK "CMOTS [CMOTS?]"
+        VARCHAR company_name
+        VARCHAR industry
+        VARCHAR sector
+        VARCHAR mcap_class
+        CHAR isin_primary
+        VARCHAR status "ACTIVE|MERGED|DELISTED|SUSPENDED|WOUND_UP"
+        INTEGER merged_into_co_code FK
+        BOOLEAN bse_listed
+        BOOLEAN nse_listed
+        TIMESTAMPTZ cmots_last_seen_at
+    }
+
+    scrips {
+        INTEGER scrip_id PK
+        INTEGER co_code FK
+        VARCHAR exchange "NSE|BSE"
+        VARCHAR bse_code
+        VARCHAR nse_symbol
+        VARCHAR series "EQ|BE|SM|ST|IT|IV|XX|A|B|T|XT|X|Z|P|E|W|Y"
+        CHAR isin
+        NUMERIC face_value
+        INTEGER lot_size
+        NUMERIC tick_size
+        BOOLEAN is_active
+        DATE listing_date
+        DATE delisting_date
+    }
+
+    instruments {
+        BIGINT instrument_id PK
+        VARCHAR asset_class "EQUITY|INDEX|FUTURE|OPTION|MF|ETF|BOND"
+        INTEGER scrip_id FK
+        INTEGER index_id FK
+        INTEGER mf_scheme_id FK
+        BIGINT underlying_instrument_id FK
+        VARCHAR display_symbol
+        VARCHAR display_long_name
+        BOOLEAN is_tradeable
+        BOOLEAN is_active
+        JSONB derivative_meta
+        INTEGER legacy_ticker_id "bridge to tickers.id"
+    }
+
+    instrument_identifiers {
+        BIGINT instrument_id PK_FK
+        VARCHAR vendor PK "CMOTS_CO_CODE|BSE_CODE|NSE_SYMBOL|ISIN|FYERS_*|UPSTOX_*|ANGEL_TOKEN|AMFI_CODE|KITE_TOKEN"
+        TIMESTAMPTZ valid_from PK
+        VARCHAR vendor_id
+        TIMESTAMPTZ valid_to "NULL = current"
+        BOOLEAN is_active
+        JSONB meta
+    }
+
+    indices {
+        INTEGER index_id PK
+        VARCHAR index_code UK "[CMOTS?]"
+        VARCHAR index_symbol UK "NIFTY 50, BANKNIFTY"
+        VARCHAR index_family
+        VARCHAR index_kind "BROAD|SECTORAL|THEMATIC|STRATEGY|VOLATILITY|BOND"
+        BOOLEAN is_tradeable
+        INTEGER total_return_index_id FK
+    }
+
+    index_constituents {
+        BIGINT id PK
+        INTEGER index_id FK
+        INTEGER scrip_id FK
+        NUMERIC weight_pct
+        DATE valid_from
+        DATE valid_to "NULL = current"
+    }
+
+    mf_schemes {
+        INTEGER mf_scheme_id PK
+        INTEGER scheme_code UK "AMFI"
+        INTEGER amc_id FK
+        VARCHAR category
+        VARCHAR sub_category
+        VARCHAR plan_type "DIRECT|REGULAR"
+        VARCHAR option_type "GROWTH|IDCW_*"
+        CHAR isin_growth
+        VARCHAR cmots_scheme_code "[CMOTS?]"
+    }
+
+    scrip_segments {
+        BIGINT id PK
+        INTEGER scrip_id FK
+        VARCHAR segment
+        TIMESTAMPTZ valid_from
+        TIMESTAMPTZ valid_to "NULL = current"
+        VARCHAR source
+    }
+
+    corporate_actions {
+        BIGINT id PK
+        INTEGER scrip_id FK
+        INTEGER co_code FK
+        ENUM action_type "DIVIDEND|BONUS|SPLIT|RIGHTS|BUYBACK|MERGER|DEMERGER|NAME_CHANGE|ISIN_CHANGE|FACE_VALUE_CHANGE|LISTING|DELISTING|SUSPENSION|REVOCATION|CONSOLIDATION|AMALGAMATION"
+        DATE ex_date
+        DATE record_date
+        DATE payment_date
+        SMALLINT sequence_no
+        INTEGER ratio_numerator
+        INTEGER ratio_denominator
+        NUMERIC amount_per_share
+        VARCHAR dividend_type
+        BIGINT superseded_by_id FK
+        BOOLEAN is_active
+        VARCHAR source "NSE|BSE|CMOTS"
+    }
+
+    corporate_action_adjustments {
+        INTEGER scrip_id PK_FK
+        DATE effective_date PK
+        ENUM adjustment_kind PK "SPLIT|BONUS|RIGHTS|DIVIDEND_TR"
+        BIGINT corporate_action_id FK
+        NUMERIC price_factor
+        NUMERIC volume_factor
+    }
+
+    ltp_snapshot {
+        INTEGER scrip_id PK_FK "single row per scrip"
+        NUMERIC ltp
+        NUMERIC prev_close
+        NUMERIC percent_change
+        BIGINT volume_traded
+        NUMERIC week_52_high
+        NUMERIC week_52_low
+        TIMESTAMPTZ last_trade_ts
+        TIMESTAMPTZ updated_at
+    }
+
+    bhavcopy_eod {
+        INTEGER scrip_id PK_FK
+        VARCHAR exchange PK
+        DATE trade_date PK "hypertable dim"
+        NUMERIC open
+        NUMERIC high
+        NUMERIC low
+        NUMERIC close
+        NUMERIC vwap
+        BIGINT volume_traded
+        NUMERIC turnover
+        BIGINT delivery_qty
+        NUMERIC delivery_pct
+    }
+
+    fno_contracts {
+        INTEGER id PK
+        VARCHAR instrument_token UK
+        INTEGER underlying_scrip_id FK
+        INTEGER underlying_index_id FK
+        VARCHAR exchange
+        VARCHAR instrument_type "CE|PE|FUT"
+        DATE expiry_date
+        NUMERIC strike "NULL for FUT"
+        INTEGER lot_size
+        BOOLEAN is_active
+    }
+
+    fno_eod {
+        INTEGER contract_id PK_FK
+        DATE trade_date PK "hypertable dim"
+        NUMERIC open
+        NUMERIC close
+        NUMERIC settle
+        BIGINT volume
+        BIGINT open_interest
+        BIGINT change_in_oi
+        NUMERIC iv
+    }
+
+    oi_snapshot_5min {
+        INTEGER contract_id PK_FK
+        TIMESTAMPTZ snapshot_ts PK "hypertable dim"
+        BIGINT open_interest
+        BIGINT change_in_oi
+        NUMERIC last_price
+    }
+
+    index_eod {
+        INTEGER index_id PK_FK
+        DATE trade_date PK
+        NUMERIC open "nullable"
+        NUMERIC close
+        NUMERIC prev_close
+    }
+
+    index_ohlc_1min {
+        INTEGER index_id PK_FK
+        TIMESTAMPTZ ts PK "hypertable dim"
+        NUMERIC open
+        NUMERIC high
+        NUMERIC low
+        NUMERIC close
+    }
+
+    mf_nav {
+        INTEGER scheme_code PK
+        DATE nav_date PK "hypertable dim"
+        NUMERIC nav
+        NUMERIC repurchase_nav
+        NUMERIC sale_nav
+    }
+
+    sector_eod_aggregates {
+        VARCHAR sector PK
+        DATE trade_date PK
+        NUMERIC avg_return_pct
+        NUMERIC mcap_weighted_return_pct
+        INTEGER breadth_advance
+        INTEGER breadth_decline
+    }
+
+    line_item_dictionary {
+        VARCHAR code PK
+        ENUM statement_type "INCOME|BALANCE_SHEET|CASH_FLOW|EQUITY_CHANGES"
+        VARCHAR display_name
+        VARCHAR parent_code FK
+        SMALLINT sort_order
+        BOOLEAN is_subtotal
+        BOOLEAN is_calculated
+        TEXT formula
+        TEXT applies_to_sectors
+    }
+
+    cmots_line_item_mapping {
+        VARCHAR cmots_field_name PK
+        VARCHAR cmots_feed PK
+        DATE valid_from PK
+        VARCHAR internal_code FK
+        DATE valid_to
+    }
+
+    financial_statements {
+        INTEGER co_code PK_FK
+        ENUM statement_type PK
+        ENUM period_type PK "Q1|Q2|Q3|Q4|H1|H2|ANNUAL|TTM"
+        DATE period_end PK
+        VARCHAR line_item_code PK "loose FK"
+        ENUM reporting_basis PK "STANDALONE|CONSOLIDATED"
+        SMALLINT fiscal_year
+        NUMERIC amount
+        ENUM amount_unit "CR|LAKH|ABSOLUTE"
+        BOOLEAN restated_flag
+        VARCHAR source
+    }
+
+    key_ratios {
+        INTEGER co_code PK_FK
+        ENUM period_type PK
+        DATE period_end PK
+        VARCHAR ratio_code PK
+        ENUM reporting_basis PK
+        ENUM source PK "CMOTS|INTERNAL_CALC"
+        NUMERIC ratio_value
+        JSONB calc_inputs
+    }
+
+    shareholding_pattern {
+        INTEGER co_code PK_FK
+        DATE period_end PK
+        ENUM holder_category PK "PROMOTER|DOMESTIC_INSTITUTION|FOREIGN_INSTITUTION|MUTUAL_FUND|RETAIL|GOVERNMENT|OTHERS"
+        NUMERIC holding_pct
+        BIGINT holding_qty
+        BIGINT pledged_qty
+        NUMERIC pledged_pct
+    }
+
+    shareholding_individual {
+        INTEGER co_code PK_FK
+        DATE period_end PK
+        ENUM holder_type PK
+        VARCHAR holder_name_normalized PK
+        VARCHAR holder_name
+        NUMERIC holding_pct
+        BIGINT holding_qty
+        SMALLINT rank_in_category
+    }
+
+    bulk_deals {
+        BIGINT id PK
+        DATE deal_date
+        ENUM exchange "NSE|BSE"
+        INTEGER co_code FK
+        INTEGER scrip_id FK
+        VARCHAR client_name_normalized
+        ENUM deal_type "BUY|SELL"
+        BIGINT quantity
+        NUMERIC avg_price
+        NUMERIC deal_value_cr "GENERATED"
+    }
+
+    block_deals {
+        BIGINT id PK
+        DATE deal_date
+        ENUM exchange
+        INTEGER co_code FK
+        INTEGER scrip_id FK
+        VARCHAR client_name_normalized
+        ENUM deal_type
+        BIGINT quantity
+        NUMERIC avg_price
+    }
+
+    delivery_data {
+        INTEGER scrip_id PK_FK
+        ENUM exchange PK
+        DATE trade_date PK
+        BIGINT traded_qty
+        BIGINT delivery_qty
+        NUMERIC delivery_pct
+    }
+
+    brokers {
+        INTEGER id PK
+        VARCHAR broker_name UK
+        CHAR country
+        BOOLEAN is_active
+    }
+
+    analyst_recommendations {
+        INTEGER co_code PK_FK
+        INTEGER broker_id PK_FK
+        DATE recommendation_date PK
+        VARCHAR analyst_name PK
+        ENUM rating "STRONG_BUY|BUY|HOLD|REDUCE|SELL|STRONG_SELL"
+        NUMERIC target_price
+        SMALLINT time_horizon_months
+        ENUM source "BLOOMBERG|REUTERS|CMOTS_BROKERAGE|INTERNAL_PDF"
+    }
+
+    earnings_estimates {
+        INTEGER co_code PK_FK
+        DATE period_end PK
+        ENUM period_type PK
+        ENUM estimate_type PK "EPS|REVENUE|EBITDA|NET_PROFIT"
+        DATE asof_date PK
+        SMALLINT n_analysts
+        NUMERIC estimate_mean
+        NUMERIC estimate_median
+        NUMERIC estimate_std
+    }
+
+    eps_revisions {
+        INTEGER co_code PK_FK
+        DATE asof_date PK
+        DATE period_end PK
+        ENUM period_type PK
+        SMALLINT n_up_30d
+        SMALLINT n_down_30d
+        NUMERIC mean_change_30d_pct
+    }
+
+    quarterly_announcements {
+        BIGINT announcement_id PK_FK
+        INTEGER co_code FK
+        DATE period_end
+        ENUM period_type
+        TIMESTAMPTZ announced_at
+        ENUM result_type "STANDALONE|CONSOLIDATED"
+        NUMERIC revenue_actual
+        NUMERIC eps_actual
+        NUMERIC eps_estimate
+        NUMERIC surprise_pct
+        NUMERIC sentiment_score
+    }
+
+    announcement_performance {
+        BIGINT announcement_id PK_FK
+        INTEGER co_code FK
+        NUMERIC ret_t_plus_1
+        NUMERIC ret_t_plus_5
+        NUMERIC ret_t_plus_30
+        NUMERIC alpha_t_plus_5 "GENERATED"
+    }
+
+    stock_scorecard {
+        INTEGER co_code PK_FK
+        DATE scorecard_date PK
+        NUMERIC overall_score
+        NUMERIC performance_score
+        NUMERIC valuation_score
+        NUMERIC growth_score
+        NUMERIC profitability_score
+        NUMERIC entry_point_score
+        NUMERIC red_flags_score
+        NUMERIC buyback_sentiment_score
+        JSONB metrics_json
+        CHAR inputs_hash
+    }
+
+    reverse_dcf_estimates {
+        INTEGER co_code PK_FK
+        DATE valuation_date PK
+        NUMERIC wacc PK
+        NUMERIC terminal_growth PK
+        SMALLINT forecast_years PK
+        NUMERIC current_price
+        NUMERIC implied_growth_rate
+        NUMERIC intrinsic_value
+        VARCHAR expectations_label
+    }
+
+    news_articles {
+        BIGINT id PK
+        BYTEA url_hash UK "SHA-256"
+        VARCHAR source "CMOTS_NEWS|GOOGLE_NEWS|ZERODHA_PULSE|BSE_FILING|NSE_FILING"
+        VARCHAR source_article_id
+        TEXT headline
+        TIMESTAMPTZ published_at
+        VARCHAR category
+    }
+
+    news_article_tags {
+        BIGINT article_id FK
+        VARCHAR tag_kind "INSTRUMENT|COMPANY|SECTOR|INDEX"
+        BIGINT instrument_id FK
+        INTEGER co_code FK
+        INTEGER index_id FK
+        VARCHAR sector
+        NUMERIC relevance
+        VARCHAR tagged_by "auto|manual|source"
+    }
+
+    corporate_announcements {
+        BIGINT id PK
+        INTEGER scrip_id FK
+        INTEGER co_code FK
+        VARCHAR announcement_type
+        VARCHAR subject
+        TEXT attachment_url
+        TIMESTAMPTZ filed_at
+        VARCHAR source "BSE|NSE|CMOTS"
+    }
+
+    pcr_data {
+        DATE trade_date PK
+        VARCHAR symbol PK "NIFTY|BANKNIFTY|stock|ALL"
+        DATE expiry_date PK "NULL = aggregate"
+        NUMERIC pcr_oi
+        NUMERIC pcr_volume
+        BIGINT total_call_oi
+        BIGINT total_put_oi
+    }
+
+    vix_signals {
+        DATE trade_date PK
+        NUMERIC vix_close
+        NUMERIC vix_change_pct
+        ENUM regime "LOW_VOL|NORMAL|HIGH_VOL|CRISIS"
+        NUMERIC percentile_1y
+    }
+
+    vix_regime_thresholds {
+        ENUM regime PK
+        NUMERIC lower_inclusive
+        NUMERIC upper_exclusive
+    }
+
+    fii_dii_flows {
+        DATE trade_date PK
+        ENUM segment PK "CASH|INDEX_FUT|STOCK_FUT|INDEX_OPT|STOCK_OPT"
+        ENUM participant PK "FII|DII|PROP|CLIENT"
+        NUMERIC buy_value_cr
+        NUMERIC sell_value_cr
+        NUMERIC net_value_cr "GENERATED"
+    }

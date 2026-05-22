@@ -1,0 +1,102 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "Reliance Industries Ltd",
+      "VALUE": 384021.0,
+      "PRNAME": "Cost of Materials Consumed",
+      "SYMBOL": "RELIANCE",
+      "CO_CODE": 476.0,
+      "PRCODEN": "00011080"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "Reliance Industries Ltd",
+      "VALUE": 15864.0,
+      "PRNAME": "Purchase of Traded Goods",
+      "SYMBOL": "RELIANCE",
+      "CO_CODE": 476.0,
+      "PRCODEN": "00002080"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "Reliance Industries Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Others",
+      "SYMBOL": "RELIANCE",
+      "CO_CODE": 476.0,
+      "PRCODEN": "00011080"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "Reliance Industries Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Crude Oil",
+      "SYMBOL": "RELIANCE",
+      "CO_CODE": 476.0,
+      "PRCODEN": "27090000"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202403.0,
+      "YEAR": 2024.0,
+      "LNAME": "Reliance Industries Ltd",
+      "VALUE": 376418.0,
+      "PRNAME": "Cost of Materials Consumed",
+      "SYMBOL": "RELIANCE",
+      "CO_CODE": 476.0,
+      "PRCODEN": "00011080"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202403.0,
+      "YEAR": 2024.0,
+      "LNAME": "Reliance Industries Ltd",
+      "VALUE": 13453.0,
+      "PRNAME": "Purchase of Traded Goods",
+      "SYMBOL": "RELIANCE",
+      "CO_CODE": 476.0,
+      "PRCODEN": "00002080"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202403.0,
+      "YEAR": 2024.0,
+      "LNAME": "Reliance Industries Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Others",
+      "SYMBOL": "RELIANCE",
+      "CO_CODE": 476.0,
+      "PRCODEN": "00011080"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202403.0,
+      "YEAR": 2024.0,
+      "LNAME": "Reliance Industries Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Crude Oil",
+      "SYMBOL": "RELIANCE",
+      "CO_CODE": 476.0,
+      "PRCODEN": "27090000"
+    }
+  ]
+}

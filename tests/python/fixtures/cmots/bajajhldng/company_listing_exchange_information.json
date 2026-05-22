@@ -1,0 +1,56 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "sc_code": "500490",
+      "groupname": "BSE_500",
+      "index_code": 21552.0
+    },
+    {
+      "sc_code": "500490",
+      "groupname": "BSE_100",
+      "index_code": 21558.0
+    },
+    {
+      "sc_code": "500490",
+      "groupname": "BSE_200",
+      "index_code": 21559.0
+    },
+    {
+      "sc_code": "500490",
+      "groupname": "BSEDOLLEX",
+      "index_code": 21560.0
+    },
+    {
+      "sc_code": "500490",
+      "groupname": "NIFTYJR",
+      "index_code": 22113.0
+    },
+    {
+      "sc_code": "500490",
+      "groupname": "CNX500",
+      "index_code": 22115.0
+    },
+    {
+      "sc_code": "500490",
+      "groupname": "CNX100",
+      "index_code": 27176.0
+    },
+    {
+      "sc_code": "500490",
+      "groupname": "DOL100 ",
+      "index_code": 27358.0
+    },
+    {
+      "sc_code": "500490",
+      "groupname": "CNX200",
+      "index_code": 41356.0
+    },
+    {
+      "sc_code": "500490",
+      "groupname": "NFT100EQWT",
+      "index_code": 51461.0
+    }
+  ]
+}

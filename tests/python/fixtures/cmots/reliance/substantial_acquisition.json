@@ -1,0 +1,21 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "co_code": 476.0,
+      "Acq_Sale": null,
+      "SecurityName": "RELIANCE INDUSTRIES LTD.",
+      "ModeofBuy_Sale": "Release of Shares",
+      "TransactionPeriod": "27/03/2024",
+      "TransactedQuantity": "0",
+      "ExchangeReportedDate": "2024-03-28T00:00:00",
+      "NameofAcquirer_Seller": "SBICAP Trustee Company Ltd",
+      "Promoter_PromoterGroup": "No",
+      "TransactedQuantity_PerChange": "0",
+      "HoldingAfterTransactionQuantity": "0",
+      "HoldingAfterTransaction_PerChange_TotalCapital": "0",
+      "HoldingAfterTransaction_PerChange_DilutedCapital": "0"
+    }
+  ]
+}

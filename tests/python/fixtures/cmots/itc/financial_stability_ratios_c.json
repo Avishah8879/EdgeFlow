@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "YRC": 202503,
+      "co_code": 301,
+      "QuickRatio": 1.9712224895720767,
+      "CurrentRatio": 1.58,
+      "InterestCover": 595.5,
+      "TotalDebt_MCap": 0.0005548442176483009,
+      "TotalDebt_Equity": 0.0
+    }
+  ]
+}

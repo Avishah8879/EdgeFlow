@@ -2,22 +2,37 @@ import { useState } from "react";
 import { useParams, Redirect, Link } from "wouter";
 import { useStockDetail } from "@/hooks/use-stock-detail";
 import { useStockLTP } from "@/hooks/use-stock-ltp";
+import { useMarketStatus } from "@/hooks/use-market-status";
 import { SEO } from "@/components/SEO";
 import { PAGE_SEO } from "@/lib/seo-config";
 import { generateStockBreadcrumbSchema, generateFinancialProductSchema } from "@/lib/json-ld";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Globe, ExternalLink } from "lucide-react";
+import { AlertCircle, ExternalLink, Sparkles } from "lucide-react";
 import PriceChartSection from "@/components/stock-detail/PriceChartSection";
 import SentimentGauge from "@/components/stock-detail/SentimentGauge";
 import SentimentMetrics from "@/components/stock-detail/SentimentMetrics";
 import SentimentNewsSection from "@/components/stock-detail/SentimentNewsSection";
 import { SentimentProvider } from "@/contexts/SentimentContext";
 import { CollapsibleSection } from "@/components/stock-detail/CollapsibleSection";
-import { StockDetailNav, type NavSection } from "@/components/stock-detail/StockDetailNav";
+import type { NavSection } from "@/components/stock-detail/StockDetailNav";
+import { TocSidebar } from "@/components/stock-detail/TocSidebar";
+import GenerateAlphaCard from "@/components/stock-detail/GenerateAlphaCard";
+import { HeroStrip } from "@/components/stock-detail/HeroStrip";
+import type { StatStripCell } from "@/components/stock-detail/StatStrip";
+import { GrowthGrid } from "@/components/stock-detail/GrowthGrid";
+import { FinancialSankey } from "@/components/stock-detail/FinancialSankey";
+import { getEquityProAiUrl, EXTERNAL_LINK_PROPS } from "@/lib/external-links";
+import { Button } from "@/components/ui/button";
 import { FinancialTable } from "@/components/stock-detail/FinancialTable";
+import { useCmotsCoverage } from "@/hooks/use-cmots-coverage";
+import { CreditRatingsPanel } from "@/components/stock-detail/CreditRatingsPanel";
+import { ProsConsPanel } from "@/components/stock-detail/ProsConsPanel";
+import { CorporateActionsTimeline } from "@/components/stock-detail/CorporateActionsTimeline";
+import { NarrativesPanel } from "@/components/stock-detail/NarrativesPanel";
+import { RatiosPanel } from "@/components/stock-detail/RatiosPanel";
+import { FinancialStatementsPanel } from "@/components/stock-detail/FinancialStatementsPanel";
 import { Eyebrow } from "@/components/ui/eyebrow";
-import { DeltaBadge } from "@/components/ui/delta-badge";
 import {
   incomeRows,
   balanceRows,
@@ -48,6 +63,29 @@ function formatRupees(value: number | null | undefined): string {
   return `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 }
 
+/**
+ * Derive a market-cap tier label from the raw market_cap (rupees).
+ * Uses SEBI's standard NSE/BSE classification thresholds:
+ *   ≥ ₹20,000 Cr  → Large Cap
+ *   ₹5,000 – 20,000 Cr → Mid Cap
+ *   < ₹5,000 Cr  → Small Cap
+ * Falls back to the explicit `tickers.mcap_type` when present (CMOTS-set);
+ * derives from `market_cap` otherwise. Returns null if neither is available.
+ */
+function deriveMcapTier(
+  mcapType: string | null | undefined,
+  marketCap: number | null | undefined,
+): "Large Cap" | "Mid Cap" | "Small Cap" | null {
+  if (mcapType === "Large Cap" || mcapType === "Mid Cap" || mcapType === "Small Cap") {
+    return mcapType;
+  }
+  if (marketCap == null || !Number.isFinite(marketCap)) return null;
+  const cr = marketCap / 1e7;
+  if (cr >= 20000) return "Large Cap";
+  if (cr >= 5000) return "Mid Cap";
+  return "Small Cap";
+}
+
 // ─── small UI primitives ────────────────────────────────────────────────────
 
 function MetricRow({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
@@ -55,40 +93,6 @@ function MetricRow({ label, value, accent = false }: { label: string; value: str
     <div className="flex items-center justify-between gap-3 py-2 border-b border-border/50 last:border-b-0">
       <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
       <span className={cn("text-sm font-mono font-semibold tabular-nums", accent && "text-primary")}>{value}</span>
-    </div>
-  );
-}
-
-/**
- * StatCell — single cell in the 7-up stat strip below the hero.
- * Mirrors the design's `.stat-cell` pattern (eyebrow + mono value).
- */
-function StatCell({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="p-3.5 md:p-4 border-r last:border-r-0 border-b sm:[&:nth-child(-n+4)]:border-b lg:border-b-0 border-border">
-      <div className="text-[10px] font-bold uppercase tracking-uppercase text-muted-foreground">{label}</div>
-      <div className="font-mono text-base font-bold tabular-nums text-foreground mt-1.5 leading-none">
-        {value}
-      </div>
-      {sub && <div className="text-[11px] text-muted-foreground mt-1">{sub}</div>}
-    </div>
-  );
-}
-
-// ─── compounded growth grid card ────────────────────────────────────────────
-
-function GrowthCard({ title, periods }: { title: string; periods: { label: string; value: string }[] }) {
-  return (
-    <div className="rounded-xl border border-border/50 bg-card p-5">
-      <h3 className="text-sm font-semibold text-foreground mb-3">{title}</h3>
-      <div className="space-y-1.5">
-        {periods.map((p) => (
-          <div key={p.label} className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{p.label}:</span>
-            <span className="font-mono font-semibold text-foreground tabular-nums">{p.value}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -117,62 +121,11 @@ function computeCagr(data: Record<string, any> | null | undefined, fieldCandidat
   return (Math.pow(latest / earliest, 1 / years) - 1) * 100;
 }
 
-// ─── pros / cons derived from fundamentals ──────────────────────────────────
-
-function derivePros(f: any): string[] {
-  const pros: string[] = [];
-  if (f.return_on_equity != null && f.return_on_equity * 100 >= 15) {
-    pros.push(`Company has a healthy return on equity of ${(f.return_on_equity * 100).toFixed(2)}%.`);
-  }
-  if (f.profit_margin != null && f.profit_margin * 100 >= 15) {
-    pros.push(`Company has good profit margins of ${(f.profit_margin * 100).toFixed(2)}%.`);
-  }
-  if (f.dividend_yield != null && f.dividend_yield * 100 >= 2) {
-    pros.push(`Stock pays a healthy dividend yield of ${(f.dividend_yield * 100).toFixed(2)}%.`);
-  }
-  if (f.debt_to_equity != null && f.debt_to_equity < 0.3) {
-    pros.push(`Company is almost debt free.`);
-  }
-  if (f.revenue_growth != null && f.revenue_growth * 100 >= 15) {
-    pros.push(`Company has delivered good revenue growth of ${(f.revenue_growth * 100).toFixed(2)}%.`);
-  }
-  if (f.earnings_growth != null && f.earnings_growth * 100 >= 15) {
-    pros.push(`Company has delivered good earnings growth of ${(f.earnings_growth * 100).toFixed(2)}%.`);
-  }
-  if (f.current_ratio != null && f.current_ratio >= 1.5) {
-    pros.push(`Company has a strong liquidity position with current ratio of ${f.current_ratio.toFixed(2)}.`);
-  }
-  return pros;
-}
-
-function deriveCons(f: any): string[] {
-  const cons: string[] = [];
-  if (f.return_on_equity != null && f.return_on_equity * 100 < 10) {
-    cons.push(`Company has a low return on equity of ${(f.return_on_equity * 100).toFixed(2)}%.`);
-  }
-  if (f.profit_margin != null && f.profit_margin * 100 < 5) {
-    cons.push(`Company has low profit margins of ${(f.profit_margin * 100).toFixed(2)}%.`);
-  }
-  if (f.payout_ratio != null && f.payout_ratio * 100 < 10 && f.dividend_yield != null && f.dividend_yield > 0) {
-    cons.push(`Dividend payout has been low at ${(f.payout_ratio * 100).toFixed(2)}% of profits.`);
-  }
-  if (f.debt_to_equity != null && f.debt_to_equity > 1) {
-    cons.push(`Company has a high debt to equity ratio of ${f.debt_to_equity.toFixed(2)}.`);
-  }
-  if (f.trailing_pe != null && f.trailing_pe > 50) {
-    cons.push(`Stock is trading at a high P/E of ${f.trailing_pe.toFixed(2)}.`);
-  }
-  if (f.price_to_book != null && f.price_to_book > 5) {
-    cons.push(`Stock is trading at ${f.price_to_book.toFixed(2)} times its book value.`);
-  }
-  return cons;
-}
-
 // ─── main page ──────────────────────────────────────────────────────────────
 
 function LoadingState() {
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-6">
       <Skeleton className="h-12 w-2/3" />
       <Skeleton className="h-48 w-full" />
       <Skeleton className="h-96 w-full" />
@@ -183,7 +136,7 @@ function LoadingState() {
 
 function ErrorState({ error }: { error: Error }) {
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-16">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16">
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>Failed to load stock details: {error.message}</AlertDescription>
@@ -200,7 +153,13 @@ export default function StockDetail() {
 
   const { data, isLoading, error } = useStockDetail(ticker);
   const { data: ltpData } = useStockLTP(ticker);
+  const { data: marketStatus } = useMarketStatus();
+  const { data: cmotsCoverage } = useCmotsCoverage(ticker);
+  const hasCmotsData = !!cmotsCoverage?.has_cmots_data;
   const [shareholdingView, setShareholdingView] = useState<"quarterly" | "yearly">("quarterly");
+  // Sankey inline expand inside P&L section. Defaults closed; lazy mount on first toggle.
+  // State resets on ticker change because Wouter unmounts/remounts StockDetail on route change.
+  const [sankeyOpen, setSankeyOpen] = useState(false);
 
   if (error && !isLoading) return <ErrorState error={error as Error} />;
   if (isLoading || !data) return <LoadingState />;
@@ -211,7 +170,6 @@ export default function StockDetail() {
   const currentPrice = ltpData?.ltp ?? f.current_price;
   const priceChangePercent = ltpData?.percent_change ?? f.price_change_percent;
   const isPositive = priceChangePercent != null && priceChangePercent >= 0;
-  const lastUpdatedAt = ltpData?.timestamp ?? f.last_updated;
 
   const companyName = (() => {
     const longName = basic.long_name;
@@ -238,22 +196,30 @@ export default function StockDetail() {
 
   const fmtGrowth = (v: number | null) => (v == null ? "—" : `${v.toFixed(0)}%`);
 
-  const pros = derivePros(f);
-  const cons = deriveCons(f);
-
   const announcements = data.external_analyst?.announcements ?? [];
 
-  // Build nav section list. CollapsibleSection handles empty states internally.
+  // Build nav section list. CMOTS sections appear only when the ticker is
+  // covered; Pros/Cons is always present (it has a yfinance fallback adapter).
   const navSections: NavSection[] = [
-    { id: "price-action", label: "Price" },
-    { id: "quarterly", label: "Quarterly" },
-    { id: "pnl", label: "P&L" },
-    { id: "balance-sheet", label: "Balance Sheet" },
-    { id: "cash-flows", label: "Cash Flows" },
-    { id: "ratios", label: "Ratios" },
-    { id: "shareholding", label: "Shareholding" },
-    { id: "sentiment", label: "Sentiment" },
-    { id: "news", label: "News" },
+    { id: "price-action",   label: "Price" },
+    { id: "pros-cons",      label: "Pros/Cons" },
+    { id: "quarterly",      label: "Quarterly" },
+    { id: "pnl",            label: "P&L" },
+    { id: "balance-sheet",  label: "Balance Sheet" },
+    { id: "cash-flows",     label: "Cash Flows" },
+    { id: "ratios",         label: "Ratios" },
+    ...(hasCmotsData ? [
+      { id: "cmots-financials", label: "Statements" },
+      { id: "cmots-ratios",     label: "Key Ratios" },
+    ] : []),
+    { id: "shareholding",   label: "Shareholding" },
+    ...(hasCmotsData ? [
+      { id: "cmots-corporate-actions", label: "Corp Actions" },
+      { id: "cmots-narratives",        label: "Reports" },
+      { id: "cmots-credit-ratings",    label: "Ratings" },
+    ] : []),
+    { id: "sentiment",      label: "Sentiment" },
+    { id: "news",           label: "News" },
   ];
   if (announcements.length > 0) navSections.push({ id: "documents", label: "Documents" });
 
@@ -270,118 +236,112 @@ export default function StockDetail() {
       />
 
       <div className="min-h-screen bg-background">
-        <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-6">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-6">
 
-          {/* HERO — gradient bg with breadcrumbs + ticker mark + display H1 + price block */}
-          <section
-            className="relative overflow-hidden rounded-xl border border-border bg-card -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 pt-5 pb-6"
-            style={{
-              background:
-                "radial-gradient(800px 200px at 90% -50%, hsl(var(--brand-gold) / 0.10), transparent 70%), linear-gradient(180deg, hsl(var(--card)), hsl(var(--background)))",
-            }}
-          >
-            {/* Breadcrumbs */}
-            <nav className="text-xs text-muted-foreground flex items-center gap-1.5 mb-3" aria-label="Breadcrumb">
-              <Link href="/home" className="hover:text-[hsl(var(--brand-gold))] transition-colors">Markets</Link>
-              <span className="opacity-40">/</span>
-              <Link href="/stocks" className="hover:text-[hsl(var(--brand-gold))] transition-colors">Stocks</Link>
-              <span className="opacity-40">/</span>
-              <span className="text-foreground/80">{basic.symbol}</span>
-            </nav>
-
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
-              <div className="flex items-start gap-4 min-w-0">
-                {/* Ticker mark — gradient navy badge with the first 2 letters of the symbol */}
-                <div
-                  aria-hidden
-                  className="hidden sm:flex shrink-0 h-14 w-14 items-center justify-center rounded-xl border border-[hsl(var(--brand-gold)/0.4)] text-white font-display font-extrabold text-lg tabular-nums shadow-card"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, hsl(var(--brand-navy)) 0%, hsl(var(--brand-navy-deep)) 100%)",
-                  }}
-                >
-                  {basic.symbol.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="space-y-1.5 min-w-0">
-                  <Eyebrow tone="gold">
-                    Stock · {basic.exchange} · {basic.symbol}
-                  </Eyebrow>
-                  <h1 className="font-display text-2xl md:text-3xl font-bold leading-tight tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
-                    {companyName}
-                  </h1>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                    {basic.website && (
-                      <a
-                        href={basic.website.startsWith("http") ? basic.website : `https://${basic.website}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 hover:text-[hsl(var(--brand-gold))] transition-colors"
-                      >
-                        <Globe className="w-3 h-3" />
-                        {basic.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-                      </a>
-                    )}
-                    {basic.sector && <span>· {basic.sector}</span>}
-                    {basic.industry && <span>· {basic.industry}</span>}
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col items-start md:items-end shrink-0">
-                <div className="flex items-baseline gap-3">
-                  <span className="text-3xl md:text-4xl font-semibold font-mono tabular-nums text-foreground leading-none">
-                    {formatRupees(currentPrice)}
-                  </span>
-                  {priceChangePercent != null && (
-                    <DeltaBadge
-                      value={priceChangePercent}
-                      suffix="%"
-                      direction={isPositive ? "up" : "down"}
-                    />
-                  )}
-                </div>
-                {lastUpdatedAt && (
-                  <span className="text-[10.5px] text-muted-foreground mt-1.5 font-bold uppercase tracking-uppercase">
-                    Updated {new Date(lastUpdatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                  </span>
-                )}
-              </div>
-            </div>
-          </section>
-
-          {/* 7-cell stat strip */}
-          <section className="rounded-xl border border-border bg-card overflow-hidden">
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
-              <StatCell label="Market Cap" value={formatCrore(f.market_cap)} />
-              <StatCell
-                label="P / E"
-                value={f.trailing_pe != null ? f.trailing_pe.toFixed(2) : "—"}
-              />
-              <StatCell
-                label="P / B"
-                value={f.price_to_book != null ? f.price_to_book.toFixed(2) : "—"}
-              />
-              <StatCell
-                label="Div Yield"
-                value={f.dividend_yield != null ? formatPct(f.dividend_yield * 100) : "—"}
-              />
-              <StatCell
-                label="52W Range"
-                value={
+          {/* HERO — Phase B: extracted to HeroStrip composing TickerMark + StatStrip.
+              Stat strip content unchanged from current page (7 cells: Mkt Cap | P/E | P/B
+              | Div Yield | 52W Range | ROCE | ROE). Subtexts deferred to Phase D. */}
+          {(() => {
+            const heroStats: StatStripCell[] = [
+              { label: "Market Cap", value: formatCrore(f.market_cap) },
+              { label: "P / E", value: f.trailing_pe != null ? f.trailing_pe.toFixed(2) : "—" },
+              { label: "P / B", value: f.price_to_book != null ? f.price_to_book.toFixed(2) : "—" },
+              {
+                label: "Div Yield",
+                value: f.dividend_yield != null ? formatPct(f.dividend_yield * 100) : "—",
+              },
+              {
+                label: "52W Range",
+                value:
                   f.fifty_two_week_high && f.fifty_two_week_low
-                    ? `${formatRupees(f.fifty_two_week_low).replace("₹", "")}–${formatRupees(f.fifty_two_week_high).replace("₹", "")}`
-                    : "—"
-                }
+                    ? `${formatRupees(f.fifty_two_week_low).replace("₹", "")}–${formatRupees(
+                        f.fifty_two_week_high,
+                      ).replace("₹", "")}`
+                    : "—",
+              },
+              {
+                // API returns return_on_assets as percentage already (×100 applied server-side).
+                // Do NOT multiply by 100 again. Same applies to ROE and ProsConsPanel adapter
+                // fields. dividend_yield is the lone exception (returned as fraction).
+                //
+                // Label: "ROA" (not "ROCE") — return_on_assets is Return on Assets, which
+                // diverges from Return on Capital Employed for capital-intensive sectors
+                // (e.g. RELIANCE ROA ~4%, ROCE ~10-12%). Phase D swaps the data source to
+                // `cmots_ratio_yearly.roce` and renames this label back to "ROCE".
+                label: "ROA",
+                value: f.return_on_assets != null ? formatPct(f.return_on_assets) : "—",
+              },
+              {
+                label: "ROE",
+                value: f.return_on_equity != null ? formatPct(f.return_on_equity) : "—",
+              },
+            ];
+            const mcapTier = deriveMcapTier(
+              (basic as { mcap_type?: string | null }).mcap_type ?? null,
+              f.market_cap,
+            );
+            // Absolute change in rupees, derived from CMP − previous close.
+            // Falls back to null when either is missing.
+            const priceChangeAbsolute =
+              currentPrice != null && f.previous_close != null
+                ? currentPrice - f.previous_close
+                : null;
+            const priceChangeAbsoluteFormatted =
+              priceChangeAbsolute != null && Number.isFinite(priceChangeAbsolute)
+                ? `${priceChangeAbsolute >= 0 ? "+" : "−"}${Math.abs(priceChangeAbsolute).toFixed(2)}`
+                : null;
+            // Status line: "LIVE · NSE · 14:32 IST" or "CLOSED · NSE" variants.
+            const statusLabel = (() => {
+              if (!marketStatus) return null;
+              const map: Record<string, string> = {
+                OPEN: "LIVE",
+                "PRE-MARKET": "PRE-MARKET",
+                "POST-MARKET": "POST-MARKET",
+                CLOSED: "CLOSED",
+              };
+              return map[marketStatus.status] ?? marketStatus.status;
+            })();
+            const quoteTime = ltpData?.timestamp
+              ? new Date(ltpData.timestamp).toLocaleTimeString("en-IN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                  timeZone: "Asia/Kolkata",
+                })
+              : null;
+            const statusLine = [statusLabel, basic.exchange ?? "NSE", quoteTime ? `${quoteTime} IST` : null]
+              .filter(Boolean)
+              .join(" · ") || null;
+            // Quick actions: Watchlist + Compare hidden per Phase 0 §7 q14 lock
+            // (Watchlist is hidden in app per CLAUDE.md Known Issues; Compare has no route).
+            // Generate Alpha → external EquityPro AI URL.
+            const quickActions = (
+              <Button
+                asChild
+                size="sm"
+                className="bg-[hsl(var(--brand-gold))] hover:bg-[hsl(var(--brand-gold-bright))] text-[hsl(var(--brand-navy))] font-semibold"
+              >
+                <a href={`${getEquityProAiUrl()}?ticker=${encodeURIComponent(basic.symbol)}`} {...EXTERNAL_LINK_PROPS}>
+                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                  Generate Alpha
+                  <ExternalLink className="h-3 w-3 ml-1.5" />
+                </a>
+              </Button>
+            );
+            return (
+              <HeroStrip
+                companyName={companyName}
+                basic={basic}
+                priceFormatted={formatRupees(currentPrice)}
+                priceChangeAbsoluteFormatted={priceChangeAbsoluteFormatted}
+                priceChangePercent={priceChangePercent}
+                statusLine={statusLine}
+                stats={heroStats}
+                mcapTier={mcapTier}
+                quickActions={quickActions}
               />
-              <StatCell
-                label="ROCE"
-                value={f.return_on_assets != null ? formatPct(f.return_on_assets * 100) : "—"}
-              />
-              <StatCell
-                label="ROE"
-                value={f.return_on_equity != null ? formatPct(f.return_on_equity * 100) : "—"}
-              />
-            </div>
-          </section>
+            );
+          })()}
 
           {/* About + Key Points (combined card) */}
           <section className="rounded-xl border border-border bg-card p-5 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -402,142 +362,165 @@ export default function StockDetail() {
             </div>
           </section>
 
-          {/* PROS / CONS */}
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-xl border border-positive/30 bg-positive/5 p-5">
-              <h3 className="text-xs uppercase tracking-wide text-positive font-semibold mb-3">Pros</h3>
-              {pros.length > 0 ? (
-                <ul className="space-y-2">
-                  {pros.map((p, i) => (
-                    <li key={i} className="text-sm text-foreground flex gap-2">
-                      <span className="text-positive shrink-0">•</span>
-                      <span>{p}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">No standout pros identified from current data.</p>
-              )}
-            </div>
-            <div className="rounded-xl border border-negative/30 bg-negative/5 p-5">
-              <h3 className="text-xs uppercase tracking-wide text-negative font-semibold mb-3">Cons</h3>
-              {cons.length > 0 ? (
-                <ul className="space-y-2">
-                  {cons.map((c, i) => (
-                    <li key={i} className="text-sm text-foreground flex gap-2">
-                      <span className="text-negative shrink-0">•</span>
-                      <span>{c}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">No major concerns flagged from current data.</p>
-              )}
-            </div>
-          </section>
-          <p className="text-xs text-muted-foreground -mt-4">* Pros and cons are derived from current fundamentals.</p>
+          {/* TWO-COLUMN LAYOUT: left = sections, right = TOC + sidebar cards (Phase A) */}
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6">
 
-          {/* IN-PAGE NAV (sticky) */}
-          <StockDetailNav sections={navSections} />
+            {/* LEFT COLUMN — sections */}
+            <div className="space-y-6 min-w-0">
 
           {/* PRICE ACTION */}
-          <CollapsibleSection id="price-action" title="Price Action" defaultOpen>
+          <CollapsibleSection id="price-action" title="Price Action" collapsible={false}>
             <PriceChartSection key={ticker} ticker={ticker} />
           </CollapsibleSection>
 
+          {/* PROS & CONS — CMOTS rule engine on covered tickers, yfinance fallback on uncovered */}
+          <CollapsibleSection id="pros-cons" title="Pros & Cons" collapsible={false}>
+            <ProsConsPanel ticker={basic.symbol} fundamentalsFallback={f} />
+          </CollapsibleSection>
+
           {/* QUARTERLY RESULTS */}
-          <CollapsibleSection id="quarterly" title="Quarterly Results" subtitle="Consolidated figures in Rs. Crores" defaultOpen>
+          <CollapsibleSection id="quarterly" title="Quarterly Results" subtitle="Consolidated figures in Rs. Crores" collapsible={false}>
             <FinancialTable
               data={data.financials.quarterly_financials}
               rows={incomeRows}
               emptyMessage="Quarterly results not available."
+              density="narrow"
             />
           </CollapsibleSection>
 
           {/* PROFIT & LOSS */}
-          <CollapsibleSection id="pnl" title="Profit & Loss" subtitle="Consolidated figures in Rs. Crores" defaultOpen>
+          <CollapsibleSection
+            id="pnl"
+            title="Profit & Loss"
+            subtitle="Consolidated figures in Rs. Crores"
+            collapsible={false}
+            action={
+              <button
+                type="button"
+                onClick={() => setSankeyOpen((v) => !v)}
+                className="text-xs font-medium text-muted-foreground hover:text-[hsl(var(--brand-gold))] transition-colors inline-flex items-center gap-1"
+                aria-expanded={sankeyOpen}
+                aria-controls="pnl-sankey"
+              >
+                {sankeyOpen ? "Hide Revenue Flow" : "View Revenue Flow"}
+                <span aria-hidden>{sankeyOpen ? "↑" : "→"}</span>
+              </button>
+            }
+          >
             <FinancialTable
               data={data.financials.income_statement}
               rows={incomeRows}
               emptyMessage="Profit & loss data not available."
+              density="narrow"
             />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-              <GrowthCard
-                title="Compounded Sales Growth"
-                periods={[
-                  { label: "10 Years", value: fmtGrowth(salesGrowth["10 Years"]) },
-                  { label: "5 Years", value: fmtGrowth(salesGrowth["5 Years"]) },
-                  { label: "3 Years", value: fmtGrowth(salesGrowth["3 Years"]) },
-                  { label: "TTM", value: f.revenue_growth != null ? `${(f.revenue_growth * 100).toFixed(0)}%` : "—" },
-                ]}
-              />
-              <GrowthCard
-                title="Compounded Profit Growth"
-                periods={[
-                  { label: "10 Years", value: fmtGrowth(profitGrowth["10 Years"]) },
-                  { label: "5 Years", value: fmtGrowth(profitGrowth["5 Years"]) },
-                  { label: "3 Years", value: fmtGrowth(profitGrowth["3 Years"]) },
-                  { label: "TTM", value: f.earnings_growth != null ? `${(f.earnings_growth * 100).toFixed(0)}%` : "—" },
-                ]}
-              />
-              <GrowthCard
-                title="Stock Price CAGR"
-                periods={[
-                  { label: "10 Years", value: "—" },
-                  { label: "5 Years", value: "—" },
-                  { label: "3 Years", value: "—" },
-                  { label: "1 Year", value: priceChangePercent != null ? `${priceChangePercent.toFixed(0)}%` : "—" },
-                ]}
-              />
-              <GrowthCard
-                title="Return on Equity"
-                periods={[
-                  { label: "10 Years", value: "—" },
-                  { label: "5 Years", value: "—" },
-                  { label: "3 Years", value: "—" },
-                  { label: "Last Year", value: f.return_on_equity != null ? `${(f.return_on_equity * 100).toFixed(0)}%` : "—" },
-                ]}
-              />
-            </div>
+            {/* Lazy mount: <FinancialSankey> only renders when toggled open.
+                Verifiable via DevTools Network — no /api/sankey/ requests fire
+                until first click. State resets on ticker change (Wouter
+                unmounts/remounts StockDetail on route change). */}
+            {sankeyOpen && (
+              <div id="pnl-sankey" className="mt-6 pt-6 border-t border-border/40">
+                <h3 className="text-[11px] font-semibold uppercase tracking-uppercase text-muted-foreground mb-3">
+                  Revenue Flow · Sankey
+                </h3>
+                <FinancialSankey ticker={basic.symbol} statementType="income" />
+              </div>
+            )}
+            <GrowthGrid
+              cards={[
+                {
+                  title: "Compounded Sales Growth",
+                  periods: [
+                    { label: "10 Years", value: fmtGrowth(salesGrowth["10 Years"]) },
+                    { label: "5 Years", value: fmtGrowth(salesGrowth["5 Years"]) },
+                    { label: "3 Years", value: fmtGrowth(salesGrowth["3 Years"]) },
+                    { label: "TTM", value: f.revenue_growth != null ? `${f.revenue_growth.toFixed(0)}%` : "—" },
+                  ],
+                },
+                {
+                  title: "Compounded Profit Growth",
+                  periods: [
+                    { label: "10 Years", value: fmtGrowth(profitGrowth["10 Years"]) },
+                    { label: "5 Years", value: fmtGrowth(profitGrowth["5 Years"]) },
+                    { label: "3 Years", value: fmtGrowth(profitGrowth["3 Years"]) },
+                    { label: "TTM", value: f.earnings_growth != null ? `${f.earnings_growth.toFixed(0)}%` : "—" },
+                  ],
+                },
+                {
+                  title: "Stock Price CAGR",
+                  // 10Y/5Y/3Y placeholders pending Phase D usePriceChart over multi-year windows.
+                  periods: [
+                    { label: "10 Years", value: "—" },
+                    { label: "5 Years", value: "—" },
+                    { label: "3 Years", value: "—" },
+                    { label: "1 Year", value: priceChangePercent != null ? `${priceChangePercent.toFixed(0)}%` : "—" },
+                  ],
+                },
+                {
+                  title: "Return on Equity",
+                  // 10Y/5Y/3Y placeholders pending Phase D wiring to cmots_ratio_yearly.roe history.
+                  periods: [
+                    { label: "10 Years", value: "—" },
+                    { label: "5 Years", value: "—" },
+                    { label: "3 Years", value: "—" },
+                    { label: "Last Year", value: f.return_on_equity != null ? `${f.return_on_equity.toFixed(0)}%` : "—" },
+                  ],
+                },
+              ]}
+            />
           </CollapsibleSection>
 
           {/* BALANCE SHEET */}
-          <CollapsibleSection id="balance-sheet" title="Balance Sheet" subtitle="Consolidated figures in Rs. Crores" defaultOpen>
+          <CollapsibleSection id="balance-sheet" title="Balance Sheet" subtitle="Consolidated figures in Rs. Crores" collapsible={false}>
             <FinancialTable
               data={data.financials.balance_sheet}
               rows={balanceRows}
               emptyMessage="Balance sheet data not available."
+              density="narrow"
             />
           </CollapsibleSection>
 
           {/* CASH FLOWS */}
-          <CollapsibleSection id="cash-flows" title="Cash Flows" subtitle="Consolidated figures in Rs. Crores" defaultOpen={false}>
+          <CollapsibleSection id="cash-flows" title="Cash Flows" subtitle="Consolidated figures in Rs. Crores" collapsible={false}>
             <FinancialTable
               data={data.financials.cash_flow}
               rows={cashflowRows}
               emptyMessage="Cash flow data not available."
+              density="narrow"
             />
           </CollapsibleSection>
 
           {/* RATIOS */}
-          <CollapsibleSection id="ratios" title="Ratios" subtitle="Consolidated figures" defaultOpen={false}>
+          <CollapsibleSection id="ratios" title="Ratios" subtitle="Consolidated figures" collapsible={false}>
             <FinancialTable
               data={
                 f.return_on_assets != null
-                  ? { Latest: { "ROCE %": Math.round(f.return_on_assets * 100) } }
+                  ? { Latest: { "ROCE %": Math.round(f.return_on_assets) } }
                   : null
               }
               rows={ratiosRows}
               emptyMessage="Ratio data not available."
+              density="narrow"
             />
           </CollapsibleSection>
+
+          {/* CMOTS STATEMENTS + KEY RATIOS — covered tickers only */}
+          {hasCmotsData && (
+            <>
+              <CollapsibleSection id="cmots-financials" title="Statements" subtitle="CMOTS detailed financial statements" collapsible={false}>
+                <FinancialStatementsPanel ticker={basic.symbol} />
+              </CollapsibleSection>
+              <CollapsibleSection id="cmots-ratios" title="Key Ratios" subtitle="CMOTS yearly / quarterly / daily" collapsible={false}>
+                <RatiosPanel ticker={basic.symbol} />
+              </CollapsibleSection>
+            </>
+          )}
 
           {/* SHAREHOLDING PATTERN */}
           <CollapsibleSection
             id="shareholding"
             title="Shareholding Pattern"
             subtitle="Numbers in percentages"
-            defaultOpen={false}
+            collapsible={false}
             action={
               <ShareholdingViewToggle view={shareholdingView} onViewChange={setShareholdingView} />
             }
@@ -545,23 +528,38 @@ export default function StockDetail() {
             <ShareholdingPattern ticker={ticker} view={shareholdingView} />
           </CollapsibleSection>
 
+          {/* CMOTS CORPORATE ACTIONS + REPORTS + CREDIT RATINGS — covered tickers only */}
+          {hasCmotsData && (
+            <>
+              <CollapsibleSection id="cmots-corporate-actions" title="Corporate Actions" subtitle="Dividends, bonuses, board meetings" collapsible={false}>
+                <CorporateActionsTimeline ticker={basic.symbol} />
+              </CollapsibleSection>
+              <CollapsibleSection id="cmots-narratives" title="Reports" subtitle="Director's Report, Auditor's Report, MD&A" collapsible={false}>
+                <NarrativesPanel ticker={basic.symbol} />
+              </CollapsibleSection>
+              <CollapsibleSection id="cmots-credit-ratings" title="Credit Ratings" subtitle="Agency-reported credit ratings" collapsible={false}>
+                <CreditRatingsPanel ticker={basic.symbol} />
+              </CollapsibleSection>
+            </>
+          )}
+
           {/* SENTIMENT + NEWS */}
           <SentimentProvider ticker={ticker}>
-            <CollapsibleSection id="sentiment" title="AI Sentiment" defaultOpen={false}>
+            <CollapsibleSection id="sentiment" title="AI Sentiment" collapsible={false}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <SentimentGauge />
                 <SentimentMetrics />
               </div>
             </CollapsibleSection>
 
-            <CollapsibleSection id="news" title="News" defaultOpen={false}>
+            <CollapsibleSection id="news" title="News" collapsible={false}>
               <SentimentNewsSection />
             </CollapsibleSection>
           </SentimentProvider>
 
           {/* DOCUMENTS / ANNOUNCEMENTS */}
           {announcements.length > 0 && (
-            <CollapsibleSection id="documents" title="Documents" defaultOpen={false}>
+            <CollapsibleSection id="documents" title="Documents" collapsible={false}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {announcements.slice(0, 8).map((a, i) => (
                   <a
@@ -586,12 +584,24 @@ export default function StockDetail() {
             </CollapsibleSection>
           )}
 
-          {/* Footer link back */}
-          <div className="pt-2 pb-8">
-            <Link href="/stocks" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-              ← Back to all stocks
-            </Link>
+              {/* Footer link back (within left column) */}
+              <div className="pt-2 pb-2">
+                <Link href="/stocks" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                  ← Back to all stocks
+                </Link>
+              </div>
+
+            </div>
+            {/* END left column */}
+
+            {/* RIGHT COLUMN — sticky sidebar with vertical TOC + (Phase A) GenerateAlphaCard. Phase B will add AnalystRecommendationCard + ReverseDCFCard. */}
+            <aside className="hidden lg:flex lg:flex-col gap-5 lg:sticky lg:top-20 lg:self-start lg:h-[calc(100vh-6rem)] lg:overflow-y-auto">
+              <TocSidebar sections={navSections} />
+              <GenerateAlphaCard ticker={basic.symbol} />
+            </aside>
+
           </div>
+          {/* END two-column layout */}
 
         </div>
       </div>

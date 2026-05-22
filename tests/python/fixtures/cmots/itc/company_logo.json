@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "co_code": 301,
+      "Filepath": "https://complogosapi.cmots.com/complogodata/ITC_29088800077_301.png",
+      "CompanyName": "ITC Ltd"
+    }
+  ]
+}

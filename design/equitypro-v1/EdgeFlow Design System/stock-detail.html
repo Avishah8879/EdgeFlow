@@ -197,6 +197,116 @@
   .kv-cell .k { color: hsl(var(--muted-foreground)); }
   .kv-cell .v { font-family: var(--font-mono); font-weight: 600; color: hsl(var(--foreground)); }
 
+  /* ============================================================
+     Screener.in-style financial tables (Pros/Cons, Peers, P&L, BS, CF, Ratios, Docs)
+     ============================================================ */
+
+  /* Pros & cons */
+  .pc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .pc-col { padding: 18px 22px; }
+  .pc-col + .pc-col { border-left: 1px solid hsl(var(--border)); }
+  .pc-hd { font-family: var(--font-display); font-size: 14px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+  .pc-hd::before { content: ""; width: 8px; height: 8px; border-radius: 2px; }
+  .pc-pros .pc-hd { color: hsl(var(--positive)); }
+  .pc-pros .pc-hd::before { background: hsl(var(--positive)); }
+  .pc-cons .pc-hd { color: hsl(var(--negative)); }
+  .pc-cons .pc-hd::before { background: hsl(var(--negative)); }
+  .pc-col ul { margin: 0; padding: 0 0 0 4px; list-style: none; }
+  .pc-col li { position: relative; padding: 6px 0 6px 18px; font-size: 13px; line-height: 1.55; color: hsl(var(--foreground)); border-bottom: 1px dashed hsl(var(--border)); }
+  .pc-col li:last-child { border-bottom: 0; }
+  .pc-col li::before { content: ""; position: absolute; left: 4px; top: 13px; width: 6px; height: 6px; border-radius: 50%; }
+  .pc-pros li::before { background: hsl(var(--positive) / 0.7); }
+  .pc-cons li::before { background: hsl(var(--negative) / 0.7); }
+  .pc-col li b { font-family: var(--font-mono); color: hsl(var(--brand-navy)); font-weight: 700; }
+  .dark .pc-col li b { color: hsl(38 30% 95%); }
+
+  /* Financial tables (P&L, BS, CF, Ratios, Peers, Quarterly) */
+  .fin-tbl-wrap { overflow-x: auto; }
+  .fin-tbl { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+  .fin-tbl thead th {
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: var(--ls-uppercase); color: hsl(var(--muted-foreground));
+    background: hsl(var(--muted) / 0.5);
+    padding: 9px 10px; text-align: right; white-space: nowrap;
+    border-bottom: 1px solid hsl(var(--border));
+    position: sticky; top: 0;
+  }
+  .fin-tbl thead th.lcol { text-align: left; }
+  .fin-tbl thead th.cur {
+    color: hsl(var(--brand-gold));
+    background: hsl(var(--brand-gold) / 0.08);
+  }
+  .fin-tbl tbody td {
+    padding: 9px 10px; text-align: right; white-space: nowrap;
+    border-bottom: 1px solid hsl(var(--border) / 0.5);
+    color: hsl(var(--foreground));
+  }
+  .fin-tbl tbody td.lcol {
+    text-align: left; font-family: var(--font-sans);
+    font-weight: 500; color: hsl(var(--foreground));
+    position: sticky; left: 0; background: hsl(var(--card));
+    border-right: 1px solid hsl(var(--border));
+    min-width: 180px;
+  }
+  .fin-tbl tbody td.cur {
+    background: hsl(var(--brand-gold) / 0.05);
+    color: hsl(var(--brand-navy)); font-weight: 700;
+  }
+  .dark .fin-tbl tbody td.cur { color: hsl(var(--brand-gold)); }
+  .fin-tbl tbody tr:hover td { background: hsl(var(--muted) / 0.3); }
+  .fin-tbl tbody tr:hover td.cur { background: hsl(var(--brand-gold) / 0.10); }
+  .fin-tbl tbody tr.sub td { background: hsl(var(--muted) / 0.4); font-weight: 700; }
+  .fin-tbl tbody tr.sub td.cur { background: hsl(var(--brand-gold) / 0.12); }
+  .fin-tbl tbody tr.hl td {
+    background: linear-gradient(0deg, hsl(var(--brand-navy) / 0.06), hsl(var(--brand-navy) / 0.06));
+    font-weight: 700;
+    color: hsl(var(--brand-navy));
+    border-top: 1px solid hsl(var(--border));
+  }
+  .dark .fin-tbl tbody tr.hl td { color: hsl(38 30% 95%); }
+  .fin-tbl tbody tr.hl td.cur { background: hsl(var(--brand-gold) / 0.15); }
+  .fin-tbl tbody tr.me td { background: hsl(var(--brand-gold) / 0.08); font-weight: 700; }
+  .fin-tbl tbody tr.med td { background: hsl(var(--muted) / 0.5); font-style: italic; color: hsl(var(--muted-foreground)); }
+  .fin-tbl .pos { color: hsl(var(--positive)); font-weight: 700; }
+  .fin-tbl .neg { color: hsl(var(--negative)); font-weight: 700; }
+  .fin-tbl.narrow thead th, .fin-tbl.narrow tbody td { padding: 7px 9px; font-size: 12px; }
+
+  /* Growth sub-cards under P&L */
+  .growth-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 1px solid hsl(var(--border)); }
+  .growth-card { padding: 16px 18px; border-right: 1px solid hsl(var(--border)); }
+  .growth-card:last-child { border-right: 0; }
+  .growth-card h4 {
+    margin: 0 0 10px; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: var(--ls-uppercase);
+    color: hsl(var(--muted-foreground));
+  }
+  .g-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 5px 0; border-bottom: 1px dashed hsl(var(--border));
+    font-size: 12.5px;
+  }
+  .g-row:last-child { border-bottom: 0; }
+  .g-row span { color: hsl(var(--muted-foreground)); }
+  .g-row b { font-family: var(--font-mono); font-weight: 700; color: hsl(var(--brand-gold)); font-size: 13.5px; }
+
+  /* Documents */
+  .doc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
+  .doc-col { padding: 18px 20px; border-right: 1px solid hsl(var(--border)); }
+  .doc-col:last-child { border-right: 0; }
+  .doc-hd { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: var(--ls-uppercase); color: hsl(var(--brand-gold)); margin-bottom: 10px; }
+  .doc-col ul { margin: 0; padding: 0; list-style: none; }
+  .doc-col li { padding: 8px 0; border-bottom: 1px dashed hsl(var(--border)); font-size: 12.5px; line-height: 1.45; }
+  .doc-col li:last-child { border-bottom: 0; }
+  .doc-col a { color: hsl(var(--foreground)); }
+  .doc-col a:hover { color: hsl(var(--brand-gold)); }
+  .d-meta {
+    display: inline-block; min-width: 64px;
+    font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;
+    color: hsl(var(--muted-foreground)); margin-right: 8px;
+  }
+  .d-meta.b-aaa { color: hsl(var(--positive)); }
+  .d-meta.b-a1 { color: hsl(var(--brand-sky)); }
+
   /* Shareholding bars */
   .sh-row { display: grid; grid-template-columns: 100px 1fr 60px; gap: 12px; align-items: center; padding: 10px 20px; border-bottom: 1px solid hsl(var(--border)); font-size: 12.5px; }
   .sh-row:last-child { border-bottom: 0; }
@@ -578,32 +688,336 @@
         </div>
       </section>
 
-      <!-- Fundamentals -->
+      <!-- ============== PROS / CONS ============== -->
+      <section class="card" id="sec-proscons">
+        <div class="card-header">
+          <div>
+            <div class="card-eyebrow">Quick read</div>
+            <div class="card-title">Pros &amp; cons</div>
+          </div>
+          <span class="badge badge-gold">AI synthesized</span>
+        </div>
+        <div class="pc-grid">
+          <div class="pc-col pc-pros">
+            <div class="pc-hd">Pros</div>
+            <ul>
+              <li>Company has delivered good profit growth of <b>26.4 %</b> CAGR over last 5 years.</li>
+              <li>Company has a healthy interest coverage ratio of <b>5.8×</b>.</li>
+              <li>Promoter holding stable at <b>50.34 %</b>; no pledge.</li>
+              <li>Reduced net debt to <b>₹2.86 L Cr</b> from <b>₹3.42 L Cr</b> YoY.</li>
+              <li>Strong cash flow from operations (<b>₹1.42 L Cr</b> FY24).</li>
+            </ul>
+          </div>
+          <div class="pc-col pc-cons">
+            <div class="pc-hd">Cons</div>
+            <ul>
+              <li>Stock is trading at <b>2.1× book value</b> — above 5-year average of 1.9×.</li>
+              <li>Return on equity of <b>8.9 %</b> over the last 3 years is below sector median.</li>
+              <li>Promoters have pledged <b>1.42 %</b> of holdings (recent disclosure).</li>
+              <li>Earnings include other income of <b>₹14,820 Cr</b> — quality watch.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== PEER COMPARISON ============== -->
+      <section class="card" id="sec-peers">
+        <div class="card-header">
+          <div>
+            <div class="card-eyebrow">Peer comparison</div>
+            <div class="card-title">Refining &amp; Marketing · 8 companies</div>
+          </div>
+          <div class="tabs">
+            <button class="active">Mcap</button>
+            <button>P/E</button>
+            <button>ROCE</button>
+          </div>
+        </div>
+        <div class="fin-tbl-wrap">
+          <table class="fin-tbl">
+            <thead>
+              <tr>
+                <th class="lcol">Name</th>
+                <th>CMP</th><th>P/E</th><th>Mkt Cap</th><th>Div Yld</th>
+                <th>NP Qtr</th><th>Qtr Profit Var</th><th>Sales Qtr</th>
+                <th>Qtr Sales Var</th><th>ROCE</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="me"><td class="lcol"><b>Reliance Inds.</b></td><td>2,948.55</td><td>28.40</td><td>19,94,210</td><td>0.34%</td><td>18,420</td><td class="pos">+11.2%</td><td>2,42,800</td><td class="pos">+8.4%</td><td>11.4%</td></tr>
+              <tr><td class="lcol">IOCL</td><td>164.20</td><td>6.84</td><td>2,31,840</td><td>4.82%</td><td>3,180</td><td class="neg">−14.6%</td><td>2,18,420</td><td class="neg">−2.1%</td><td>16.8%</td></tr>
+              <tr><td class="lcol">BPCL</td><td>342.10</td><td>5.42</td><td>1,48,210</td><td>5.84%</td><td>4,820</td><td class="pos">+6.8%</td><td>1,32,420</td><td>+0.4%</td><td>22.4%</td></tr>
+              <tr><td class="lcol">HPCL</td><td>418.40</td><td>4.18</td><td>89,420</td><td>5.42%</td><td>3,180</td><td class="neg">−8.4%</td><td>1,18,240</td><td class="neg">−1.8%</td><td>18.6%</td></tr>
+              <tr><td class="lcol">Mangalore Refinery</td><td>184.20</td><td>11.84</td><td>32,180</td><td>2.84%</td><td>684</td><td class="pos">+24.2%</td><td>22,820</td><td class="pos">+4.2%</td><td>14.2%</td></tr>
+              <tr><td class="lcol">Chennai Petroleum</td><td>684.20</td><td>5.84</td><td>10,184</td><td>4.18%</td><td>418</td><td class="pos">+18.4%</td><td>18,420</td><td class="pos">+2.4%</td><td>22.8%</td></tr>
+              <tr><td class="lcol">Gulf Oil Lubricants</td><td>1,148.40</td><td>22.84</td><td>5,684</td><td>1.84%</td><td>82</td><td class="pos">+12.4%</td><td>820</td><td class="pos">+8.2%</td><td>24.6%</td></tr>
+              <tr class="med"><td class="lcol">Median · 8 cos</td><td>—</td><td>8.84</td><td>—</td><td>4.18%</td><td>—</td><td>+9.0%</td><td>—</td><td>+1.4%</td><td>18.6%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============== QUARTERLY RESULTS ============== -->
+      <section class="card" id="sec-quarterly">
+        <div class="card-header">
+          <div>
+            <div class="card-eyebrow">Quarterly results</div>
+            <div class="card-title">Consolidated · last 10 quarters · ₹ Cr</div>
+          </div>
+          <div class="flex gap-2">
+            <div class="tabs"><button class="active">Standalone</button><button>Consolidated</button></div>
+            <button class="btn btn-ghost btn-sm">Raw data ↓</button>
+            <button class="btn btn-ghost btn-sm">Product segments ↓</button>
+          </div>
+        </div>
+        <div class="fin-tbl-wrap">
+          <table class="fin-tbl narrow">
+            <thead>
+              <tr>
+                <th class="lcol">Particulars</th>
+                <th>Jan'24</th><th>Apr'24</th><th>Jul'24</th><th>Oct'24</th>
+                <th>Jan'25</th><th>Apr'25</th><th>Jul'25</th><th>Oct'25</th>
+                <th>Jan'26</th><th class="cur">Apr'26</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="lcol">Sales</td><td>2,16,683</td><td>2,32,810</td><td>2,28,247</td><td>2,21,529</td><td>2,40,715</td><td>2,38,406</td><td>2,42,442</td><td>2,46,884</td><td>2,40,930</td><td class="cur">2,42,800</td></tr>
+              <tr><td class="lcol">Expenses</td><td>1,82,640</td><td>1,94,200</td><td>1,90,420</td><td>1,84,820</td><td>2,01,840</td><td>1,99,420</td><td>2,02,180</td><td>2,05,420</td><td>2,00,420</td><td class="cur">2,01,840</td></tr>
+              <tr class="sub"><td class="lcol">Operating Profit</td><td>34,043</td><td>38,610</td><td>37,827</td><td>36,709</td><td>38,875</td><td>38,986</td><td>40,262</td><td>41,464</td><td>40,510</td><td class="cur">40,960</td></tr>
+              <tr><td class="lcol">OPM %</td><td>15.7%</td><td>16.6%</td><td>16.6%</td><td>16.6%</td><td>16.2%</td><td>16.4%</td><td>16.6%</td><td>16.8%</td><td>16.8%</td><td class="cur">16.9%</td></tr>
+              <tr><td class="lcol">Other Income</td><td>3,240</td><td>3,640</td><td>3,420</td><td>3,820</td><td>3,684</td><td>3,840</td><td>3,684</td><td>3,920</td><td>3,820</td><td class="cur">3,960</td></tr>
+              <tr><td class="lcol">Interest</td><td>5,840</td><td>6,184</td><td>6,420</td><td>6,840</td><td>6,684</td><td>6,420</td><td>6,184</td><td>5,840</td><td>5,684</td><td class="cur">5,420</td></tr>
+              <tr><td class="lcol">Depreciation</td><td>11,840</td><td>12,184</td><td>12,420</td><td>12,684</td><td>12,840</td><td>13,184</td><td>13,420</td><td>13,684</td><td>13,840</td><td class="cur">14,180</td></tr>
+              <tr class="sub"><td class="lcol">Profit before tax</td><td>19,603</td><td>23,882</td><td>22,407</td><td>21,005</td><td>23,035</td><td>23,222</td><td>24,342</td><td>25,860</td><td>24,806</td><td class="cur">25,320</td></tr>
+              <tr><td class="lcol">Tax %</td><td>24%</td><td>24%</td><td>24%</td><td>24%</td><td>24%</td><td>24%</td><td>24%</td><td>25%</td><td>25%</td><td class="cur">25%</td></tr>
+              <tr class="hl"><td class="lcol">Net Profit</td><td>14,898</td><td>18,151</td><td>17,029</td><td>15,964</td><td>17,507</td><td>17,649</td><td>18,500</td><td>19,395</td><td>18,605</td><td class="cur">18,990</td></tr>
+              <tr><td class="lcol">EPS in Rs</td><td>22.0</td><td>26.8</td><td>25.2</td><td>23.6</td><td>25.9</td><td>26.1</td><td>27.3</td><td>28.7</td><td>27.5</td><td class="cur">28.1</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============== PROFIT & LOSS ============== -->
+      <section class="card" id="sec-pnl">
+        <div class="card-header">
+          <div>
+            <div class="card-eyebrow">Profit &amp; loss</div>
+            <div class="card-title">Annual · last 10 years · ₹ Cr</div>
+          </div>
+          <button class="btn btn-ghost btn-sm">Schedule of P&amp;L ↓</button>
+        </div>
+        <div class="fin-tbl-wrap">
+          <table class="fin-tbl narrow">
+            <thead>
+              <tr>
+                <th class="lcol">Particulars</th>
+                <th>2017</th><th>2018</th><th>2019</th><th>2020</th><th>2021</th>
+                <th>2022</th><th>2023</th><th>2024</th><th>2025</th><th class="cur">TTM</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="lcol">Sales</td><td>2,42,290</td><td>3,90,820</td><td>5,80,418</td><td>5,96,743</td><td>4,86,326</td><td>6,98,672</td><td>8,76,396</td><td>9,32,335</td><td>9,73,775</td><td class="cur">9,80,540</td></tr>
+              <tr><td class="lcol">Expenses</td><td>2,05,840</td><td>3,32,180</td><td>4,93,420</td><td>4,98,420</td><td>4,02,180</td><td>5,82,840</td><td>7,34,820</td><td>7,78,420</td><td>8,13,840</td><td class="cur">8,18,420</td></tr>
+              <tr class="sub"><td class="lcol">Operating Profit</td><td>36,450</td><td>58,640</td><td>86,998</td><td>98,323</td><td>84,146</td><td>1,15,832</td><td>1,41,576</td><td>1,53,915</td><td>1,59,935</td><td class="cur">1,62,120</td></tr>
+              <tr><td class="lcol">OPM %</td><td>15.0%</td><td>15.0%</td><td>15.0%</td><td>16.5%</td><td>17.3%</td><td>16.6%</td><td>16.2%</td><td>16.5%</td><td>16.4%</td><td class="cur">16.5%</td></tr>
+              <tr><td class="lcol">Other Income</td><td>9,420</td><td>9,840</td><td>10,420</td><td>13,840</td><td>14,820</td><td>11,420</td><td>12,840</td><td>14,820</td><td>14,184</td><td class="cur">14,820</td></tr>
+              <tr><td class="lcol">Interest</td><td>3,840</td><td>8,420</td><td>16,840</td><td>22,840</td><td>21,420</td><td>14,840</td><td>19,840</td><td>23,840</td><td>25,420</td><td class="cur">23,184</td></tr>
+              <tr><td class="lcol">Depreciation</td><td>11,820</td><td>16,820</td><td>20,840</td><td>22,180</td><td>26,840</td><td>29,840</td><td>40,840</td><td>50,820</td><td>52,420</td><td class="cur">54,180</td></tr>
+              <tr class="sub"><td class="lcol">Profit before tax</td><td>30,210</td><td>43,240</td><td>59,738</td><td>67,143</td><td>50,706</td><td>82,572</td><td>93,736</td><td>94,075</td><td>96,279</td><td class="cur">99,576</td></tr>
+              <tr><td class="lcol">Tax %</td><td>27%</td><td>27%</td><td>26%</td><td>25%</td><td>21%</td><td>22%</td><td>24%</td><td>22%</td><td>23%</td><td class="cur">24%</td></tr>
+              <tr class="hl"><td class="lcol">Net Profit</td><td>22,054</td><td>31,565</td><td>44,206</td><td>50,357</td><td>40,057</td><td>64,406</td><td>71,239</td><td>73,670</td><td>74,135</td><td class="cur">75,678</td></tr>
+              <tr><td class="lcol">EPS in Rs</td><td>33.4</td><td>47.8</td><td>67.0</td><td>76.3</td><td>60.7</td><td>97.6</td><td>108.0</td><td>103.8</td><td>104.5</td><td class="cur">106.7</td></tr>
+              <tr><td class="lcol">Dividend Payout %</td><td>15%</td><td>15%</td><td>14%</td><td>13%</td><td>11%</td><td>8%</td><td>9%</td><td>10%</td><td>10%</td><td class="cur">9%</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Growth sub-tables -->
+        <div class="growth-grid">
+          <div class="growth-card">
+            <h4>Compounded Sales Growth</h4>
+            <div class="g-row"><span>10 Years:</span><b>14%</b></div>
+            <div class="g-row"><span>5 Years:</span><b>13%</b></div>
+            <div class="g-row"><span>3 Years:</span><b>10%</b></div>
+            <div class="g-row"><span>TTM:</span><b>4%</b></div>
+          </div>
+          <div class="growth-card">
+            <h4>Compounded Profit Growth</h4>
+            <div class="g-row"><span>10 Years:</span><b>14%</b></div>
+            <div class="g-row"><span>5 Years:</span><b>11%</b></div>
+            <div class="g-row"><span>3 Years:</span><b>4%</b></div>
+            <div class="g-row"><span>TTM:</span><b>2%</b></div>
+          </div>
+          <div class="growth-card">
+            <h4>Stock Price CAGR</h4>
+            <div class="g-row"><span>10 Years:</span><b>18%</b></div>
+            <div class="g-row"><span>5 Years:</span><b>11%</b></div>
+            <div class="g-row"><span>3 Years:</span><b>8%</b></div>
+            <div class="g-row"><span>1 Year:</span><b>−2%</b></div>
+          </div>
+          <div class="growth-card">
+            <h4>Return on Equity</h4>
+            <div class="g-row"><span>10 Years:</span><b>10%</b></div>
+            <div class="g-row"><span>5 Years:</span><b>9%</b></div>
+            <div class="g-row"><span>3 Years:</span><b>9%</b></div>
+            <div class="g-row"><span>Last Year:</span><b>9%</b></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== BALANCE SHEET ============== -->
+      <section class="card" id="sec-balance">
+        <div class="card-header">
+          <div>
+            <div class="card-eyebrow">Balance sheet</div>
+            <div class="card-title">Consolidated · ₹ Cr</div>
+          </div>
+          <button class="btn btn-ghost btn-sm">Corporate actions ↓</button>
+        </div>
+        <div class="fin-tbl-wrap">
+          <table class="fin-tbl narrow">
+            <thead>
+              <tr>
+                <th class="lcol">Particulars</th>
+                <th>2017</th><th>2018</th><th>2019</th><th>2020</th><th>2021</th>
+                <th>2022</th><th>2023</th><th>2024</th><th>2025</th><th class="cur">Sep'25</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="sub"><td class="lcol">Equity Capital</td><td>2,948</td><td>5,922</td><td>6,338</td><td>6,338</td><td>6,445</td><td>6,766</td><td>6,766</td><td>6,766</td><td>6,766</td><td class="cur">6,766</td></tr>
+              <tr><td class="lcol">Reserves</td><td>2,93,840</td><td>3,15,420</td><td>3,87,584</td><td>4,42,840</td><td>6,84,940</td><td>7,73,690</td><td>8,46,260</td><td>9,15,920</td><td>9,89,055</td><td class="cur">10,22,800</td></tr>
+              <tr><td class="lcol">Borrowings</td><td>2,18,840</td><td>2,87,505</td><td>2,87,505</td><td>3,36,294</td><td>2,55,891</td><td>2,67,615</td><td>3,14,768</td><td>3,46,818</td><td>3,84,200</td><td class="cur">3,92,400</td></tr>
+              <tr><td class="lcol">Other Liabilities</td><td>2,18,420</td><td>2,84,180</td><td>3,18,840</td><td>3,82,840</td><td>3,18,484</td><td>3,82,260</td><td>4,11,924</td><td>4,42,148</td><td>4,74,820</td><td class="cur">4,82,180</td></tr>
+              <tr class="hl"><td class="lcol">Total Liabilities</td><td>7,34,048</td><td>8,93,027</td><td>10,00,267</td><td>11,68,312</td><td>12,65,760</td><td>14,30,331</td><td>15,79,718</td><td>17,11,652</td><td>18,54,841</td><td class="cur">19,04,146</td></tr>
+              <tr><td class="lcol">Fixed Assets</td><td>3,18,420</td><td>4,84,180</td><td>5,48,182</td><td>5,89,260</td><td>5,94,940</td><td>5,84,000</td><td>6,98,170</td><td>8,01,968</td><td>8,68,820</td><td class="cur">8,96,420</td></tr>
+              <tr><td class="lcol">CWIP</td><td>1,32,840</td><td>1,18,840</td><td>1,29,420</td><td>1,42,820</td><td>1,42,840</td><td>1,68,420</td><td>1,82,840</td><td>1,68,820</td><td>1,42,820</td><td class="cur">1,38,420</td></tr>
+              <tr><td class="lcol">Investments</td><td>1,42,840</td><td>1,68,420</td><td>1,84,820</td><td>2,18,420</td><td>2,82,820</td><td>3,18,820</td><td>3,42,840</td><td>3,68,820</td><td>3,92,840</td><td class="cur">4,12,180</td></tr>
+              <tr><td class="lcol">Other Assets</td><td>1,40,000</td><td>1,22,000</td><td>1,38,000</td><td>2,18,000</td><td>2,46,000</td><td>3,59,000</td><td>3,56,000</td><td>3,72,000</td><td>4,50,000</td><td class="cur">4,57,000</td></tr>
+              <tr class="hl"><td class="lcol">Total Assets</td><td>7,34,100</td><td>8,93,440</td><td>10,00,422</td><td>11,68,500</td><td>12,66,600</td><td>14,30,240</td><td>15,79,850</td><td>17,11,608</td><td>18,54,480</td><td class="cur">19,04,020</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============== CASH FLOW ============== -->
+      <section class="card" id="sec-cashflow">
+        <div class="card-header">
+          <div>
+            <div class="card-eyebrow">Cash flows</div>
+            <div class="card-title">Consolidated · ₹ Cr</div>
+          </div>
+        </div>
+        <div class="fin-tbl-wrap">
+          <table class="fin-tbl narrow">
+            <thead>
+              <tr>
+                <th class="lcol">Particulars</th>
+                <th>2017</th><th>2018</th><th>2019</th><th>2020</th><th>2021</th>
+                <th>2022</th><th>2023</th><th>2024</th><th class="cur">2025</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="lcol">Cash from Operating</td><td>40,140</td><td>56,672</td><td>78,267</td><td>83,572</td><td>61,675</td><td>1,11,257</td><td>1,15,032</td><td>1,42,000</td><td class="cur">1,48,420</td></tr>
+              <tr><td class="lcol">Cash from Investing</td><td>−68,242</td><td>−87,840</td><td>−96,470</td><td>−1,05,840</td><td>−1,28,420</td><td>−1,32,180</td><td>−1,58,420</td><td>−1,72,820</td><td class="cur">−1,84,820</td></tr>
+              <tr><td class="lcol">Cash from Financing</td><td>32,402</td><td>34,820</td><td>22,840</td><td>26,420</td><td>72,140</td><td>21,420</td><td>46,420</td><td>34,820</td><td class="cur">42,840</td></tr>
+              <tr class="hl"><td class="lcol">Net Cash Flow</td><td>4,300</td><td>3,652</td><td>4,637</td><td>4,152</td><td>5,395</td><td>497</td><td>3,032</td><td>4,000</td><td class="cur">6,440</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============== RATIOS ============== -->
+      <section class="card" id="sec-ratios">
+        <div class="card-header">
+          <div>
+            <div class="card-eyebrow">Ratios</div>
+            <div class="card-title">Operational efficiency</div>
+          </div>
+        </div>
+        <div class="fin-tbl-wrap">
+          <table class="fin-tbl narrow">
+            <thead>
+              <tr>
+                <th class="lcol">Particulars</th>
+                <th>2017</th><th>2018</th><th>2019</th><th>2020</th><th>2021</th>
+                <th>2022</th><th>2023</th><th>2024</th><th class="cur">2025</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="lcol">Debtor Days</td><td>9.4</td><td>14.2</td><td>17.8</td><td>16.2</td><td>14.6</td><td>11.4</td><td>11.8</td><td>13.2</td><td class="cur">14.4</td></tr>
+              <tr><td class="lcol">Inventory Days</td><td>62.4</td><td>74.8</td><td>82.4</td><td>86.2</td><td>104.2</td><td>92.4</td><td>81.6</td><td>78.4</td><td class="cur">76.2</td></tr>
+              <tr><td class="lcol">Days Payable</td><td>82.4</td><td>96.4</td><td>108.2</td><td>118.4</td><td>136.4</td><td>118.2</td><td>104.2</td><td>96.8</td><td class="cur">92.4</td></tr>
+              <tr class="hl"><td class="lcol">Cash Conversion Cycle</td><td>−10.6</td><td>−7.4</td><td>−8.0</td><td>−16.0</td><td>−17.6</td><td>−14.4</td><td>−10.8</td><td>−5.2</td><td class="cur">−1.8</td></tr>
+              <tr><td class="lcol">Working Capital Days</td><td>18.4</td><td>22.6</td><td>14.2</td><td>−6.8</td><td>−2.4</td><td>−2.0</td><td>−4.2</td><td>−12.4</td><td class="cur">−18.6</td></tr>
+              <tr class="hl"><td class="lcol">ROCE %</td><td>9%</td><td>10%</td><td>11%</td><td>11%</td><td>8%</td><td>10%</td><td>10%</td><td>10%</td><td class="cur">11%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============== KEY FUNDAMENTALS (kept, condensed) ============== -->
       <section class="card" id="sec-fundamentals">
         <div class="card-header">
           <div>
-            <div class="card-eyebrow">Fundamentals</div>
+            <div class="card-eyebrow">At a glance</div>
             <div class="card-title">Key metrics &amp; ratios</div>
-          </div>
-          <div class="tabs">
-            <button class="active">Annual</button>
-            <button>Quarterly</button>
-            <button>TTM</button>
           </div>
         </div>
         <div class="kv-table">
-          <div class="kv-cell"><span class="k">Revenue (FY24)</span><span class="v">₹9.74 L Cr</span></div>
-          <div class="kv-cell"><span class="k">EBITDA</span><span class="v">₹1.78 L Cr</span></div>
-          <div class="kv-cell"><span class="k">Net profit</span><span class="v">₹73,670 Cr</span></div>
-          <div class="kv-cell"><span class="k">EBITDA margin</span><span class="v">18.3 %</span></div>
-          <div class="kv-cell"><span class="k">EPS (TTM)</span><span class="v">₹103.8</span></div>
-          <div class="kv-cell"><span class="k">Book value</span><span class="v">₹1,403</span></div>
+          <div class="kv-cell"><span class="k">Market Cap</span><span class="v">₹19.94 L Cr</span></div>
+          <div class="kv-cell"><span class="k">Current Price</span><span class="v">₹2,948.55</span></div>
+          <div class="kv-cell"><span class="k">High / Low (52w)</span><span class="v">3,217 / 2,221</span></div>
+          <div class="kv-cell"><span class="k">Stock P/E</span><span class="v">28.4</span></div>
+          <div class="kv-cell"><span class="k">Book Value</span><span class="v">₹1,403</span></div>
+          <div class="kv-cell"><span class="k">Dividend Yield</span><span class="v">0.34 %</span></div>
+          <div class="kv-cell"><span class="k">ROCE</span><span class="v">11.4 %</span></div>
+          <div class="kv-cell"><span class="k">ROE</span><span class="v">8.9 %</span></div>
+          <div class="kv-cell"><span class="k">Face Value</span><span class="v">₹10.0</span></div>
           <div class="kv-cell"><span class="k">Debt / Equity</span><span class="v">0.42</span></div>
-          <div class="kv-cell"><span class="k">Interest coverage</span><span class="v">5.8×</span></div>
-          <div class="kv-cell"><span class="k">Promoter holding</span><span class="v">50.34 %</span></div>
-          <div class="kv-cell"><span class="k">FII holding</span><span class="v">22.06 %</span></div>
-          <div class="kv-cell"><span class="k">DII holding</span><span class="v">15.20 %</span></div>
-          <div class="kv-cell"><span class="k">Public</span><span class="v">12.40 %</span></div>
+          <div class="kv-cell"><span class="k">Interest Coverage</span><span class="v">5.8×</span></div>
+          <div class="kv-cell"><span class="k">EPS (TTM)</span><span class="v">₹106.7</span></div>
+        </div>
+      </section>
+
+      <!-- ============== DOCUMENTS / FILINGS ============== -->
+      <section class="card" id="sec-docs">
+        <div class="card-header">
+          <div>
+            <div class="card-eyebrow">Documents</div>
+            <div class="card-title">Filings, calls &amp; ratings</div>
+          </div>
+          <button class="btn btn-ghost btn-sm">View all 248 ↗</button>
+        </div>
+        <div class="doc-grid">
+          <div class="doc-col">
+            <div class="doc-hd">Announcements</div>
+            <ul>
+              <li><span class="d-meta">26 Apr</span><a href="#">Q4 FY26 results published — net profit ₹18,990 Cr</a></li>
+              <li><span class="d-meta">22 Apr</span><a href="#">Board approves Jio listing on Indian bourses</a></li>
+              <li><span class="d-meta">18 Apr</span><a href="#">RIL to acquire 18 % in solar JV with TotalEnergies</a></li>
+              <li><span class="d-meta">12 Apr</span><a href="#">Disclosure under Reg 30 — investor day on 14 May</a></li>
+              <li><span class="d-meta">04 Apr</span><a href="#">Buyback proposal placed at AGM agenda · ₹14,820 Cr</a></li>
+            </ul>
+          </div>
+          <div class="doc-col">
+            <div class="doc-hd">Annual reports · concalls</div>
+            <ul>
+              <li><span class="d-meta">FY25</span><a href="#">Annual report — 348 pp PDF</a></li>
+              <li><span class="d-meta">Q4'25</span><a href="#">Concall transcript — 22 Apr</a></li>
+              <li><span class="d-meta">Q3'25</span><a href="#">Concall transcript — 19 Jan</a></li>
+              <li><span class="d-meta">Q2'25</span><a href="#">Concall transcript — 12 Oct '24</a></li>
+              <li><span class="d-meta">FY24</span><a href="#">Annual report — 312 pp PDF</a></li>
+            </ul>
+          </div>
+          <div class="doc-col">
+            <div class="doc-hd">Credit ratings</div>
+            <ul>
+              <li><span class="d-meta b-aaa">CRISIL</span><a href="#">AAA · stable · long-term · Apr 26</a></li>
+              <li><span class="d-meta b-aaa">ICRA</span><a href="#">AAA · stable · long-term · Mar 26</a></li>
+              <li><span class="d-meta b-a1">CARE</span><a href="#">A1+ · short-term · Mar 26</a></li>
+              <li><span class="d-meta b-aaa">S&amp;P (global)</span><a href="#">BBB+ · positive · Feb 26</a></li>
+            </ul>
+          </div>
         </div>
       </section>
 
@@ -652,10 +1066,18 @@
         <a href="#sec-scorecard" class="active"><span class="num">02</span>Scorecard</a>
         <a href="#sec-sentiment"><span class="num">03</span>AI Sentiment</a>
         <a href="#sec-technicals"><span class="num">04</span>Technicals</a>
-        <a href="#sec-fundamentals"><span class="num">05</span>Fundamentals</a>
-        <a href="#sec-shareholding"><span class="num">06</span>Shareholding</a>
-        <a href="#sec-analysts"><span class="num">07</span>Analysts</a>
-        <a href="#sec-dcf"><span class="num">08</span>Reverse DCF</a>
+        <a href="#sec-proscons"><span class="num">05</span>Pros &amp; cons</a>
+        <a href="#sec-peers"><span class="num">06</span>Peer comparison</a>
+        <a href="#sec-quarterly"><span class="num">07</span>Quarterly results</a>
+        <a href="#sec-pnl"><span class="num">08</span>Profit &amp; loss</a>
+        <a href="#sec-balance"><span class="num">09</span>Balance sheet</a>
+        <a href="#sec-cashflow"><span class="num">10</span>Cash flows</a>
+        <a href="#sec-ratios"><span class="num">11</span>Ratios</a>
+        <a href="#sec-fundamentals"><span class="num">12</span>At a glance</a>
+        <a href="#sec-docs"><span class="num">13</span>Documents</a>
+        <a href="#sec-shareholding"><span class="num">14</span>Shareholding</a>
+        <a href="#sec-analysts"><span class="num">15</span>Analysts</a>
+        <a href="#sec-dcf"><span class="num">16</span>Reverse DCF</a>
       </div>
 
       <!-- Generate alpha CTA -->

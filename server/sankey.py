@@ -284,9 +284,32 @@ def _get_color(label: str) -> str:
 # Data Fetching
 # ======================
 
+def _yf_symbol(ticker: str) -> str:
+    """Normalize a bare NSE symbol for yfinance lookup.
+
+    yfinance requires exchange suffixes for non-US tickers (e.g. ``RELIANCE.NS``
+    for NSE, ``RELIANCE.BO`` for BSE). Our ``tickers.symbol`` column stores
+    BARE symbols (``RELIANCE``, ``ITC``, …). This helper appends ``.NS`` when
+    no suffix is present. Idempotent — won't double-suffix if the caller
+    already passed ``RELIANCE.NS``.
+
+    Phase C 2026-05-18 fix: BSE-only tickers (~0.76% of the universe, 24 of
+    3,175 rows) get ``.NS`` here too and yfinance returns empty → caller
+    raises ValueError → 404. Accepted trade-off per Option A (single-line
+    fix, 99%+ NSE). For full BSE coverage, see Option B (DB-backed Sankey
+    refactor) tracked in TODO_CMOTS.md cross-cutting hygiene.
+    """
+    if not ticker:
+        return ticker
+    t = ticker.upper()
+    if "." in t:
+        return t
+    return f"{t}.NS"
+
+
 def get_income_statement(ticker: str) -> pd.DataFrame:
     """Fetch and normalize annual income statement from yfinance."""
-    stock = yf.Ticker(ticker)
+    stock = yf.Ticker(_yf_symbol(ticker))
     statement = stock.financials
     if statement is None or statement.empty:
         raise ValueError(f"No income statement data found for {ticker}")
@@ -300,7 +323,7 @@ def get_income_statement(ticker: str) -> pd.DataFrame:
 
 def get_cashflow_statement(ticker: str) -> pd.DataFrame:
     """Fetch and normalize annual cash flow statement from yfinance."""
-    stock = yf.Ticker(ticker)
+    stock = yf.Ticker(_yf_symbol(ticker))
     cf = stock.cashflow
     if cf is None or cf.empty:
         raise ValueError(f"No cash flow data found for {ticker}")
@@ -314,7 +337,7 @@ def get_cashflow_statement(ticker: str) -> pd.DataFrame:
 
 def get_balance_sheet(ticker: str) -> pd.DataFrame:
     """Fetch and normalize annual balance sheet from yfinance."""
-    stock = yf.Ticker(ticker)
+    stock = yf.Ticker(_yf_symbol(ticker))
     bs = stock.balance_sheet
     if bs is None or bs.empty:
         raise ValueError(f"No balance sheet data found for {ticker}")

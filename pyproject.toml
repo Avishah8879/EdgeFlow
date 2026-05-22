@@ -111,6 +111,8 @@ dependencies = [
     "asyncpg>=0.31.0",
     "fyers-apiv3",
     "msgpack",
+    "bleach>=6.3.0",
+    "tinycss2>=1.5.1",
 ]
 
 [dependency-groups]

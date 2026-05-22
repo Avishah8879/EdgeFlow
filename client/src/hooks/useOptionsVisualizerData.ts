@@ -41,6 +41,11 @@ export interface ExposureData {
 export interface TimeSeriesPoint {
   timestamp: string;
   atm_gxoi: number;
+  atm_straddle: number | null;
+  atm_strike: number | null;
+  spot: number;
+  ce_ltp: number;
+  pe_ltp: number;
 }
 
 export interface TimeSeriesData {

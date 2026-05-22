@@ -1,0 +1,69 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "YRC": 201101.0,
+      "EQTY": 111.29000091552734,
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "REMARKS": "Conversion of Warrants",
+      "EQTYASON": "2011.01.21  "
+    },
+    {
+      "YRC": 201003.0,
+      "EQTY": 106.04000091552734,
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "REMARKS": "Conversion of Warrants",
+      "EQTYASON": "2010.03.27  "
+    },
+    {
+      "YRC": 200011.0,
+      "EQTY": 101.18000030517578,
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "REMARKS": "Reduction - Buy Back of Shares",
+      "EQTYASON": "2000.11.02  "
+    },
+    {
+      "YRC": 199709.0,
+      "EQTY": 119.38999938964844,
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "REMARKS": "Bonus Issue",
+      "EQTYASON": "1997.09.15  "
+    },
+    {
+      "YRC": 199411.0,
+      "EQTY": 79.58999633789062,
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "REMARKS": "Equity Underlying GDR",
+      "EQTYASON": "1994.11.03  "
+    },
+    {
+      "YRC": 199406.0,
+      "EQTY": 75.26000213623047,
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "REMARKS": "Bonus Issue",
+      "EQTYASON": "1994.06.03  "
+    },
+    {
+      "YRC": 199109.0,
+      "EQTY": 37.630001068115234,
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "REMARKS": "Bonus Issue",
+      "EQTYASON": "1991.09.10  "
+    },
+    {
+      "YRC": 198803.0,
+      "EQTY": 18.809999465942383,
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "REMARKS": "Bonus Issue",
+      "EQTYASON": "1988.03.25  "
+    },
+    {
+      "YRC": 198506.0,
+      "EQTY": 9.40999984741211,
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "REMARKS": "As Per Annual Report",
+      "EQTYASON": "1985.06.30  "
+    }
+  ]
+}

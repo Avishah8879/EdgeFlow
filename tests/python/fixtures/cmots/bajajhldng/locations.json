@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "PIN": 411035.0,
+      "ADD1": "Mumbai-Pune Road",
+      "ADD2": "Akurdi",
+      "ADD3": null,
+      "CITY": "Pune",
+      "FAX1": "91-20-27407380",
+      "TEL1": "91-20-27472851/7150/66107150",
+      "TYPE": "RGO",
+      "CO_CODE": 50.0,
+      "ST_NAME": null
+    }
+  ]
+}

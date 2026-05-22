@@ -1,0 +1,126 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "PIN": 249403.0,
+      "ADD1": "1 Sector 11 (Food Fac) (Foods)",
+      "ADD2": "Integrated Industrial Estate  ",
+      "ADD3": "                              ",
+      "CITY": "Haridwar                      ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 301.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 249403.0,
+      "ADD1": "1 Sector 11 (Personal Care Pro",
+      "ADD2": "Integrated Industrial Estate  ",
+      "ADD3": "                              ",
+      "CITY": "Haridwar                      ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 301.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 563130.0,
+      "ADD1": "15/1 & 15/2 (Foods)           ",
+      "ADD2": "Madivala Gr Pancha Yeshwanth V",
+      "ADD3": "                              ",
+      "CITY": "Kolar                         ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 301.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 271801.0,
+      "ADD1": "475-477 497-498 500-505       ",
+      "ADD2": "507-509 Villae Moh Ngr Pargana",
+      "ADD3": "                              ",
+      "CITY": "Bahraich                      ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 301.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 144601.0,
+      "ADD1": "A-1-A Miexe Use Indl Park     ",
+      "ADD2": "Village Jhalthikriwal (Constru",
+      "ADD3": "                              ",
+      "CITY": "Kapurthala                    ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 301.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 533342.0,
+      "ADD1": "Anaparti (Green Leaf Threshing",
+      "ADD2": "East Godavari                 ",
+      "ADD3": "                              ",
+      "CITY": "Anaparti                      ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 301.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 502325.0,
+      "ADD1": "Anrich Industrial Estate(Paper",
+      "ADD2": "Village Bollaram Medak        ",
+      "ADD3": "                              ",
+      "CITY": "Medak                         ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 301.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 243601.0,
+      "ADD1": "Arazi Nos 10 & 12/3 (Part)    ",
+      "ADD2": "Village Khunak                ",
+      "ADD3": "                              ",
+      "CITY": "Badaun                        ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 301.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 271001.0,
+      "ADD1": "Arazi Nos 420 421-424 427-428 ",
+      "ADD2": "431 433-434 442-446 447 448   ",
+      "ADD3": "                              ",
+      "CITY": "Gonda                         ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 301.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 445001.0,
+      "ADD1": "Bhumapan Kramank 15 B K Upvibh",
+      "ADD2": "Village Parwa                 ",
+      "ADD3": "                              ",
+      "CITY": "Yavatmal                      ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 301.0,
+      "ST_NAME": null
+    }
+  ]
+}

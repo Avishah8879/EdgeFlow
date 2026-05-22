@@ -1,0 +1,142 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "Name": "Tobacco Manufacturers (india) Limited",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 17.79,
+      "NOOFshares": 2228495863.0
+    },
+    {
+      "Name": "Life Insurance Corporation Of India",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 15.83,
+      "NOOFshares": 1983205253.0
+    },
+    {
+      "Name": "Specified Undertaking Of The Unit Trust Of India",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 7.78,
+      "NOOFshares": 974531427.0
+    },
+    {
+      "Name": "Myddleton Investment Company Limited",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 3.88,
+      "NOOFshares": 486311940.0
+    },
+    {
+      "Name": "Icici Prudential Mutual Funds",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 3.58,
+      "NOOFshares": 448017257.0
+    },
+    {
+      "Name": "Sbi Mutual Funds",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 3.29,
+      "NOOFshares": 412638474.0
+    },
+    {
+      "Name": "Qib - Insurance Company Registered",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 2.11,
+      "NOOFshares": 263704964.0
+    },
+    {
+      "Name": "Parag Parikh Flexi Cap Mutual Funds",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 1.9,
+      "NOOFshares": 238616594.0
+    },
+    {
+      "Name": "Goldman Sachs Trust Ii - Goldman Sachs Gqg Partners International Opportunities Fund",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 1.74,
+      "NOOFshares": 217669387.0
+    },
+    {
+      "Name": "Nps Trust (various Pension Funds)",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 1.73,
+      "NOOFshares": 216571766.0
+    },
+    {
+      "Name": "General Insurance Corporation Of India",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 1.73,
+      "NOOFshares": 217185508.0
+    },
+    {
+      "Name": "Nippon Life India Trustee Mutual Funds",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 1.61,
+      "NOOFshares": 201220756.0
+    },
+    {
+      "Name": "The New India Assurance Company Limited",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 1.46,
+      "NOOFshares": 182590777.0
+    },
+    {
+      "Name": "Uti Mutual Funds",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 1.41,
+      "NOOFshares": 176649826.0
+    },
+    {
+      "Name": "Rothmans International Enterprises Limited",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 1.24,
+      "NOOFshares": 154954890.0
+    },
+    {
+      "Name": "Gqg Partners Emerging Markets Equity Fund",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 1.22,
+      "NOOFshares": 153329896.0
+    },
+    {
+      "Name": "Insurance Funds - Dept Of Post India",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 301.0,
+      "perstake": 0.12,
+      "NOOFshares": 14890741.0
+    }
+  ]
+}

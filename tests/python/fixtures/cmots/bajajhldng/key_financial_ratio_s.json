@@ -1,0 +1,81 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "RID": 1,
+      "Y202503": 202503.0,
+      "COLUMNNAME": "Year End"
+    },
+    {
+      "RID": 2,
+      "Y202503": 0.0,
+      "COLUMNNAME": "Debt-Equity Ratio"
+    },
+    {
+      "RID": 3,
+      "Y202503": 0.0,
+      "COLUMNNAME": "Long Term Debt-Equity Ratio"
+    },
+    {
+      "RID": 4,
+      "Y202503": 1.11,
+      "COLUMNNAME": "Current Ratio"
+    },
+    {
+      "RID": 5,
+      "Y202503": 3.75,
+      "COLUMNNAME": "   Fixed Assets"
+    },
+    {
+      "RID": 6,
+      "Y202503": 0.0,
+      "COLUMNNAME": "   Inventory"
+    },
+    {
+      "RID": 7,
+      "Y202503": 0.0,
+      "COLUMNNAME": "   Debtors"
+    },
+    {
+      "RID": 8,
+      "Y202503": 955.54,
+      "COLUMNNAME": "Interest Cover Ratio"
+    },
+    {
+      "RID": 9,
+      "Y202503": 90.36,
+      "COLUMNNAME": "PBIDTM (%)"
+    },
+    {
+      "RID": 10,
+      "Y202503": 88.37,
+      "COLUMNNAME": "PBITM (%)"
+    },
+    {
+      "RID": 11,
+      "Y202503": 90.27,
+      "COLUMNNAME": "PBDTM (%)"
+    },
+    {
+      "RID": 12,
+      "Y202503": 82.72,
+      "COLUMNNAME": "CPM (%)"
+    },
+    {
+      "RID": 13,
+      "Y202503": 80.73,
+      "COLUMNNAME": "APATM (%)"
+    },
+    {
+      "RID": 14,
+      "Y202503": 7.38,
+      "COLUMNNAME": "ROCE (%)"
+    },
+    {
+      "RID": 15,
+      "Y202503": 6.76,
+      "COLUMNNAME": "RONW (%)"
+    }
+  ]
+}

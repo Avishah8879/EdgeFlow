@@ -1,0 +1,17 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "reg_fax": "91-33-22882358",
+      "reg_tel": "91-33-22886426/22880",
+      "reg_add1": "Investor Serv Centre",
+      "reg_add2": "37 Jawaharlal Nehru",
+      "reg_add3": "Road",
+      "reg_add4": "Kolkata - 700071",
+      "reg_email": "isc@itc.in",
+      "reg_internet": "www.itcportal.com",
+      "RegistrarName": "ITC Ltd"
+    }
+  ]
+}

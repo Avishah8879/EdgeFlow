@@ -1,0 +1,43 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "EV": 112347.23,
+      "PE": 11.39,
+      "EPS": 879.59,
+      "PBV": 1.52,
+      "COGS": 38.89,
+      "MCAP": 111493.66,
+      "ROA_TTM": 11.491040753557362,
+      "ROE_TTM": 11.1507,
+      "TTMAson": 202603,
+      "co_code": 50,
+      "DIVYIELD": 1.95,
+      "EBIT_TTM": 10057.359999999999,
+      "NetSales": 1069.58,
+      "ROCE_TTM": 11.666,
+      "BookValue": 6572.9697188,
+      "Netprofit": 9636.75,
+      "EBITDA_TTM": 10089.27,
+      "EPSDiluted": 732.93,
+      "Industry_PE": 18.77965002943859,
+      "EV_Sales_TTM": 105.03864133585147,
+      "PEGRatio_TTM": 0.5448146487545071,
+      "EV_EBITDA_TTM": 11.135318016070537,
+      "AnnualDividend": 2170.155,
+      "Debt_Equity_TTM": 0.0001,
+      "CurrentRatio_TTM": 1.4509,
+      "LongtermDebt_TTM": 9.62,
+      "AssetTurnover_TTM": 0.012555611210623728,
+      "EBITDA_Margin_TTM": 943.2926943286152,
+      "SharesOutstanding": 111293510,
+      "ShorttermDebt_TTM": 0.0,
+      "NetDebt_EBITDA_TTM": -0.002208286625295983,
+      "NetIncomeMargin_TTM": 900.984498588231,
+      "GrossIncomeMargin_TTM": 943.22537818583,
+      "Sales_TotalAssets_TTM": 0.012555611210623728,
+      "TotalShareHoldersEquity_TTM": 73150.57999999999
+    }
+  ]
+}

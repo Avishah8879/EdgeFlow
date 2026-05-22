@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "YRC": 202503.0,
+      "CASA": 0.0,
+      "co_code": 301.0,
+      "Cash_to_Deposits": 20.06,
+      "Loans_to_Deposits": 0.0,
+      "Credit_to_Deposits": 0.0,
+      "IncLoan_to_Deposit": 31676.08,
+      "Investment_toDeposits": 150.89,
+      "Interestincome_to_Totalfunds": 0.0,
+      "InterestExpended_to_Totalfunds": 0.0,
+      "InterestExpended_to_Interestearned": 0.0
+    }
+  ]
+}

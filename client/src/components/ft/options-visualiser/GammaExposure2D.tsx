@@ -22,14 +22,24 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
     );
   }, [exposureData]);
 
-  // Format time series for chart - use Date objects for proper Plotly time axis
+  // Format time series for chart - use Date objects for proper Plotly time axis.
+  // Straddle values may be null on bars where neither leg has printed yet
+  // (typical of 09:15 IST). Pass null through so Plotly skips those points
+  // — the line picks up at the first minute with real prints.
   const formattedTimeSeries = useMemo(() => {
-    if (!timeSeriesData?.data) return { times: [] as Date[], values: [] as number[] };
+    if (!timeSeriesData?.data) {
+      return {
+        times: [] as Date[],
+        gxoiValues: [] as number[],
+        straddleValues: [] as (number | null)[],
+      };
+    }
 
     const times = timeSeriesData.data.map((point) => new Date(point.timestamp));
-    const values = timeSeriesData.data.map((point) => point.atm_gxoi);
+    const gxoiValues = timeSeriesData.data.map((point) => point.atm_gxoi);
+    const straddleValues = timeSeriesData.data.map((point) => point.atm_straddle);
 
-    return { times, values };
+    return { times, gxoiValues, straddleValues };
   }, [timeSeriesData]);
 
   if (isLoading) {
@@ -59,6 +69,14 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
   const gxoiValues = filteredExposure.map((item) => item.net_gxoi);
   const gexValues = filteredExposure.map((item) => item.net_gex);
   const vegaValues = filteredExposure.map((item) => item.net_vega);
+
+  // Force Plotly to redraw on every new fetch. react-plotly.js's diff
+  // sometimes skips redraws on appended-only time series, leaving the chart
+  // stale until the page is reloaded. Bumping `revision` makes Plotly.react()
+  // commit the new traces regardless.
+  const revision =
+    (exposureData.timestamp ? Date.parse(exposureData.timestamp) : 0) +
+    (timeSeriesData?.data?.length ?? 0);
 
   return (
     <div className="flex flex-col gap-2 p-2 overflow-auto">
@@ -90,8 +108,9 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
       </div>
 
       {/* Plotly Charts */}
-      <div className="h-[900px] rounded border border-border overflow-hidden">
+      <div className="h-[1100px] rounded border border-border overflow-hidden">
         <Plot
+          revision={revision}
           data={[
             // Trace 0: GxOI (Net CE - PE) - Row 1
             {
@@ -133,13 +152,25 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
             {
               type: 'scatter' as const,
               x: formattedTimeSeries.times,
-              y: formattedTimeSeries.values,
+              y: formattedTimeSeries.gxoiValues,
               mode: 'lines+markers' as const,
               line: { color: 'white', width: 2 },
               marker: { color: 'white', size: 4 },
               name: 'ATM GxOI',
               xaxis: 'x4',
               yaxis: 'y4',
+            },
+            // Trace 4: ATM Straddle Time Series - Row 5
+            {
+              type: 'scatter' as const,
+              x: formattedTimeSeries.times,
+              y: formattedTimeSeries.straddleValues,
+              mode: 'lines+markers' as const,
+              line: { color: '#f59e0b', width: 2 },
+              marker: { color: '#f59e0b', size: 4 },
+              name: 'ATM Straddle',
+              xaxis: 'x5',
+              yaxis: 'y5',
             },
           ]}
           layout={{
@@ -150,15 +181,15 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
             font: { color: '#38bdf8', family: 'monospace', size: 10 },
             showlegend: false,
 
-            // Grid layout: 4 rows
+            // Grid layout: 5 rows
             grid: {
-              rows: 4,
+              rows: 5,
               columns: 1,
               pattern: 'independent' as const,
               roworder: 'top to bottom' as const,
             },
 
-            // Row 1: GxOI (top 25%)
+            // Row 1: GxOI
             xaxis: {
               domain: [0, 1],
               anchor: 'y',
@@ -168,7 +199,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               zerolinecolor: 'rgba(128, 128, 128, 0.5)',
             },
             yaxis: {
-              domain: [0.78, 1],
+              domain: [0.83, 1],
               anchor: 'x',
               title: { text: 'GxOI (Net CE - PE)', font: { color: '#38bdf8', size: 10 } },
               tickfont: { color: '#38bdf8', size: 9 },
@@ -186,7 +217,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               zerolinecolor: 'rgba(128, 128, 128, 0.5)',
             },
             yaxis2: {
-              domain: [0.53, 0.74],
+              domain: [0.63, 0.79],
               anchor: 'x2',
               title: { text: 'GEX (Rs)', font: { color: '#38bdf8', size: 10 } },
               tickfont: { color: '#38bdf8', size: 9 },
@@ -194,7 +225,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               zerolinecolor: 'rgba(128, 128, 128, 0.5)',
             },
 
-            // Row 3: VxOI (Vega Exposure)
+            // Row 3: Vega
             xaxis3: {
               domain: [0, 1],
               anchor: 'y3',
@@ -204,7 +235,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               zerolinecolor: 'rgba(128, 128, 128, 0.5)',
             },
             yaxis3: {
-              domain: [0.28, 0.49],
+              domain: [0.43, 0.59],
               anchor: 'x3',
               title: { text: 'Vega (CE - PE)', font: { color: '#a855f7', size: 10 } },
               tickfont: { color: '#a855f7', size: 9 },
@@ -212,25 +243,42 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               zerolinecolor: 'rgba(128, 128, 128, 0.5)',
             },
 
-            // Row 4: Time Series
+            // Row 4: ATM GxOI Time Series
             xaxis4: {
               type: 'date',
               domain: [0, 1],
               anchor: 'y4',
-              title: { text: 'Time', font: { color: '#38bdf8', size: 10 } },
               tickfont: { color: '#38bdf8', size: 9 },
-              tickformat: '%H:%M\n%b %d',
+              tickformat: '%H:%M',
               gridcolor: 'rgba(128, 128, 128, 0.3)',
             },
             yaxis4: {
-              domain: [0, 0.22],
+              domain: [0.23, 0.39],
               anchor: 'x4',
               title: { text: 'ATM GxOI', font: { color: '#38bdf8', size: 10 } },
               tickfont: { color: '#38bdf8', size: 9 },
               gridcolor: 'rgba(128, 128, 128, 0.3)',
             },
 
-            // Vertical spot price lines on charts 1, 2, and 3
+            // Row 5: ATM Straddle Time Series
+            xaxis5: {
+              type: 'date',
+              domain: [0, 1],
+              anchor: 'y5',
+              title: { text: 'Time (IST)', font: { color: '#38bdf8', size: 10 } },
+              tickfont: { color: '#38bdf8', size: 9 },
+              tickformat: '%H:%M\n%b %d',
+              gridcolor: 'rgba(128, 128, 128, 0.3)',
+            },
+            yaxis5: {
+              domain: [0, 0.19],
+              anchor: 'x5',
+              title: { text: 'ATM Straddle (Rs)', font: { color: '#f59e0b', size: 10 } },
+              tickfont: { color: '#f59e0b', size: 9 },
+              gridcolor: 'rgba(128, 128, 128, 0.3)',
+            },
+
+            // Vertical spot price lines on the three strike-axis rows
             shapes: [
               {
                 type: 'line',
@@ -238,7 +286,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
                 yref: 'paper',
                 x0: spot,
                 x1: spot,
-                y0: 0.78,
+                y0: 0.83,
                 y1: 1,
                 line: { color: 'yellow', dash: 'dot', width: 1 },
               },
@@ -248,8 +296,8 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
                 yref: 'paper',
                 x0: spot,
                 x1: spot,
-                y0: 0.53,
-                y1: 0.74,
+                y0: 0.63,
+                y1: 0.79,
                 line: { color: 'yellow', dash: 'dot', width: 1 },
               },
               {
@@ -258,8 +306,8 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
                 yref: 'paper',
                 x0: spot,
                 x1: spot,
-                y0: 0.28,
-                y1: 0.49,
+                y0: 0.43,
+                y1: 0.59,
                 line: { color: 'yellow', dash: 'dot', width: 1 },
               },
             ],
@@ -282,7 +330,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
                 showarrow: false,
                 x: 0.5,
                 xref: 'paper',
-                y: 0.76,
+                y: 0.81,
                 yref: 'paper',
                 xanchor: 'center',
               },
@@ -292,17 +340,27 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
                 showarrow: false,
                 x: 0.5,
                 xref: 'paper',
-                y: 0.51,
+                y: 0.61,
                 yref: 'paper',
                 xanchor: 'center',
               },
               {
-                text: `GxOI_ATM (Time Series)${timeSeriesData?.is_market_open ? ' ● LIVE' : ''}`,
+                text: `GxOI_ATM (1-min, intraday)${timeSeriesData?.is_market_open ? ' ● LIVE' : ''}`,
                 font: { color: timeSeriesData?.is_market_open ? '#22c55e' : '#38bdf8', size: 11 },
                 showarrow: false,
                 x: 0.5,
                 xref: 'paper',
-                y: 0.24,
+                y: 0.41,
+                yref: 'paper',
+                xanchor: 'center',
+              },
+              {
+                text: `ATM Straddle (1-min, intraday)${timeSeriesData?.is_market_open ? ' ● LIVE' : ''}`,
+                font: { color: timeSeriesData?.is_market_open ? '#22c55e' : '#f59e0b', size: 11 },
+                showarrow: false,
+                x: 0.5,
+                xref: 'paper',
+                y: 0.21,
                 yref: 'paper',
                 xanchor: 'center',
               },

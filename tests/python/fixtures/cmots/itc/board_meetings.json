@@ -1,0 +1,42 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "isin": "INE154A01025",
+      "bmdate": "2025-05-22T00:00:00",
+      "symbol": "ITC",
+      "co_code": 301.0,
+      "co_name": "ITC Ltd",
+      "description": "ITC Ltdhas informed BSE that the meeting of the Board of Directors of the Company is scheduled on 22/05/2025 inter alia to consider and approve Audited Financial Results for FY 2024-25 and recommend Final Dividend for FY 2024-25\r\n\r\nFinal Dividend of Rs. 7.85 per share\r\n\r\nRecommendation for re-appointment of Independent Director\r\n\r\n(As per BSE Announcement Dated on 22/05/2025)",
+      "announcementdate": "2025-05-08T00:00:00"
+    },
+    {
+      "isin": "INE154A01025",
+      "bmdate": "2025-08-01T00:00:00",
+      "symbol": "ITC",
+      "co_code": 301.0,
+      "co_name": "ITC Ltd",
+      "description": "ITC Ltdhas informed BSE that the meeting of the Board of Directors of the Company is scheduled on 01/08/2025 inter alia to consider and approve the Unaudited Standalone and Consolidated Financial Results of the Company along with the Segment-wise Revenue Results Assets and Liabilities for the Quarter ended 30th June 2025.\r\n\r\nUnaudited Financial Results for the quarter ended 30th June, 2025\r\n\r\nScheme of Amalgamation of Sresta Natural Bioproducts Private Limited and Wimco Limited with ITC Limited\r\n\r\n(As per BSE Announcement Dated on 01/08/2025)",
+      "announcementdate": "2025-07-18T00:00:00"
+    },
+    {
+      "isin": "INE154A01025",
+      "bmdate": "2025-10-30T00:00:00",
+      "symbol": "ITC",
+      "co_code": 301.0,
+      "co_name": "ITC Ltd",
+      "description": "ITC Ltdhas informed BSE that the meeting of the Board of Directors of the Company is scheduled on 30/10/2025 inter alia to consider and approve In terms of Regulation 29 of the SEBI (Listing Obligations and Disclosure Requirements) Regulations 2015 we write to advise that a Meeting of the Board of Directors of the Company has been convened for Thursday 30th October 2025 inter alia to consider and approve the Unaudited Standalone and Consolidated Financial Results of the Company along with the Segment-wise Revenue Results Assets and Liabilities for the Quarter and Six Months ended 30th September 2025 the Balance Sheet as on that date the Statement of Cash Flows \r\n\r\nOutcome of Board Meeting - Financial Results and Voluntary Delisting from Calcutta Stock Exchange \r\n\r\n(As Per BSE Announcement Dated On : 30.10.2025)\r\nfor the half year ended on that date and the Notes thereto.",
+      "announcementdate": "2025-10-16T00:00:00"
+    },
+    {
+      "isin": "INE154A01025",
+      "bmdate": "2026-01-29T00:00:00",
+      "symbol": "ITC",
+      "co_code": 301.0,
+      "co_name": "ITC Ltd",
+      "description": "ITC Ltdhas informed BSE that the meeting of the Board of Directors of the Company is scheduled on 29/01/2026 inter alia to consider and approve the Unaudited Standalone and Consolidated Financial Results of the Company along with the Segment-wise Revenue Results Assets and Liabilities for the Quarter and Nine Months ended 31st December 2025 and consider declaration of Interim Dividend for the financial year ending on 31st March 2026.\r\n\r\nDeclared Interim Dividend of f 6.50 per Ordinary Share of f 1/- each for the financial year ending on 31st March, 2026; such Dividend will be paid between Thursday, 26th February, 2026 and Saturday, 28th February, 2026 to those Members of the Company entitled thereto.\r\n\r\n(b) Fixed Wednesday, 4th February, 2026 as the Record Date for the purpose of determining entitlement of the Members for such Interim Dividend.\r\n\r\n(As Per NSE Annpuncement Dated on 29.01.2026)",
+      "announcementdate": "2026-01-15T00:00:00"
+    }
+  ]
+}

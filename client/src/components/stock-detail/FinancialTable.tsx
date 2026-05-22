@@ -28,6 +28,14 @@ interface FinancialTableProps {
   data: Record<string, any> | null | undefined;
   rows: RowDef[];
   emptyMessage: string;
+  /**
+   * Visual density. Defaults to "default" (existing behavior — no caller
+   * changes required). "narrow" applies the design's compact-tabular
+   * treatment: smaller padding (7px/9px), 12px font, sticky-left name
+   * column, last-period column highlighted (`.cur` gold bg @ varying
+   * opacity per row kind), and `kind`-driven row backgrounds.
+   */
+  density?: "default" | "narrow";
 }
 
 // Find which children of a parent row are actually present in any period's data.
@@ -48,14 +56,17 @@ function presentChildren(
   return expectedChildren.filter((c) => seen.has(c));
 }
 
-export function FinancialTable({ data, rows, emptyMessage }: FinancialTableProps) {
+export function FinancialTable({ data, rows, emptyMessage, density = "default" }: FinancialTableProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const narrow = density === "narrow";
 
   if (!data || Object.keys(data).length === 0) {
     return <div className="text-sm text-muted-foreground py-6 text-center">{emptyMessage}</div>;
   }
 
   const periods = Object.keys(data).sort();
+  // In narrow mode the LAST period is the "current" column (visually highlighted).
+  const currentPeriod = narrow && periods.length > 0 ? periods[periods.length - 1] : null;
 
   const toggle = (key: string) =>
     setExpanded((prev) => {
@@ -89,18 +100,48 @@ export function FinancialTable({ data, rows, emptyMessage }: FinancialTableProps
   // Drop rows whose canonical field has no data anywhere AND no children present
   const visible = resolved.filter((r) => r.resolvedField != null || r.children.length > 0);
 
+  // Narrow-mode cell/text classes — tighter padding (7px/9px ≈ py-1 px-2.5)
+  // and 12px font (text-xs). Default mode preserves existing 8px / 13px sizing.
+  const cellPaddingY = narrow ? "py-1" : "py-1.5";
+  const cellPaddingX = narrow ? "px-2.5" : "px-3";
+  const fontSizeClass = narrow ? "text-xs" : "text-sm";
+
+  // Per design extraction, current-column gold opacity scales with row kind:
+  //   normal → @ 0.05, subtotal → @ 0.12, highlight → @ 0.15.
+  const curBgFor = (kind?: "sub" | "hl") => {
+    if (!narrow) return "";
+    if (kind === "hl") return "bg-[hsl(var(--brand-gold)/0.15)]";
+    if (kind === "sub") return "bg-[hsl(var(--brand-gold)/0.12)]";
+    return "bg-[hsl(var(--brand-gold)/0.05)]";
+  };
+
+  // Row-bg per kind (narrow only — default mode preserves zebra stripes).
+  const rowBgFor = (kind?: "sub" | "hl", idx?: number) => {
+    if (!narrow) return idx != null && idx % 2 === 1 ? "bg-muted/20" : "bg-card";
+    if (kind === "hl") return "bg-[hsl(var(--brand-navy)/0.06)] border-t border-border/70";
+    if (kind === "sub") return "bg-muted/40";
+    return idx != null && idx % 2 === 1 ? "bg-muted/20" : "bg-card";
+  };
+
   return (
     <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
-      <table className="w-full text-sm border-collapse">
+      <table className={cn("w-full border-collapse", fontSizeClass)}>
         <thead>
           <tr className="border-b border-border/70 bg-card sticky top-0">
-            <th className="text-left py-2 pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap text-xs uppercase tracking-wide">
+            <th className={cn("text-left pr-3 font-medium text-muted-foreground sticky left-0 bg-card whitespace-nowrap text-xs uppercase tracking-wide z-10", cellPaddingY)}>
               {/* parent column header intentionally empty */}
             </th>
             {periods.map((p) => (
               <th
                 key={p}
-                className="text-right py-2 px-3 font-medium text-muted-foreground whitespace-nowrap text-xs uppercase tracking-wide"
+                className={cn(
+                  "text-right font-medium whitespace-nowrap text-xs uppercase tracking-wide",
+                  cellPaddingY,
+                  cellPaddingX,
+                  p === currentPeriod
+                    ? "text-[hsl(var(--brand-gold))] bg-[hsl(var(--brand-gold)/0.08)] font-semibold"
+                    : "text-muted-foreground",
+                )}
               >
                 {p}
               </th>
@@ -113,22 +154,26 @@ export function FinancialTable({ data, rows, emptyMessage }: FinancialTableProps
             const isOpen = expanded.has(def.field);
             const fieldForRender = resolvedField ?? def.field;
             const hasExpandable = children.length > 0;
-            const stripeBg = idx % 2 === 1 ? "bg-muted/20" : "bg-card";
+            const kindBg = rowBgFor(def.kind, idx);
+            const isBold = def.bold || def.kind === "sub" || def.kind === "hl";
 
             return (
               <Fragment key={def.field}>
                 <tr
                   className={cn(
                     "border-b border-border/30 last:border-b-0 transition-colors",
-                    idx % 2 === 1 && "bg-muted/20",
-                    "hover:bg-muted/40",
+                    kindBg,
+                    !narrow && "hover:bg-muted/40",
+                    narrow && def.kind !== "hl" && def.kind !== "sub" && "hover:bg-muted/30",
                   )}
                 >
                   <td
                     className={cn(
-                      "py-1.5 pr-3 sticky left-0 whitespace-nowrap text-foreground",
-                      stripeBg,
-                      def.bold && "font-semibold",
+                      "pr-3 sticky left-0 whitespace-nowrap text-foreground",
+                      cellPaddingY,
+                      kindBg, // sticky-left bg matches row bg so it doesn't show transparent
+                      isBold && "font-semibold",
+                      def.kind === "hl" && narrow && "text-[hsl(var(--brand-navy))] dark:text-foreground",
                     )}
                   >
                     <span className="inline-flex items-center gap-1.5">
@@ -148,17 +193,24 @@ export function FinancialTable({ data, rows, emptyMessage }: FinancialTableProps
                       {def.field}
                     </span>
                   </td>
-                  {periods.map((p) => (
-                    <td
-                      key={p}
-                      className={cn(
-                        "text-right py-1.5 px-3 font-mono tabular-nums whitespace-nowrap",
-                        def.bold && "font-semibold",
-                      )}
-                    >
-                      {formatTableCell(resolvedField ? data[p]?.[resolvedField] : null, fieldForRender)}
-                    </td>
-                  ))}
+                  {periods.map((p) => {
+                    const isCurrent = narrow && p === currentPeriod;
+                    return (
+                      <td
+                        key={p}
+                        className={cn(
+                          "text-right font-mono tabular-nums whitespace-nowrap",
+                          cellPaddingY,
+                          cellPaddingX,
+                          isBold && "font-semibold",
+                          isCurrent && curBgFor(def.kind),
+                          isCurrent && def.kind === "hl" && "text-[hsl(var(--brand-navy))] dark:text-[hsl(var(--brand-gold))]",
+                        )}
+                      >
+                        {formatTableCell(resolvedField ? data[p]?.[resolvedField] : null, fieldForRender)}
+                      </td>
+                    );
+                  })}
                 </tr>
 
                 {hasExpandable && isOpen &&
@@ -169,22 +221,35 @@ export function FinancialTable({ data, rows, emptyMessage }: FinancialTableProps
                     >
                       <td
                         className={cn(
-                          "py-1.5 pr-3 sticky left-0 whitespace-nowrap bg-muted/30 text-muted-foreground",
+                          "pr-3 sticky left-0 whitespace-nowrap bg-muted/30 text-muted-foreground",
+                          cellPaddingY,
                         )}
                       >
-                        <span className="inline-flex items-center gap-1.5 pl-6 text-[13px]">
+                        <span className={cn(
+                          "inline-flex items-center gap-1.5 pl-6",
+                          narrow ? "text-[11px]" : "text-[13px]",
+                        )}>
                           <span className="text-border">·</span>
                           {child}
                         </span>
                       </td>
-                      {periods.map((p) => (
-                        <td
-                          key={p}
-                          className="text-right py-1.5 px-3 font-mono tabular-nums whitespace-nowrap text-[13px] text-muted-foreground"
-                        >
-                          {formatTableCell(data[p]?.[child], child)}
-                        </td>
-                      ))}
+                      {periods.map((p) => {
+                        const isCurrent = narrow && p === currentPeriod;
+                        return (
+                          <td
+                            key={p}
+                            className={cn(
+                              "text-right font-mono tabular-nums whitespace-nowrap text-muted-foreground",
+                              cellPaddingY,
+                              cellPaddingX,
+                              narrow ? "text-[11px]" : "text-[13px]",
+                              isCurrent && "bg-[hsl(var(--brand-gold)/0.05)]",
+                            )}
+                          >
+                            {formatTableCell(data[p]?.[child], child)}
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))}
               </Fragment>

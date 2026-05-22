@@ -1,0 +1,36 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "co_code": 50.0,
+      "Acq_Sale": "ACQ",
+      "SecurityName": "BAJAJ HOLDINGS & INVESTMENT LTD.",
+      "ModeofBuy_Sale": "Market",
+      "TransactionPeriod": "10/09/2024",
+      "TransactedQuantity": "7500",
+      "ExchangeReportedDate": "2024-09-12T00:00:00",
+      "NameofAcquirer_Seller": "PPFAS Mutual Fund",
+      "Promoter_PromoterGroup": "No",
+      "TransactedQuantity_PerChange": "0",
+      "HoldingAfterTransactionQuantity": "5567692",
+      "HoldingAfterTransaction_PerChange_TotalCapital": "5",
+      "HoldingAfterTransaction_PerChange_DilutedCapital": "5"
+    },
+    {
+      "co_code": 50.0,
+      "Acq_Sale": "SALE",
+      "SecurityName": "BAJAJ HOLDINGS & INVESTMENT LTD.",
+      "ModeofBuy_Sale": "Market",
+      "TransactionPeriod": "26/09/2023",
+      "TransactedQuantity": "60000",
+      "ExchangeReportedDate": "2023-09-28T00:00:00",
+      "NameofAcquirer_Seller": "ACACIA Conservation Fund LP & Others",
+      "Promoter_PromoterGroup": "No",
+      "TransactedQuantity_PerChange": "0",
+      "HoldingAfterTransactionQuantity": "3440302",
+      "HoldingAfterTransaction_PerChange_TotalCapital": "0",
+      "HoldingAfterTransaction_PerChange_DilutedCapital": "3.09"
+    }
+  ]
+}

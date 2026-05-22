@@ -1,0 +1,46 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "BNK_NAME": "Bank Of America N A           "
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "BNK_NAME": "Bank of Baroda"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "BNK_NAME": "Bank of India"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "BNK_NAME": "Canara Bank"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "BNK_NAME": "Central Bank of India"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "BNK_NAME": "Citibank                      "
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "BNK_NAME": "Credit Agricole CIB"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "BNK_NAME": "Deutsche Bank"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "BNK_NAME": "HDFC Bank Ltd"
+    },
+    {
+      "LNAME": "Reliance Industries Ltd",
+      "BNK_NAME": "HSBC BANK                     "
+    }
+  ]
+}

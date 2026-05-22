@@ -1,0 +1,76 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "YRC": 202603.0,
+      "EQTY": 1252.946823,
+      "LNAME": "ITC Ltd",
+      "REMARKS": "Issued under ESOP Scheme",
+      "EQTYASON": "2026.03.18  "
+    },
+    {
+      "YRC": 202601.0,
+      "EQTY": 1252.922938,
+      "LNAME": "ITC Ltd",
+      "REMARKS": "Issued under ESOP Scheme",
+      "EQTYASON": "2026.01.16  "
+    },
+    {
+      "YRC": 202512.0,
+      "EQTY": 1252.895977,
+      "LNAME": "ITC Ltd",
+      "REMARKS": "Issued under ESOP Scheme",
+      "EQTYASON": "2025.12.19  "
+    },
+    {
+      "YRC": 202511.0,
+      "EQTY": 1252.876456,
+      "LNAME": "ITC Ltd",
+      "REMARKS": "Issued under ESOP Scheme",
+      "EQTYASON": "2025.11.17  "
+    },
+    {
+      "YRC": 202510.0,
+      "EQTY": 1252.7837661,
+      "LNAME": "ITC Ltd",
+      "REMARKS": "Issued under ESOP Scheme",
+      "EQTYASON": "2025.10.15  "
+    },
+    {
+      "YRC": 202509.0,
+      "EQTY": 1252.713043,
+      "LNAME": "ITC Ltd",
+      "REMARKS": "Issued under ESOP Scheme",
+      "EQTYASON": "2025.09.17  "
+    },
+    {
+      "YRC": 202508.0,
+      "EQTY": 1252.6662921,
+      "LNAME": "ITC Ltd",
+      "REMARKS": "Issued under ESOP Scheme",
+      "EQTYASON": "2025.08.19  "
+    },
+    {
+      "YRC": 202507.0,
+      "EQTY": 1252.208176,
+      "LNAME": "ITC Ltd",
+      "REMARKS": "Issued under ESOP Scheme",
+      "EQTYASON": "2025.07.11  "
+    },
+    {
+      "YRC": 202507.0,
+      "EQTY": 1252.363144,
+      "LNAME": "ITC Ltd",
+      "REMARKS": "Issued under ESOP Scheme",
+      "EQTYASON": "2025.07.22  "
+    },
+    {
+      "YRC": 202507.0,
+      "EQTY": 1252.537309,
+      "LNAME": "ITC Ltd",
+      "REMARKS": "Issued under ESOP Scheme",
+      "EQTYASON": "2025.07.31  "
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "yrc": 202606.0,
+      "EST_CODE": 50.0,
+      "TotalValue": 139259.3711845,
+      "InvestorName": "Premji And Associates"
+    }
+  ]
+}

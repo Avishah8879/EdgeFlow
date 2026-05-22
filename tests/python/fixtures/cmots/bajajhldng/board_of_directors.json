@@ -1,0 +1,78 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "slno": 2.0,
+      "year": 2025.0,
+      "dir_desg": "Vice Chairman",
+      "dir_name": "Rajiv Bajaj"
+    },
+    {
+      "slno": 3.0,
+      "year": 2025.0,
+      "dir_desg": "Non Executive Director",
+      "dir_name": "Manish Kejriwal"
+    },
+    {
+      "slno": 4.0,
+      "year": 2025.0,
+      "dir_desg": "Managing Director & Chief Executive Officer",
+      "dir_name": "Sanjiv Bajaj"
+    },
+    {
+      "slno": 5.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "Naushad Forbes"
+    },
+    {
+      "slno": 7.0,
+      "year": 2025.0,
+      "dir_desg": "Vice Chairman",
+      "dir_name": "Niraj Bajaj"
+    },
+    {
+      "slno": 8.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "Pradip Panalal Shah"
+    },
+    {
+      "slno": 9.0,
+      "year": 2025.0,
+      "dir_desg": "Chairman (Non-Executive)",
+      "dir_name": "Shekhar Bajaj"
+    },
+    {
+      "slno": 10.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "Arindam Bhattacharya"
+    },
+    {
+      "slno": 11.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "Vidya Rajiv Yeravdekar"
+    },
+    {
+      "slno": 12.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "Abhinav Bindra"
+    },
+    {
+      "slno": 13.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "SMITA MANKAD"
+    },
+    {
+      "slno": 14.0,
+      "year": 2025.0,
+      "dir_desg": "Company Sec. & Compli. Officer",
+      "dir_name": "Saurabh Erande"
+    }
+  ]
+}

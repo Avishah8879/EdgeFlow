@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "R1": 304.7229,
+      "R2": 306.1271,
+      "R3": 308.4,
+      "S1": 300.1771,
+      "S2": 298.7729,
+      "S3": 296.5,
+      "co_code": 301.0,
+      "co_name": "ITC",
+      "CurrTime": "2026-05-13T00:00:00",
+      "currprice": 304.35,
+      "PivotPoint": 302.45
+    }
+  ]
+}

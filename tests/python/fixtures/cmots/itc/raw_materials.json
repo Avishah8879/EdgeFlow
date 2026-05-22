@@ -1,0 +1,126 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "ITC Ltd",
+      "VALUE": 23440.12,
+      "PRNAME": "Raw Material Consumed",
+      "SYMBOL": "ITC",
+      "CO_CODE": 301.0,
+      "PRCODEN": "00011024"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "ITC Ltd",
+      "VALUE": 8936.22,
+      "PRNAME": "Purchase of Stock in Trade",
+      "SYMBOL": "ITC",
+      "CO_CODE": 301.0,
+      "PRCODEN": "00002024"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "ITC Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Other Goods - Purchases",
+      "SYMBOL": "ITC",
+      "CO_CODE": 301.0,
+      "PRCODEN": "00002024"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "ITC Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Others -Purchases",
+      "SYMBOL": "ITC",
+      "CO_CODE": 301.0,
+      "PRCODEN": "00002024"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "ITC Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Miscellaneous",
+      "SYMBOL": "ITC",
+      "CO_CODE": 301.0,
+      "PRCODEN": "00011024"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "ITC Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Other Raw Material",
+      "SYMBOL": "ITC",
+      "CO_CODE": 301.0,
+      "PRCODEN": "00011024"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "ITC Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Sale of Waste",
+      "SYMBOL": "ITC",
+      "CO_CODE": 301.0,
+      "PRCODEN": "00020024"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "Ton",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "ITC Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Branded Packaged Food Purchase",
+      "SYMBOL": "ITC",
+      "CO_CODE": 301.0,
+      "PRCODEN": "00026024"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "ITC Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Packing Materials",
+      "SYMBOL": "ITC",
+      "CO_CODE": 301.0,
+      "PRCODEN": "00026024"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "MT",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "ITC Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Coffee",
+      "SYMBOL": "ITC",
+      "CO_CODE": 301.0,
+      "PRCODEN": "09010000"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "CPM": 82.72,
+      "YRC": 202503.0,
+      "PATM": 80.73,
+      "EBITM": 88.37,
+      "PBIDTIM": 90.36,
+      "co_code": 50.0,
+      "PreTaxMargin": 93.38630459356017
+    }
+  ]
+}

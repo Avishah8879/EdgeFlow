@@ -1,0 +1,446 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "Name": "Srichakra Commercials Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 11.13,
+      "NOOFshares": 1479199658.0
+    },
+    {
+      "Name": "Devarshi Commercials Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 8.21,
+      "NOOFshares": 1091138920.0
+    },
+    {
+      "Name": "Karuna Commercials Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 8.21,
+      "NOOFshares": 1091138920.0
+    },
+    {
+      "Name": "Tattvam Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 8.21,
+      "NOOFshares": 1091138920.0
+    },
+    {
+      "Name": "Life Insurance Corporation Of India",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 6.8,
+      "NOOFshares": 904443047.0
+    },
+    {
+      "Name": "Reliance Industries Holding Private Ltd",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 4.57,
+      "NOOFshares": 608030142.0
+    },
+    {
+      "Name": "Reliance Industrial Investments And Holdings Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 3.63,
+      "NOOFshares": 481884012.0
+    },
+    {
+      "Name": "Reliance Services And Holdings Limited A Company Controlled By Petroleum Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 2.59,
+      "NOOFshares": 343765640.0
+    },
+    {
+      "Name": "Sbi Mutual Funds",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 2.55,
+      "NOOFshares": 338619667.0
+    },
+    {
+      "Name": "Samarjit Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 1.88,
+      "NOOFshares": 249250548.0
+    },
+    {
+      "Name": "Icici Prudential Mutual Funds",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 1.61,
+      "NOOFshares": 213405338.0
+    },
+    {
+      "Name": "Nps Trust",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 1.42,
+      "NOOFshares": 188920787.0
+    },
+    {
+      "Name": "K D Ambani",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.24,
+      "NOOFshares": 31482644.0
+    },
+    {
+      "Name": "Shreeji Comtrade Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.22,
+      "NOOFshares": 28675930.0
+    },
+    {
+      "Name": "Shrikrishna Tradecom Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.22,
+      "NOOFshares": 28675930.0
+    },
+    {
+      "Name": "Svar Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.2,
+      "NOOFshares": 27178734.0
+    },
+    {
+      "Name": "Mukesh D Ambani",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.12,
+      "NOOFshares": 16104040.0
+    },
+    {
+      "Name": "Nita M Ambani",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.12,
+      "NOOFshares": 16104042.0
+    },
+    {
+      "Name": "Isha M Ambani",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.12,
+      "NOOFshares": 16104042.0
+    },
+    {
+      "Name": "Akash M Ambani",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.12,
+      "NOOFshares": 16104042.0
+    },
+    {
+      "Name": "Anant M Ambani",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.12,
+      "NOOFshares": 16104042.0
+    },
+    {
+      "Name": "Reliance Welfare Association",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.08,
+      "NOOFshares": 10689994.0
+    },
+    {
+      "Name": "Vasuprada Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.02,
+      "NOOFshares": 2631850.0
+    },
+    {
+      "Name": "Kamalakar Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 426.0
+    },
+    {
+      "Name": "Narahari Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 426.0
+    },
+    {
+      "Name": "Exotic Officeinfra Private Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 55348.0
+    },
+    {
+      "Name": "Carat Holdings And Trading Co Pvt Ltd",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 21902.0
+    },
+    {
+      "Name": "Neutron Enterprises Private Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 3698.0
+    },
+    {
+      "Name": "Futura Commercials Private Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 3628.0
+    },
+    {
+      "Name": "Chakradev Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 432.0
+    },
+    {
+      "Name": "Janardan Commercials Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 432.0
+    },
+    {
+      "Name": "Elakshi Commercials Private Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 216.0
+    },
+    {
+      "Name": "Pinakin Commercials Private Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 216.0
+    },
+    {
+      "Name": "Abhayaprada Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 430.0
+    },
+    {
+      "Name": "Adisesh Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 430.0
+    },
+    {
+      "Name": "Ajitesh Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 430.0
+    },
+    {
+      "Name": "Badri Commercials Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 430.0
+    },
+    {
+      "Name": "Bhuvanesh Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 430.0
+    },
+    {
+      "Name": "Chakradhar Commercials Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 432.0
+    },
+    {
+      "Name": "Chakresh Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 432.0
+    },
+    {
+      "Name": "Chhatrabhuj Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 432.0
+    },
+    {
+      "Name": "Harinarayan Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 432.0
+    },
+    {
+      "Name": "Kankhal Trading Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 430.0
+    },
+    {
+      "Name": "Pavana Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 430.0
+    },
+    {
+      "Name": "Pitambar Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 430.0
+    },
+    {
+      "Name": "Rishikesh Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 430.0
+    },
+    {
+      "Name": "Shripal Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 432.0
+    },
+    {
+      "Name": "Taran Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 430.0
+    },
+    {
+      "Name": "Trilokesh Commercials Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 430.0
+    },
+    {
+      "Name": "Vishatan Enterprises Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 432.0
+    },
+    {
+      "Name": "Reliance Life Sciences Private Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Sikka Ports & Terminals Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Jamnagar Utilities And Power Private Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Tiruttani Infralog Private Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Petroleum Trust Throu Trustees For Sole Beneficiary Reliance Industrial Investments And Holdings Ltd",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 476.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    }
+  ]
+}

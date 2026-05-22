@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "PE": 107.43,
+      "YRC": 202503.0,
+      "co_code": 50.0,
+      "EV_EBITDA": 95.93,
+      "Mcap_Sales": 86.73,
+      "DividendYield": 0.75,
+      "Price_BookValue": 7.16
+    }
+  ]
+}

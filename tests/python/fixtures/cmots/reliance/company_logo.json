@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "co_code": 476,
+      "Filepath": "https://complogosapi.cmots.com/complogodata/RelianceInds_29114129325_476.png",
+      "CompanyName": "Reliance Industries Ltd"
+    }
+  ]
+}
