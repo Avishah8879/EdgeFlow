@@ -1,20 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw, Search, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import {
   usePairMatrix,
   usePairTradingGroups,
   type GroupType,
   type PairMethod,
 } from '@/hooks/use-pair-trading';
+import { PairControlsBar, type View } from './PairControlsBar';
 import { PairMatrix } from './PairMatrix';
 import { PairChartView } from './PairChartView';
-
-type View = 'matrix' | 'chart';
 
 export function PairFeasibilityPanel() {
   const [groupType, setGroupType] = useState<GroupType>('sector');
@@ -82,6 +76,16 @@ export function PairFeasibilityPanel() {
     }
   };
 
+  const handleViewChart = () => {
+    if (selectedPair || (matrixQuery.data && matrixQuery.data.symbols.length >= 2)) {
+      if (!selectedPair && matrixQuery.data) {
+        const [x, y] = matrixQuery.data.symbols;
+        setSelectedPair({ x, y });
+      }
+      setView('chart');
+    }
+  };
+
   const handleCellClick = (x: string, y: string) => {
     setSelectedPair({ x, y });
     setView('chart');
@@ -106,141 +110,29 @@ export function PairFeasibilityPanel() {
 
   return (
     <div className="space-y-4">
-      <Card className="p-3 bg-card/50 border-primary/20">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search symbol"
-              value={symbolSearch}
-              onChange={(e) => setSymbolSearch(e.target.value)}
-              className="h-9 w-40"
-            />
-          </div>
-
-          <div>
-            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              Group Type
-            </Label>
-            <Select value={groupType} onValueChange={(v) => setGroupType(v as GroupType)}>
-              <SelectTrigger className="w-28 h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sector">Sector</SelectItem>
-                <SelectItem value="industry">Industry</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              {groupType === 'sector' ? 'Sector' : 'Industry'}
-            </Label>
-            <Select value={group} onValueChange={setGroup} disabled={availableGroups.length === 0}>
-              <SelectTrigger className="w-56 h-9">
-                <SelectValue
-                  placeholder={
-                    groupsQuery.isLoading
-                      ? 'Loading…'
-                      : groupsQuery.isError
-                      ? 'Failed to load'
-                      : availableGroups.length === 0
-                      ? `No ${groupType}s available`
-                      : 'Select group'
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {availableGroups.map((g) => (
-                  <SelectItem key={g} value={g}>
-                    {g}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              Method
-            </Label>
-            <Select value={method} onValueChange={(v) => setMethod(v as PairMethod)}>
-              <SelectTrigger className="w-40 h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="correlation">Correlation</SelectItem>
-                <SelectItem value="cointegration">Cointegration</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              Lookback (days)
-            </Label>
-            <Input
-              type="number"
-              min={10}
-              max={500}
-              value={lookbackInput}
-              onChange={(e) => setLookbackInput(e.target.value)}
-              className="w-24 h-9"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 ml-auto">
-            <Button onClick={handleApply} disabled={!group}>
-              Apply
-            </Button>
-            <Button variant="outline" onClick={handleReset}>
-              Reset
-            </Button>
-            <div className="inline-flex rounded-md border border-border overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setView('matrix')}
-                className={`px-3 py-2 text-sm ${
-                  view === 'matrix'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-transparent text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                Matrix
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (selectedPair || (matrixQuery.data && matrixQuery.data.symbols.length >= 2)) {
-                    if (!selectedPair && matrixQuery.data) {
-                      const [x, y] = matrixQuery.data.symbols;
-                      setSelectedPair({ x, y });
-                    }
-                    setView('chart');
-                  }
-                }}
-                className={`px-3 py-2 text-sm ${
-                  view === 'chart'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-transparent text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                Chart
-              </button>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => matrixQuery.refetch()}
-              disabled={matrixQuery.isFetching}
-              title="Refresh"
-            >
-              <RefreshCw className={`w-4 h-4 ${matrixQuery.isFetching ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
-        </div>
-      </Card>
+      <PairControlsBar
+        groupType={groupType}
+        onGroupTypeChange={setGroupType}
+        group={group}
+        onGroupChange={setGroup}
+        availableGroups={availableGroups}
+        groupsLoading={groupsQuery.isLoading}
+        groupsError={groupsQuery.isError}
+        method={method}
+        onMethodChange={setMethod}
+        lookbackInput={lookbackInput}
+        onLookbackInputChange={setLookbackInput}
+        symbolSearch={symbolSearch}
+        onSymbolSearchChange={setSymbolSearch}
+        onApply={handleApply}
+        onReset={handleReset}
+        applyDisabled={!group}
+        view={view}
+        onViewMatrix={() => setView('matrix')}
+        onViewChart={handleViewChart}
+        onRefresh={() => matrixQuery.refetch()}
+        isRefreshing={matrixQuery.isFetching}
+      />
 
       {matrixQuery.data?.truncated && (
         <div className="flex items-center gap-2 rounded-md border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-600 dark:text-yellow-400">

@@ -263,7 +263,7 @@ export default function EquityProSignup() {
     <>
       <SEO
         title="Sign Up - EquityPro"
-        description="Create your free EquityPro account to access AI-powered stock analysis, expert screener, and strategy backtesting tools for Indian stocks."
+        description="Create your free EquityPro account to access AI-powered stock analysis, technical screener, and strategy backtesting tools for Indian stocks."
         noIndex={true}
       />
 

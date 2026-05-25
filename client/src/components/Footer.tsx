@@ -20,7 +20,7 @@ export default function Footer() {
     {
       title: "Tools",
       links: [
-        { label: "Expert Screener", href: "/screener" },
+        { label: "Technical Screener", href: "/screener" },
         { label: "EquityPro AI ↗", href: getEquityProAiUrl(), external: true },
         { label: "Portfolio", href: "/portfolio" },
       ],

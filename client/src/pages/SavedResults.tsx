@@ -61,7 +61,7 @@ function EmptyState({ type }: { type: 'screener' | 'backtest' }) {
   const isScreener = type === 'screener';
   const Icon = isScreener ? Search : LineChart;
   const path = isScreener ? '/screener' : '/alpha-generation';
-  const label = isScreener ? 'Expert Screener' : 'Alpha Generation';
+  const label = isScreener ? 'Technical Screener' : 'Alpha Generation';
 
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-border bg-card">

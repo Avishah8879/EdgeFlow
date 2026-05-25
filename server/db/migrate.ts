@@ -62,7 +62,7 @@ async function createMigrationTable(pool: Pool): Promise<void> {
  */
 async function isMigrationApplied(pool: Pool, migrationName: string): Promise<boolean> {
   const result = await pool.query(
-    'SELECT id FROM migration_history WHERE migration_name = $1',
+    'SELECT id FROM migration_history WHERE migration_name = $1 AND success = true',
     [migrationName]
   );
   return result.rows.length > 0;
@@ -78,7 +78,12 @@ async function recordMigration(
   errorMessage?: string
 ): Promise<void> {
   await pool.query(
-    'INSERT INTO migration_history (migration_name, success, error_message) VALUES ($1, $2, $3)',
+    `INSERT INTO migration_history (migration_name, success, error_message)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (migration_name) DO UPDATE
+       SET success = EXCLUDED.success,
+           error_message = EXCLUDED.error_message,
+           applied_at = NOW()`,
     [migrationName, success, errorMessage]
   );
 }

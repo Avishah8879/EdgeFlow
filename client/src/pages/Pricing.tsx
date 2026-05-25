@@ -53,7 +53,7 @@ const PLANS: PlanDef[] = [
     ],
     locked: [
       "Strategy backtesting",
-      "Expert screener",
+      "Technical screener",
       "AI sentiment analysis",
       "Equity Pro AI chat",
     ],
@@ -73,7 +73,7 @@ const PLANS: PlanDef[] = [
       "Everything in Free",
       "100 coins / month included",
       "Strategy backtesting (5 coins / run)",
-      "Expert screener (2 coins / run)",
+      "Technical screener (2 coins / run)",
       "AI sentiment analysis (3 coins / run)",
       "Saved screener history",
       "Premium news depth",
@@ -130,7 +130,7 @@ const COMPARE: CompareSection[] = [
     title: "Research",
     rows: [
       { label: "Pre-built screeners", free: false, semi: true, pro: true },
-      { label: "Custom expert screener", free: false, semi: "2 coins / run", pro: "Unlimited" },
+      { label: "Custom technical screener", free: false, semi: "2 coins / run", pro: "Unlimited" },
       { label: "Strategy backtesting", free: false, semi: "5 coins / run", pro: "Unlimited" },
       { label: "Reverse DCF model", free: false, semi: true, pro: true },
       { label: "AI sentiment analysis", free: false, semi: "3 coins / run", pro: "Unlimited" },
@@ -543,7 +543,7 @@ export default function Pricing() {
               </span>
               <span>
                 <span className="font-mono font-bold tabular-nums text-foreground">2</span>{" "}
-                <span className="text-muted-foreground">coins · Expert screener</span>
+                <span className="text-muted-foreground">coins · Technical screener</span>
               </span>
               <span>
                 <span className="font-mono font-bold tabular-nums text-foreground">3</span>{" "}

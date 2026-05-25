@@ -995,7 +995,7 @@ export default function Profile() {
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span>Expert Screener</span>
+                          <span>Technical Screener</span>
                           <span>
                             {usageLimits.usage.screenerRuns} / {usageLimits.limits.screenerRunsPerHour}
                           </span>

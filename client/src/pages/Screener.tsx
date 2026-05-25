@@ -425,12 +425,12 @@ export default function Screener() {
         jsonLd={[
           generateFAQSchema(SCREENER_FAQS),
           generateSoftwareApplicationSchema(
-            'EquityPro Expert Screener - AI Stock Screening Tool',
-            'Free AI-powered expert screener for Indian stocks. Screen NSE stocks using technical indicators like SMA, EMA, RSI, MACD with boolean expressions.',
+            'EquityPro Technical Screener - AI Stock Screening Tool',
+            'Free AI-powered technical screener for Indian stocks. Screen NSE stocks using technical indicators like SMA, EMA, RSI, MACD with boolean expressions.',
             ['Technical Screener', 'Stock Filter', 'NSE Screener', 'AI Stock Analysis', 'Boolean Expression Screener']
           ),
           generateHowToSchema(
-            'How to Use the Expert Screener',
+            'How to Use the Technical Screener',
             'Step-by-step guide to screen NSE stocks using technical indicators and boolean expressions',
             SCREENER_HOWTO
           ),
@@ -444,7 +444,7 @@ export default function Screener() {
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div className="space-y-2">
                 <Eyebrow tone="gold" rule>
-                  Expert screener
+                  Technical screener
                 </Eyebrow>
                 <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
                   Find your edge.
@@ -566,7 +566,7 @@ export default function Screener() {
                     aria-busy={validation.isValidating}
                   >
                     <span className="run-button-content">
-                      Run Expert Screener
+                      Run Technical Screener
                     </span>
                   </button>
                 ) : (

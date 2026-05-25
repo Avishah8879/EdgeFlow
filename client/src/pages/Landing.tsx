@@ -317,7 +317,7 @@ const FEATURES = [
   },
   {
     icon: Search,
-    title: "Expert screener",
+    title: "Technical screener",
     desc: "40+ pre-built screens (Magic Formula, Piotroski F, dividend champions) plus a no-code custom screen builder.",
   },
   {

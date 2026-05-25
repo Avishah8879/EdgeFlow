@@ -12598,6 +12598,212 @@ async def ft_pair_trading_pair_series(
         return _ft_api_response([], f"Pair series unavailable: {str(e)}")
 
 
+def _pair_trading_compute_scan_metrics_sync(
+    group_type: str,
+    group: str,
+    method: str,
+    lookback_days: int,
+) -> Optional[Dict[str, Any]]:
+    """Compute per-pair correlation, beta, and delta for every pair in a sector/industry.
+
+    Reuses _pair_trading_fetch_matrix_data_sync for the OHLC fetch (same 30-symbol cap).
+    Returns the FULL pre-filter list so the endpoint can cache it and apply conditions at
+    request time without busting the expensive compute cache.
+
+    beta  = Pearson r of normalized cumulative % returns  (matches PairChartView β badge)
+    delta = σ(residuals) with ddof=1 in % units           (matches PairChartView σ badge)
+    correlation = Pearson on log returns ×100 (correlation method)
+                  or (1−p)×100             (cointegration method)
+    X = alphabetically-first symbol, Y = second — consistent with PairFeasibilityPanel.
+    """
+    fetched = _pair_trading_fetch_matrix_data_sync(group_type, group, lookback_days)
+    if fetched is None:
+        return None
+
+    ticker_rows = fetched["ticker_rows"]
+    ohlc_rows   = fetched["ohlc_rows"]
+    truncated   = fetched["truncated"]
+
+    id_to_symbol: Dict[int, str] = {r["id"]: r["symbol"].upper() for r in ticker_rows}
+
+    per_symbol: Dict[str, Dict[str, float]] = {}
+    for row in ohlc_rows:
+        sym = id_to_symbol.get(row["ticker_id"])
+        if not sym:
+            continue
+        per_symbol.setdefault(sym, {})[row["day"].strftime("%Y-%m-%d")] = float(row["close"])
+
+    min_required = int(lookback_days * _PAIR_MATRIX_MIN_COVERAGE)
+    symbols: List[str] = []
+    series_map: Dict[str, pd.Series] = {}
+    for sym, closes in per_symbol.items():
+        if len(closes) < min_required:
+            continue
+        series_map[sym] = pd.Series(closes).sort_index()
+        symbols.append(sym)
+
+    symbols.sort()  # alphabetical — X = symbols[i], Y = symbols[j] for i < j
+
+    if len(symbols) < 2:
+        return None
+
+    as_of = max(s.index.max() for s in series_map.values())
+
+    coint_fn = None
+    if method == "cointegration":
+        try:
+            from statsmodels.tsa.stattools import coint as _coint
+            coint_fn = _coint
+        except ImportError:
+            pass
+
+    results: List[Dict[str, Any]] = []
+    n = len(symbols)
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            sym_x, sym_y = symbols[i], symbols[j]
+
+            pair_df = pd.concat(
+                [series_map[sym_x].rename("x"), series_map[sym_y].rename("y")],
+                axis=1,
+            ).dropna()
+
+            if len(pair_df) < 2:
+                results.append({"symbolA": sym_x, "symbolB": sym_y,
+                                 "correlation": None, "beta": None,
+                                 "delta": None, "pvalue": None})
+                continue
+
+            close_x = pair_df["x"].values
+            close_y = pair_df["y"].values
+
+            # ── Correlation ────────────────────────────────────────────────
+            correlation: Optional[float] = None
+            pvalue: Optional[float] = None
+
+            if method == "correlation":
+                # Pearson on log returns — same computation as the matrix endpoint
+                log_x = np.log(close_x[1:] / close_x[:-1])
+                log_y = np.log(close_y[1:] / close_y[:-1])
+                mask = np.isfinite(log_x) & np.isfinite(log_y)
+                if mask.sum() >= 2:
+                    r = np.corrcoef(log_x[mask], log_y[mask])[0, 1]
+                    correlation = round(float(r) * 100.0, 2) if np.isfinite(r) else None
+
+            elif method == "cointegration" and coint_fn is not None:
+                min_coint = max(20, min_required // 2)
+                if len(pair_df) >= min_coint:
+                    try:
+                        _stat, pv, _crit = coint_fn(close_x, close_y)
+                        pvalue = round(float(pv), 4)
+                        correlation = round(float((1.0 - pv) * 100.0), 2)
+                    except Exception:
+                        pass
+
+            # ── Beta + Delta ────────────────────────────────────────────────
+            # Normalized cumulative % returns from first bar — matches PairChartView exactly
+            beta: Optional[float] = None
+            delta: Optional[float] = None
+
+            if close_x[0] != 0 and close_y[0] != 0:
+                norm_x = (close_x / close_x[0] - 1.0) * 100.0
+                norm_y = (close_y / close_y[0] - 1.0) * 100.0
+                if len(norm_x) >= 2:
+                    r = np.corrcoef(norm_x, norm_y)[0, 1]
+                    if np.isfinite(r):
+                        beta = round(float(r), 3)
+                        residuals = norm_y - beta * norm_x
+                        if len(residuals) >= 2:
+                            std = float(np.std(residuals, ddof=1))
+                            delta = round(std, 3) if np.isfinite(std) else None
+
+            results.append({
+                "symbolA": sym_x,
+                "symbolB": sym_y,
+                "correlation": correlation,
+                "beta": beta,
+                "delta": delta,
+                "pvalue": pvalue,
+            })
+
+    return {
+        "results": results,
+        "symbols": symbols,
+        "truncated": truncated,
+        "symbol_cap": _PAIR_MATRIX_SYMBOL_CAP,
+        "total_pairs": len(results),
+        "method": method,
+        "lookback_days": lookback_days,
+        "as_of": str(as_of) if as_of is not None else None,
+    }
+
+
+@fastapi_app.get("/api/pair-trading/scan")
+async def ft_pair_trading_scan(
+    group_type: str = Query(..., pattern="^(sector|industry)$"),
+    group: str = Query(..., min_length=1),
+    method: str = Query("correlation", pattern="^(correlation|cointegration)$"),
+    lookback_days: int = Query(40, ge=10, le=500),
+    min_correlation: Optional[float] = Query(None),
+    max_correlation: Optional[float] = Query(None),
+):
+    """Scan all pairs in a sector/industry and return those matching the given conditions.
+
+    Pre-filter metrics are cached independently of condition params so that moving a
+    threshold slider reuses the cached compute result (no re-query of the DB).
+    Cache key: pair_trading:scan_metrics:v1:{group_type}:{group}:{method}:{lookback_days}
+    TTL: 15 min.  Condition filters are applied at request time from the cached metrics.
+    """
+    metrics_cache_key = (
+        f"pair_trading:scan_metrics:v1:{group_type}:{group}:{method}:{lookback_days}"
+    )
+    metrics = get_cached(metrics_cache_key)
+
+    if metrics is None:
+        try:
+            metrics = await asyncio.to_thread(
+                _pair_trading_compute_scan_metrics_sync,
+                group_type, group, method, lookback_days,
+            )
+        except Exception as e:
+            logging.exception(f"[PairTrading] scan metrics error: {e}")
+            return _ft_api_response(None, f"Scan unavailable: {str(e)}")
+
+        if metrics is None:
+            return _ft_api_response(None, f"No stocks found for {group_type} '{group}'")
+
+        set_cached(metrics_cache_key, metrics, 900)
+        logging.info(
+            f"[PairTrading] scan metrics computed: {metrics['total_pairs']} pairs, "
+            f"group={group!r}, method={method}, lookback={lookback_days}"
+        )
+    else:
+        logging.info(f"[PairTrading] scan metrics served from cache: {metrics_cache_key}")
+
+    # Apply condition filters at request time — does not touch the cache
+    def _passes(pair: Dict[str, Any]) -> bool:
+        c = pair.get("correlation")
+        if min_correlation is not None and (c is None or c < min_correlation):
+            return False
+        if max_correlation is not None and (c is None or c > max_correlation):
+            return False
+        return True
+
+    filtered = [p for p in metrics["results"] if _passes(p)]
+
+    payload: Dict[str, Any] = {
+        "results": filtered,
+        "total_pairs": metrics["total_pairs"],
+        "truncated": metrics["truncated"],
+        "symbol_cap": metrics["symbol_cap"],
+        "method": metrics["method"],
+        "lookback_days": metrics["lookback_days"],
+        "as_of": metrics["as_of"],
+    }
+    return _ft_api_response(payload)
+
+
 # =============================================================================
 # Pattern Search Endpoint
 # =============================================================================

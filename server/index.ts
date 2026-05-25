@@ -122,6 +122,7 @@ app.use((req, res, next) => {
   const { default: notificationRoutes } = await import('./routes-notifications.js');
   const { default: publicConfigRoutes } = await import('./routes-public-config.js');
   const { default: savedResultsRoutes } = await import('./routes-saved-results.js');
+  const { default: pairWatchlistRoutes } = await import('./routes-pair-watchlist.js');
   const { default: userTemplatesRoutes } = await import('./routes-user-templates.js');
   const { default: trackingRoutes } = await import('./routes-tracking.js');
   const { default: developerRoutes } = await import('./routes-developer.js');
@@ -167,6 +168,9 @@ app.use((req, res, next) => {
 
   // Mount saved results routes (screener/backtest)
   app.use('/api/saved', savedResultsRoutes);
+
+  // Mount pair watchlist routes
+  app.use('/api/saved/pair-watchlist', pairWatchlistRoutes);
 
   // Mount user-owned Expert Screener template routes (Save as Template).
   // Note: FastAPI owns the other /api/expert-screener/* routes (run, validate,

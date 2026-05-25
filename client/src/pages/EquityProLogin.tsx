@@ -133,7 +133,7 @@ export default function EquityProLogin() {
     <>
       <SEO
         title="Sign In - EquityPro"
-        description="Sign in to your EquityPro account to access AI-powered stock analysis, expert screener, and strategy backtesting tools."
+        description="Sign in to your EquityPro account to access AI-powered stock analysis, technical screener, and strategy backtesting tools."
         noIndex={true}
       />
 
