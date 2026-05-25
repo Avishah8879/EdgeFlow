@@ -36,7 +36,7 @@ export const NAV: NavSection[] = [
     title: "Research",
     children: [
       [
-        { label: "Expert Screener", href: "/screener", sublabel: "Boolean expressions" },
+        { label: "Technical Screener", href: "/screener", sublabel: "Boolean expressions" },
         { label: "Fundamental Scanner", href: "/equity-screener", sublabel: "Quality + value rules" },
         { label: "Pattern Search", href: "/pattern-search", sublabel: "Chart pattern detection" },
         { label: "Price Pattern", href: "/price-pattern", sublabel: "Price-action detection" },

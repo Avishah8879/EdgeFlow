@@ -98,7 +98,7 @@ export default function ExpressionBuilder({
           >
             <span className="run-button-content">
               <Play className="w-4 h-4" />
-              Run Expert Screener
+              Run Technical Screener
             </span>
           </button>
         ) : (

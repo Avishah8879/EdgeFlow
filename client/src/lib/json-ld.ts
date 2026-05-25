@@ -32,7 +32,7 @@ export function generateOrganizationSchema() {
     name: 'EquityPro',
     url: SEO_CONFIG.siteUrl,
     logo: `${SEO_CONFIG.siteUrl}/favicon.svg`,
-    description: 'AI-powered stock analysis platform & TradingView alternative for Indian investors. Free AI sentiment analysis, expert screener with pine script-like expressions, and strategy bots.',
+    description: 'AI-powered stock analysis platform & TradingView alternative for Indian investors. Free AI sentiment analysis, technical screener with pine script-like expressions, and strategy bots.',
     foundingDate: '2024',
     knowsAbout: [
       'EquityPro Stock Analysis',
@@ -234,7 +234,7 @@ export function generateWebPageSchema(
 export const LANDING_FAQS: FAQItem[] = [
   {
     question: 'What is EquityPro?',
-    answer: 'EquityPro is a free AI-powered stock analysis platform and TradingView alternative for Indian investors. It provides AI sentiment analysis using FinBERT, an expert screener with pine script-like boolean expressions, and strategy bots with genetic algorithm optimization for 3000+ NSE stocks.',
+    answer: 'EquityPro is a free AI-powered stock analysis platform and TradingView alternative for Indian investors. It provides AI sentiment analysis using FinBERT, a technical screener with pine script-like boolean expressions, and strategy bots with genetic algorithm optimization for 3000+ NSE stocks.',
   },
   {
     question: 'Is EquityPro a good TradingView alternative for India?',

@@ -7,7 +7,7 @@ export const SEO_CONFIG = {
   siteName: 'EquityPro',
   siteUrl: 'https://your-domain.com',
   defaultTitle: 'EquityPro - AI-Powered Stock Analysis for Indian Investors',
-  defaultDescription: 'Free AI stock analysis platform & TradingView alternative. AI sentiment analysis, expert screener with pine script-like expressions, and strategy bots for 3000+ NSE stocks.',
+  defaultDescription: 'Free AI stock analysis platform & TradingView alternative. AI sentiment analysis, technical screener with pine script-like expressions, and strategy bots for 3000+ NSE stocks.',
   defaultOgImage: '/favicon.svg',
   twitterHandle: '@equitypro',
   locale: 'en_IN',
@@ -42,7 +42,7 @@ export const SEO_CONFIG = {
 export const PAGE_SEO = {
   landing: {
     title: 'EquityPro - AI-Powered Stock Analysis for Indian Investors',
-    description: 'Free AI stock analysis platform & TradingView alternative. AI sentiment analysis, expert screener with pine script-like expressions, and strategy bots for 3000+ NSE stocks.',
+    description: 'Free AI stock analysis platform & TradingView alternative. AI sentiment analysis, technical screener with pine script-like expressions, and strategy bots for 3000+ NSE stocks.',
     keywords: 'equitypro, AI stock analysis, NSE screener, Indian stocks, AI trading, free stock research, pine script alternative, trading view alternative, strategy bots',
   },
   home: {
@@ -118,7 +118,7 @@ export const PAGE_SEO = {
   },
   signup: {
     title: 'Create Free Account - EquityPro AI Platform',
-    description: 'Create your free EquityPro account. Access AI-powered stock analysis, expert screener, and strategy backtesting.',
+    description: 'Create your free EquityPro account. Access AI-powered stock analysis, technical screener, and strategy backtesting.',
   },
   forgotPassword: {
     title: 'Reset Password - EquityPro',

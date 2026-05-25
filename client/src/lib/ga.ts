@@ -30,7 +30,7 @@ const ROUTE_TITLES: Record<string, string> = {
   // Protected routes
   '/home': 'Home',
   '/stocks': 'Stocks',
-  '/screener': 'Expert Screener',
+  '/screener': 'Technical Screener',
   '/indices': 'Indices',
   '/alpha-generation': 'EquityPro AI Redirect',
   '/portfolio': 'Portfolio',
