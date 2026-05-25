@@ -29,6 +29,7 @@ import {
 } from 'recharts';
 import {
   calculatePearsonCorrelation,
+  olsRegression,
   buildNormalizedSeries,
   buildPairScatter,
   buildRegressionLine,
@@ -498,32 +499,36 @@ export function GraphComparisonPanel() {
     () => buildPairScatter(normalizedData, pairSelection.x, pairSelection.y),
     [normalizedData, pairSelection],
   );
-  const autoPairBeta = useMemo(() => {
-    if (!pairSelection.x || !pairSelection.y) return 0;
-    if (pairSelection.x === pairSelection.y) return 1;
-    const matrixValue =
-      correlationMatrix[pairSelection.x]?.[pairSelection.y] ??
-      correlationMatrix[pairSelection.y]?.[pairSelection.x];
-    if (typeof matrixValue === 'number' && !Number.isNaN(matrixValue)) return matrixValue;
-    if (pairScatterData.length < 2) return 0;
-    return calculatePearsonCorrelation(
+  const autoPairRegression = useMemo(() => {
+    if (!pairSelection.x || !pairSelection.y) return { beta: 0, alpha: 0 };
+    if (pairSelection.x === pairSelection.y) return { beta: 1, alpha: 0 };
+    if (pairScatterData.length < 2) return { beta: 0, alpha: 0 };
+    return olsRegression(
       pairScatterData.map((p) => p.xValue),
       pairScatterData.map((p) => p.yValue),
     );
-  }, [pairSelection, correlationMatrix, pairScatterData]);
+  }, [pairSelection, pairScatterData]);
   const manualBeta = useMemo(() => {
     const parsed = parseFloat(manualBetaInput);
     return Number.isFinite(parsed) ? parsed : NaN;
   }, [manualBetaInput]);
   const effectiveBeta =
-    betaMode === 'manual' && Number.isFinite(manualBeta) ? manualBeta : autoPairBeta;
+    betaMode === 'manual' && Number.isFinite(manualBeta) ? manualBeta : autoPairRegression.beta;
+  const effectiveAlpha = useMemo(() => {
+    if (betaMode === 'manual' && Number.isFinite(manualBeta) && pairScatterData.length >= 2) {
+      const meanX = pairScatterData.reduce((s, p) => s + p.xValue, 0) / pairScatterData.length;
+      const meanY = pairScatterData.reduce((s, p) => s + p.yValue, 0) / pairScatterData.length;
+      return meanY - manualBeta * meanX;
+    }
+    return autoPairRegression.alpha;
+  }, [betaMode, manualBeta, pairScatterData, autoPairRegression.alpha]);
   const regressionLineData = useMemo(
-    () => buildRegressionLine(pairScatterData, effectiveBeta),
-    [pairScatterData, effectiveBeta],
+    () => buildRegressionLine(pairScatterData, effectiveBeta, effectiveAlpha),
+    [pairScatterData, effectiveBeta, effectiveAlpha],
   );
   const residualsData = useMemo(
-    () => computeResiduals(pairScatterData, effectiveBeta),
-    [pairScatterData, effectiveBeta],
+    () => computeResiduals(pairScatterData, effectiveBeta, effectiveAlpha),
+    [pairScatterData, effectiveBeta, effectiveAlpha],
   );
   const residualStdDev = useMemo(
     () => computeResidualStdDev(residualsData),
@@ -533,8 +538,10 @@ export function GraphComparisonPanel() {
   const pairEquationLabel =
     pairSelection.x && pairSelection.y
       ? `${pairSelection.y} = ${
-          Number.isFinite(effectiveBeta) ? effectiveBeta.toFixed(2) : 'beta'
-        } * ${pairSelection.x}`
+          Number.isFinite(effectiveAlpha) ? effectiveAlpha.toFixed(2) : 'α'
+        } + ${
+          Number.isFinite(effectiveBeta) ? effectiveBeta.toFixed(2) : 'β'
+        } · ${pairSelection.x}`
       : 'Select securities';
   const pairXValue = pairSelection.x || symbols[0] || '';
   const pairYValue = pairSelection.y || symbols[1] || symbols[0] || '';

@@ -99,11 +99,38 @@ export function buildPairScatter(
   return out;
 }
 
+export function olsRegression(x: number[], y: number[]): { beta: number; alpha: number } {
+  const n = Math.min(x.length, y.length);
+  if (n < 2) return { beta: 0, alpha: 0 };
+
+  let sumX = 0;
+  let sumY = 0;
+  for (let i = 0; i < n; i++) {
+    sumX += x[i];
+    sumY += y[i];
+  }
+  const meanX = sumX / n;
+  const meanY = sumY / n;
+
+  let num = 0;
+  let den = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = x[i] - meanX;
+    num += dx * (y[i] - meanY);
+    den += dx * dx;
+  }
+
+  if (den === 0) return { beta: 0, alpha: meanY };
+  const beta = num / den;
+  return { beta, alpha: meanY - beta * meanX };
+}
+
 export function buildRegressionLine(
   scatter: PairScatterPoint[],
   beta: number,
+  alpha: number,
 ): PairScatterPoint[] {
-  if (scatter.length < 2 || !Number.isFinite(beta)) return [];
+  if (scatter.length < 2 || !Number.isFinite(beta) || !Number.isFinite(alpha)) return [];
   let minX = Infinity;
   let maxX = -Infinity;
   for (const p of scatter) {
@@ -112,8 +139,8 @@ export function buildRegressionLine(
   }
   if (!Number.isFinite(minX) || !Number.isFinite(maxX) || minX === maxX) return [];
   return [
-    { date: 'start', xValue: minX, yValue: beta * minX },
-    { date: 'end', xValue: maxX, yValue: beta * maxX },
+    { date: 'start', xValue: minX, yValue: alpha + beta * minX },
+    { date: 'end', xValue: maxX, yValue: alpha + beta * maxX },
   ];
 }
 
@@ -125,11 +152,12 @@ export interface ResidualPoint {
 export function computeResiduals(
   scatter: PairScatterPoint[],
   beta: number,
+  alpha: number,
 ): ResidualPoint[] {
-  if (scatter.length === 0 || !Number.isFinite(beta)) return [];
+  if (scatter.length === 0 || !Number.isFinite(beta) || !Number.isFinite(alpha)) return [];
   return scatter.map((p) => ({
     date: p.date,
-    residual: parseFloat((p.yValue - beta * p.xValue).toFixed(4)),
+    residual: parseFloat((p.yValue - (alpha + beta * p.xValue)).toFixed(4)),
   }));
 }
 
