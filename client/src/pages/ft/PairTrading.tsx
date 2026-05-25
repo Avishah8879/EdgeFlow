@@ -2,6 +2,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Construction } from 'lucide-react';
 import { PairFeasibilityPanel } from '@/components/ft/pair-trading/PairFeasibilityPanel';
+import { PairScannerPanel } from '@/components/ft/pair-trading/PairScannerPanel';
+import { PairWatchlistPanel } from '@/components/ft/pair-trading/PairWatchlistPanel';
 import { FtPageHeader } from '@/components/ft/FtPageHeader';
 
 function ComingSoon({ title }: { title: string }) {
@@ -42,11 +44,11 @@ export default function PairTrading() {
           </TabsContent>
 
           <TabsContent value="scanner" className="mt-4">
-            <ComingSoon title="Scanner" />
+            <PairScannerPanel />
           </TabsContent>
 
           <TabsContent value="watchlist" className="mt-4">
-            <ComingSoon title="Watchlist" />
+            <PairWatchlistPanel />
           </TabsContent>
         </Tabs>
       </div>

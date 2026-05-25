@@ -46,6 +46,7 @@ vite.config.ts.*
 # Credentials
 fyers_token.json
 APIKey*.csv
+server ssh/
 
 # DB backups (created in Step 0 of CMOTS integration)
 backups/*.dump
