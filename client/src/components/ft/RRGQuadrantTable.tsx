@@ -14,22 +14,26 @@ const QUADRANT_STYLES: Record<RRGQuadrant, string> = {
   Lagging:   "bg-rose-500/15 text-rose-600 dark:text-rose-400",
 };
 
+const QUADRANT_ORDER: Record<RRGQuadrant, number> = {
+  Leading: 0, Improving: 1, Weakening: 2, Lagging: 3,
+};
+
 export function RRGQuadrantTable({ symbols, period = "2y" }: RRGQuadrantTableProps) {
   const { data, isLoading } = useRRG(symbols, period);
 
   const rows = useMemo(() => {
     if (!data?.legend?.length) return [];
     const trails = data.trails ?? [];
-    return data.legend.map((item) => {
-      const trail = trails.find((t) => (t.label ?? t.symbol) === item.symbol);
-      return {
-        symbol: item.symbol,
-        rsRatio: item.rsRatio,
-        rsMom: item.rsMom,
-        quadrant: classifyQuadrant(item.rsRatio, item.rsMom),
-        color: trail?.color ?? "#10b981",
-      };
-    });
+    return data.legend
+      .map((item) => {
+        const trail = trails.find((t) => (t.label ?? t.symbol) === item.symbol);
+        return {
+          symbol: item.symbol,
+          quadrant: classifyQuadrant(item.rsRatio, item.rsMom),
+          color: trail?.color ?? "#10b981",
+        };
+      })
+      .sort((a, b) => QUADRANT_ORDER[a.quadrant] - QUADRANT_ORDER[b.quadrant]);
   }, [data]);
 
   if (isLoading || rows.length === 0) return null;
@@ -44,12 +48,6 @@ export function RRGQuadrantTable({ symbols, period = "2y" }: RRGQuadrantTablePro
             </th>
             <th className="px-3 py-2 text-left text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
               Quadrant
-            </th>
-            <th className="px-3 py-2 text-right text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
-              RS-Ratio
-            </th>
-            <th className="px-3 py-2 text-right text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
-              RS-Mom
             </th>
           </tr>
         </thead>
@@ -68,12 +66,6 @@ export function RRGQuadrantTable({ symbols, period = "2y" }: RRGQuadrantTablePro
                 >
                   {row.quadrant}
                 </span>
-              </td>
-              <td className="px-3 py-1.5 text-right font-mono tabular-nums text-foreground">
-                {row.rsRatio.toFixed(1)}
-              </td>
-              <td className="px-3 py-1.5 text-right font-mono tabular-nums text-foreground">
-                {row.rsMom.toFixed(1)}
               </td>
             </tr>
           ))}
