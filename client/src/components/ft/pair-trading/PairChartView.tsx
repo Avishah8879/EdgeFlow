@@ -9,6 +9,7 @@ import {
   buildPairScatter,
   buildRegressionLine,
   calculatePearsonCorrelation,
+  olsRegression,
   computeResiduals,
   residualStdDev as computeResidualStdDev,
   type OhlcPoint,
@@ -85,7 +86,15 @@ export function PairChartView({
     [normalizedData, xSymbol, ySymbol],
   );
 
-  const beta = useMemo(() => {
+  const { beta, alpha } = useMemo(() => {
+    if (pairScatter.length < 2) return { beta: 0, alpha: 0 };
+    return olsRegression(
+      pairScatter.map((p) => p.xValue),
+      pairScatter.map((p) => p.yValue),
+    );
+  }, [pairScatter]);
+
+  const pearsonR = useMemo(() => {
     if (pairScatter.length < 2) return 0;
     return calculatePearsonCorrelation(
       pairScatter.map((p) => p.xValue),
@@ -93,12 +102,18 @@ export function PairChartView({
     );
   }, [pairScatter]);
 
-  const regressionLine = useMemo(() => buildRegressionLine(pairScatter, beta), [pairScatter, beta]);
-  const residuals = useMemo(() => computeResiduals(pairScatter, beta), [pairScatter, beta]);
+  const regressionLine = useMemo(
+    () => buildRegressionLine(pairScatter, beta, alpha),
+    [pairScatter, beta, alpha],
+  );
+  const residuals = useMemo(
+    () => computeResiduals(pairScatter, beta, alpha),
+    [pairScatter, beta, alpha],
+  );
   const stdDev = useMemo(() => computeResidualStdDev(residuals), [residuals]);
 
   const correlationPct =
-    method === 'correlation' && matrixScore !== null ? matrixScore : beta * 100;
+    method === 'correlation' && matrixScore !== null ? matrixScore : pearsonR * 100;
 
   return (
     <div className="space-y-4">
@@ -153,7 +168,7 @@ export function PairChartView({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="p-4 bg-card/50 border-primary/20">
           <h4 className="text-sm font-semibold mb-2 text-primary">
-            Pair Regression: {ySymbol} = β · {xSymbol}
+            Pair Regression: {ySymbol} = α + β · {xSymbol}
           </h4>
           <PairRegressionChart
             scatter={pairScatter}
@@ -164,7 +179,7 @@ export function PairChartView({
         </Card>
         <Card className="p-4 bg-card/50 border-primary/20">
           <h4 className="text-sm font-semibold mb-2 text-primary">
-            Residuals: {ySymbol} − β · {xSymbol}
+            Residuals: {ySymbol} − (α + β · {xSymbol})
           </h4>
           <ResidualsChart residuals={residuals} stdDev={stdDev} />
         </Card>

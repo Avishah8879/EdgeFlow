@@ -12710,10 +12710,16 @@ def _pair_trading_compute_scan_metrics_sync(
                 norm_x = (close_x / close_x[0] - 1.0) * 100.0
                 norm_y = (close_y / close_y[0] - 1.0) * 100.0
                 if len(norm_x) >= 2:
-                    r = np.corrcoef(norm_x, norm_y)[0, 1]
-                    if np.isfinite(r):
-                        beta = round(float(r), 3)
-                        residuals = norm_y - beta * norm_x
+                    mean_x = float(norm_x.mean())
+                    mean_y = float(norm_y.mean())
+                    dx = norm_x - mean_x
+                    dy = norm_y - mean_y
+                    sum_dxdx = float(np.sum(dx * dx))
+                    if sum_dxdx > 0:
+                        beta_val = float(np.sum(dx * dy) / sum_dxdx)
+                        alpha_val = float(mean_y - beta_val * mean_x)
+                        beta = round(beta_val, 3)
+                        residuals = norm_y - (alpha_val + beta_val * norm_x)
                         if len(residuals) >= 2:
                             std = float(np.std(residuals, ddof=1))
                             delta = round(std, 3) if np.isfinite(std) else None

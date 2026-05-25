@@ -67,7 +67,7 @@ export function PairRegressionChart({
         <Scatter name={`${ySymbol} vs ${xSymbol}`} data={scatter} fill="#3b82f6" />
         {regressionLine.length === 2 && (
           <Line
-            name="beta * X"
+            name="α + β · X"
             data={regressionLine}
             dataKey="yValue"
             stroke="#f97316"
