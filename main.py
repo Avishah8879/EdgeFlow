@@ -47,12 +47,16 @@ from datetime import datetime, timedelta, timezone
 import atexit
 from contextlib import contextmanager
 
+logger = logging.getLogger(__name__)
+
 from Strat_optimizer_tpsl import run_optimization as run_tpsl_optimization, run_optimization_from_dataframe as run_tpsl_optimization_from_df
 from expert_screener import (
     run_screener as run_expert_screener,
     run_screener_streaming,
     get_all_ticker_symbols,
     ConditionEvaluator,
+    audit_identifiers,
+    audit_fundamental_identifiers,
     cache_indicator_value,
     cache_indicator_values,
     get_cached_indicator_value,
@@ -94,6 +98,12 @@ from server.sankey import get_sankey_data, get_available_years
 env_file = '.env.production' if os.getenv('NODE_ENV') == 'production' else '.env'
 load_dotenv(env_file, override=True)
 print(f"[ENV] Loaded environment from: {env_file}")
+
+for _proxy_key in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
+    _proxy_value = os.getenv(_proxy_key, "")
+    if "127.0.0.1:9" in _proxy_value or "localhost:9" in _proxy_value:
+        os.environ.pop(_proxy_key, None)
+        logging.warning("[ENV] Ignored dead local proxy setting from %s", _proxy_key)
 
 # Worker-aware pool sizing: Divide total pool by number of workers
 # Total target: minconn=5, maxconn=100 across all workers (reduced for faster startup)
@@ -3000,20 +3010,21 @@ def build_analyst_hub_payload(ticker: str) -> Dict[str, Any]:
 
 # ==================== FastAPI Setup ====================
 class AllowFrameMiddleware(BaseHTTPMiddleware):
+    """Strips X-Frame-Options and sets `frame-ancestors *` so this app can be
+    iframe-embedded. CORS is intentionally NOT handled here — CORSMiddleware
+    (configured below with an explicit allowlist) owns the Access-Control-*
+    headers. Embedding is governed by framing headers, not CORS."""
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
         for header_key in list(response.headers.keys()):
             if header_key.lower() == "x-frame-options":
                 del response.headers[header_key]
         response.headers["Content-Security-Policy"] = "frame-ancestors *"
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "*"
         return response
 
 
 fastapi_app = FastAPI(
-    title="Tiphub Developer API",
+    title="EquityPro Developer API",
     description=(
         "Financial market data, technical analysis, and AI-powered insights for Indian markets (NSE).\n\n"
         "## Authentication\n"
@@ -3168,6 +3179,20 @@ async def startup_event():
     logging.info("=" * 60)
     logging.info("STARTUP INITIATED")
     logging.info("=" * 60)
+    # Surface the DB target prominently. This is the FIRST diagnostic to
+    # check when any "data is empty / wrong" report comes in — never infer
+    # the connection target from anecdotal evidence again (see §9 cache
+    # poisoning post-mortem). The cmots_accessor module reads through
+    # _get_db_connection_target() at every call, so this banner reflects
+    # the target the live CMOTS accessors will hit.
+    logging.info(
+        "[STARTUP] Database target: DB_NAME=%r DB_HOST=%r DB_PORT=%r DB_USER=%r",
+        os.environ.get("DB_NAME"),
+        os.environ.get("DB_HOST"),
+        os.environ.get("DB_PORT", "5432"),
+        os.environ.get("DB_USER"),
+    )
+    logging.info("=" * 60)
 
     # Initialize Redis connection
     t0 = time.time()
@@ -3177,6 +3202,8 @@ async def startup_event():
         logging.info(f"[STARTUP] Redis cache layer enabled ({time.time() - t0:.2f}s)")
     else:
         logging.warning(f"[STARTUP] Redis not available ({time.time() - t0:.2f}s)")
+
+    await _ft_init_asyncpg_pool()
 
     # Initialize Fear & Greed Index cache (run in background to avoid blocking)
     t0 = time.time()
@@ -3229,6 +3256,7 @@ async def shutdown_event():
     # Other workers can continue serving streams if available.
 
     # Cleanup database pool
+    await _ft_close_asyncpg_pool()
     cleanup_pool()
     logging.info("Shutdown complete")
 
@@ -3242,6 +3270,9 @@ class ExpertScreenerRequest(BaseModel):
     expression: str
     symbols: Optional[List[str]] = None
     period: str = "1y"
+    # Used only by the validate endpoint to pick the right identifier audit.
+    # Run paths ignore this — they have separate endpoints per variant.
+    variant: Optional[str] = None  # "expert" (default) | "fundamental"
 
 
 # ==================== Helper Functions ====================
@@ -3297,7 +3328,7 @@ def apply_screener_condition(field: str, operator: str, value: Optional[float], 
 @fastapi_app.get("/")
 async def root():
     return {
-        "message": "Tiphub API",
+        "message": "EquityPro API",
         "version": "1.0.0",
         "endpoints": {
             "sentiment_analysis": "/api/sentiment-analysis",
@@ -6644,6 +6675,30 @@ async def shareholding_pattern_api(
 
         logging.info(f"[API] /api/shareholding/{ticker} START (view={view})")
 
+        # CMOTS-first branch (§8): if the ticker is covered by the CMOTS
+        # pipeline, serve a scraper-shape response built from
+        # cmots_shareholding. Falls through to the existing Selenium
+        # scraper for uncovered tickers — frontend contract unchanged.
+        from server.cmots_accessor import (
+            has_cmots_data as cmots_has_data,
+            get_shareholding_cmots_in_scraper_shape,
+        )
+        if await asyncio.to_thread(cmots_has_data, ticker):
+            logging.info(f"[API] /api/shareholding/{ticker} → CMOTS branch")
+            cmots_result = await asyncio.to_thread(
+                get_shareholding_cmots_in_scraper_shape, ticker, view,
+            )
+            if cmots_result.get("success"):
+                # Bypass screener.in cache key — CMOTS has its own invalidation
+                # at sync-end via delete_pattern("cmots:*").
+                return cmots_result
+            # CMOTS branch returned no data (rare — covered ticker with
+            # empty cmots_shareholding); fall through to scraper as a
+            # belt-and-braces fallback.
+            logging.info(
+                f"[API] /api/shareholding/{ticker} CMOTS empty → fallback to scraper"
+            )
+
         # Check cache
         cache_key = make_shareholding_key(ticker, view)
         cached = get_cached(cache_key)
@@ -6669,6 +6724,348 @@ async def shareholding_pattern_api(
             status_code=500,
             detail=f"Failed to fetch shareholding data: {str(exc)}",
         ) from exc
+
+
+# =============================================================================
+# CMOTS — read-side accessor routes (§8)
+# =============================================================================
+#
+# 11 GET routes for per-ticker CMOTS data + 1 sector-medians route.
+# All wrap accessors in ``server.cmots_accessor`` and return via
+# ``success_response(data=...)``. Empty-shape returns flow through unchanged
+# (the accessor layer enforces "never 404, never naked None").
+#
+# 3 admin POST/GET routes for sync triggering + status, gated on the
+# X-Admin-Secret header per the plan §3 spec.
+
+
+# Allowed parameter values — validation rejects anything else with 400.
+_CMOTS_STATEMENT_TYPES = ("standalone", "consolidated")
+_CMOTS_REPORTS = ("profit_loss", "balance_sheet", "cash_flow", "quarterly", "yearly")
+_CMOTS_RATIO_PERIODS = ("yearly", "quarterly", "daily")
+_CMOTS_DOC_TYPES = (
+    "director_report", "chairman_report", "auditor_report",
+    "notes_to_account", "mda",
+)
+
+
+# Admin-secret dependency: separate from the existing ``verify_admin_key``
+# (which uses ``X-Admin-Key`` for the older /api/system/* endpoints).
+# CMOTS admin routes use ``X-Admin-Secret`` per plan §3 spec. The pattern
+# below explicitly requires BOTH the env-var AND the header to be non-empty
+# before comparing — so an unset ``ADMIN_SECRET_KEY`` cannot accidentally
+# admit empty/None requests.
+async def require_cmots_admin(x_admin_secret: str = Header(None, alias="X-Admin-Secret")):
+    """Verify ``X-Admin-Secret`` header matches ``ADMIN_SECRET_KEY``.
+
+    Returns 401 if header missing, header empty, env var unset/empty, or
+    values don't match. Both sides must be truthy strings before equality
+    is even considered.
+    """
+    expected = os.getenv("ADMIN_SECRET_KEY")
+    if not expected:
+        # Defensive: refuse to admit anything when the env var is unset.
+        # Without this check, a missing env var + missing header would both
+        # be None and pass an equality check.
+        raise HTTPException(
+            status_code=503,
+            detail="Admin endpoint disabled: ADMIN_SECRET_KEY env var unset",
+        )
+    if not x_admin_secret or x_admin_secret != expected:
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized: valid X-Admin-Secret header required",
+        )
+
+
+# --- Read routes ---------------------------------------------------------
+
+
+@fastapi_app.get("/api/tickers/{symbol}/has-cmots-data", tags=["CMOTS"])
+async def cmots_has_data_api(symbol: str):
+    """Boolean check: does this ticker have CMOTS coverage?
+    Never raises; returns ``{has_cmots_data: bool}``."""
+    from server.cmots_accessor import has_cmots_data
+    result = await asyncio.to_thread(has_cmots_data, symbol)
+    return success_response(data={"has_cmots_data": bool(result)})
+
+
+@fastapi_app.get("/api/tickers/{symbol}/screener", tags=["CMOTS"])
+async def cmots_screener_bundle_api(symbol: str):
+    """Composite ScreenerBundle for a ticker (§9.6). Returns empty-shaped
+    bundle for uncovered tickers — frontend gets a renderable response either way."""
+    from server.cmots_accessor import get_screener_bundle
+    bundle = await asyncio.to_thread(get_screener_bundle, symbol)
+    return success_response(data=bundle)
+
+
+@fastapi_app.get(
+    "/api/tickers/{symbol}/financials/{statement_type}/{report}",
+    tags=["CMOTS"],
+)
+async def cmots_financials_api(symbol: str, statement_type: str, report: str):
+    """WideTable for one statement. Empty WideTable for uncovered tickers
+    OR when ``(statement_type, report)`` has no data."""
+    if statement_type.lower() not in _CMOTS_STATEMENT_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"statement_type must be one of {_CMOTS_STATEMENT_TYPES}",
+        )
+    if report.lower() not in _CMOTS_REPORTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"report must be one of {_CMOTS_REPORTS}",
+        )
+    from server.cmots_accessor import get_financial_statements
+    wt = await asyncio.to_thread(
+        get_financial_statements, symbol, statement_type.lower(), report.lower(),
+    )
+    return success_response(data=wt)
+
+
+@fastapi_app.get("/api/tickers/{symbol}/ratios/{period}", tags=["CMOTS"])
+async def cmots_ratios_api(symbol: str, period: str):
+    """Ratios: WideTable for yearly/quarterly, flat dict for daily."""
+    if period.lower() not in _CMOTS_RATIO_PERIODS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"period must be one of {_CMOTS_RATIO_PERIODS}",
+        )
+    from server.cmots_accessor import get_ratios
+    r = await asyncio.to_thread(get_ratios, symbol, period.lower())
+    return success_response(data=r)
+
+
+@fastapi_app.get("/api/tickers/{symbol}/shareholding", tags=["CMOTS"])
+async def cmots_shareholding_api(symbol: str):
+    """CMOTS shareholding pivot (WideTable shape). The legacy
+    ``/api/shareholding/{ticker}`` endpoint serves the scraper-shape
+    response — this endpoint is the CMOTS-native WideTable view for new
+    §9 panels."""
+    from server.cmots_accessor import get_shareholding
+    wt = await asyncio.to_thread(get_shareholding, symbol)
+    return success_response(data=wt)
+
+
+@fastapi_app.get("/api/tickers/{symbol}/corporate-actions", tags=["CMOTS"])
+async def cmots_corp_actions_api(
+    symbol: str,
+    type: str | None = Query(None, description="Optional action_type filter"),
+):
+    """Corporate-action events. Optional ``?type=dividend`` filter."""
+    from server.cmots_accessor import get_corporate_actions
+    rows = await asyncio.to_thread(get_corporate_actions, symbol, type)
+    return success_response(data=rows)
+
+
+@fastapi_app.get("/api/tickers/{symbol}/narratives/{doc_type}", tags=["CMOTS"])
+async def cmots_narratives_api(symbol: str, doc_type: str):
+    """Narrative documents (Director Report, MDA, etc.)."""
+    if doc_type.lower() not in _CMOTS_DOC_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"doc_type must be one of {_CMOTS_DOC_TYPES}",
+        )
+    from server.cmots_accessor import get_narratives
+    rows = await asyncio.to_thread(get_narratives, symbol, doc_type.lower())
+    return success_response(data=rows)
+
+
+@fastapi_app.get("/api/tickers/{symbol}/announcements", tags=["CMOTS"])
+async def cmots_announcements_api(
+    symbol: str,
+    with_ratings_only: bool = Query(False, description="Filter to rating events"),
+):
+    """BSE/NSE announcements timeline. Optional ``?with_ratings_only=true``."""
+    from server.cmots_accessor import get_announcements
+    rows = await asyncio.to_thread(get_announcements, symbol, with_ratings_only)
+    return success_response(data=rows)
+
+
+@fastapi_app.get("/api/tickers/{symbol}/pros-cons", tags=["CMOTS"])
+async def cmots_pros_cons_api(symbol: str):
+    """§9.3 pros/cons rule engine output: ``[{type, label, detail}, ...]``."""
+    from server.cmots_accessor import get_pros_cons
+    rows = await asyncio.to_thread(get_pros_cons, symbol)
+    return success_response(data=rows)
+
+
+@fastapi_app.get("/api/tickers/{symbol}/credit-ratings", tags=["CMOTS"])
+async def cmots_credit_ratings_api(symbol: str):
+    """§9.4 credit-rating events (subset of announcements with agency+rating
+    extracted)."""
+    from server.cmots_accessor import get_credit_ratings
+    rows = await asyncio.to_thread(get_credit_ratings, symbol)
+    return success_response(data=rows)
+
+
+@fastapi_app.get("/api/sectors/{sector}/medians", tags=["CMOTS"])
+async def cmots_sector_medians_api(sector: str):
+    """§9.2 sector medians for the sector-comparison panel.
+    Process-wide in-memory cache; invalidated at sync-end."""
+    from server.cmots_accessor import get_sector_medians
+    sector_decoded = unquote(sector)
+    medians = await asyncio.to_thread(get_sector_medians, sector_decoded)
+    return success_response(data=medians)
+
+
+# --- Admin routes (require X-Admin-Secret) -------------------------------
+
+
+def _cmots_admin_db_cursor():
+    """Open a direct psycopg2 cursor for admin endpoints using DB_* env at
+    call time. Matches the accessor module's pattern (and bypasses the
+    module-level pool, which is initialized once at import time and can't
+    pick up environment changes — important for test environments that
+    repoint DB_* at TEST_DB_*)."""
+    from server.cmots_accessor import _open_cursor
+    return _open_cursor()
+
+
+@fastapi_app.post(
+    "/api/admin/cmots/sync",
+    dependencies=[Depends(require_cmots_admin)],
+    tags=["CMOTS Admin"],
+)
+async def cmots_admin_sync_api():
+    """Enqueue the ``cmots.sync`` Celery task. Returns immediately with
+    ``{task_id, sync_state}``. Rejects with 409 if a sync is already
+    in flight (``cmots_sync_state.status = 'running'``)."""
+    try:
+        conn, cur = _cmots_admin_db_cursor()
+        try:
+            cur.execute(
+                "SELECT id, status, started_at, finished_at, total, done, failed, current "
+                "FROM cmots_sync_state WHERE id = 1"
+            )
+            current_state = cur.fetchone()
+        finally:
+            cur.close()
+            conn.close()
+    except Exception as exc:  # noqa: BLE001
+        logging.exception("[CMOTS-ADMIN] sync-state read failed")
+        raise HTTPException(status_code=500, detail=f"Failed to read sync state: {exc}") from exc
+
+    if current_state and current_state.get("status") == "running":
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "CMOTS sync already in progress",
+                "sync_state": _serialize_sync_state_row(current_state),
+            },
+        )
+
+    # Enqueue via Celery. The task is registered in celery_tasks.py.
+    try:
+        from celery_app import celery_app as celery_app_instance
+        result = celery_app_instance.send_task("cmots.sync")
+        task_id = result.id
+    except Exception as exc:  # noqa: BLE001
+        logging.exception("[CMOTS-ADMIN] Celery dispatch failed")
+        raise HTTPException(
+            status_code=503,
+            detail=f"Failed to enqueue cmots.sync task: {exc}",
+        ) from exc
+
+    return success_response(data={
+        "task_id":    task_id,
+        "sync_state": _serialize_sync_state_row(current_state),
+    })
+
+
+@fastapi_app.get(
+    "/api/admin/cmots/sync-state",
+    dependencies=[Depends(require_cmots_admin)],
+    tags=["CMOTS Admin"],
+)
+async def cmots_admin_sync_state_api():
+    """Return the ``cmots_sync_state`` singleton row for progress polling."""
+    try:
+        conn, cur = _cmots_admin_db_cursor()
+        try:
+            cur.execute(
+                "SELECT id, status, total, done, failed, current, started_at, finished_at "
+                "FROM cmots_sync_state WHERE id = 1"
+            )
+            row = cur.fetchone()
+        finally:
+            cur.close()
+            conn.close()
+        return success_response(data=_serialize_sync_state_row(row))
+    except Exception as exc:  # noqa: BLE001
+        logging.exception("[CMOTS-ADMIN] sync-state read failed")
+        raise HTTPException(status_code=500, detail=f"Failed to read sync state: {exc}") from exc
+
+
+@fastapi_app.get(
+    "/api/admin/cmots/coverage",
+    dependencies=[Depends(require_cmots_admin)],
+    tags=["CMOTS Admin"],
+)
+async def cmots_admin_coverage_api(
+    limit: int = Query(200, ge=1, le=3500, description="Max rows"),
+    offset: int = Query(0, ge=0),
+):
+    """Paginated list of CMOTS-covered tickers
+    ``[{co_code, symbol, name, last_synced_at}, ...]``."""
+    try:
+        conn, cur = _cmots_admin_db_cursor()
+        try:
+            cur.execute(
+                """
+                SELECT co_code, symbol, name, cmots_last_synced_at, cmots_disabled
+                  FROM tickers
+                 WHERE has_cmots_data = TRUE
+                   AND co_code IS NOT NULL
+                 ORDER BY co_code ASC
+                 LIMIT %s OFFSET %s
+                """,
+                (limit, offset),
+            )
+            rows = cur.fetchall()
+            cur.execute(
+                "SELECT count(*) AS n FROM tickers WHERE has_cmots_data = TRUE AND co_code IS NOT NULL"
+            )
+            total = cur.fetchone()["n"]
+        finally:
+            cur.close()
+            conn.close()
+        return success_response(
+            data={
+                "tickers": [
+                    {
+                        "co_code":         r["co_code"],
+                        "symbol":          r["symbol"],
+                        "name":            r["name"],
+                        "last_synced_at":  r["cmots_last_synced_at"].isoformat() if r["cmots_last_synced_at"] else None,
+                        "cmots_disabled":  bool(r["cmots_disabled"]),
+                    }
+                    for r in rows
+                ],
+                "total":  total,
+                "limit":  limit,
+                "offset": offset,
+            }
+        )
+    except Exception as exc:  # noqa: BLE001
+        logging.exception("[CMOTS-ADMIN] coverage read failed")
+        raise HTTPException(status_code=500, detail=f"Failed to read coverage: {exc}") from exc
+
+
+def _serialize_sync_state_row(row: dict | None) -> dict:
+    """Render a ``cmots_sync_state`` row dict for JSON response."""
+    if not row:
+        return {"status": "never_run", "total": 0, "done": 0, "failed": 0}
+    return {
+        "id":          row.get("id"),
+        "status":      row.get("status"),
+        "total":       row.get("total"),
+        "done":        row.get("done"),
+        "failed":      row.get("failed"),
+        "current":     row.get("current"),
+        "started_at":  row["started_at"].isoformat() if row.get("started_at") else None,
+        "finished_at": row["finished_at"].isoformat() if row.get("finished_at") else None,
+    }
 
 
 @fastapi_app.get("/api/stock-analysis/{ticker}/pdf", tags=["Stock Detail"])
@@ -7749,27 +8146,73 @@ async def get_expert_screener_universe():
 @fastapi_app.post("/api/expert-screener/validate", tags=["Technical Analysis"])
 async def validate_expert_screener_expression(payload: ExpertScreenerRequest):
     """
-    Validate an expert screener expression without running it.
+    Validate a screener expression without running it.
+
+    Body:
+        expression: required string.
+        variant: optional, "expert" (default) | "fundamental". Selects which
+                 identifier audit to apply. The AST-level check is the same
+                 for both — only the recognised-identifier set differs.
 
     Returns:
-        Validation result with error message if invalid
+        {valid, expression, error?, unknown_identifiers}
+        - AST check via ConditionEvaluator (catches syntax errors,
+          disallowed Python nodes). Same for both variants.
+        - Identifier audit via audit_identifiers (expert) or
+          audit_fundamental_identifiers (fundamental) — catches names the
+          screener's parser wouldn't recognise, which would silently
+          produce zero-result screens at runtime.
+        valid is true only when both pass. unknown_identifiers is always
+        present (empty list when none) so consumers don't need to handle
+        a missing field.
     """
     expression = (payload.expression or "").strip()
     if not expression:
         raise HTTPException(status_code=400, detail="Expression is required")
 
+    variant = (payload.variant or "expert").strip().lower()
+    if variant not in {"expert", "fundamental"}:
+        raise HTTPException(status_code=400, detail=f"Unknown variant: {variant}")
+    audit_fn = audit_fundamental_identifiers if variant == "fundamental" else audit_identifiers
+
+    # AST-level check
     try:
         ConditionEvaluator(expression)
-        return success_response({
-            "valid": True,
-            "expression": expression
-        })
-    except ValueError as e:
+    except (ValueError, SyntaxError) as e:
         return success_response({
             "valid": False,
             "expression": expression,
-            "error": str(e)
+            "error": str(e),
+            "unknown_identifiers": [],
         })
+
+    # Identifier audit (only if AST passed)
+    try:
+        _known, unknown = audit_fn(expression)
+    except (ValueError, SyntaxError) as e:
+        # Shouldn't happen — AST already passed — but stay defensive.
+        return success_response({
+            "valid": False,
+            "expression": expression,
+            "error": str(e),
+            "unknown_identifiers": [],
+        })
+
+    if unknown:
+        unknown_sorted = sorted(unknown)
+        names = ", ".join(unknown_sorted)
+        return success_response({
+            "valid": False,
+            "expression": expression,
+            "error": f"Unknown identifier{'s' if len(unknown_sorted) > 1 else ''}: {names}",
+            "unknown_identifiers": unknown_sorted,
+        })
+
+    return success_response({
+        "valid": True,
+        "expression": expression,
+        "unknown_identifiers": [],
+    })
 
 
 @fastapi_app.get("/api/expert-screener/templates", tags=["Technical Analysis"])
@@ -7798,6 +8241,36 @@ async def get_expert_screener_templates():
             "name": "52W Breakout Watch",
             "description": "Price reclaiming prior highs on rising RSI",
             "expression": "(close > 0.9 * high_52_W) and (ema_20 > ema_50)"
+        },
+        {
+            "id": "golden_cross",
+            "name": "Golden Cross Setup",
+            "description": "Classic bullish crossover with liquidity confirmation",
+            "expression": "(ema_50 > ema_200) and (close > ema_50) and (liquidity > 500000000)"
+        },
+        {
+            "id": "volatility_squeeze",
+            "name": "Volatility Squeeze",
+            "description": "Tight Bollinger Bands signaling a potential breakout",
+            "expression": "((bb_upper_20_2 - bb_lower_20_2) / bb_middle_20_2 < 0.1) and (close > sma_50)"
+        },
+        {
+            "id": "macd_bullish_crossover",
+            "name": "MACD Bullish Crossover",
+            "description": "Momentum shift catching early trend reversals",
+            "expression": "(macd_line > macd_signal) and (macd_histogram > 0) and (close > ema_50) and (rsi_14 > 50)"
+        },
+        {
+            "id": "oversold_reversal",
+            "name": "Oversold Reversal",
+            "description": "Deeply oversold names showing signs of a bounce",
+            "expression": "(rsi_14 < 30) and (close > low_20_D) and (liquidity > 100000000)"
+        },
+        {
+            "id": "ath_momentum",
+            "name": "ATH Momentum",
+            "description": "Stocks at new highs with stacked moving averages",
+            "expression": "(close >= high_52_W) and (close > ema_20) and (ema_20 > ema_50) and (ema_50 > ema_200)"
         }
     ]
 
@@ -8001,8 +8474,8 @@ def _openrouter_streaming_sync(messages, queue):
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://tiphub.app",
-        "X-Title": "TipHub AI"
+        "HTTP-Referer": "https://your-domain.com",
+        "X-Title": "EquityPro AI"
     }
     payload = {
         "model": OPENROUTER_MODEL,
@@ -8061,7 +8534,7 @@ async def call_openrouter_streaming(
     messages = []
 
     # System prompt for financial assistant
-    system_prompt = """You are TipHub AI, an AI-powered financial assistant for Indian stock markets.
+    system_prompt = """You are EquityPro AI, an AI-powered financial assistant for Indian stock markets.
 You help users understand stocks, market trends, and investment concepts.
 
 Guidelines:
@@ -8117,14 +8590,14 @@ Guidelines:
 @fastapi_app.post("/api/tip-tease/chat/start", tags=["AI Chat"])
 async def start_tiptease_chat(request: TipTeaseChatRequest):
     """
-    Start a new TipHub chat stream.
+    Start a new EquityPro chat stream.
 
     Returns a stream_id that can be used with the SSE endpoint.
     """
     if not OPENROUTER_API_KEY:
         raise HTTPException(
             status_code=503,
-            detail="TipHub AI is not configured. Please set OPENROUTER_API_KEY."
+            detail="EquityPro AI is not configured. Please set OPENROUTER_API_KEY."
         )
 
     stream_id = str(uuid.uuid4())
@@ -8159,7 +8632,7 @@ async def start_tiptease_chat(request: TipTeaseChatRequest):
 @fastapi_app.get("/api/tip-tease/stream/{stream_id}", tags=["AI Chat"])
 async def stream_tiptease_response(stream_id: str):
     """
-    SSE endpoint for streaming TipHub AI response.
+    SSE endpoint for streaming EquityPro AI response.
 
     Events:
         - connected: Initial connection confirmation
@@ -8249,7 +8722,7 @@ async def stream_tiptease_response(stream_id: str):
 
 @fastapi_app.post("/api/tip-tease/cancel/{stream_id}", tags=["AI Chat"])
 async def cancel_tiptease_stream(stream_id: str):
-    """Cancel a running TipHub stream."""
+    """Cancel a running EquityPro stream."""
     # Mark as cancelled
     update_tiptease_stream(stream_id, {"status": "cancelled"})
 
@@ -8268,7 +8741,7 @@ async def cancel_tiptease_stream(stream_id: str):
 @fastapi_app.get("/api/tip-tease/summary", tags=["AI Chat"])
 async def get_tiptease_summary():
     """
-    Get today's market summary and contextual hint for TipHub.
+    Get today's market summary and contextual hint for EquityPro.
 
     Returns:
         - summary: Brief market overview
@@ -8435,9 +8908,12 @@ except ImportError:
 try:
     from option_chain_visualizer import (
         compute_exposures as _ft_compute_exposures,
+        compute_atm_straddle as _ft_compute_atm_straddle,
         build_iv_surface as _ft_build_iv_surface,
         append_atm_gxoi as _ft_append_atm_gxoi,
         get_atm_gxoi_timeseries as _ft_get_atm_gxoi_timeseries,
+        append_minute_bar as _ft_append_minute_bar,
+        get_minute_bars as _ft_get_minute_bars,
         append_surface_snapshot as _ft_append_surface_snapshot,
         get_surface_history as _ft_get_surface_history,
         cache_exposure_data as _ft_cache_exposure_data,
@@ -8448,9 +8924,12 @@ try:
     )
 except ImportError:
     _ft_compute_exposures = None  # type: ignore
+    _ft_compute_atm_straddle = None  # type: ignore
     _ft_build_iv_surface = None  # type: ignore
     _ft_append_atm_gxoi = None  # type: ignore
     _ft_get_atm_gxoi_timeseries = None  # type: ignore
+    _ft_append_minute_bar = None  # type: ignore
+    _ft_get_minute_bars = None  # type: ignore
     _ft_append_surface_snapshot = None  # type: ignore
     _ft_get_surface_history = None  # type: ignore
     _ft_cache_exposure_data = None  # type: ignore
@@ -8589,12 +9068,20 @@ def _ft_get_range_params(range_value: str):
         "3M": ("3mo", "1d"),
         "6M": ("6mo", "1d"),
         "1Y": ("1y", "1d"),
+        "3Y": ("3y", "1d"),
+        "5Y": ("5y", "1d"),
     }
     return mappings.get(range_value.upper(), ("1mo", "1d"))
 
 
 def _ft_fetch_symbol_history(symbol: str, period: str, interval: str, include_time: bool = False) -> Dict[str, Any]:
-    """Fetch historical data for a symbol using yfinance."""
+    """Fetch historical data for a symbol using yfinance.
+
+    yfinance returns NaN for half-day holidays / illiquid bars. NaN floats
+    are not valid JSON (FastAPI's default encoder raises ValueError), so we
+    skip rows where any OHLC field is NaN rather than emitting them and
+    blowing up the whole response downstream.
+    """
     try:
         formatted_symbol = _ft_format_symbol(symbol)
         ticker = yf.Ticker(formatted_symbol)
@@ -8608,14 +9095,24 @@ def _ft_fetch_symbol_history(symbol: str, period: str, interval: str, include_ti
                 timestamp_value = date_value.isoformat()
             else:
                 timestamp_value = date_value.strftime("%Y-%m-%d")
+
+            o = row.get("Open")
+            h = row.get("High")
+            l = row.get("Low")
+            c = row.get("Close")
+            v = row.get("Volume")
+            # Drop rows that have any NaN in OHLC — these are yfinance gaps
+            # for missing/half-day sessions and would break JSON serialization.
+            if any(pd.isna(x) for x in (o, h, l, c)):
+                continue
             records.append({
                 "timestamp": timestamp_value,
                 "date": date_value.strftime("%Y-%m-%d"),
-                "open": float(row["Open"]) if "Open" in row else 0,
-                "high": float(row["High"]) if "High" in row else 0,
-                "low": float(row["Low"]) if "Low" in row else 0,
-                "close": float(row["Close"]) if "Close" in row else 0,
-                "volume": int(row["Volume"]) if "Volume" in row and not pd.isna(row["Volume"]) else 0,
+                "open": float(o),
+                "high": float(h),
+                "low": float(l),
+                "close": float(c),
+                "volume": int(v) if v is not None and not pd.isna(v) else 0,
             })
         return {"symbol": symbol.upper(), "data": records}
     except Exception as exc:
@@ -8672,9 +9169,53 @@ def _ft_fetch_yfinance_quote(symbol: str) -> Optional[Dict[str, Any]]:
 
 
 # --- FinTerminal asyncpg pool (separate from EdgeFlow's psycopg2 pool) ---
-# This pool is None by default; set it externally if asyncpg is available
-# and a connection to the same DB is needed by FinTerminal endpoints.
 _ft_asyncpg_pool = None
+
+
+async def _ft_init_asyncpg_pool():
+    """Attach FinTerminal async endpoints to the same Postgres database."""
+    global _ft_asyncpg_pool
+    if _ft_asyncpg_pool is not None:
+        return
+    if _asyncpg is None:
+        logger.warning("[FinTerminal DB] asyncpg is not installed; DB-backed FT routes disabled")
+        return
+
+    required = ("host", "port", "database", "user", "password")
+    missing = [key for key in required if not DB_CONFIG.get(key)]
+    if missing:
+        logger.warning("[FinTerminal DB] Missing DB config keys: %s", ", ".join(missing))
+        return
+
+    try:
+        _ft_asyncpg_pool = await _asyncpg.create_pool(
+            host=DB_CONFIG["host"],
+            port=int(DB_CONFIG["port"]),
+            database=DB_CONFIG["database"],
+            user=DB_CONFIG["user"],
+            password=DB_CONFIG["password"],
+            min_size=int(os.getenv("FT_ASYNCPG_MIN_SIZE", "1")),
+            max_size=int(os.getenv("FT_ASYNCPG_MAX_SIZE", "5")),
+            command_timeout=float(os.getenv("FT_ASYNCPG_COMMAND_TIMEOUT", "30")),
+        )
+        logger.info("[FinTerminal DB] asyncpg pool initialized")
+    except Exception:
+        _ft_asyncpg_pool = None
+        logger.exception("[FinTerminal DB] Failed to initialize asyncpg pool")
+
+
+async def _ft_close_asyncpg_pool():
+    """Close the FinTerminal asyncpg pool during FastAPI shutdown."""
+    global _ft_asyncpg_pool
+    if _ft_asyncpg_pool is None:
+        return
+    try:
+        await _ft_asyncpg_pool.close()
+        logger.info("[FinTerminal DB] asyncpg pool closed")
+    except Exception:
+        logger.exception("[FinTerminal DB] Failed to close asyncpg pool")
+    finally:
+        _ft_asyncpg_pool = None
 
 
 # =============================================================================
@@ -8815,9 +9356,152 @@ _ft_depth_ws_manager = _FTDepthWSConnectionManager()
 # FinTerminal: Option Chain Endpoints
 # =============================================================================
 
+async def _read_oi_previous_snapshot(symbol: str, expiry: str) -> dict:
+    """
+    Read the `:previous` OI snapshot from Redis (written by the Celery
+    snapshot_options_oi task every 5 min). Returns a strike-keyed dict
+    {"22000": {"ce_oi": N, "pe_oi": N}} or empty dict if missing.
+    """
+    if not expiry:
+        return {}
+    try:
+        from redis_cache import get_redis
+        redis = await get_redis()
+        prev_key = f"options_oi:{symbol.upper()}:{expiry}:previous"
+        raw = await redis.get(prev_key)
+        if not raw:
+            return {}
+        import json as _json
+        snap = _json.loads(raw)
+        return snap.get("strikes") or {}
+    except Exception as e:
+        print(f"[options chain] OI snapshot read failed for {symbol}/{expiry}: {e}")
+        return {}
+
+
+def _compute_chain_summary(chain: dict) -> dict:
+    """
+    Compute per-chain aggregates: ATM strike, PCR, total CE/PE OI, ATM IV,
+    max pain. All purely client-side derivations from the chain rows we
+    already have — no extra fetches.
+
+    max pain: for each strike S, total expiration loss to option writers is
+        sum_{K} call_OI[K] * max(0, S - K) + put_OI[K] * max(0, K - S)
+    The strike S that minimizes that loss is the max-pain strike.
+    """
+    calls = chain.get("calls") or []
+    puts = chain.get("puts") or []
+    underlying = chain.get("underlying")
+
+    if not calls and not puts:
+        return {
+            "atmStrike": None, "atmIV": None, "pcr": None,
+            "totalCallOI": 0, "totalPutOI": 0, "maxPain": None,
+        }
+
+    total_ce_oi = sum(int(c.get("openInterest") or 0) for c in calls)
+    total_pe_oi = sum(int(p.get("openInterest") or 0) for p in puts)
+    pcr = (total_pe_oi / total_ce_oi) if total_ce_oi > 0 else None
+
+    # ATM strike — closest to underlying
+    atm_strike = None
+    atm_iv = None
+    if underlying:
+        all_strikes = {float(c.get("strike") or 0) for c in calls if c.get("strike")}
+        all_strikes |= {float(p.get("strike") or 0) for p in puts if p.get("strike")}
+        all_strikes.discard(0)
+        if all_strikes:
+            atm_strike = min(all_strikes, key=lambda k: abs(k - underlying))
+            # Average CE+PE IV at ATM
+            ivs = []
+            for c in calls:
+                if float(c.get("strike") or 0) == atm_strike:
+                    iv = c.get("impliedVolatility")
+                    if iv:
+                        ivs.append(float(iv))
+            for p in puts:
+                if float(p.get("strike") or 0) == atm_strike:
+                    iv = p.get("impliedVolatility")
+                    if iv:
+                        ivs.append(float(iv))
+            atm_iv = (sum(ivs) / len(ivs)) if ivs else None
+
+    # Max pain — loss to writers minimized at this strike
+    max_pain = None
+    if calls or puts:
+        ce_oi_by_strike: dict = {}
+        pe_oi_by_strike: dict = {}
+        for c in calls:
+            k = float(c.get("strike") or 0)
+            if k > 0:
+                ce_oi_by_strike[k] = int(c.get("openInterest") or 0)
+        for p in puts:
+            k = float(p.get("strike") or 0)
+            if k > 0:
+                pe_oi_by_strike[k] = int(p.get("openInterest") or 0)
+        all_k = sorted(set(list(ce_oi_by_strike.keys()) + list(pe_oi_by_strike.keys())))
+        if all_k:
+            best_strike = None
+            best_loss = float("inf")
+            for s in all_k:
+                loss = 0.0
+                for k_call, oi in ce_oi_by_strike.items():
+                    if s > k_call:
+                        loss += oi * (s - k_call)
+                for k_put, oi in pe_oi_by_strike.items():
+                    if s < k_put:
+                        loss += oi * (k_put - s)
+                if loss < best_loss:
+                    best_loss = loss
+                    best_strike = s
+            max_pain = best_strike
+
+    return {
+        "atmStrike": atm_strike,
+        "atmIV": atm_iv,
+        "pcr": pcr,
+        "totalCallOI": total_ce_oi,
+        "totalPutOI": total_pe_oi,
+        "maxPain": max_pain,
+    }
+
+
+def _annotate_chain_with_oi_delta(chain: dict, prev_strikes: dict) -> dict:
+    """
+    Attach `oiDelta` to each call/put leg = current OI - 5-min-ago OI.
+    Returns a NEW dict (doesn't mutate input).
+    """
+    if not prev_strikes:
+        # No snapshot yet — explicitly None so frontend shows "—" instead of 0
+        for leg in (chain.get("calls") or []):
+            leg["oiDelta"] = None
+        for leg in (chain.get("puts") or []):
+            leg["oiDelta"] = None
+        return chain
+
+    for leg in (chain.get("calls") or []):
+        k = str(int(leg.get("strike") or 0))
+        prev = prev_strikes.get(k)
+        cur_oi = int(leg.get("openInterest") or 0)
+        leg["oiDelta"] = (cur_oi - int(prev.get("ce_oi", 0))) if prev else None
+    for leg in (chain.get("puts") or []):
+        k = str(int(leg.get("strike") or 0))
+        prev = prev_strikes.get(k)
+        cur_oi = int(leg.get("openInterest") or 0)
+        leg["oiDelta"] = (cur_oi - int(prev.get("pe_oi", 0))) if prev else None
+    return chain
+
+
 @fastapi_app.get("/api/options/{symbol}")
 async def ft_get_option_chain(symbol: str, expiry: str = Query(None)):
-    """Fetch option chain data (NIFTY via NSE live scraper, otherwise yfinance)."""
+    """Fetch option chain data (NIFTY/BANKNIFTY via NSE live scraper, otherwise yfinance).
+
+    Response augmentations on top of the raw chain (added during the v2 panel
+    rebuild):
+    - `summary` object: atmStrike, atmIV, pcr, totalCallOI, totalPutOI, maxPain
+    - per-strike `oiDelta`: current OI minus the OI snapshotted 5 minutes ago
+      (None if the snapshot Celery task hasn't yet written one for this expiry)
+    """
     try:
         normalized_symbol = symbol.upper()
         if normalized_symbol in {"NIFTY", "NIFTY 50", "^NSEI", "BANKNIFTY", "NIFTY BANK"}:
@@ -8825,8 +9509,14 @@ async def ft_get_option_chain(symbol: str, expiry: str = Query(None)):
                 return _ft_api_response({
                     "symbol": symbol.upper(), "expiry": None,
                     "availableExpiries": [], "calls": [], "puts": [],
+                    "summary": None,
                 }, "option_chain_live module unavailable")
             live_chain = await asyncio.to_thread(_ft_fetch_nse_index_option_chain, normalized_symbol, expiry)
+            # Annotate with 5-min OI delta from the snapshot Celery writes
+            chain_expiry = live_chain.get("expiry") if isinstance(live_chain, dict) else None
+            prev_strikes = await _read_oi_previous_snapshot(normalized_symbol, chain_expiry) if chain_expiry else {}
+            live_chain = _annotate_chain_with_oi_delta(live_chain, prev_strikes)
+            live_chain["summary"] = _compute_chain_summary(live_chain)
             return _ft_api_response(live_chain, "Live NSE option chain")
 
         formatted_symbol = _ft_format_symbol(symbol)
@@ -8881,7 +9571,11 @@ async def ft_get_option_chain(symbol: str, expiry: str = Query(None)):
             "availableExpiries": available_expiries,
             "calls": [serialize_option(record) for record in calls],
             "puts": [serialize_option(record) for record in puts],
+            "underlying": None,  # yfinance fallback doesn't include spot inline
         }
+        # No OI snapshot for yfinance symbols (cron only covers NIFTY/BANKNIFTY)
+        data = _annotate_chain_with_oi_delta(data, {})
+        data["summary"] = _compute_chain_summary(data)
 
         return _ft_api_response(data)
 
@@ -8893,6 +9587,7 @@ async def ft_get_option_chain(symbol: str, expiry: str = Query(None)):
             "availableExpiries": [],
             "calls": [],
             "puts": [],
+            "summary": None,
         }, f"Option chain unavailable: {str(exc)}")
 
 
@@ -8925,7 +9620,28 @@ async def ft_get_options_exposure(symbol: str, expiry: str = Query(None)):
         exposure_data = _ft_compute_exposures(chain, spot)
 
         now = datetime.now(_FT_IST)
-        asyncio.create_task(_ft_append_atm_gxoi(normalized, now, exposure_data["atm_gxoi"]))
+        try:
+            asyncio.ensure_future(_ft_append_atm_gxoi(normalized, now, exposure_data["atm_gxoi"]))
+        except Exception as e:
+            logging.warning(f"Failed to append ATM GxOI: {e}")
+
+        # Idempotent minute-bar write so dev/test environments without Celery beat
+        # still accumulate a time series. Worker writes the same key — last writer
+        # for a given HH:MM minute wins and that's fine.
+        if _ft_append_minute_bar is not None and _ft_compute_atm_straddle is not None:
+            try:
+                straddle = _ft_compute_atm_straddle(chain, spot, exposure_data.get("atm_strike"))
+                bar = {
+                    "atm_gxoi": exposure_data.get("atm_gxoi", 0),
+                    "atm_strike": exposure_data.get("atm_strike"),
+                    "spot": spot,
+                    "atm_straddle": straddle.get("atm_straddle", 0),
+                    "ce_ltp": straddle.get("ce_ltp", 0),
+                    "pe_ltp": straddle.get("pe_ltp", 0),
+                }
+                asyncio.ensure_future(_ft_append_minute_bar(normalized, now, bar))
+            except Exception as e:
+                logging.warning(f"Failed to append minute bar: {e}")
 
         await _ft_cache_exposure_data(normalized, exposure_data)
 
@@ -8938,23 +9654,56 @@ async def ft_get_options_exposure(symbol: str, expiry: str = Query(None)):
 
 @fastapi_app.get("/api/options-visualizer/timeseries/{symbol}")
 async def ft_get_options_timeseries(symbol: str, date: str = Query(None)):
-    """Get ATM GxOI time series for current or specified trading session."""
+    """
+    1-minute bars for the current (or specified) trading session.
+
+    Returns ATM GxOI + ATM straddle in one payload. Both series share the
+    same minute grid sourced from `options_viz:minute_bar:{SYMBOL}:{YYYY-MM-DD}`.
+    """
     try:
         normalized = symbol.upper()
         if normalized not in {"NIFTY", "BANKNIFTY"}:
             return _ft_api_error("Only NIFTY and BANKNIFTY supported", 400)
 
-        if _ft_get_atm_gxoi_timeseries is None or _ft_viz_is_market_hours is None:
+        if _ft_get_minute_bars is None or _ft_viz_is_market_hours is None:
             return _ft_api_error("option_chain_visualizer module unavailable", 503)
 
-        history = await _ft_get_atm_gxoi_timeseries(normalized, date)
+        bars = await _ft_get_minute_bars(normalized, date)
+
+        # Map minute bars to the wire shape. `timestamp` keeps the existing
+        # contract used by the 2D chart's GxOI line; new fields drive the 5th
+        # subplot (ATM straddle).
+        #
+        # Straddle is emitted as `null` when both legs have zero LTP — that is
+        # the early-session signature of "no trades have printed yet on the
+        # ATM CE/PE today" (NSE resets lastPrice to 0 at session start). Plotly
+        # breaks the line on null, so the straddle plot starts at the first
+        # minute that actually has prints rather than dipping to 0 at 09:15.
+        # GxOI is left untouched — its inputs (OI carry-forward + Greeks from
+        # quotes) are valid from 09:15.
+        data = []
+        for bar in bars:
+            if not bar.get("ts"):
+                continue
+            ce_ltp = bar.get("ce_ltp", 0) or 0
+            pe_ltp = bar.get("pe_ltp", 0) or 0
+            no_prints_yet = ce_ltp == 0 and pe_ltp == 0
+            data.append({
+                "timestamp": bar.get("ts"),
+                "atm_gxoi": bar.get("atm_gxoi", 0),
+                "atm_straddle": None if no_prints_yet else bar.get("atm_straddle", 0),
+                "atm_strike": bar.get("atm_strike"),
+                "spot": bar.get("spot", 0),
+                "ce_ltp": ce_ltp,
+                "pe_ltp": pe_ltp,
+            })
 
         return _ft_api_response({
             "symbol": normalized,
-            "data": history,
+            "data": data,
             "is_market_open": _ft_viz_is_market_hours(),
             "date": date or datetime.now(_FT_IST).strftime("%Y-%m-%d"),
-        }, "ATM GxOI time series")
+        }, "Options visualizer minute bars")
 
     except Exception as e:
         print(f"Options timeseries error for {symbol}: {e}")
@@ -9019,7 +9768,10 @@ async def ft_get_options_surface(
         await _ft_cache_surface_data(normalized, surface_data)
 
         now = datetime.now(_FT_IST)
-        asyncio.create_task(_ft_append_surface_snapshot(normalized, now, surface_data))
+        try:
+            asyncio.ensure_future(_ft_append_surface_snapshot(normalized, now, surface_data))
+        except Exception as e:
+            logging.warning(f"Failed to append surface snapshot: {e}")
 
         if include_history:
             history = await _ft_get_surface_history(normalized)
@@ -9123,13 +9875,7 @@ async def ft_submit_async_screener(payload: AsyncScreenerRequest):
 
 @fastapi_app.post("/api/portfolio/optimize")
 async def ft_submit_portfolio_optimization(payload: PortfolioOptimizeRequest):
-    """Submit a portfolio optimization job to run in the background."""
-    if not _FT_CELERY_AVAILABLE:
-        raise HTTPException(
-            status_code=503,
-            detail={"success": False, "message": "Background job processing not available."}
-        )
-
+    """Run portfolio optimization (synchronous fallback when Celery unavailable)."""
     try:
         if not payload.holdings:
             raise HTTPException(
@@ -9150,27 +9896,41 @@ async def ft_submit_portfolio_optimization(payload: PortfolioOptimizeRequest):
                 detail={"success": False, "message": "At least 2 holdings with valid quantities required for optimization"}
             )
 
-        task = _ft_celery_optimize_portfolio.delay(
-            holdings=cleaned_holdings,
-            risk_free_rate=payload.risk_free_rate,
-            max_weight=payload.max_weight,
-            rebalance_frequency=payload.rebalance_frequency,
-            lookback_period=payload.lookback_period,
-        )
-
-        return _ft_api_response({
-            "job_id": task.id,
-            "status": "submitted",
-            "holdings_count": len(cleaned_holdings),
-            "submitted_at": datetime.utcnow().isoformat() + "Z",
-        }, "Portfolio optimization job submitted successfully")
+        if _FT_CELERY_AVAILABLE:
+            # Async via Celery
+            task = _ft_celery_optimize_portfolio.delay(
+                holdings=cleaned_holdings,
+                risk_free_rate=payload.risk_free_rate,
+                max_weight=payload.max_weight,
+                rebalance_frequency=payload.rebalance_frequency,
+                lookback_period=payload.lookback_period,
+            )
+            return _ft_api_response({
+                "job_id": task.id,
+                "status": "submitted",
+                "holdings_count": len(cleaned_holdings),
+                "submitted_at": datetime.utcnow().isoformat() + "Z",
+            }, "Portfolio optimization job submitted successfully")
+        else:
+            # Synchronous fallback — run directly
+            from portfolio_optimizer import run_full_optimization
+            job_id = str(uuid.uuid4())
+            result = await run_full_optimization(_ft_asyncpg_pool, cleaned_holdings)
+            return _ft_api_response({
+                "job_id": job_id,
+                "status": "completed",
+                "result": result,
+                "holdings_count": len(cleaned_holdings),
+                "computed_at": datetime.utcnow().isoformat() + "Z",
+            }, "Portfolio optimization completed")
 
     except HTTPException:
         raise
     except Exception as exc:
+        logger.exception(f"Portfolio optimization failed: {exc}")
         raise HTTPException(
             status_code=500,
-            detail={"success": False, "message": f"Failed to submit job: {str(exc)}"}
+            detail={"success": False, "message": f"Optimization failed: {str(exc)}"}
         )
 
 
@@ -9884,6 +10644,8 @@ async def ft_compare_chart(
         "3M": "3 months",
         "6M": "6 months",
         "1Y": "1 year",
+        "3Y": "3 years",
+        "5Y": "5 years",
     }
     sql_interval = range_map.get(range.upper(), "1 month")
 
@@ -9893,6 +10655,8 @@ async def ft_compare_chart(
         "3M": "3mo",
         "6M": "6mo",
         "1Y": "1y",
+        "3Y": "3y",
+        "5Y": "5y",
     }
     cache_period = period_map.get(range.upper(), "1mo")
 
@@ -9900,7 +10664,11 @@ async def ft_compare_chart(
     db_symbols_found = set()
     uncached_symbols = list(symbol_list)
 
-    cached_charts = await _ft_redis_cache.get_cached_charts_batch(symbol_list, "1d", cache_period)
+    try:
+        cached_charts = await _ft_redis_cache.get_cached_charts_batch(symbol_list, "1d", cache_period)
+    except Exception as e:
+        print(f"[Chart Compare] cache read failed, continuing: {e}")
+        cached_charts = {}
     for sym in symbol_list:
         if sym in cached_charts and cached_charts[sym]:
             results.append({"symbol": sym, "data": cached_charts[sym]})
@@ -9955,16 +10723,24 @@ async def ft_compare_chart(
     missing_symbols = [sym for sym in symbol_list if sym not in db_symbols_found]
 
     if missing_symbols and _FT_USE_YFINANCE_FALLBACK:
-        period_yf, interval_yf = _ft_get_range_params(range)
-        tasks = [
-            asyncio.to_thread(_ft_fetch_symbol_history, sym, period_yf, interval_yf)
-            for sym in missing_symbols
-        ]
-        fallback_results = await asyncio.gather(*tasks)
+        try:
+            period_yf, interval_yf = _ft_get_range_params(range)
+            tasks = [
+                asyncio.to_thread(_ft_fetch_symbol_history, sym, period_yf, interval_yf)
+                for sym in missing_symbols
+            ]
+            # return_exceptions=True so a single yfinance failure (rate-limit,
+            # bad symbol, network blip) doesn't kill the entire request.
+            fallback_results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        for result in fallback_results:
-            if result["data"]:
-                results.append(result)
+            for idx, result in enumerate(fallback_results):
+                if isinstance(result, BaseException):
+                    print(f"[Chart Compare] yfinance fallback failed for {missing_symbols[idx]}: {result}")
+                    continue
+                if result.get("data"):
+                    results.append(result)
+        except Exception as e:
+            print(f"[Chart Compare] yfinance fallback batch failed: {e}")
 
     found_symbols = {r["symbol"] for r in results}
     for sym in symbol_list:
@@ -9975,6 +10751,427 @@ async def ft_compare_chart(
         return _ft_api_response([], "No historical data available for requested symbols")
 
     return _ft_api_response(results)
+
+
+# =============================================================================
+# FinTerminal: Monitor — sector heat
+# =============================================================================
+
+@fastapi_app.get("/api/monitor/sector-heat")
+async def ft_monitor_sector_heat(
+    universe: str = Query("NSE", description="Symbol universe — currently always NSE-wide"),
+    limit: int = Query(9, ge=4, le=18, description="How many top sectors to return"),
+):
+    """
+    Aggregate today's percent_change by sector for the sector heatmap cell on
+    the Monitor page. Joins ltp_live → tickers → stock_fundamentals (for sector)
+    and computes the mean percent_change per sector across all stocks where
+    fundamentals carry a sector. Returns sectors sorted by absolute change so
+    the heatmap shows the most-moved sectors first.
+    """
+    _ = universe  # reserved for future filtering (NIFTY 50 / NIFTY 200 / etc.)
+
+    def _fetch():
+        conn = None
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT sf.sector,
+                           AVG(ltp.percent_change)::float AS avg_pct,
+                           COUNT(*) AS member_count
+                    FROM ltp_live ltp
+                    JOIN tickers t ON t.id = ltp.ticker_id
+                    JOIN stock_fundamentals sf ON sf.ticker_id = t.id
+                    WHERE sf.sector IS NOT NULL
+                      AND sf.sector <> ''
+                      AND ltp.percent_change IS NOT NULL
+                      AND t.is_active = true
+                    GROUP BY sf.sector
+                    HAVING COUNT(*) >= 3
+                    ORDER BY ABS(AVG(ltp.percent_change)) DESC
+                    LIMIT %s
+                    """,
+                    [limit],
+                )
+                rows = cur.fetchall()
+            return [
+                {
+                    "sector": row[0],
+                    "avg_change_percent": float(row[1]) if row[1] is not None else 0.0,
+                    "member_count": int(row[2]),
+                }
+                for row in rows
+            ]
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    try:
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(None, _fetch)
+        return list_response(result, {"count": len(result)})
+    except Exception as exc:
+        logging.exception("Monitor sector-heat failed")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch sector heat: {str(exc)}") from exc
+
+
+# =============================================================================
+# FinTerminal: Monitor — 52-week extremes (highs/lows leaderboard)
+# =============================================================================
+
+@fastapi_app.get("/api/monitor/extremes")
+async def ft_monitor_extremes(
+    limit: int = Query(10, ge=3, le=25),
+    proximity_pct: float = Query(
+        1.0,
+        ge=0.0,
+        le=10.0,
+        description="How close (in %) to the 52-week high/low to count as 'at' the extreme",
+    ),
+):
+    """
+    Stocks at or near 52-week highs / lows. Joins ltp_live with
+    stock_fundamentals.fifty_two_week_high/low and ranks by today's
+    percent_change (gainers first for highs, losers first for lows).
+
+    Returns { highs: [...], lows: [...] }, each row has:
+      symbol, name, ltp, percent_change, fifty_two_week_high,
+      fifty_two_week_low, distance_pct (how far from the extreme).
+    """
+    threshold_high = 1.0 - (proximity_pct / 100.0)  # e.g. 0.99 for 1%
+    threshold_low = 1.0 + (proximity_pct / 100.0)   # e.g. 1.01 for 1%
+
+    def _fetch():
+        conn = None
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                # 52-week highs: LTP within proximity of the stored high
+                cur.execute(
+                    """
+                    SELECT t.symbol,
+                           COALESCE(sf.long_name, t.name) AS name,
+                           ltp.ltp,
+                           ltp.percent_change,
+                           sf.fifty_two_week_high,
+                           sf.fifty_two_week_low,
+                           ((ltp.ltp - sf.fifty_two_week_high) / sf.fifty_two_week_high) * 100.0 AS distance_pct
+                    FROM ltp_live ltp
+                    JOIN tickers t ON t.id = ltp.ticker_id
+                    JOIN stock_fundamentals sf ON sf.ticker_id = t.id
+                    WHERE t.is_active = true
+                      AND sf.fifty_two_week_high IS NOT NULL
+                      AND sf.fifty_two_week_high > 0
+                      AND ltp.ltp IS NOT NULL
+                      AND ltp.ltp >= sf.fifty_two_week_high * %s
+                    ORDER BY ltp.percent_change DESC NULLS LAST
+                    LIMIT %s
+                    """,
+                    [threshold_high, limit],
+                )
+                highs_rows = cur.fetchall()
+
+                # 52-week lows: LTP within proximity of the stored low
+                cur.execute(
+                    """
+                    SELECT t.symbol,
+                           COALESCE(sf.long_name, t.name) AS name,
+                           ltp.ltp,
+                           ltp.percent_change,
+                           sf.fifty_two_week_high,
+                           sf.fifty_two_week_low,
+                           ((ltp.ltp - sf.fifty_two_week_low) / sf.fifty_two_week_low) * 100.0 AS distance_pct
+                    FROM ltp_live ltp
+                    JOIN tickers t ON t.id = ltp.ticker_id
+                    JOIN stock_fundamentals sf ON sf.ticker_id = t.id
+                    WHERE t.is_active = true
+                      AND sf.fifty_two_week_low IS NOT NULL
+                      AND sf.fifty_two_week_low > 0
+                      AND ltp.ltp IS NOT NULL
+                      AND ltp.ltp <= sf.fifty_two_week_low * %s
+                    ORDER BY ltp.percent_change ASC NULLS LAST
+                    LIMIT %s
+                    """,
+                    [threshold_low, limit],
+                )
+                lows_rows = cur.fetchall()
+
+            def to_dict(rows):
+                return [
+                    {
+                        "symbol": r[0],
+                        "name": r[1],
+                        "ltp": float(r[2]) if r[2] is not None else None,
+                        "percent_change": float(r[3]) if r[3] is not None else None,
+                        "fifty_two_week_high": float(r[4]) if r[4] is not None else None,
+                        "fifty_two_week_low": float(r[5]) if r[5] is not None else None,
+                        "distance_pct": float(r[6]) if r[6] is not None else None,
+                    }
+                    for r in rows
+                ]
+
+            return {"highs": to_dict(highs_rows), "lows": to_dict(lows_rows)}
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    try:
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(None, _fetch)
+        return success_response(result)
+    except Exception as exc:
+        logging.exception("Monitor extremes failed")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch extremes: {str(exc)}") from exc
+
+
+# =============================================================================
+# FinTerminal: Stock Comparator Metrics
+# =============================================================================
+
+@fastapi_app.get("/api/compare/metrics")
+async def ft_compare_metrics(
+    symbols: str = Query(..., min_length=1),
+    benchmark: str = Query("NIFTY 50"),
+):
+    """
+    Per-symbol metrics for the Stock Comparator page.
+
+    For each symbol returns: live price + change, market cap, P/E (TTM),
+    P/B, ROE, debt/equity, dividend yield, avg daily volume,
+    fifty-two-week high/low, computed 1Y / 3Y / YTD returns, computed 30-day
+    realized volatility, and computed beta vs benchmark (default NIFTY 50).
+
+    Computed fields are derived from `ohlc_daily`. Stored fields come from
+    `stock_fundamentals` and `ltp_live`. Beta is the OLS slope of daily-return
+    regression of stock vs benchmark over the same 1-year window used for the
+    1Y return.
+    """
+    raw_symbols = [s.strip().upper().replace('.NS', '') for s in symbols.split(',') if s.strip()]
+    if not raw_symbols:
+        return list_response([])
+    # Limit to a sane upper bound
+    symbol_list = raw_symbols[:6]
+    benchmark_sym = benchmark.strip().upper().replace('.NS', '')
+
+    def _fetch():
+        conn = None
+        try:
+            conn = get_db_connection()
+
+            # 1) Resolve ticker IDs for all requested symbols + benchmark
+            with conn.cursor() as cur:
+                lookup_syms = list(set(symbol_list + [benchmark_sym]))
+                cur.execute(
+                    "SELECT id, symbol FROM tickers WHERE UPPER(symbol) = ANY(%s) AND is_active = true",
+                    [lookup_syms],
+                )
+                ticker_rows = cur.fetchall()
+            ticker_id_by_sym = {row[1].upper(): row[0] for row in ticker_rows}
+            if not ticker_id_by_sym:
+                return []
+
+            requested_ids = [ticker_id_by_sym[s] for s in symbol_list if s in ticker_id_by_sym]
+            benchmark_id = ticker_id_by_sym.get(benchmark_sym)
+
+            # 2) Fundamentals for requested symbols
+            fundamentals_by_id: dict = {}
+            if requested_ids:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "SELECT ticker_id, long_name, sector, industry, market_cap, "
+                        "trailing_pe, price_to_book, return_on_equity, debt_to_equity, "
+                        "dividend_yield, avg_volume, fifty_two_week_high, fifty_two_week_low "
+                        "FROM stock_fundamentals WHERE ticker_id = ANY(%s)",
+                        [requested_ids],
+                    )
+                    for row in cur.fetchall():
+                        fundamentals_by_id[row[0]] = {
+                            "long_name": row[1],
+                            "sector": row[2],
+                            "industry": row[3],
+                            "market_cap": float(row[4]) if row[4] is not None else None,
+                            "trailing_pe": float(row[5]) if row[5] is not None else None,
+                            "price_to_book": float(row[6]) if row[6] is not None else None,
+                            "return_on_equity": float(row[7]) if row[7] is not None else None,
+                            "debt_to_equity": float(row[8]) if row[8] is not None else None,
+                            "dividend_yield": float(row[9]) if row[9] is not None else None,
+                            "avg_volume": float(row[10]) if row[10] is not None else None,
+                            "fifty_two_week_high": float(row[11]) if row[11] is not None else None,
+                            "fifty_two_week_low": float(row[12]) if row[12] is not None else None,
+                        }
+
+            # 3) LTP for requested symbols
+            ltp_accessor = LTPDataAccessor(conn)
+            ltps = ltp_accessor.get_latest_ltps(requested_ids)
+            ltp_by_id = {row['ticker_id']: row for row in ltps if row}
+
+            # 4) 5-year daily closes for requested symbols + benchmark (single batched query)
+            history_ids = list(set(requested_ids + ([benchmark_id] if benchmark_id else [])))
+            history_by_id: dict = {sid: [] for sid in history_ids}
+            if history_ids:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "SELECT ticker_id, day, close "
+                        "FROM ohlc_daily "
+                        "WHERE ticker_id = ANY(%s) "
+                        "  AND day >= CURRENT_DATE - INTERVAL '5 years' "
+                        "ORDER BY ticker_id, day ASC",
+                        [history_ids],
+                    )
+                    for row in cur.fetchall():
+                        sid, day, close = row[0], row[1], row[2]
+                        if close is not None:
+                            history_by_id[sid].append((day, float(close)))
+
+            # ── helpers ─────────────────────────────────────────────────
+            def pct_return(series, days_back):
+                if len(series) < 2:
+                    return None
+                last_day, last_close = series[-1]
+                if last_close <= 0:
+                    return None
+                # Find the close closest to (last_day - days_back)
+                target_day = last_day - timedelta(days=days_back)
+                candidate = None
+                for d, c in series:
+                    if d <= target_day:
+                        candidate = c
+                    else:
+                        break
+                if candidate is None or candidate <= 0:
+                    return None
+                return (last_close / candidate - 1.0) * 100.0
+
+            def cagr(series, days_back):
+                pct = pct_return(series, days_back)
+                if pct is None:
+                    return None
+                years = days_back / 365.0
+                if years <= 0:
+                    return None
+                growth = 1.0 + pct / 100.0
+                if growth <= 0:
+                    return None
+                return (growth ** (1.0 / years) - 1.0) * 100.0
+
+            def ytd_return(series):
+                if not series:
+                    return None
+                last_day, last_close = series[-1]
+                jan_1 = last_day.replace(month=1, day=1)
+                # First trading day on/after Jan 1
+                anchor = None
+                for d, c in series:
+                    if d >= jan_1:
+                        anchor = c
+                        break
+                if anchor is None or anchor <= 0:
+                    return None
+                return (last_close / anchor - 1.0) * 100.0
+
+            def realized_vol_30d(series):
+                # Annualized 30-day daily-return stddev
+                if len(series) < 21:
+                    return None
+                tail = series[-30:]
+                closes = [c for _, c in tail]
+                returns = [closes[i] / closes[i - 1] - 1.0 for i in range(1, len(closes)) if closes[i - 1] > 0]
+                if len(returns) < 5:
+                    return None
+                mean = sum(returns) / len(returns)
+                var = sum((r - mean) ** 2 for r in returns) / max(1, len(returns) - 1)
+                stddev = var ** 0.5
+                # Annualize from daily → ~252 trading days
+                return stddev * (252 ** 0.5) * 100.0
+
+            def beta_vs(series, bench_series, days_back=365):
+                # OLS slope of daily-return regression of stock vs benchmark
+                # over the trailing `days_back` window.
+                if not series or not bench_series:
+                    return None
+                last_day = min(series[-1][0], bench_series[-1][0])
+                cutoff = last_day - timedelta(days=days_back)
+                # Index by date
+                bmap = {d: c for d, c in bench_series if d > cutoff}
+                pairs = []
+                prev_s = prev_b = None
+                for d, c in series:
+                    if d <= cutoff:
+                        continue
+                    if d not in bmap:
+                        continue
+                    if prev_s is not None and prev_b is not None and prev_s > 0 and prev_b > 0:
+                        pairs.append((c / prev_s - 1.0, bmap[d] / prev_b - 1.0))
+                    prev_s = c
+                    prev_b = bmap[d]
+                if len(pairs) < 30:
+                    return None
+                stock_returns = [p[0] for p in pairs]
+                mkt_returns = [p[1] for p in pairs]
+                mean_s = sum(stock_returns) / len(stock_returns)
+                mean_m = sum(mkt_returns) / len(mkt_returns)
+                cov = sum((stock_returns[i] - mean_s) * (mkt_returns[i] - mean_m) for i in range(len(pairs))) / len(pairs)
+                var_m = sum((r - mean_m) ** 2 for r in mkt_returns) / len(pairs)
+                if var_m <= 0:
+                    return None
+                return cov / var_m
+
+            # ── assemble per-symbol metrics ─────────────────────────────
+            bench_series = history_by_id.get(benchmark_id, []) if benchmark_id else []
+
+            output = []
+            for sym in symbol_list:
+                tid = ticker_id_by_sym.get(sym)
+                if tid is None:
+                    output.append({"symbol": sym, "available": False})
+                    continue
+                series = history_by_id.get(tid, [])
+                fund = fundamentals_by_id.get(tid, {})
+                ltp = ltp_by_id.get(tid, {}) or {}
+
+                last_price = ltp.get('ltp')
+                change_pct = ltp.get('percent_change')
+                # Fallback to last close in series if LTP missing
+                if last_price is None and series:
+                    last_price = series[-1][1]
+
+                output.append({
+                    "symbol": sym,
+                    "available": True,
+                    "long_name": fund.get("long_name"),
+                    "sector": fund.get("sector"),
+                    "last_price": float(last_price) if last_price is not None else None,
+                    "change_percent": float(change_pct) if change_pct is not None else None,
+                    "return_1y": pct_return(series, 365),
+                    "cagr_3y": cagr(series, 365 * 3),
+                    "return_ytd": ytd_return(series),
+                    "fifty_two_week_high": fund.get("fifty_two_week_high"),
+                    "fifty_two_week_low": fund.get("fifty_two_week_low"),
+                    "market_cap": fund.get("market_cap"),
+                    "trailing_pe": fund.get("trailing_pe"),
+                    "price_to_book": fund.get("price_to_book"),
+                    "return_on_equity": fund.get("return_on_equity"),
+                    "debt_to_equity": fund.get("debt_to_equity"),
+                    "dividend_yield": fund.get("dividend_yield"),
+                    "beta_1y": beta_vs(series, bench_series, 365),
+                    "volatility_30d": realized_vol_30d(series),
+                    "avg_volume": fund.get("avg_volume"),
+                })
+
+            return output
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    try:
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(None, _fetch)
+        return list_response(result, {"benchmark": benchmark_sym, "count": len(result)})
+    except Exception as exc:
+        logging.exception("Compare metrics API failed")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch compare metrics: {str(exc)}") from exc
 
 
 # =============================================================================
@@ -10053,9 +11250,431 @@ async def ft_get_rrg_image(
 # FinTerminal: Market Data Extra Endpoints
 # =============================================================================
 
+# =============================================================================
+# FinTerminal: World indices (curated list across 5 regions)
+# =============================================================================
+
+# Curated global benchmarks per region. yfinance ticker → display name.
+# Indian benchmarks come from our DB (ltp_live) for live data; everything
+# else routes through yfinance (NaN-safe fallback already in place).
+_WORLD_INDICES_CONFIG = {
+    "India": [
+        # symbol, name, yfinance ticker (None means use DB lookup by symbol)
+        ("Nifty 50",      "NIFTY 50",        None),
+        ("Nifty Bank",    "BANK NIFTY",      None),
+        ("India VIX",     "INDIA VIX",       None),
+        ("SENSEX",        "BSE SENSEX",      "^BSESN"),
+    ],
+    "Asia-Pacific": [
+        ("NIKKEI",        "Nikkei 225",      "^N225"),
+        ("HSI",           "Hang Seng",       "^HSI"),
+        ("KOSPI",         "KOSPI Composite", "^KS11"),
+        ("AXJO",          "ASX 200",         "^AXJO"),
+    ],
+    "Europe": [
+        ("FTSE",          "FTSE 100",        "^FTSE"),
+        ("DAX",           "DAX",             "^GDAXI"),
+        ("CAC",           "CAC 40",          "^FCHI"),
+        ("STOXX",         "STOXX 600",       "^STOXX"),
+    ],
+    "Americas": [
+        ("SPX",           "S&P 500",         "^GSPC"),
+        ("DJI",           "Dow Jones",       "^DJI"),
+        ("IXIC",          "NASDAQ",          "^IXIC"),
+        ("GSPTSE",        "TSX Composite",   "^GSPTSE"),
+    ],
+    "Commodities & FX": [
+        ("BRENT",         "Brent crude",     "BZ=F"),
+        ("GOLD",          "Gold futures",    "GC=F"),
+        ("USDINR",        "USD / INR",       "INR=X"),
+        ("BTC",           "Bitcoin",         "BTC-USD"),
+    ],
+}
+
+# Approximate market session windows (IST, weekdays only). Used for the
+# session badge — open / pre-market / closed.
+_SESSION_HOURS_IST = {
+    "India":            (datetime.strptime("09:15", "%H:%M").time(), datetime.strptime("15:30", "%H:%M").time()),
+    "Asia-Pacific":     (datetime.strptime("06:00", "%H:%M").time(), datetime.strptime("13:00", "%H:%M").time()),  # rough
+    "Europe":           (datetime.strptime("13:00", "%H:%M").time(), datetime.strptime("21:30", "%H:%M").time()),  # rough
+    "Americas":         (datetime.strptime("19:00", "%H:%M").time(), datetime.strptime("23:59", "%H:%M").time()),  # 9:30am ET → ~19:00 IST
+    "Commodities & FX": None,  # 24h
+}
+
+
+def _world_session_status(region: str) -> str:
+    """Return 'open' | 'closed' | 'pre-market' for the region (rough IST mapping)."""
+    if region == "Commodities & FX":
+        return "open"  # 24h
+    now_ist = get_current_ist_time()
+    weekday = now_ist.weekday()  # 0=Mon, 6=Sun
+    if weekday >= 5:
+        return "closed"
+    hours = _SESSION_HOURS_IST.get(region)
+    if not hours:
+        return "closed"
+    open_t, close_t = hours
+    now_t = now_ist.time()
+    if now_t < open_t:
+        # within 90 minutes of open → pre-market
+        delta_min = (open_t.hour * 60 + open_t.minute) - (now_t.hour * 60 + now_t.minute)
+        return "pre-market" if 0 <= delta_min <= 90 else "closed"
+    if now_t > close_t:
+        return "closed"
+    return "open"
+
+
+@fastapi_app.get("/api/world-indices")
+async def ft_world_indices():
+    """
+    Curated cross-region indices for the World Indices terminal page.
+
+    Indian indices are sourced from our ltp_live table (live, real-time).
+    Global indices route through yfinance (NaN-safe fallback we already
+    hardened). Each row carries a small daily-close sparkline + computed
+    YTD return + 30-day annualized volatility.
+
+    Cached for 60 seconds globally because yfinance is rate-limited.
+    """
+    cache_key = "world_indices:v1"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    # ── helpers ────────────────────────────────────────────────────────
+    def _fetch_db_index(symbol_in_db: str) -> dict:
+        """Live LTP + day range from our ltp_live for an Indian index."""
+        conn = None
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT t.symbol, t.name, ltp.ltp, ltp.percent_change,
+                           ltp.open, ltp.high, ltp.low, ltp.close
+                    FROM ltp_live ltp
+                    JOIN tickers t ON t.id = ltp.ticker_id
+                    WHERE UPPER(t.symbol) = UPPER(%s) AND t.is_active = true
+                    LIMIT 1
+                    """,
+                    [symbol_in_db],
+                )
+                row = cur.fetchone()
+            if not row:
+                return {}
+            sym, _name, ltp_v, pct, op, hi, lo, prev = row
+            ltp_f = float(ltp_v) if ltp_v is not None else None
+            pct_f = float(pct) if pct is not None else None
+            change = None
+            if ltp_f is not None and prev is not None:
+                change = ltp_f - float(prev)
+            return {
+                "ltp": ltp_f,
+                "change": change,
+                "change_percent": pct_f,
+                "day_low": float(lo) if lo is not None else None,
+                "day_high": float(hi) if hi is not None else None,
+            }
+        except Exception as e:
+            print(f"[world-indices] DB index lookup failed for {symbol_in_db}: {e}")
+            return {}
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    def _fetch_db_history(symbol_in_db: str) -> list[float]:
+        """Last ~1 year of daily closes for an Indian index from ohlc_daily."""
+        conn = None
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT od.day, od.close
+                    FROM ohlc_daily od
+                    JOIN tickers t ON t.id = od.ticker_id
+                    WHERE UPPER(t.symbol) = UPPER(%s) AND t.is_active = true
+                      AND od.day >= CURRENT_DATE - INTERVAL '13 months'
+                    ORDER BY od.day ASC
+                    """,
+                    [symbol_in_db],
+                )
+                rows = cur.fetchall()
+            return [(r[0], float(r[1])) for r in rows if r[1] is not None]
+        except Exception as e:
+            print(f"[world-indices] DB history lookup failed for {symbol_in_db}: {e}")
+            return []
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    def _fetch_yf_history(yf_ticker: str):
+        """Fetch ~1Y of daily closes via yfinance with NaN-safe filter.
+
+        Wrapped to be called inside asyncio.to_thread so the event loop
+        isn't blocked by yfinance's synchronous HTTP calls.
+        """
+        try:
+            ticker = yf.Ticker(yf_ticker)
+            history = ticker.history(period="1y", interval="1d")
+            if history is None or history.empty:
+                return None, []
+            valid = history.dropna(subset=["Close"])
+            if valid.empty:
+                return None, []
+            last_close = float(valid["Close"].iloc[-1])
+            prev_close = float(valid["Close"].iloc[-2]) if len(valid) >= 2 else last_close
+            day_low = float(valid["Low"].iloc[-1]) if not pd.isna(valid["Low"].iloc[-1]) else last_close
+            day_high = float(valid["High"].iloc[-1]) if not pd.isna(valid["High"].iloc[-1]) else last_close
+            change = last_close - prev_close
+            change_pct = (change / prev_close * 100.0) if prev_close > 0 else 0.0
+            series = [(idx.date(), float(row["Close"])) for idx, row in valid.iterrows() if not pd.isna(row["Close"])]
+            return {
+                "ltp": last_close,
+                "change": change,
+                "change_percent": change_pct,
+                "day_low": day_low,
+                "day_high": day_high,
+            }, series
+        except Exception as e:
+            print(f"[world-indices] yfinance lookup failed for {yf_ticker}: {e}")
+            return None, []
+
+    def _ytd_return(series):
+        if not series:
+            return None
+        last_day, last_close = series[-1]
+        # day is a date or datetime
+        if hasattr(last_day, "date"):
+            last_day = last_day.date()
+        jan1 = last_day.replace(month=1, day=1)
+        anchor = None
+        for d, c in series:
+            d_norm = d.date() if hasattr(d, "date") else d
+            if d_norm >= jan1:
+                anchor = c
+                break
+        if anchor is None or anchor <= 0:
+            return None
+        return (last_close / anchor - 1.0) * 100.0
+
+    def _vol_30d(series):
+        if len(series) < 21:
+            return None
+        tail = series[-30:]
+        closes = [c for _, c in tail]
+        rets = [closes[i] / closes[i - 1] - 1.0 for i in range(1, len(closes)) if closes[i - 1] > 0]
+        if len(rets) < 5:
+            return None
+        mean = sum(rets) / len(rets)
+        var = sum((r - mean) ** 2 for r in rets) / max(1, len(rets) - 1)
+        return (var ** 0.5) * (252 ** 0.5) * 100.0
+
+    def _build_sparkline(series, max_points: int = 30):
+        """Return last N closes as a flat list for client-side rendering."""
+        if not series:
+            return []
+        return [c for _, c in series[-max_points:]]
+
+    # ── per-instrument async fetch ─────────────────────────────────────
+    semaphore = asyncio.Semaphore(5)  # cap concurrent yfinance calls
+
+    async def _fetch_one(region: str, symbol: str, name: str, yf_ticker):
+        session = _world_session_status(region)
+        quote: dict = {}
+        series: list = []
+        try:
+            if yf_ticker is None:
+                # Indian — DB lookup, fast
+                quote = await asyncio.to_thread(_fetch_db_index, symbol)
+                series = await asyncio.to_thread(_fetch_db_history, symbol)
+            else:
+                # Global — yfinance, capped concurrency, hard 6s timeout
+                async with semaphore:
+                    try:
+                        yf_quote, series = await asyncio.wait_for(
+                            asyncio.to_thread(_fetch_yf_history, yf_ticker),
+                            timeout=6.0,
+                        )
+                        if yf_quote:
+                            quote = yf_quote
+                    except asyncio.TimeoutError:
+                        print(f"[world-indices] timeout fetching {yf_ticker}")
+                    except Exception as e:
+                        print(f"[world-indices] error fetching {yf_ticker}: {e}")
+        except Exception as e:
+            print(f"[world-indices] {symbol} failed: {e}")
+
+        return {
+            "symbol": symbol,
+            "name": name,
+            "region": region,
+            "session": session,
+            "ltp": quote.get("ltp"),
+            "change": quote.get("change"),
+            "change_percent": quote.get("change_percent"),
+            "day_low": quote.get("day_low"),
+            "day_high": quote.get("day_high"),
+            "ytd_return": _ytd_return(series),
+            "volatility_30d": _vol_30d(series),
+            "sparkline": _build_sparkline(series, 30),
+        }
+
+    try:
+        # Launch every instrument in parallel; semaphore caps yfinance to 5
+        # concurrent + each call has its own 6s timeout, so the whole batch
+        # is bounded at ~12s total wall clock.
+        tasks = [
+            _fetch_one(region, sym, name, yf)
+            for region, members in _WORLD_INDICES_CONFIG.items()
+            for sym, name, yf in members
+        ]
+        # Use return_exceptions so one slow / failed task doesn't kill the
+        # batch — _fetch_one already swallows yfinance errors per-task and
+        # returns a row with empty data, so this is just belt-and-braces.
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        result = [r for r in results if not isinstance(r, BaseException)]
+        payload = list_response(result, {"count": len(result)})
+        set_cached(cache_key, payload, 60)
+        return payload
+    except Exception as exc:
+        logging.exception("world-indices failed")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch world indices: {str(exc)}") from exc
+
+
 @fastapi_app.get("/api/most-active")
-async def ft_get_most_active():
-    return _ft_api_response([], "Data unavailable")
+async def ft_get_most_active(
+    sort: str = Query("volume", description="Sort: volume | value | gainers | losers | high52w | low52w"),
+    limit: int = Query(25, ge=5, le=100),
+    proximity_pct: float = Query(1.0, ge=0.0, le=10.0, description="For 52w sorts: how close (in %) to the extreme to count"),
+):
+    """
+    Universal market-activity ranking endpoint backing the Most-active panel.
+    Joins ltp_live × tickers × stock_fundamentals and returns rows ordered per
+    `sort`. Each row carries the data needed for all 6 sub-tabs (volume / value
+    / gainers / losers / 52w high / 52w low) so the frontend can pivot client-
+    side without re-querying.
+
+    Returns per row: symbol, name, sector, ltp, change_percent, volume,
+    value_cr (= ltp * volume / 1e7), fifty_two_week_high/low, band_position
+    (0 at low → 1 at high).
+    """
+    sort_norm = sort.lower().strip()
+
+    sort_clauses = {
+        "volume": "ORDER BY ltp.trade_volume DESC NULLS LAST",
+        "value": "ORDER BY (ltp.ltp * COALESCE(ltp.trade_volume, 0)) DESC NULLS LAST",
+        "gainers": "ORDER BY ltp.percent_change DESC NULLS LAST",
+        "losers": "ORDER BY ltp.percent_change ASC NULLS LAST",
+        "high52w": "ORDER BY ltp.percent_change DESC NULLS LAST",
+        "low52w": "ORDER BY ltp.percent_change ASC NULLS LAST",
+    }
+    order_by = sort_clauses.get(sort_norm, sort_clauses["volume"])
+
+    where_extras = []
+    where_params: list = []
+    if sort_norm == "high52w":
+        where_extras.append(
+            "sf.fifty_two_week_high IS NOT NULL AND sf.fifty_two_week_high > 0 "
+            "AND ltp.ltp >= sf.fifty_two_week_high * %s"
+        )
+        where_params.append(1.0 - (proximity_pct / 100.0))
+    elif sort_norm == "low52w":
+        where_extras.append(
+            "sf.fifty_two_week_low IS NOT NULL AND sf.fifty_two_week_low > 0 "
+            "AND ltp.ltp <= sf.fifty_two_week_low * %s"
+        )
+        where_params.append(1.0 + (proximity_pct / 100.0))
+
+    where_block = ""
+    if where_extras:
+        where_block = " AND " + " AND ".join(where_extras)
+
+    cache_key = f"most_active:v2:{sort_norm}:{limit}:{proximity_pct}"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    def _fetch():
+        conn = None
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                query = f"""
+                    WITH latest_ltp AS (
+                        SELECT DISTINCT ON (ticker_id)
+                               ticker_id,
+                               ltp,
+                               percent_change,
+                               trade_volume,
+                               timestamp
+                        FROM ltp_live
+                        WHERE ltp IS NOT NULL
+                          AND trade_volume IS NOT NULL
+                          AND trade_volume > 0
+                        ORDER BY ticker_id, timestamp DESC
+                    )
+                    SELECT t.symbol,
+                           COALESCE(sf.long_name, t.name) AS name,
+                           sf.sector,
+                           ltp.ltp,
+                           ltp.percent_change,
+                           ltp.trade_volume AS volume,
+                           sf.fifty_two_week_high,
+                           sf.fifty_two_week_low
+                    FROM latest_ltp ltp
+                    JOIN tickers t ON t.id = ltp.ticker_id
+                    LEFT JOIN stock_fundamentals sf ON sf.ticker_id = t.id
+                    WHERE t.is_active = true
+                      {where_block}
+                    {order_by}
+                    LIMIT %s
+                """
+                cur.execute(query, where_params + [limit])
+                rows = cur.fetchall()
+
+            output = []
+            for row in rows:
+                symbol, name, sector, ltp_val, pct, vol, hi52, lo52 = row
+                ltp_f = float(ltp_val) if ltp_val is not None else None
+                vol_f = float(vol) if vol is not None else None
+                hi_f = float(hi52) if hi52 is not None else None
+                lo_f = float(lo52) if lo52 is not None else None
+                value_cr = (
+                    (ltp_f * vol_f) / 1e7
+                    if ltp_f is not None and vol_f is not None
+                    else None
+                )
+                band_pos = None
+                if hi_f and lo_f and hi_f > lo_f and ltp_f is not None:
+                    band_pos = max(0.0, min(1.0, (ltp_f - lo_f) / (hi_f - lo_f)))
+                output.append({
+                    "symbol": symbol,
+                    "name": name,
+                    "sector": sector,
+                    "ltp": ltp_f,
+                    "change_percent": float(pct) if pct is not None else None,
+                    "volume": vol_f,
+                    "value_cr": value_cr,
+                    "fifty_two_week_high": hi_f,
+                    "fifty_two_week_low": lo_f,
+                    "band_position": band_pos,
+                })
+            return output
+        finally:
+            if conn:
+                release_db_connection(conn)
+
+    try:
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(None, _fetch)
+        payload = list_response(result, {"sort": sort_norm, "count": len(result)})
+        # Cache for 60 seconds (data refreshes every minute)
+        set_cached(cache_key, payload, 60)
+        return payload
+    except Exception as exc:
+        logging.exception("most-active failed")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch most active: {str(exc)}") from exc
 
 
 @fastapi_app.get("/api/52week/{symbol}")
@@ -10658,11 +12277,617 @@ async def ft_get_batch_sectors(symbols: str = Query(..., min_length=1)):
         return _ft_api_response([], f"Batch sectors unavailable: {str(e)}")
 
 
+# =============================================================================
+# Pair Trading Feasibility Endpoints
+# =============================================================================
+
+def _pair_trading_fetch_groups_sync() -> Dict[str, List[str]]:
+    """Sync DB worker for /api/pair-trading/groups (runs inside asyncio.to_thread)."""
+    with get_db_cursor() as cur:
+        cur.execute("""
+            SELECT DISTINCT TRIM(s) AS g FROM (
+                SELECT sector AS s FROM stock_fundamentals WHERE sector IS NOT NULL AND TRIM(sector) <> ''
+                UNION
+                SELECT sector AS s FROM tickers WHERE sector IS NOT NULL AND TRIM(sector) <> ''
+            ) u
+            WHERE TRIM(s) <> ''
+            ORDER BY g ASC
+        """)
+        sectors = [row["g"] for row in cur.fetchall() if row.get("g")]
+        cur.execute("""
+            SELECT DISTINCT TRIM(s) AS g FROM (
+                SELECT industry AS s FROM stock_fundamentals WHERE industry IS NOT NULL AND TRIM(industry) <> ''
+                UNION
+                SELECT industry AS s FROM tickers WHERE industry IS NOT NULL AND TRIM(industry) <> ''
+            ) u
+            WHERE TRIM(s) <> ''
+            ORDER BY g ASC
+        """)
+        industries = [row["g"] for row in cur.fetchall() if row.get("g")]
+    return {"sectors": sectors, "industries": industries}
+
+
+@fastapi_app.get("/api/pair-trading/groups")
+async def ft_pair_trading_groups():
+    """Return sorted lists of distinct sectors and industries for the group dropdown."""
+    cache_key = "pair_trading:groups:v4"
+    cached = get_cached(cache_key)
+    if cached and (cached.get("sectors") or cached.get("industries")):
+        logging.info(
+            f"[PairTrading] groups served from cache: sectors={len(cached.get('sectors', []))}, "
+            f"industries={len(cached.get('industries', []))}"
+        )
+        return _ft_api_response(cached)
+
+    try:
+        data = await asyncio.to_thread(_pair_trading_fetch_groups_sync)
+        logging.info(
+            f"[PairTrading] groups computed: sectors={len(data['sectors'])}, "
+            f"industries={len(data['industries'])}"
+        )
+        set_cached(cache_key, data, 3600)
+        return _ft_api_response(data)
+
+    except Exception as e:
+        logging.exception(f"[PairTrading] groups error: {e}")
+        return _ft_api_response({"sectors": [], "industries": []}, f"Groups unavailable: {str(e)}")
+
+
+_PAIR_MATRIX_SYMBOL_CAP = 30
+_PAIR_MATRIX_MIN_COVERAGE = 0.8
+
+
+def _pair_trading_fetch_matrix_data_sync(
+    group_type: str,
+    group: str,
+    lookback_days: int,
+) -> Optional[Dict[str, Any]]:
+    """Sync DB worker that returns { ticker_rows, ohlc_rows, truncated } or None if no tickers."""
+    col = "sector" if group_type == "sector" else "industry"
+    with get_db_cursor() as cur:
+        cur.execute(
+            f"""
+            SELECT DISTINCT t.id AS id, t.symbol AS symbol
+            FROM tickers t
+            LEFT JOIN stock_fundamentals sf ON sf.ticker_id = t.id
+            WHERE COALESCE(t.is_active, true) = true
+              AND (TRIM(t.{col}) = %s OR TRIM(sf.{col}) = %s)
+            ORDER BY t.symbol ASC
+            """,
+            (group, group),
+        )
+        ticker_rows = cur.fetchall()
+        if not ticker_rows:
+            return None
+
+        truncated = len(ticker_rows) > _PAIR_MATRIX_SYMBOL_CAP
+        if truncated:
+            ticker_rows = ticker_rows[:_PAIR_MATRIX_SYMBOL_CAP]
+
+        ticker_ids = [r["id"] for r in ticker_rows]
+
+        cur.execute(
+            """
+            SELECT ticker_id, day, close FROM (
+                SELECT ticker_id, day, close,
+                       ROW_NUMBER() OVER (PARTITION BY ticker_id ORDER BY day DESC) AS rn
+                FROM ohlc_daily
+                WHERE ticker_id = ANY(%s)
+            ) t
+            WHERE rn <= %s
+            ORDER BY ticker_id, day ASC
+            """,
+            (ticker_ids, lookback_days),
+        )
+        ohlc_rows = cur.fetchall()
+
+    return {
+        "ticker_rows": [{"id": r["id"], "symbol": r["symbol"]} for r in ticker_rows],
+        "ohlc_rows": [{"ticker_id": r["ticker_id"], "day": r["day"], "close": r["close"]} for r in ohlc_rows],
+        "truncated": truncated,
+    }
+
+
+@fastapi_app.get("/api/pair-trading/matrix")
+async def ft_pair_trading_matrix(
+    group_type: str = Query(..., pattern="^(sector|industry)$"),
+    group: str = Query(..., min_length=1),
+    method: str = Query("correlation", pattern="^(correlation|cointegration)$"),
+    lookback_days: int = Query(40, ge=10, le=500),
+):
+    """Compute an N×N correlation or cointegration matrix for all stocks in a sector/industry."""
+    cache_key = f"pair_trading:matrix:v4:{group_type}:{group}:{method}:{lookback_days}"
+    cached = get_cached(cache_key)
+    if cached:
+        return _ft_api_response(cached)
+
+    try:
+        fetched = await asyncio.to_thread(
+            _pair_trading_fetch_matrix_data_sync, group_type, group, lookback_days
+        )
+
+        if fetched is None:
+            return _ft_api_response(None, f"No stocks found for {group_type} '{group}'")
+
+        ticker_rows = fetched["ticker_rows"]
+        ohlc_rows = fetched["ohlc_rows"]
+        truncated = fetched["truncated"]
+
+        id_to_symbol = {row["id"]: row["symbol"].upper() for row in ticker_rows}
+
+        if not ohlc_rows:
+            return _ft_api_response(None, "No OHLC data for the selected lookback window")
+
+        per_symbol: Dict[str, Dict[str, float]] = {}
+        for row in ohlc_rows:
+            sym = id_to_symbol.get(row["ticker_id"])
+            if not sym:
+                continue
+            day_key = row["day"].strftime("%Y-%m-%d")
+            per_symbol.setdefault(sym, {})[day_key] = float(row["close"])
+
+        min_required = int(lookback_days * _PAIR_MATRIX_MIN_COVERAGE)
+        symbols: List[str] = []
+        series_map: Dict[str, pd.Series] = {}
+        for sym, closes in per_symbol.items():
+            if len(closes) < min_required:
+                continue
+            series = pd.Series(closes).sort_index()
+            symbols.append(sym)
+            series_map[sym] = series
+
+        symbols.sort()
+
+        if len(symbols) < 2:
+            return _ft_api_response(
+                None,
+                f"Not enough symbols with sufficient data (need ≥2, got {len(symbols)})",
+            )
+
+        close_df = pd.DataFrame({s: series_map[s] for s in symbols}).sort_index()
+        close_df = close_df.dropna(how="all")
+
+        as_of = close_df.index.max() if len(close_df) else None
+        n = len(symbols)
+        matrix: List[List[Optional[float]]] = [[None] * n for _ in range(n)]
+        pvalues: Optional[List[List[Optional[float]]]] = None
+
+        if method == "correlation":
+            aligned = close_df.dropna(how="any")
+            log_returns = np.log(aligned / aligned.shift(1)).dropna(how="any")
+            if len(log_returns) < 2:
+                return _ft_api_response(None, "Not enough overlapping data to compute correlation")
+
+            corr = log_returns.corr(method="pearson")
+            for i, sym_i in enumerate(symbols):
+                for j, sym_j in enumerate(symbols):
+                    if i == j:
+                        matrix[i][j] = 100.0
+                    else:
+                        val = corr.loc[sym_i, sym_j]
+                        if pd.isna(val):
+                            matrix[i][j] = None
+                        else:
+                            matrix[i][j] = round(float(val) * 100.0, 2)
+        else:
+            try:
+                from statsmodels.tsa.stattools import coint
+            except ImportError as e:
+                return _ft_api_response(
+                    None,
+                    f"Cointegration unavailable (statsmodels not installed): {str(e)}",
+                )
+
+            pvalues = [[None] * n for _ in range(n)]
+
+            for i in range(n):
+                matrix[i][i] = 100.0
+                pvalues[i][i] = 0.0
+                for j in range(i + 1, n):
+                    sym_i, sym_j = symbols[i], symbols[j]
+                    pair = close_df[[sym_i, sym_j]].dropna(how="any")
+                    if len(pair) < max(20, min_required // 2):
+                        continue
+                    try:
+                        _stat, pvalue, _crit = coint(pair[sym_i].values, pair[sym_j].values)
+                        score = round(float((1.0 - pvalue) * 100.0), 2)
+                        pval_rounded = round(float(pvalue), 4)
+                    except Exception:
+                        continue
+                    matrix[i][j] = score
+                    matrix[j][i] = score
+                    pvalues[i][j] = pval_rounded
+                    pvalues[j][i] = pval_rounded
+
+        payload: Dict[str, Any] = {
+            "symbols": symbols,
+            "matrix": matrix,
+            "method": method,
+            "lookback_days": lookback_days,
+            "group_type": group_type,
+            "group": group,
+            "truncated": truncated,
+            "symbol_cap": _PAIR_MATRIX_SYMBOL_CAP,
+            "as_of": str(as_of) if as_of is not None else None,
+        }
+        if pvalues is not None:
+            payload["pvalues"] = pvalues
+
+        set_cached(cache_key, payload, 900)
+        return _ft_api_response(payload)
+
+    except Exception as e:
+        logging.exception(f"[PairTrading] matrix error: {e}")
+        return _ft_api_response(None, f"Matrix unavailable: {str(e)}")
+
+
+def _pair_trading_fetch_pair_series_sync(symbols: List[str], lookback_days: int) -> List[Dict[str, Any]]:
+    """Fetch last N daily closes for each symbol from ohlc_daily (independent of calendar date)."""
+    with get_db_cursor() as cur:
+        cur.execute(
+            "SELECT id, symbol FROM tickers WHERE UPPER(symbol) = ANY(%s)",
+            ([s.upper() for s in symbols],),
+        )
+        ticker_rows = cur.fetchall()
+        if not ticker_rows:
+            return []
+
+        id_to_symbol = {r["id"]: r["symbol"].upper() for r in ticker_rows}
+        ticker_ids = list(id_to_symbol.keys())
+
+        cur.execute(
+            """
+            SELECT ticker_id, day, open, high, low, close, volume FROM (
+                SELECT ticker_id, day, open, high, low, close, volume,
+                       ROW_NUMBER() OVER (PARTITION BY ticker_id ORDER BY day DESC) AS rn
+                FROM ohlc_daily
+                WHERE ticker_id = ANY(%s)
+            ) t
+            WHERE rn <= %s
+            ORDER BY ticker_id, day ASC
+            """,
+            (ticker_ids, lookback_days),
+        )
+        ohlc_rows = cur.fetchall()
+
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    for row in ohlc_rows:
+        sym = id_to_symbol.get(row["ticker_id"])
+        if not sym:
+            continue
+        grouped.setdefault(sym, []).append({
+            "date": row["day"].strftime("%Y-%m-%d"),
+            "open": float(row["open"]) if row["open"] is not None else 0.0,
+            "high": float(row["high"]) if row["high"] is not None else 0.0,
+            "low": float(row["low"]) if row["low"] is not None else 0.0,
+            "close": float(row["close"]) if row["close"] is not None else 0.0,
+            "volume": int(row["volume"]) if row["volume"] else 0,
+        })
+
+    return [{"symbol": sym, "data": grouped.get(sym, [])} for sym in [s.upper() for s in symbols]]
+
+
+@fastapi_app.get("/api/pair-trading/pair-series")
+async def ft_pair_trading_pair_series(
+    symbols: str = Query(..., min_length=1),
+    lookback_days: int = Query(40, ge=10, le=1000),
+):
+    """Return the last N daily OHLC bars for each symbol in the pair.
+
+    Independent of the calendar date (uses ORDER BY day DESC LIMIT N),
+    so it works even if the DB isn't updated to today.
+    """
+    symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+    if not symbol_list:
+        return _ft_api_response([], "No symbols provided")
+    symbol_list = symbol_list[:5]
+
+    cache_key = f"pair_trading:pair_series:v1:{','.join(symbol_list)}:{lookback_days}"
+    cached = get_cached(cache_key)
+    if cached:
+        return _ft_api_response(cached)
+
+    try:
+        data = await asyncio.to_thread(
+            _pair_trading_fetch_pair_series_sync, symbol_list, lookback_days
+        )
+        set_cached(cache_key, data, 600)
+        return _ft_api_response(data)
+    except Exception as e:
+        logging.exception(f"[PairTrading] pair-series error: {e}")
+        return _ft_api_response([], f"Pair series unavailable: {str(e)}")
+
+
+# =============================================================================
+# Pattern Search Endpoint
+# =============================================================================
+
+@fastapi_app.get("/api/pattern-search", tags=["Technical Analysis"])
+async def pattern_search_api(
+    pattern: str = Query("all"),
+    timeframe: str = Query("1M"),
+    confidence: int = Query(70, ge=50, le=100),
+):
+    """
+    Scan top stocks for chart patterns (Head & Shoulders, Double Top/Bottom, Triangles, etc.).
+
+    Returns a plain JSON array (no envelope) because the frontend useQuery expects Pattern[] directly.
+    """
+    from server.pattern_detector import scan_patterns
+
+    cache_key = f"pattern_search:v2:{pattern}:{timeframe}:{confidence}"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    pool = get_db_pool()
+    conn = pool.getconn()
+    try:
+        patterns = scan_patterns(conn, pattern, timeframe, confidence)
+    finally:
+        pool.putconn(conn)
+
+    set_cached(cache_key, patterns, 900)  # 15 min TTL
+    return patterns
+
+
+@fastapi_app.get("/api/price-pattern-types", tags=["Technical Analysis"])
+async def price_pattern_types_api():
+    """
+    Return the grouped pattern-type metadata consumed by the dropdown on
+    /price-pattern. Single source of truth: backend defines the catalogue,
+    the frontend renders it. The `rare` flag drives the empty-state hint
+    when a scan returns zero results for an uncommon pattern.
+    """
+    from server.price_pattern_detector import PRICE_PATTERN_GROUPS
+
+    cache_key = "price_pattern_types:v1"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    payload = {"groups": PRICE_PATTERN_GROUPS}
+    set_cached(cache_key, payload, 300)
+    return payload
+
+
+@fastapi_app.get("/api/price-pattern-search", tags=["Technical Analysis"])
+async def price_pattern_search_api(
+    pattern: str = Query("all"),
+    timeframe: str = Query("1D"),
+    confidence: int = Query(70, ge=50, le=100),
+    symbol: str = Query(""),
+):
+    """
+    Scan stocks for candle and price-action patterns.
+
+    Returns a plain JSON array (no envelope) to mirror /api/pattern-search.
+    """
+    from server.price_pattern_detector import scan_price_patterns
+
+    symbol_filter = unquote(symbol).strip().upper()
+    cache_key = f"price_pattern_search:v1:{pattern}:{timeframe}:{confidence}:{symbol_filter or 'all'}"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    pool = get_db_pool()
+    conn = pool.getconn()
+    try:
+        patterns = scan_price_patterns(
+            conn,
+            pattern_filter=pattern,
+            timeframe=timeframe,
+            min_confidence=confidence,
+            symbol_filter=symbol_filter or None,
+        )
+    finally:
+        pool.putconn(conn)
+
+    set_cached(cache_key, patterns, 120)
+    return patterns
+
+
+# =============================================================================
+# Seasonality Analysis Endpoint
+# =============================================================================
+
+@fastapi_app.get("/api/seasonality/{ticker}", tags=["Technical Analysis"])
+async def seasonality_api(ticker: str):
+    """
+    Calculate weekly seasonality analysis for a stock using all available daily data.
+
+    Returns weekly stats (avg return, win rate per ISO week), monthly stats, and yearly heatmap data.
+    """
+    from server.seasonality import calculate_seasonality
+
+    ticker = unquote(ticker).upper()
+
+    cache_key = f"seasonality:{ticker}"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return {"data": cached}
+
+    pool = get_db_pool()
+    conn = pool.getconn()
+    try:
+        result = calculate_seasonality(conn, ticker)
+    finally:
+        pool.putconn(conn)
+
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"No data found for ticker {ticker}")
+
+    set_cached(cache_key, result, 3600)  # 1 hour TTL
+    return {"data": result}
+
+
+# =============================================================================
+# Fyers Token Management Endpoint
+# =============================================================================
+
+class FyersTokenRequest(BaseModel):
+    access_token: str
+    generated_at: Optional[str] = None
+    expiry: Optional[str] = None
+
+@fastapi_app.post("/api/admin/fyers-token", tags=["Admin"])
+async def update_fyers_token(request: FyersTokenRequest):
+    """Update Fyers access token from the admin UI. Writes to FYERS_TOKEN_PATH."""
+    import json as _json
+    from datetime import datetime as _dt
+
+    token_path = os.getenv("FYERS_TOKEN_PATH", "./fyers_token.json")
+
+    if not request.access_token or not request.access_token.strip():
+        raise HTTPException(status_code=400, detail="access_token is required")
+
+    payload = {
+        "access_token": request.access_token.strip(),
+        "generated_at": request.generated_at or _dt.now().isoformat(),
+        "expiry": request.expiry or "",
+    }
+
+    try:
+        with open(token_path, "w") as f:
+            _json.dump(payload, f, indent=2)
+        logging.info(f"[FyersToken] Token updated successfully, expires: {payload['expiry']}")
+        return success_response({"message": "Token updated", "expiry": payload["expiry"]})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to write token: {str(e)}")
+
+@fastapi_app.get("/api/admin/fyers-token", tags=["Admin"])
+async def get_fyers_token_status():
+    """Get current Fyers token status (expiry only, not the token itself)."""
+    import json as _json
+    from datetime import datetime as _dt
+
+    token_path = os.getenv("FYERS_TOKEN_PATH", "./fyers_token.json")
+
+    try:
+        if not os.path.exists(token_path):
+            return success_response({"status": "missing", "expiry": None})
+        with open(token_path, "r") as f:
+            data = _json.load(f)
+        expiry_str = data.get("expiry", "")
+        is_valid = False
+        if expiry_str:
+            try:
+                expiry = _dt.fromisoformat(expiry_str)
+                is_valid = expiry > _dt.now()
+            except Exception:
+                pass
+        return success_response({
+            "status": "valid" if is_valid else "expired",
+            "expiry": expiry_str,
+            "generated_at": data.get("generated_at", ""),
+        })
+    except Exception as e:
+        return success_response({"status": "error", "error": str(e), "expiry": None})
+
+
+# =============================================================================
+# Fundamental Screener Endpoints
+# =============================================================================
+
+class FundamentalScreenerRequest(BaseModel):
+    expression: str
+
+@fastapi_app.post("/api/fundamental-screener/start", tags=["Technical Analysis"])
+async def start_fundamental_screener(request: Request, body: FundamentalScreenerRequest):
+    """Start a fundamental screener job and return job_id for SSE streaming."""
+    user_id = get_task_user_id(request)
+    tier = get_task_tier(request)
+    if not check_task_limit(user_id, tier):
+        raise HTTPException(status_code=429, detail="Too many concurrent tasks. Please wait.")
+
+    expression = body.expression.strip()
+    if not expression:
+        raise HTTPException(status_code=400, detail="Expression is required")
+
+    try:
+        ConditionEvaluator(expression)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid expression: {str(e)}")
+
+    job_id = str(uuid.uuid4())
+    increment_task_count(user_id)
+
+    if not create_screener_task(job_id):
+        raise HTTPException(status_code=500, detail="Failed to create task")
+
+    _task_user_id = user_id
+
+    def run_task():
+        from server.fundamental_screener import run_fundamental_screener
+
+        if not get_screener_task(job_id):
+            decrement_task_count(_task_user_id)
+            return
+
+        def progress_cb(processed, total, matches):
+            update_screener_task(job_id, {"processed": processed, "total": total, "matches": matches})
+
+        def result_cb(result):
+            append_screener_result(job_id, result)
+
+        def abort_check():
+            return is_screener_cancelled(job_id)
+
+        try:
+            pool = get_db_pool()
+            conn = pool.getconn()
+            try:
+                summary = run_fundamental_screener(conn, expression, progress_cb, result_cb, abort_check)
+            finally:
+                pool.putconn(conn)
+
+            update_screener_task(job_id, {
+                "status": "complete",
+                "summary": summary,
+                "completed_at": time.time()
+            })
+        except Exception as e:
+            logging.exception(f"Fundamental screener task {job_id} failed")
+            update_screener_task(job_id, {
+                "status": "error",
+                "error": str(e),
+                "completed_at": time.time()
+            })
+        finally:
+            decrement_task_count(_task_user_id)
+
+    threading.Thread(target=run_task, daemon=True).start()
+    return success_response({"job_id": job_id})
+
+
+@fastapi_app.get("/api/fundamental-screener/stream/{job_id}", tags=["Technical Analysis"])
+async def stream_fundamental_screener(job_id: str):
+    """SSE stream for fundamental screener progress — reuses expert screener stream logic."""
+    return await stream_expert_screener(job_id)
+
+
+@fastapi_app.post("/api/fundamental-screener/cancel/{job_id}", tags=["Technical Analysis"])
+async def cancel_fundamental_screener(job_id: str):
+    """Cancel a running fundamental screener job."""
+    if not get_screener_task(job_id):
+        raise HTTPException(status_code=404, detail="Task not found")
+    update_screener_task(job_id, {"status": "cancelled", "completed_at": time.time()})
+    return success_response({"status": "cancelled"})
+
+
+@fastapi_app.get("/api/fundamental-screener/variables", tags=["Technical Analysis"])
+async def get_fundamental_variables():
+    """Return available fundamental variables for the screener."""
+    from server.fundamental_screener import FUNDAMENTAL_VARIABLES
+    return success_response(FUNDAMENTAL_VARIABLES)
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PYTHON_PORT", "7860"))
     is_dev = os.getenv("NODE_ENV", "development").lower() == "development"
 
-    logging.info(f"Starting Tiphub API server on port {port}")
+    logging.info(f"Starting EquityPro API server on port {port}")
     logging.info(f"Environment: {'development' if is_dev else 'production'}")
     logging.info(f"Auto-reload: {'enabled' if is_dev else 'disabled'}")
 

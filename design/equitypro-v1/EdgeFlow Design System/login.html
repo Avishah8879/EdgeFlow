@@ -1,0 +1,81 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+body{background:hsl(var(--background))}
+.auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+.auth-aside{background:linear-gradient(155deg,hsl(var(--brand-navy)) 0%,hsl(var(--brand-navy-deep)) 100%);color:white;padding:60px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.auth-aside::before{content:"";position:absolute;left:-150px;bottom:-150px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,hsl(var(--brand-gold)/0.3),transparent 70%);filter:blur(40px)}
+.auth-aside .brand-lockup{color:white}
+.auth-aside .brand-lockup span{color:white}
+.auth-aside h2{font-family:var(--font-display);font-size:42px;line-height:1.1;letter-spacing:-0.02em;margin:auto 0 24px;position:relative;z-index:1;color:white}
+.auth-aside h2 em{font-style:italic;color:hsl(var(--brand-gold))}
+.auth-aside .quote{position:relative;z-index:1;padding-top:20px;border-top:1px solid hsl(38 30% 88%/0.2)}
+.auth-aside .quote p{font-size:14px;line-height:1.6;color:hsl(38 30% 88%);margin:0 0 12px}
+.auth-aside .quote .who{font-size:12px;color:hsl(var(--brand-gold));font-weight:600}
+.auth-form{display:flex;align-items:center;justify-content:center;padding:40px}
+.auth-card{width:100%;max-width:400px}
+.auth-card h1{font-family:var(--font-display);font-size:32px;letter-spacing:-0.02em;color:hsl(var(--brand-navy));margin:0 0 8px}
+.dark .auth-card h1{color:hsl(38 30% 95%)}
+.auth-card p.lead{color:hsl(var(--muted-foreground));margin:0 0 28px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11.5px;font-weight:600;margin-bottom:6px}
+.field input{width:100%;height:42px;border:1px solid hsl(var(--border));background:hsl(var(--background));border-radius:var(--radius-md);padding:0 14px;font-size:14px;color:inherit;font-family:inherit;transition:border-color var(--t-fast)}
+.field input:focus{outline:none;border-color:hsl(var(--brand-gold));box-shadow:0 0 0 3px hsl(var(--brand-gold)/0.15)}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-bottom:18px}
+.row label{display:flex;gap:6px;align-items:center;color:hsl(var(--muted-foreground))}
+.row a{color:hsl(var(--brand-gold));text-decoration:none;font-weight:600}
+.divider{display:flex;align-items:center;margin:22px 0;font-size:11px;color:hsl(var(--muted-foreground));text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:600}
+.divider::before,.divider::after{content:"";flex:1;border-top:1px solid hsl(var(--border))}
+.divider span{padding:0 12px}
+.oauth{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.oauth button{height:42px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-md);font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:inherit}
+.tos{font-size:11px;color:hsl(var(--muted-foreground));margin-top:24px;text-align:center;line-height:1.6}
+.tos a{color:hsl(var(--brand-gold));font-weight:600}
+</style></head>
+<body data-screen-label="Auth · Sign in">
+<div class="auth">
+  <aside class="auth-aside">
+    <a href="index.html" class="brand-lockup"><img class="brand-mark" src="assets/shield.png" alt=""><span>EquityPro</span></a>
+    <h2>Markets at the<br><em>speed of thought.</em></h2>
+    <div class="quote">
+      <p>The reverse DCF is the killer feature for me. I finally stopped arguing with myself about what growth rate is reasonable — the market tells me.</p>
+      <div class="who">Arjun S. · Independent investor · Pune</div>
+    </div>
+  </aside>
+
+  <main class="auth-form">
+    <div class="auth-card">
+      <h1>Welcome back.</h1>
+      <p class="lead">Sign in to your EquityPro terminal.</p>
+
+      <div class="field"><label>Email</label><input type="email" placeholder="you@firm.in" value="arjun@example.in"></div>
+      <div class="field"><label>Password</label><input type="password" placeholder="••••••••••" value="password123"></div>
+
+      <div class="row">
+        <label><input type="checkbox" checked> Keep me signed in</label>
+        <a href="forgot.html">Forgot password?</a>
+      </div>
+
+      <a href="dashboard.html" class="btn btn-primary" style="width:100%;height:44px">Sign in</a>
+
+      <div class="divider"><span>Or continue with</span></div>
+      <div class="oauth">
+        <button>
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Google
+        </button>
+        <button>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+          Apple
+        </button>
+      </div>
+
+      <p class="tos">Don't have an account? <a href="signup.html">Open one →</a></p>
+      <p class="tos">By continuing you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</p>
+    </div>
+  </main>
+</div>
+<script src="app.js"></script>
+</body></html>

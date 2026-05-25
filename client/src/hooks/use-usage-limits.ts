@@ -13,7 +13,7 @@ const AUTH_BASE_URL = getAuthBaseUrl();
 
 // Types
 export interface UsageLimits {
-  tier: 'basic' | 'premium';
+  tier: 'free' | 'semi' | 'pro';
   limits: {
     screenerRunsPerHour: number;
     backtestRunsPerHour: number;

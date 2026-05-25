@@ -1,0 +1,242 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Advanced chart · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+body{overflow:hidden}
+.ft-app{display:grid;grid-template-rows:auto 1fr;height:100vh;background:hsl(var(--background))}
+.ft-bar{display:flex;align-items:center;gap:0;padding:0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card));height:48px}
+.ft-bar .sym{padding:0 16px;display:flex;align-items:center;gap:10px;border-right:1px solid hsl(var(--border));height:100%}
+.ft-bar .sym .t{font-family:var(--font-display);font-weight:800;font-size:18px;color:hsl(var(--brand-navy))}
+.dark .ft-bar .sym .t{color:hsl(38 30% 95%)}
+.ft-bar .sym .px{font-family:var(--font-mono);font-weight:700;font-size:16px}
+.ft-bar .sym .ch{font-family:var(--font-mono);font-size:13px}
+.ft-bar .tabs{display:flex;height:100%}
+.ft-bar .tabs button{height:100%;padding:0 14px;border:0;background:transparent;font-size:12px;font-weight:600;color:hsl(var(--muted-foreground));border-right:1px solid hsl(var(--border));font-family:var(--font-mono)}
+.ft-bar .tabs button.active{background:hsl(var(--accent));color:hsl(var(--brand-navy))}
+.dark .ft-bar .tabs button.active{color:hsl(var(--brand-gold))}
+.ft-bar .ind{display:flex;gap:6px;padding:0 16px;border-right:1px solid hsl(var(--border));height:100%;align-items:center}
+.ind-pill{font-size:11px;font-family:var(--font-mono);padding:3px 8px;border-radius:var(--radius-pill);background:hsl(var(--muted));border:1px solid hsl(var(--border));color:hsl(var(--foreground));font-weight:600}
+.ind-pill .x{color:hsl(var(--muted-foreground));margin-left:4px}
+.ft-bar .right{margin-left:auto;display:flex;gap:8px;padding:0 12px}
+
+.ft-grid{display:grid;grid-template-columns:60px 1fr 280px;height:100%;overflow:hidden}
+.ft-tools{border-right:1px solid hsl(var(--border));background:hsl(var(--card));display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:4px}
+.ft-tools button{width:38px;height:38px;border:0;background:transparent;border-radius:var(--radius-md);color:hsl(var(--muted-foreground));display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;font-family:var(--font-mono);font-weight:700}
+.ft-tools button.active{background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep))}
+.ft-tools button:hover{background:hsl(var(--muted))}
+.ft-tools .div{width:28px;height:1px;background:hsl(var(--border));margin:4px 0}
+
+.ft-chart-wrap{position:relative;background:hsl(var(--background));overflow:hidden}
+.ft-chart-wrap svg{width:100%;height:100%;display:block}
+.crosshair-info{position:absolute;top:14px;left:14px;background:hsl(var(--card)/0.92);border:1px solid hsl(var(--border));border-radius:var(--radius-md);padding:8px 12px;font-family:var(--font-mono);font-size:11px;display:flex;gap:14px;backdrop-filter:blur(8px)}
+.crosshair-info span{color:hsl(var(--muted-foreground))}
+.crosshair-info b{color:hsl(var(--foreground));font-weight:700}
+.crosshair-info .pos{color:hsl(var(--positive))}
+.crosshair-info .neg{color:hsl(var(--negative))}
+
+.ft-side{border-left:1px solid hsl(var(--border));background:hsl(var(--card));overflow-y:auto}
+.ft-side .sec{padding:14px 16px;border-bottom:1px solid hsl(var(--border))}
+.ft-side .sec h4{margin:0 0 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground))}
+.dom{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:hsl(var(--border));border:1px solid hsl(var(--border));border-radius:var(--radius-sm);overflow:hidden;font-family:var(--font-mono);font-size:11px}
+.dom .h{background:hsl(var(--muted));padding:5px 8px;font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;text-align:center}
+.dom .b,.dom .a{padding:5px 8px;display:flex;justify-content:space-between;background:hsl(var(--card));position:relative}
+.dom .b{color:hsl(var(--positive))}
+.dom .a{color:hsl(var(--negative))}
+.dom .b::before,.dom .a::before{content:"";position:absolute;top:0;bottom:0;background:currentColor;opacity:0.06;width:var(--w,30%)}
+.dom .b::before{left:0}.dom .a::before{right:0}
+
+.tape{font-family:var(--font-mono);font-size:11px}
+.tape div{display:grid;grid-template-columns:50px 60px 60px 50px;gap:6px;padding:3px 0;border-bottom:1px dashed hsl(var(--border))}
+.tape div span:first-child{color:hsl(var(--muted-foreground))}
+.tape div span:nth-child(2){font-weight:700}
+.tape div .b{color:hsl(var(--positive))}
+.tape div .s{color:hsl(var(--negative))}
+</style></head>
+<body data-page="advanced-chart" data-screen-label="Terminal · 20 Advanced chart">
+<div class="ft-app">
+  <div class="ft-bar">
+    <div class="sym">
+      <span class="t">RELIANCE</span>
+      <span class="muted body-sm">NSE</span>
+      <span class="px">2,948.55</span>
+      <span class="ch change-up">+24.10 (+0.82%)</span>
+    </div>
+    <div class="tabs">
+      <button>1m</button><button>5m</button><button>15m</button><button class="active">1H</button><button>1D</button><button>1W</button>
+    </div>
+    <div class="tabs">
+      <button class="active">Candles</button><button>Heikin-Ashi</button><button>Line</button><button>Renko</button>
+    </div>
+    <div class="ind">
+      <span class="ind-pill">EMA 20<span class="x">×</span></span>
+      <span class="ind-pill">EMA 50<span class="x">×</span></span>
+      <span class="ind-pill">VWAP<span class="x">×</span></span>
+      <span class="ind-pill">+ Add</span>
+    </div>
+    <div class="right">
+      <button class="btn btn-ghost btn-sm">Compare</button>
+      <button class="btn btn-ghost btn-sm">Save layout</button>
+      <button class="btn btn-primary btn-sm">+ Trade</button>
+    </div>
+  </div>
+
+  <div class="ft-grid">
+    <aside class="ft-tools">
+      <button class="active" title="Cursor">⊕</button>
+      <button title="Trendline">/</button>
+      <button title="Horizontal">─</button>
+      <button title="Channel">⫽</button>
+      <button title="Fib retrace">𝝓</button>
+      <div class="div"></div>
+      <button title="Rectangle">▭</button>
+      <button title="Ellipse">◯</button>
+      <button title="Brush">✎</button>
+      <div class="div"></div>
+      <button title="Text">Aa</button>
+      <button title="Note">¶</button>
+      <button title="Arrow">↗</button>
+      <div class="div"></div>
+      <button title="Eraser">⌫</button>
+      <button title="Lock">🔒</button>
+    </aside>
+
+    <div class="ft-chart-wrap">
+      <div class="crosshair-info">
+        <span>O <b>2,930.20</b></span>
+        <span>H <b>2,956.40</b></span>
+        <span>L <b>2,924.10</b></span>
+        <span>C <b class="pos">2,948.55</b></span>
+        <span>VOL <b>1.42M</b></span>
+        <span>VWAP <b>2,941.80</b></span>
+        <span>RSI(14) <b>62.4</b></span>
+      </div>
+      <svg viewBox="0 0 1100 580" preserveAspectRatio="none">
+        <defs>
+          <pattern id="grid2" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="hsl(var(--border))" stroke-width="0.5"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid2)"/>
+        <!-- price scale -->
+        <g font-family="ui-monospace" font-size="10" fill="hsl(var(--muted-foreground))">
+          <text x="1080" y="50" text-anchor="end">2,980</text>
+          <text x="1080" y="120" text-anchor="end">2,960</text>
+          <text x="1080" y="190" text-anchor="end">2,940</text>
+          <text x="1080" y="260" text-anchor="end">2,920</text>
+          <text x="1080" y="330" text-anchor="end">2,900</text>
+          <text x="1080" y="400" text-anchor="end">2,880</text>
+        </g>
+        <!-- candles -->
+        <g>
+          <!-- helper: each candle ~14 wide, gap ~2 -->
+          <!-- generated set -->
+          <g stroke="hsl(var(--positive))" fill="hsl(var(--positive))">
+            <line x1="20" y1="350" x2="20" y2="290" stroke-width="1"/><rect x="14" y="310" width="12" height="32"/>
+            <line x1="36" y1="320" x2="36" y2="270" stroke-width="1"/><rect x="30" y="280" width="12" height="34"/>
+            <line x1="68" y1="300" x2="68" y2="250" stroke-width="1"/><rect x="62" y="260" width="12" height="32"/>
+            <line x1="100" y1="280" x2="100" y2="220" stroke-width="1"/><rect x="94" y="240" width="12" height="34"/>
+            <line x1="116" y1="260" x2="116" y2="210" stroke-width="1"/><rect x="110" y="220" width="12" height="32"/>
+            <line x1="148" y1="240" x2="148" y2="180" stroke-width="1"/><rect x="142" y="200" width="12" height="32"/>
+            <line x1="180" y1="220" x2="180" y2="160" stroke-width="1"/><rect x="174" y="180" width="12" height="32"/>
+            <line x1="228" y1="200" x2="228" y2="150" stroke-width="1"/><rect x="222" y="160" width="12" height="34"/>
+            <line x1="276" y1="180" x2="276" y2="120" stroke-width="1"/><rect x="270" y="140" width="12" height="32"/>
+            <line x1="324" y1="160" x2="324" y2="100" stroke-width="1"/><rect x="318" y="120" width="12" height="32"/>
+            <line x1="372" y1="140" x2="372" y2="90" stroke-width="1"/><rect x="366" y="110" width="12" height="22"/>
+            <line x1="436" y1="120" x2="436" y2="60" stroke-width="1"/><rect x="430" y="80" width="12" height="32"/>
+            <line x1="500" y1="80" x2="500" y2="40" stroke-width="1"/><rect x="494" y="60" width="12" height="14"/>
+            <line x1="580" y1="100" x2="580" y2="50" stroke-width="1"/><rect x="574" y="60" width="12" height="32"/>
+            <line x1="660" y1="120" x2="660" y2="80" stroke-width="1"/><rect x="654" y="90" width="12" height="22"/>
+            <line x1="724" y1="160" x2="724" y2="100" stroke-width="1"/><rect x="718" y="120" width="12" height="32"/>
+            <line x1="788" y1="180" x2="788" y2="140" stroke-width="1"/><rect x="782" y="150" width="12" height="22"/>
+            <line x1="884" y1="200" x2="884" y2="160" stroke-width="1"/><rect x="878" y="170" width="12" height="22"/>
+            <line x1="964" y1="220" x2="964" y2="170" stroke-width="1"/><rect x="958" y="180" width="12" height="32"/>
+          </g>
+          <g stroke="hsl(var(--negative))" fill="hsl(var(--negative))">
+            <line x1="52" y1="280" x2="52" y2="240" stroke-width="1"/><rect x="46" y="250" width="12" height="22"/>
+            <line x1="84" y1="260" x2="84" y2="220" stroke-width="1"/><rect x="78" y="230" width="12" height="22"/>
+            <line x1="132" y1="240" x2="132" y2="200" stroke-width="1"/><rect x="126" y="210" width="12" height="22"/>
+            <line x1="164" y1="220" x2="164" y2="180" stroke-width="1"/><rect x="158" y="190" width="12" height="22"/>
+            <line x1="196" y1="200" x2="196" y2="160" stroke-width="1"/><rect x="190" y="170" width="12" height="22"/>
+            <line x1="244" y1="190" x2="244" y2="140" stroke-width="1"/><rect x="238" y="160" width="12" height="20"/>
+            <line x1="292" y1="170" x2="292" y2="120" stroke-width="1"/><rect x="286" y="140" width="12" height="22"/>
+            <line x1="340" y1="150" x2="340" y2="100" stroke-width="1"/><rect x="334" y="120" width="12" height="22"/>
+            <line x1="404" y1="140" x2="404" y2="80" stroke-width="1"/><rect x="398" y="100" width="12" height="32"/>
+            <line x1="468" y1="120" x2="468" y2="60" stroke-width="1"/><rect x="462" y="80" width="12" height="32"/>
+            <line x1="540" y1="120" x2="540" y2="60" stroke-width="1"/><rect x="534" y="80" width="12" height="32"/>
+            <line x1="620" y1="140" x2="620" y2="80" stroke-width="1"/><rect x="614" y="100" width="12" height="32"/>
+            <line x1="700" y1="160" x2="700" y2="110" stroke-width="1"/><rect x="694" y="120" width="12" height="32"/>
+            <line x1="756" y1="180" x2="756" y2="130" stroke-width="1"/><rect x="750" y="140" width="12" height="32"/>
+            <line x1="820" y1="200" x2="820" y2="150" stroke-width="1"/><rect x="814" y="160" width="12" height="32"/>
+            <line x1="852" y1="220" x2="852" y2="170" stroke-width="1"/><rect x="846" y="180" width="12" height="32"/>
+            <line x1="916" y1="240" x2="916" y2="180" stroke-width="1"/><rect x="910" y="200" width="12" height="32"/>
+          </g>
+        </g>
+        <!-- EMAs -->
+        <path d="M0,340 C200,260 400,180 600,150 S900,210 1100,200" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="1.4"/>
+        <path d="M0,360 C200,310 400,260 600,210 S900,250 1100,240" fill="none" stroke="hsl(213 50% 50%)" stroke-width="1.4" stroke-dasharray="3 3"/>
+
+        <!-- volume sub-chart -->
+        <g transform="translate(0,460)">
+          <g fill="hsl(var(--positive))" opacity="0.55">
+            <rect x="14" y="60" width="12" height="60"/><rect x="30" y="70" width="12" height="50"/><rect x="62" y="50" width="12" height="70"/>
+            <rect x="94" y="40" width="12" height="80"/><rect x="142" y="60" width="12" height="60"/><rect x="174" y="80" width="12" height="40"/>
+            <rect x="222" y="50" width="12" height="70"/><rect x="270" y="30" width="12" height="90"/><rect x="318" y="20" width="12" height="100"/>
+            <rect x="366" y="40" width="12" height="80"/><rect x="430" y="10" width="12" height="110"/><rect x="494" y="0" width="12" height="120"/>
+            <rect x="574" y="20" width="12" height="100"/><rect x="654" y="40" width="12" height="80"/><rect x="718" y="50" width="12" height="70"/>
+            <rect x="958" y="40" width="12" height="80"/>
+          </g>
+          <g fill="hsl(var(--negative))" opacity="0.55">
+            <rect x="46" y="80" width="12" height="40"/><rect x="78" y="70" width="12" height="50"/><rect x="126" y="60" width="12" height="60"/>
+            <rect x="158" y="80" width="12" height="40"/><rect x="190" y="60" width="12" height="60"/><rect x="238" y="40" width="12" height="80"/>
+            <rect x="286" y="50" width="12" height="70"/><rect x="334" y="30" width="12" height="90"/><rect x="398" y="20" width="12" height="100"/>
+            <rect x="462" y="10" width="12" height="110"/><rect x="534" y="20" width="12" height="100"/><rect x="614" y="40" width="12" height="80"/>
+            <rect x="694" y="50" width="12" height="70"/><rect x="750" y="60" width="12" height="60"/><rect x="814" y="60" width="12" height="60"/>
+            <rect x="846" y="70" width="12" height="50"/><rect x="910" y="80" width="12" height="40"/>
+          </g>
+          <text x="14" y="14" font-family="ui-monospace" font-size="10" fill="hsl(var(--muted-foreground))">VOLUME · 1.42M</text>
+          <line x1="0" y1="0" x2="1100" y2="0" stroke="hsl(var(--border))"/>
+        </g>
+      </svg>
+    </div>
+
+    <aside class="ft-side">
+      <div class="sec">
+        <h4>Order book</h4>
+        <div class="dom">
+          <div class="h">Bid · qty</div><div class="h">Ask · qty</div>
+          <div class="b" style="--w:60%"><span>2,948.50</span><span>1,420</span></div><div class="a" style="--w:42%"><span>2,948.60</span><span>982</span></div>
+          <div class="b" style="--w:48%"><span>2,948.40</span><span>1,180</span></div><div class="a" style="--w:62%"><span>2,948.70</span><span>1,640</span></div>
+          <div class="b" style="--w:80%"><span>2,948.30</span><span>2,140</span></div><div class="a" style="--w:38%"><span>2,948.80</span><span>820</span></div>
+          <div class="b" style="--w:54%"><span>2,948.20</span><span>1,290</span></div><div class="a" style="--w:48%"><span>2,948.90</span><span>1,120</span></div>
+          <div class="b" style="--w:42%"><span>2,948.10</span><span>980</span></div><div class="a" style="--w:72%"><span>2,949.00</span><span>1,920</span></div>
+        </div>
+      </div>
+      <div class="sec">
+        <h4>Time &amp; sales</h4>
+        <div class="tape">
+          <div><span>09:42:11</span><span>2,948.55</span><span class="b">200</span><span class="b">↑</span></div>
+          <div><span>09:42:08</span><span>2,948.50</span><span class="b">120</span><span class="b">↑</span></div>
+          <div><span>09:42:05</span><span>2,948.40</span><span class="s">80</span><span class="s">↓</span></div>
+          <div><span>09:42:02</span><span>2,948.45</span><span class="b">340</span><span class="b">↑</span></div>
+          <div><span>09:41:58</span><span>2,948.30</span><span class="s">60</span><span class="s">↓</span></div>
+          <div><span>09:41:54</span><span>2,948.35</span><span class="b">220</span><span class="b">↑</span></div>
+          <div><span>09:41:50</span><span>2,948.20</span><span class="s">140</span><span class="s">↓</span></div>
+          <div><span>09:41:46</span><span>2,948.25</span><span class="b">280</span><span class="b">↑</span></div>
+          <div><span>09:41:42</span><span>2,948.10</span><span class="s">160</span><span class="s">↓</span></div>
+          <div><span>09:41:38</span><span>2,948.15</span><span class="b">100</span><span class="b">↑</span></div>
+        </div>
+      </div>
+      <div class="sec">
+        <h4>Watchlist</h4>
+        <div class="tape" style="font-size:12px">
+          <div style="grid-template-columns:1fr 70px 50px"><span>HDFCBANK</span><span>1,520.40</span><span class="b">+1.22</span></div>
+          <div style="grid-template-columns:1fr 70px 50px"><span>TCS</span><span>3,842.10</span><span class="s">−0.34</span></div>
+          <div style="grid-template-columns:1fr 70px 50px"><span>ICICIBANK</span><span>1,148.20</span><span class="b">+1.84</span></div>
+          <div style="grid-template-columns:1fr 70px 50px"><span>INFY</span><span>1,422.80</span><span class="b">+0.46</span></div>
+          <div style="grid-template-columns:1fr 70px 50px"><span>BHARTIARTL</span><span>1,524.60</span><span class="b">+0.94</span></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+<script src="app.js"></script>
+</body></html>

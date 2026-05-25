@@ -1,7 +1,8 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { PersistedScreenerState } from "@/lib/result-storage";
-import { getApiBaseUrl } from "@/lib/api-config";
+import { getApiBaseUrl, getAuthBaseUrl } from "@/lib/api-config";
+import { parseCoinError, type CoinError } from "@/lib/coin-error";
 
 export interface ExpertScreenerResult {
   symbol: string;
@@ -87,12 +88,16 @@ export function useExpertScreener() {
   const [results, setResults] = useState<ExpertScreenerResult[]>([]);
   const [summary, setSummary] = useState<ExpertScreenerSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [coinError, setCoinError] = useState<CoinError | null>(null);
   const [isRunning, setIsRunning] = useState(false);
 
   const eventSourceRef = useRef<EventSource | null>(null);
   const jobIdRef = useRef<string | null>(null);
   const abortedRef = useRef(false);
   const baseUrl = getApiBaseUrl();
+  // /start MUST go through Node so the coinGate middleware can debit before
+  // the request is proxied to Python. SSE stream + cancel stay direct to Python.
+  const gateBaseUrl = getAuthBaseUrl();
 
   const runScreener = useCallback(
     async (request: ExpertScreenerRequest) => {
@@ -108,7 +113,7 @@ export function useExpertScreener() {
 
       try {
         // Step 1: Start the screening task
-        const startResponse = await fetch(`${baseUrl}/api/expert-screener/start`, {
+        const startResponse = await fetch(`${gateBaseUrl}/api/expert-screener/start`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(request),
@@ -116,6 +121,13 @@ export function useExpertScreener() {
 
         if (!startResponse.ok) {
           const errorData = await startResponse.json().catch(() => ({ detail: "Unknown error" }));
+          const coinErr = parseCoinError(startResponse.status, errorData);
+          if (coinErr) {
+            setCoinError(coinErr);
+            setStatus("idle");
+            setIsRunning(false);
+            return;
+          }
           throw new Error(errorData.detail || `Failed to start screener: ${startResponse.status}`);
         }
 
@@ -275,6 +287,7 @@ export function useExpertScreener() {
     setResults([]);
     setSummary(null);
     setError(null);
+    setCoinError(null);
     setIsRunning(false);
   }, []);
 
@@ -285,6 +298,7 @@ export function useExpertScreener() {
     results,
     summary,
     error,
+    coinError,
     isRunning,
     runScreener,
     cancelScreener,

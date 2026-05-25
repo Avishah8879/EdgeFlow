@@ -1,0 +1,96 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Audit logs · Admin</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.ad-shell{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
+.ad-side{background:hsl(var(--brand-navy-deep));color:hsl(38 30% 88%);padding:18px 0;font-family:var(--font-mono)}
+.ad-side h4{padding:8px 18px;margin:0;font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--brand-gold));font-family:var(--font-display)}
+.ad-side a{display:block;padding:8px 18px;font-size:12.5px;color:hsl(38 30% 75%);text-decoration:none;border-left:3px solid transparent}
+.ad-side a.active{background:hsl(213 50% 18%);color:hsl(var(--brand-gold));border-left-color:hsl(var(--brand-gold));font-weight:700}
+.ad-side a:hover{background:hsl(213 50% 18%);color:white}
+.ad-main{padding:24px 32px 60px;background:hsl(var(--background))}
+.ad-hd{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+.ad-hd h1{font-family:var(--font-display);font-size:28px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .ad-hd h1{color:hsl(38 30% 95%)}
+.toolbar{display:flex;gap:10px;padding:14px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);margin-bottom:14px}
+.toolbar input,.toolbar select{height:36px;padding:0 12px;border:1px solid hsl(var(--border));border-radius:var(--radius-md);background:hsl(var(--background));font-family:var(--font-mono);font-size:13px;color:hsl(var(--foreground))}
+
+.log{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;font-family:var(--font-mono);font-size:12.5px}
+.log .row{display:grid;grid-template-columns:170px 110px 130px 1fr 90px;gap:14px;padding:10px 16px;border-bottom:1px solid hsl(var(--border));align-items:center}
+.log .row:last-child{border-bottom:0}
+.log .row:hover{background:hsl(var(--muted)/0.4)}
+.log .ts{color:hsl(var(--muted-foreground))}
+.log .ts b{color:hsl(var(--foreground));font-weight:700;margin-right:4px}
+.log .actor{display:flex;align-items:center;gap:6px}
+.log .actor .av{width:18px;height:18px;border-radius:50%;background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:9px;font-family:var(--font-display);flex-shrink:0}
+.log .actor .av.s{background:hsl(213 50% 50%);color:white}
+.log .actor .av.sys{background:hsl(213 14% 30%);color:white}
+.log .ev{display:flex;align-items:center;gap:6px}
+.log .ev .b{font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:0.04em;font-family:var(--font-mono)}
+.log .ev .b.create{background:hsl(150 50% 40% / 0.15);color:hsl(150 50% 30%)}
+.log .ev .b.update{background:hsl(213 50% 50% / 0.15);color:hsl(213 50% 35%)}
+.log .ev .b.delete{background:hsl(0 60% 50% / 0.15);color:hsl(0 60% 45%)}
+.log .ev .b.auth{background:hsl(38 75% 50% / 0.15);color:hsl(38 60% 35%)}
+.log .ev .b.alert{background:hsl(0 60% 50% / 0.15);color:hsl(0 60% 45%)}
+.dark .log .ev .b.update{color:hsl(213 50% 70%)}
+.dark .log .ev .b.create{color:hsl(150 50% 65%)}
+.dark .log .ev .b.delete{color:hsl(0 60% 70%)}
+.dark .log .ev .b.auth{color:hsl(var(--brand-gold))}
+.log .det{color:hsl(var(--muted-foreground))}
+.log .det b{color:hsl(var(--foreground))}
+.log .det code{font-family:var(--font-mono);background:hsl(var(--muted));padding:1px 6px;border-radius:3px;font-size:11px;color:hsl(var(--foreground))}
+.log .ip{color:hsl(var(--muted-foreground));text-align:right;font-size:11px}
+.log .row.bad{background:hsl(var(--negative)/0.05)}
+</style></head>
+<body data-page="admin-audit-logs" data-screen-label="Admin · 44 Audit logs">
+<div class="shell"><div data-shell-topbar></div>
+
+<main class="ad-shell">
+  <aside class="ad-side">
+    <h4>Admin</h4>
+    <a href="admin-analytics.html">Analytics</a>
+    <a href="admin-users.html">Users</a>
+    <a href="admin-feature-flags.html">Feature flags</a>
+    <a href="admin-audit-logs.html" class="active">Audit logs</a>
+    <a href="admin-coin-packs.html">Coin packs</a>
+    <a href="admin-coin-transactions.html">Coin transactions</a>
+    <a href="admin-email-settings.html">Email settings</a>
+    <a href="admin-api-keys.html">API keys</a>
+  </aside>
+
+  <section class="ad-main">
+    <div class="ad-hd">
+      <div><span class="eyebrow">Admin · Compliance</span><h1>Audit logs</h1></div>
+      <div class="flex gap-2"><button class="btn btn-ghost btn-sm">Export 90d</button><button class="btn btn-ghost btn-sm">Sync to S3</button></div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" placeholder="Filter by user, IP, action…" style="flex:1">
+      <select><option>All actions</option><option>Auth</option><option>Create</option><option>Update</option><option>Delete</option></select>
+      <select><option>All users</option></select>
+      <select><option>Last 24 hours</option><option>Last 7 days</option><option>Last 30 days</option></select>
+    </div>
+
+    <div class="log">
+      <div class="row"><span class="ts"><b>09:42:18</b> · 22 Apr</span><span class="actor"><div class="av">AS</div>anjali.s</span><span class="ev"><span class="b update">Update</span></span><span class="det">flag <code>ai_research_assistant</code> rollout <b>20% → 50%</b> on prod</span><span class="ip">10.0.4.18</span></div>
+      <div class="row"><span class="ts"><b>09:38:42</b> · 22 Apr</span><span class="actor"><div class="av s">DR</div>dev.raman</span><span class="ev"><span class="b auth">Auth</span></span><span class="det">api-key <code>sk_live_8420…</code> created · scopes <b>read:portfolio</b></span><span class="ip">203.142.18.4</span></div>
+      <div class="row bad"><span class="ts"><b>09:32:14</b> · 22 Apr</span><span class="actor"><div class="av sys">SYS</div>system</span><span class="ev"><span class="b alert">Alert</span></span><span class="det">5 failed sign-ins for <b>kiran.t@gmail.com</b> · IP <code>74.125.34.20</code> · rate-limit triggered</span><span class="ip">74.125.34.20</span></div>
+      <div class="row"><span class="ts"><b>09:28:54</b> · 22 Apr</span><span class="actor"><div class="av">AS</div>anjali.s</span><span class="ev"><span class="b create">Create</span></span><span class="det">coin-pack <b>"Annual Pro 12 mo"</b> created · price <b>₹19,999</b></span><span class="ip">10.0.4.18</span></div>
+      <div class="row"><span class="ts"><b>09:24:08</b> · 22 Apr</span><span class="actor"><div class="av s">RP</div>rahul.p</span><span class="ev"><span class="b update">Update</span></span><span class="det">user <b>UID 6240</b> plan <code>Pro → Quant</code> · MRR <b>+₹3,000</b> · proration applied</span><span class="ip">182.71.42.118</span></div>
+      <div class="row"><span class="ts"><b>09:20:22</b> · 22 Apr</span><span class="actor"><div class="av">AS</div>anjali.s</span><span class="ev"><span class="b delete">Delete</span></span><span class="det">user <b>UID 1842</b> deleted (GDPR request) · purge job <code>job_4a8f…</code> queued · 7-day grace</span><span class="ip">10.0.4.18</span></div>
+      <div class="row"><span class="ts"><b>09:14:04</b> · 22 Apr</span><span class="actor"><div class="av sys">SYS</div>system</span><span class="ev"><span class="b auth">Auth</span></span><span class="det">Fyers OAuth token refreshed for <b>UID 4218</b> · expires <b>23 Apr 09:14</b></span><span class="ip">aws-sg-01</span></div>
+      <div class="row"><span class="ts"><b>09:08:38</b> · 22 Apr</span><span class="actor"><div class="av s">MK</div>meera.k</span><span class="ev"><span class="b auth">Auth</span></span><span class="det">2FA enrolled · TOTP · UA <b>Mac · Chrome 124</b></span><span class="ip">115.184.42.220</span></div>
+      <div class="row"><span class="ts"><b>09:02:11</b> · 22 Apr</span><span class="actor"><div class="av">AS</div>anjali.s</span><span class="ev"><span class="b update">Update</span></span><span class="det">email-template <code>welcome_pro_v3</code> updated · <b>+12 lines / −4 lines</b></span><span class="ip">10.0.4.18</span></div>
+      <div class="row"><span class="ts"><b>08:54:48</b> · 22 Apr</span><span class="actor"><div class="av sys">SYS</div>system</span><span class="ev"><span class="b alert">Alert</span></span><span class="det">NSE feed lag <b>342ms</b> · auto-failover to backup feed · resolved at 08:55:02</span><span class="ip">aws-mum-04</span></div>
+      <div class="row"><span class="ts"><b>08:42:32</b> · 22 Apr</span><span class="actor"><div class="av">AS</div>anjali.s</span><span class="ev"><span class="b update">Update</span></span><span class="det">flag <code>copy_trading</code> rollout <b>0% → 0%</b> · note: "compliance hold lifted, awaiting QA"</span><span class="ip">10.0.4.18</span></div>
+      <div class="row"><span class="ts"><b>08:36:14</b> · 22 Apr</span><span class="actor"><div class="av s">PN</div>priya.n</span><span class="ev"><span class="b create">Create</span></span><span class="det">role <code>support-l2</code> assigned to <b>UID 9420</b></span><span class="ip">10.0.4.42</span></div>
+      <div class="row"><span class="ts"><b>08:18:24</b> · 22 Apr</span><span class="actor"><div class="av sys">SYS</div>system</span><span class="ev"><span class="b create">Create</span></span><span class="det">cron job <code>daily_screener_refresh</code> · 412 screens recomputed · <b>14.2s</b></span><span class="ip">aws-mum-01</span></div>
+      <div class="row"><span class="ts"><b>08:00:00</b> · 22 Apr</span><span class="actor"><div class="av sys">SYS</div>system</span><span class="ev"><span class="b update">Update</span></span><span class="det">EOD job <b>complete</b> · 1,842 stocks · 8.4M ticks · 6.8s</span><span class="ip">aws-mum-01</span></div>
+      <div class="row"><span class="ts"><b>00:14:42</b> · 22 Apr</span><span class="actor"><div class="av sys">SYS</div>system</span><span class="ev"><span class="b update">Update</span></span><span class="det">automated backup · S3 <code>backup-prod-2026-04-22</code> · <b>184 GB</b> uploaded</span><span class="ip">aws-mum-01</span></div>
+    </div>
+  </section>
+</main>
+</div>
+<script src="app.js"></script>
+</body></html>

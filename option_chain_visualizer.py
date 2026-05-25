@@ -142,6 +142,31 @@ def bs_gamma(S: float, K: float, T: float, r: float, sigma: float) -> float:
         return 0.0
 
 
+def bs_vega(S: float, K: float, T: float, r: float, sigma: float) -> float:
+    """
+    Calculate Black-Scholes vega (sensitivity of option price to volatility).
+
+    Args:
+        S: Spot price
+        K: Strike price
+        T: Time to expiry in years
+        r: Risk-free rate (decimal)
+        sigma: Implied volatility (decimal, e.g., 0.20 for 20%)
+
+    Returns:
+        Vega value (change in option price per 1% change in IV)
+    """
+    if S <= 0 or K <= 0 or sigma <= 0 or T <= 0:
+        return 0.0
+
+    try:
+        d1 = (math.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * math.sqrt(T))
+        vega = S * norm.pdf(d1) * math.sqrt(T) / 100  # Per 1% IV change
+        return vega
+    except (ValueError, ZeroDivisionError):
+        return 0.0
+
+
 def time_to_expiry_years(expiry_str: str) -> float:
     """
     Calculate time to expiry in years.
@@ -229,9 +254,17 @@ def compute_exposures(chain_data: Dict[str, Any], spot: float) -> Dict[str, Any]
         ce_gamma = bs_gamma(spot, strike, T, RISK_FREE_RATE, ce_iv) if ce_iv > 0.001 else 0
         pe_gamma = bs_gamma(spot, strike, T, RISK_FREE_RATE, pe_iv) if pe_iv > 0.001 else 0
 
+        # Calculate vegas
+        ce_vega = bs_vega(spot, strike, T, RISK_FREE_RATE, ce_iv) if ce_iv > 0.001 else 0
+        pe_vega = bs_vega(spot, strike, T, RISK_FREE_RATE, pe_iv) if pe_iv > 0.001 else 0
+
         # GxOI = Gamma * OI (raw gamma exposure)
         ce_gxoi = ce_gamma * ce_oi
         pe_gxoi = pe_gamma * pe_oi
+
+        # VxOI = Vega * OI (raw vega exposure)
+        ce_vxoi = ce_vega * ce_oi
+        pe_vxoi = pe_vega * pe_oi
 
         # GEX (SqueezeMetrics formula):
         # Dealers are typically short options, so:
@@ -240,8 +273,14 @@ def compute_exposures(chain_data: Dict[str, Any], spot: float) -> Dict[str, Any]
         ce_gex = ce_gxoi * spot * 100  # Scale by spot and contract size
         pe_gex = -pe_gxoi * spot * 100  # Negative for puts
 
+        # VEX (Vega Exposure): same dealer-short logic
+        ce_vex = ce_vxoi * 100   # Scale by contract size
+        pe_vex = -pe_vxoi * 100  # Negative for puts
+
         net_gxoi = ce_gxoi - pe_gxoi
         net_gex = ce_gex + pe_gex
+        net_vxoi = ce_vxoi - pe_vxoi
+        net_vex = ce_vex + pe_vex
         total_gex += net_gex
 
         exposures.append({
@@ -252,6 +291,15 @@ def compute_exposures(chain_data: Dict[str, Any], spot: float) -> Dict[str, Any]
             "ce_gex": round(ce_gex, 2),
             "pe_gex": round(pe_gex, 2),
             "net_gex": round(net_gex, 2),
+            "ce_vega": round(ce_vega, 6),
+            "pe_vega": round(pe_vega, 6),
+            "net_vega": round(ce_vega - pe_vega, 6),
+            "ce_vxoi": round(ce_vxoi, 4),
+            "pe_vxoi": round(pe_vxoi, 4),
+            "net_vxoi": round(net_vxoi, 4),
+            "ce_vex": round(ce_vex, 2),
+            "pe_vex": round(pe_vex, 2),
+            "net_vex": round(net_vex, 2),
             "ce_oi": ce_oi,
             "pe_oi": pe_oi,
             "ce_iv": round(ce_iv * 100, 2),
@@ -274,6 +322,49 @@ def compute_exposures(chain_data: Dict[str, Any], spot: float) -> Dict[str, Any]
         "spot": spot,
         "expiry": expiry_str,
         "timestamp": datetime.now(IST).isoformat(),
+    }
+
+
+def compute_atm_straddle(
+    chain_data: Dict[str, Any],
+    spot: float,
+    atm_strike: Optional[float] = None,
+) -> Dict[str, Any]:
+    """
+    Compute the ATM straddle premium = CE.lastPrice + PE.lastPrice at the
+    strike closest to spot.
+
+    If atm_strike is not supplied, it is computed from the chain.
+    Returns zeros (with atm_strike=None) when the chain has no usable strikes.
+    """
+    calls = chain_data.get("calls", [])
+    puts = chain_data.get("puts", [])
+
+    call_map = {c.get("strike"): c for c in calls if c.get("strike")}
+    put_map = {p.get("strike"): p for p in puts if p.get("strike")}
+    all_strikes = sorted(set(call_map.keys()) | set(put_map.keys()))
+
+    if not all_strikes:
+        return {
+            "atm_strike": None,
+            "spot": spot,
+            "ce_ltp": 0.0,
+            "pe_ltp": 0.0,
+            "atm_straddle": 0.0,
+        }
+
+    if atm_strike is None:
+        atm_strike = min(all_strikes, key=lambda k: abs(k - spot))
+
+    ce_ltp = _safe_float((call_map.get(atm_strike) or {}).get("lastPrice", 0))
+    pe_ltp = _safe_float((put_map.get(atm_strike) or {}).get("lastPrice", 0))
+
+    return {
+        "atm_strike": atm_strike,
+        "spot": spot,
+        "ce_ltp": round(ce_ltp, 2),
+        "pe_ltp": round(pe_ltp, 2),
+        "atm_straddle": round(ce_ltp + pe_ltp, 2),
     }
 
 
@@ -370,6 +461,73 @@ def _empty_surface_response(spot: float, expiry: Optional[str]) -> Dict[str, Any
 # =============================================================================
 # Redis Time Series Storage
 # =============================================================================
+
+async def append_minute_bar(
+    symbol: str,
+    timestamp: datetime,
+    payload: Dict[str, Any],
+) -> bool:
+    """
+    Idempotently write a 1-minute bucket for the visualizer time series.
+
+    Key:   options_viz:minute_bar:{SYMBOL}:{YYYY-MM-DD}  (Redis hash)
+    Field: HH:MM (IST minute), e.g. "09:15"
+    Value: JSON of `payload` plus a normalized "ts" ISO string.
+
+    Multiple writers (Celery worker + on-demand exposure handler) can call
+    this safely — same minute key just overwrites with fresh data. TTL is
+    refreshed to next market open on every write.
+    """
+    try:
+        ist_ts = timestamp.astimezone(IST) if timestamp.tzinfo else timestamp.replace(tzinfo=IST)
+        date_key = ist_ts.strftime("%Y-%m-%d")
+        minute_field = ist_ts.strftime("%H:%M")
+        redis_key = f"options_viz:minute_bar:{symbol.upper()}:{date_key}"
+
+        record = dict(payload)
+        record["ts"] = ist_ts.replace(second=0, microsecond=0).isoformat()
+
+        redis = await get_redis()
+        await redis.hset(redis_key, minute_field, json.dumps(record))
+        await redis.expire(redis_key, get_ttl_until_next_market_open())
+        return True
+    except Exception as e:
+        logger.warning(f"Failed to append minute bar for {symbol}: {e}")
+        return False
+
+
+async def get_minute_bars(
+    symbol: str,
+    date_str: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """
+    Read all 1-minute bars for a trading session, sorted by minute.
+
+    Returns a list of dicts (the payload originally written by
+    `append_minute_bar`, with ts/atm_gxoi/atm_straddle/atm_strike/spot/...).
+    """
+    try:
+        if date_str is None:
+            date_str = datetime.now(IST).strftime("%Y-%m-%d")
+
+        redis_key = f"options_viz:minute_bar:{symbol.upper()}:{date_str}"
+        redis = await get_redis()
+        raw = await redis.hgetall(redis_key)
+        if not raw:
+            return []
+
+        bars: List[Dict[str, Any]] = []
+        for field, value in raw.items():
+            try:
+                bars.append(json.loads(value))
+            except Exception:
+                continue
+        bars.sort(key=lambda b: b.get("ts", ""))
+        return bars
+    except Exception as e:
+        logger.warning(f"Failed to get minute bars for {symbol}: {e}")
+        return []
+
 
 async def append_atm_gxoi(symbol: str, timestamp: datetime, atm_gxoi: float) -> bool:
     """

@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AdminLayout } from "@/components/admin";
+import { AdminLayout, AdminKpiStrip, AdminKpi } from "@/components/admin";
 import {
   useAdminStats,
   useSignupAnalytics,
@@ -219,9 +219,14 @@ export default function AdminAnalytics() {
   // Expanded user state for showing detailed top pages
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 
-  // Format date for chart display
+  // Format date for chart display.
+  // dateStr is "YYYY-MM-DD" in the viewer's local-day calendar (server bucketed
+  // with AT TIME ZONE). Parse as a LOCAL date — not via `new Date("YYYY-MM-DD")`,
+  // which would parse as UTC midnight and could shift the label across the boundary.
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    const [y, m, d] = dateStr.split("-").map((n) => parseInt(n, 10));
+    if (!y || !m || !d) return dateStr;
+    const date = new Date(y, m - 1, d);
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
@@ -231,12 +236,22 @@ export default function AdminAnalytics() {
     return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
   };
 
-  // Format duration
+  // Format duration — preserves the seconds component when >=60s so summed
+  // displayed values match what the underlying numbers add up to.
+  // Rounding happens at display only; aggregations use float seconds.
   const formatDuration = (seconds: number | null) => {
-    if (!seconds) return "—";
-    if (seconds < 60) return `${Math.round(seconds)}s`;
-    if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
-    return `${Math.round(seconds / 3600)}h ${Math.round((seconds % 3600) / 60)}m`;
+    if (seconds === null || seconds === undefined) return "—";
+    const total = Math.round(seconds);
+    if (total <= 0) return "0s";
+    if (total < 60) return `${total}s`;
+    if (total < 3600) {
+      const m = Math.floor(total / 60);
+      const s = total % 60;
+      return s ? `${m}m ${s}s` : `${m}m`;
+    }
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    return m ? `${h}h ${m}m` : `${h}h`;
   };
 
   // Device icon
@@ -247,15 +262,13 @@ export default function AdminAnalytics() {
   };
 
   return (
-    <AdminLayout>
+    <AdminLayout
+      eyebrow="Admin · Insights"
+      title="Analytics"
+      description="User growth, engagement, and retention metrics."
+    >
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Analytics</h1>
-            <p className="text-muted-foreground mt-1">
-              User growth, engagement, and retention metrics
-            </p>
-          </div>
+        <div className="flex items-center justify-end">
           <Select value={String(days)} onValueChange={(v) => setDays(parseInt(v))}>
             <SelectTrigger className="w-36">
               <SelectValue />
@@ -284,37 +297,36 @@ export default function AdminAnalytics() {
         ) : stats ? (
           <>
             {/* Key Metrics */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <MetricCard
-                title="Total Users"
-                value={stats.users.total}
-                icon={Users}
-                trend="neutral"
+            <AdminKpiStrip cols={4}>
+              <AdminKpi
+                label="Total users"
+                value={stats.users.total.toLocaleString()}
               />
-              <MetricCard
-                title="New This Week"
-                value={stats.activity.signupsThisWeek}
-                subValue={`${stats.activity.signupsToday} today`}
-                icon={UserPlus}
-                trend="up"
+              <AdminKpi
+                label="New · this week"
+                value={stats.activity.signupsThisWeek.toLocaleString()}
+                delta={`${stats.activity.signupsToday} today`}
+                tone="positive"
               />
-              <MetricCard
-                title="Active Logins"
-                value={stats.activity.loginsThisWeek}
-                subValue={`${stats.activity.loginsToday} today`}
-                icon={LogIn}
-                trend="up"
+              <AdminKpi
+                label="Active logins"
+                value={stats.activity.loginsThisWeek.toLocaleString()}
+                delta={`${stats.activity.loginsToday} today`}
+                tone="positive"
               />
-              <MetricCard
-                title="Growth Rate"
-                value={stats.users.total > 0
-                  ? Math.round((stats.activity.signupsThisMonth / stats.users.total) * 100)
-                  : 0}
-                subValue="% this month"
-                icon={TrendingUp}
-                trend="up"
+              <AdminKpi
+                label="Growth · 30d"
+                value={`${
+                  stats.users.total > 0
+                    ? Math.round(
+                        (stats.activity.signupsThisMonth / stats.users.total) * 100,
+                      )
+                    : 0
+                }%`}
+                delta="of total user base"
+                accent="gold"
               />
-            </div>
+            </AdminKpiStrip>
 
             <Tabs defaultValue="signups" className="space-y-4">
               <TabsList className="flex-wrap h-auto">
@@ -1302,8 +1314,14 @@ export default function AdminAnalytics() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-medium text-muted-foreground">Total Platform Time</p>
-                          <p className="text-3xl font-bold mt-1">
+                          <p
+                            className="text-3xl font-bold mt-1"
+                            title="Sum of per-pageview time, capped at 1800s (30min) per pageview to suppress idle tabs. Pageviews with no recorded duration (in-progress page / lost beacon) are excluded from the sum but still counted in Page Views."
+                          >
                             {formatDuration(userTimeStats?.overview.totalPlatformTime || 0)}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Capped 1800s/page · NULL durations excluded
                           </p>
                         </div>
                         <div className="p-3 rounded-full bg-positive/10">
@@ -1435,8 +1453,15 @@ export default function AdminAnalytics() {
                                           </div>
                                         ))}
                                       </div>
+                                      <p className="text-xs text-muted-foreground mt-2">
+                                        Top {user.topPages.length} of {user.totalPagesCount} pages — accounts for{" "}
+                                        {formatDuration(
+                                          user.topPages.reduce((sum, p) => sum + p.totalTime, 0)
+                                        )}{" "}
+                                        of {formatDuration(user.totalPagesTime)} total.
+                                      </p>
                                       {user.sessions.avgSessionDuration > 0 && (
-                                        <p className="text-xs text-muted-foreground mt-2">
+                                        <p className="text-xs text-muted-foreground">
                                           Avg session: {formatDuration(user.sessions.avgSessionDuration)} •
                                           Max session: {formatDuration(user.sessions.maxSessionDuration)}
                                         </p>

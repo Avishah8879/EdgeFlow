@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
+import { useTheme } from 'next-themes';
 import { TrendingUp, TrendingDown, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getCSSColor } from '@/lib/theme-utils';
 
 interface FIIDIIData {
   date: string;
@@ -19,6 +22,22 @@ export function FIIDIIPanel() {
     queryKey: ['/api/fii-dii'],
     staleTime: 3600000, // 1 hour
   });
+
+  // Theme-aware chart chrome — re-resolves on light/dark switch
+  const { resolvedTheme } = useTheme();
+  const chartColors = useMemo(
+    () => ({
+      grid:          getCSSColor('--border'),
+      axis:          getCSSColor('--muted-foreground'),
+      tooltipBg:     getCSSColor('--card'),
+      tooltipBorder: getCSSColor('--border'),
+      tooltipText:   getCSSColor('--foreground'),
+      fii:           getCSSColor('--primary'),
+      dii:           getCSSColor('--positive'),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [resolvedTheme],
+  );
 
   const formatCurrency = (value: number): string => {
     const absValue = Math.abs(value);
@@ -44,7 +63,7 @@ export function FIIDIIPanel() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full bg-[#0A0A0A]">
+      <div className="flex items-center justify-center h-full bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-primary" data-testid="loading-spinner-fii-dii" />
       </div>
     );
@@ -52,7 +71,7 @@ export function FIIDIIPanel() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4 bg-[#0A0A0A]">
+      <div className="flex flex-col items-center justify-center h-full gap-4 bg-background">
         <AlertCircle className="w-8 h-8 text-destructive" data-testid="error-icon-fii-dii" />
         <p className="text-sm text-muted-foreground" data-testid="text-error-message">Failed to load FII/DII data</p>
         <Button 
@@ -67,11 +86,11 @@ export function FIIDIIPanel() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#0A0A0A]">
-      <div className="flex items-center justify-between p-3 border-b border-[#1a1a1a]">
+    <div className="flex flex-col h-full bg-background">
+      <div className="flex items-center justify-between p-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] uppercase tracking-wider text-[#888888]">FII/DII Activity</span>
-          <span className="text-[10px] text-[#888888]" data-testid="text-last-update">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">FII/DII Activity</span>
+          <span className="text-[10px] text-muted-foreground" data-testid="text-last-update">
             Last 30 Days
           </span>
         </div>
@@ -87,10 +106,10 @@ export function FIIDIIPanel() {
       </div>
 
       {latestData && (
-        <div className="grid grid-cols-2 gap-3 p-3 border-b border-[#1a1a1a]">
+        <div className="grid grid-cols-2 gap-3 p-3 border-b border-border">
           <div className="space-y-1">
-            <div className="text-[10px] uppercase tracking-wider text-[#888888]">FII Net</div>
-            <div className={`flex items-center gap-1 ${latestData.fiiNetBuySell >= 0 ? 'text-[#00FF00]' : 'text-[#FF6B35]'}`}>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">FII Net</div>
+            <div className={`flex items-center gap-1 ${latestData.fiiNetBuySell >= 0 ? 'text-positive' : 'text-negative'}`}>
               {latestData.fiiNetBuySell >= 0 ? (
                 <TrendingUp className="h-4 w-4" />
               ) : (
@@ -100,13 +119,13 @@ export function FIIDIIPanel() {
                 {formatCurrency(latestData.fiiNetBuySell)}
               </span>
             </div>
-            <div className="text-[9px] text-[#888888]">
+            <div className="text-[9px] text-muted-foreground">
               Buy: {formatCurrency(latestData.fiiGrossBuy)} | Sell: {formatCurrency(latestData.fiiGrossSell)}
             </div>
           </div>
           <div className="space-y-1">
-            <div className="text-[10px] uppercase tracking-wider text-[#888888]">DII Net</div>
-            <div className={`flex items-center gap-1 ${latestData.diiNetBuySell >= 0 ? 'text-[#00FF00]' : 'text-[#FF6B35]'}`}>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">DII Net</div>
+            <div className={`flex items-center gap-1 ${latestData.diiNetBuySell >= 0 ? 'text-positive' : 'text-negative'}`}>
               {latestData.diiNetBuySell >= 0 ? (
                 <TrendingUp className="h-4 w-4" />
               ) : (
@@ -116,7 +135,7 @@ export function FIIDIIPanel() {
                 {formatCurrency(latestData.diiNetBuySell)}
               </span>
             </div>
-            <div className="text-[9px] text-[#888888]">
+            <div className="text-[9px] text-muted-foreground">
               Buy: {formatCurrency(latestData.diiGrossBuy)} | Sell: {formatCurrency(latestData.diiGrossSell)}
             </div>
           </div>
@@ -126,58 +145,58 @@ export function FIIDIIPanel() {
       <div className="flex-1 p-3">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
-            <XAxis 
-              dataKey="date" 
-              stroke="#888888" 
+            <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+            <XAxis
+              dataKey="date"
+              stroke={chartColors.axis}
               style={{ fontSize: '10px', fontFamily: 'monospace' }}
-              tick={{ fill: '#888888' }}
+              tick={{ fill: chartColors.axis }}
             />
-            <YAxis 
-              stroke="#888888" 
+            <YAxis
+              stroke={chartColors.axis}
               style={{ fontSize: '10px', fontFamily: 'monospace' }}
-              tick={{ fill: '#888888' }}
+              tick={{ fill: chartColors.axis }}
               tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
             />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: '#0A0A0A', 
-                border: '1px solid #1a1a1a',
+            <Tooltip
+              contentStyle={{
+                backgroundColor: chartColors.tooltipBg,
+                border: `1px solid ${chartColors.tooltipBorder}`,
                 borderRadius: '4px',
                 fontSize: '11px',
-                fontFamily: 'monospace'
+                fontFamily: 'monospace',
               }}
-              labelStyle={{ color: '#888888' }}
-              itemStyle={{ color: '#FFFFFF' }}
+              labelStyle={{ color: chartColors.axis }}
+              itemStyle={{ color: chartColors.tooltipText }}
               formatter={(value: number) => formatCurrency(value)}
             />
-            <Legend 
+            <Legend
               wrapperStyle={{ fontSize: '10px', fontFamily: 'monospace' }}
               iconType="line"
             />
-            <Line 
-              type="monotone" 
-              dataKey="FII" 
-              stroke="#00BFFF" 
+            <Line
+              type="monotone"
+              dataKey="FII"
+              stroke={chartColors.fii}
               strokeWidth={2}
-              dot={{ fill: '#00BFFF', r: 3 }}
+              dot={{ fill: chartColors.fii, r: 3 }}
               activeDot={{ r: 5 }}
             />
-            <Line 
-              type="monotone" 
-              dataKey="DII" 
-              stroke="#00FF00" 
+            <Line
+              type="monotone"
+              dataKey="DII"
+              stroke={chartColors.dii}
               strokeWidth={2}
-              dot={{ fill: '#00FF00', r: 3 }}
+              dot={{ fill: chartColors.dii, r: 3 }}
               activeDot={{ r: 5 }}
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      <ScrollArea className="max-h-48 border-t border-[#1a1a1a]">
+      <ScrollArea className="max-h-48 border-t border-border">
         <div className="px-3">
-          <div className="grid grid-cols-3 gap-1 py-2 text-[10px] uppercase tracking-wider text-[#888888] border-b border-[#1a1a1a] bg-[#000000] sticky top-0">
+          <div className="grid grid-cols-3 gap-1 py-2 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/40 sticky top-0">
             <div>Date</div>
             <div className="text-right">FII Net</div>
             <div className="text-right">DII Net</div>
@@ -185,16 +204,16 @@ export function FIIDIIPanel() {
           {data?.slice().reverse().map((item, index) => (
             <div
               key={item.date}
-              className="grid grid-cols-3 gap-1 py-2 border-b border-[#1a1a1a] hover:bg-[#1a1a1a] transition-colors"
+              className="grid grid-cols-3 gap-1 py-2 border-b border-border hover:bg-accent transition-colors"
               data-testid={`row-fii-dii-${index}`}
             >
-              <div className="text-[11px] text-[#FFFFFF] font-mono" data-testid={`text-date-${index}`}>
+              <div className="text-[11px] text-foreground font-mono" data-testid={`text-date-${index}`}>
                 {formatDate(item.date)}
               </div>
-              <div className={`text-right font-mono text-sm ${item.fiiNetBuySell >= 0 ? 'text-[#00FF00]' : 'text-[#FF6B35]'}`} data-testid={`text-fii-${index}`}>
+              <div className={`text-right font-mono text-sm ${item.fiiNetBuySell >= 0 ? 'text-positive' : 'text-negative'}`} data-testid={`text-fii-${index}`}>
                 {formatCurrency(item.fiiNetBuySell)}
               </div>
-              <div className={`text-right font-mono text-sm ${item.diiNetBuySell >= 0 ? 'text-[#00FF00]' : 'text-[#FF6B35]'}`} data-testid={`text-dii-${index}`}>
+              <div className={`text-right font-mono text-sm ${item.diiNetBuySell >= 0 ? 'text-positive' : 'text-negative'}`} data-testid={`text-dii-${index}`}>
                 {formatCurrency(item.diiNetBuySell)}
               </div>
             </div>

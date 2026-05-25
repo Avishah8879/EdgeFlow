@@ -1,0 +1,171 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portfolio · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.pf-hd{padding:24px 0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.pf-hd .top{display:flex;justify-content:space-between;align-items:end}
+.pf-hd h1{font-family:var(--font-display);font-size:34px;letter-spacing:-0.025em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .pf-hd h1{color:hsl(38 30% 95%)}
+.pf-kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:18px;border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;background:hsl(var(--background))}
+.pf-kpi .k{padding:18px 22px;border-right:1px solid hsl(var(--border))}
+.pf-kpi .k:last-child{border-right:0}
+.pf-kpi .k .ey{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground))}
+.pf-kpi .k .v{font-family:var(--font-mono);font-size:24px;font-weight:700;color:hsl(var(--brand-navy));margin-top:4px}
+.dark .pf-kpi .k .v{color:hsl(38 30% 95%)}
+.pf-kpi .k .c{font-size:12px;font-family:var(--font-mono);margin-top:2px}
+
+.pf-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;padding:24px 0 60px}
+
+.pf-chart{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px}
+.pf-chart .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.pf-chart h3{margin:0;font-family:var(--font-display);font-size:18px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .pf-chart h3{color:hsl(38 30% 95%)}
+.pf-chart svg{width:100%;height:240px}
+
+.holdings{margin-top:18px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.holdings .hd{padding:14px 20px;border-bottom:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center}
+.holdings h3{margin:0;font-family:var(--font-display);font-size:16px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .holdings h3{color:hsl(38 30% 95%)}
+.holdings .tbl{width:100%;border-collapse:collapse;font-size:13px;font-family:var(--font-mono)}
+.holdings .tbl th{font-size:10.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:10px 14px;background:hsl(var(--muted)/0.5);text-align:right}
+.holdings .tbl th:first-child{text-align:left}
+.holdings .tbl td{padding:11px 14px;border-bottom:1px solid hsl(var(--border));text-align:right}
+.holdings .tbl td:first-child{text-align:left}
+.holdings .tbl tr:last-child td{border-bottom:0}
+.holdings .tbl .sym{font-family:var(--font-display);font-weight:700;font-size:14px;color:hsl(var(--brand-navy))}
+.dark .holdings .tbl .sym{color:hsl(38 30% 95%)}
+.holdings .tbl .nm{font-family:inherit;font-size:11.5px;color:hsl(var(--muted-foreground))}
+.holdings .pos{color:hsl(var(--positive))}
+.holdings .neg{color:hsl(var(--negative))}
+.allo-bar{display:inline-block;width:64px;height:6px;background:hsl(var(--muted));border-radius:3px;overflow:hidden;vertical-align:middle;margin-right:6px}
+.allo-bar span{display:block;height:100%;background:hsl(var(--brand-gold))}
+
+.pf-side .panel{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:18px;margin-bottom:16px}
+.pf-side h4{margin:0 0 12px;font-family:var(--font-display);font-size:14px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .pf-side h4{color:hsl(38 30% 95%)}
+.donut{position:relative;display:flex;align-items:center;justify-content:center;margin:8px 0 14px}
+.donut svg{width:200px;height:200px}
+.donut .center{position:absolute;text-align:center}
+.donut .center .v{font-family:var(--font-mono);font-size:22px;font-weight:700}
+.donut .center .l{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700}
+.alloc-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px dashed hsl(var(--border))}
+.alloc-row:last-child{border-bottom:0}
+.alloc-row .l{display:flex;align-items:center;gap:8px;color:hsl(var(--foreground))}
+.alloc-row .dot{width:8px;height:8px;border-radius:2px}
+.alloc-row .v{font-family:var(--font-mono);font-weight:700}
+</style></head>
+<body data-page="portfolio" data-screen-label="19 Portfolio">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="pf-hd"><div class="container">
+  <div class="top">
+    <div>
+      <span class="eyebrow">Account · Portfolio</span>
+      <h1>Holdings &amp; performance</h1>
+      <p class="muted body-sm" style="margin:6px 0 0">Live-synced from Fyers · 18 holdings · Last refresh 2 min ago</p>
+    </div>
+    <div class="flex gap-2">
+      <button class="btn btn-ghost btn-sm">Export CSV</button>
+      <button class="btn btn-ghost btn-sm">Reconcile broker</button>
+      <button class="btn btn-primary btn-sm">+ Add transaction</button>
+    </div>
+  </div>
+  <div class="pf-kpi">
+    <div class="k"><div class="ey">Current value</div><div class="v">₹14,28,420</div><div class="c change-up">+₹14,820 today</div></div>
+    <div class="k"><div class="ey">Invested</div><div class="v">₹11,82,400</div><div class="c muted">across 18 names</div></div>
+    <div class="k"><div class="ey">Unrealised P/L</div><div class="v change-up">+₹2,46,020</div><div class="c change-up">+20.8%</div></div>
+    <div class="k"><div class="ey">XIRR</div><div class="v change-up">+18.4%</div><div class="c muted">since 12 Apr 2022</div></div>
+    <div class="k"><div class="ey">Today</div><div class="v change-up">+₹14,820</div><div class="c change-up">+1.05%</div></div>
+  </div>
+</div></section>
+
+<main class="container pf-grid">
+  <div>
+    <div class="pf-chart">
+      <div class="hd">
+        <h3>Equity curve · Apr 2022 → today</h3>
+        <div class="tabs">
+          <button>1M</button><button>3M</button><button>YTD</button><button>1Y</button><button class="active">ALL</button>
+        </div>
+      </div>
+      <svg viewBox="0 0 800 240">
+        <defs><linearGradient id="pfg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl(var(--brand-gold))" stop-opacity="0.25"/><stop offset="1" stop-color="hsl(var(--brand-gold))" stop-opacity="0"/></linearGradient></defs>
+        <line x1="0" y1="60" x2="800" y2="60" stroke="hsl(var(--border))" stroke-dasharray="2 4"/>
+        <line x1="0" y1="120" x2="800" y2="120" stroke="hsl(var(--border))" stroke-dasharray="2 4"/>
+        <line x1="0" y1="180" x2="800" y2="180" stroke="hsl(var(--border))" stroke-dasharray="2 4"/>
+        <path d="M0,200 L40,196 L80,184 L120,178 L160,170 L200,168 L240,150 L280,156 L320,134 L360,142 L400,128 L440,108 L480,118 L520,96 L560,84 L600,92 L640,72 L680,60 L720,52 L760,40 L800,32 L800,240 L0,240 Z" fill="url(#pfg)"/>
+        <path d="M0,200 L40,196 L80,184 L120,178 L160,170 L200,168 L240,150 L280,156 L320,134 L360,142 L400,128 L440,108 L480,118 L520,96 L560,84 L600,92 L640,72 L680,60 L720,52 L760,40 L800,32" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="2"/>
+        <path d="M0,210 L40,206 L80,200 L120,196 L160,192 L200,188 L240,180 L280,182 L320,174 L360,176 L400,170 L440,164 L480,166 L520,158 L560,154 L600,156 L640,148 L680,142 L720,138 L760,132 L800,128" fill="none" stroke="hsl(var(--muted-foreground))" stroke-width="1.4" stroke-dasharray="4 3"/>
+        <text x="14" y="232" font-family="ui-monospace" font-size="10" fill="hsl(var(--muted-foreground))">Apr '22</text>
+        <text x="280" y="232" font-family="ui-monospace" font-size="10" fill="hsl(var(--muted-foreground))">Apr '23</text>
+        <text x="540" y="232" font-family="ui-monospace" font-size="10" fill="hsl(var(--muted-foreground))">Apr '24</text>
+        <text x="780" y="232" font-family="ui-monospace" font-size="10" fill="hsl(var(--muted-foreground))" text-anchor="end">today</text>
+        <g transform="translate(640,12)"><rect width="148" height="22" rx="11" fill="hsl(var(--card))" stroke="hsl(var(--border))"/><circle cx="14" cy="11" r="4" fill="hsl(var(--brand-gold))"/><text x="22" y="14" font-family="ui-monospace" font-size="10" fill="hsl(var(--foreground))">Portfolio</text><circle cx="78" cy="11" r="4" fill="hsl(var(--muted-foreground))"/><text x="86" y="14" font-family="ui-monospace" font-size="10" fill="hsl(var(--foreground))">NIFTY 50</text></g>
+      </svg>
+    </div>
+
+    <div class="holdings">
+      <div class="hd"><h3>Holdings · 18 stocks</h3><div class="tabs"><button class="active">Stocks</button><button>Mutual funds</button><button>F&amp;O</button><button>Cash</button></div></div>
+      <table class="tbl">
+        <thead><tr><th>Stock</th><th>Qty</th><th>Avg cost</th><th>LTP</th><th>Value</th><th>Day %</th><th>P/L</th><th>P/L %</th><th>Allocation</th></tr></thead>
+        <tbody>
+          <tr><td><div class="sym">RELIANCE</div><div class="nm">Reliance Industries</div></td><td>200</td><td>2,718.00</td><td>2,948.55</td><td>5,89,710</td><td class="pos">+0.82</td><td class="pos">+46,110</td><td class="pos">+8.5</td><td><span class="allo-bar"><span style="width:88%"></span></span> 41.3%</td></tr>
+          <tr><td><div class="sym">HDFCBANK</div><div class="nm">HDFC Bank</div></td><td>120</td><td>1,420.00</td><td>1,520.40</td><td>1,82,448</td><td class="pos">+1.22</td><td class="pos">+12,048</td><td class="pos">+7.1</td><td><span class="allo-bar"><span style="width:42%"></span></span> 12.8%</td></tr>
+          <tr><td><div class="sym">TCS</div><div class="nm">Tata Consultancy</div></td><td>40</td><td>3,420.00</td><td>3,842.10</td><td>1,53,684</td><td class="neg">−0.34</td><td class="pos">+16,884</td><td class="pos">+12.3</td><td><span class="allo-bar"><span style="width:36%"></span></span> 10.8%</td></tr>
+          <tr><td><div class="sym">ICICIBANK</div><div class="nm">ICICI Bank</div></td><td>120</td><td>968.00</td><td>1,148.20</td><td>1,37,784</td><td class="pos">+1.84</td><td class="pos">+21,624</td><td class="pos">+18.6</td><td><span class="allo-bar"><span style="width:32%"></span></span> 9.6%</td></tr>
+          <tr><td><div class="sym">BHARTIARTL</div><div class="nm">Bharti Airtel</div></td><td>80</td><td>1,242.00</td><td>1,524.60</td><td>1,21,968</td><td class="pos">+0.94</td><td class="pos">+22,608</td><td class="pos">+22.8</td><td><span class="allo-bar"><span style="width:28%"></span></span> 8.5%</td></tr>
+          <tr><td><div class="sym">LT</div><div class="nm">Larsen &amp; Toubro</div></td><td>20</td><td>2,948.00</td><td>3,624.40</td><td>72,488</td><td class="pos">+1.42</td><td class="pos">+13,528</td><td class="pos">+22.9</td><td><span class="allo-bar"><span style="width:18%"></span></span> 5.1%</td></tr>
+          <tr><td><div class="sym">INFY</div><div class="nm">Infosys</div></td><td>40</td><td>1,486.00</td><td>1,422.80</td><td>56,912</td><td class="pos">+0.46</td><td class="neg">−2,528</td><td class="neg">−4.2</td><td><span class="allo-bar"><span style="width:14%"></span></span> 4.0%</td></tr>
+          <tr><td><div class="sym">MARUTI</div><div class="nm">Maruti Suzuki</div></td><td>4</td><td>10,624.00</td><td>12,148.60</td><td>48,594</td><td class="pos">+2.42</td><td class="pos">+6,098</td><td class="pos">+14.3</td><td><span class="allo-bar"><span style="width:12%"></span></span> 3.4%</td></tr>
+          <tr><td><div class="sym">SUNPHARMA</div><div class="nm">Sun Pharma</div></td><td>22</td><td>1,420.00</td><td>1,624.20</td><td>35,732</td><td class="pos">+0.62</td><td class="pos">+4,492</td><td class="pos">+14.4</td><td><span class="allo-bar"><span style="width:10%"></span></span> 2.5%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <aside class="pf-side">
+    <div class="panel">
+      <h4>Sector allocation</h4>
+      <div class="donut">
+        <svg viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="78" fill="none" stroke="hsl(var(--border))" stroke-width="22"/>
+          <!-- 4 sector arcs -->
+          <circle cx="100" cy="100" r="78" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="22" stroke-dasharray="180 490" transform="rotate(-90 100 100)"/>
+          <circle cx="100" cy="100" r="78" fill="none" stroke="hsl(213 50% 40%)" stroke-width="22" stroke-dasharray="120 490" stroke-dashoffset="-180" transform="rotate(-90 100 100)"/>
+          <circle cx="100" cy="100" r="78" fill="none" stroke="hsl(150 50% 40%)" stroke-width="22" stroke-dasharray="86 490" stroke-dashoffset="-300" transform="rotate(-90 100 100)"/>
+          <circle cx="100" cy="100" r="78" fill="none" stroke="hsl(0 60% 50%)" stroke-width="22" stroke-dasharray="60 490" stroke-dashoffset="-386" transform="rotate(-90 100 100)"/>
+        </svg>
+        <div class="center"><div class="v">₹14.3L</div><div class="l">8 sectors</div></div>
+      </div>
+      <div class="alloc-row"><span class="l"><span class="dot" style="background:hsl(var(--brand-gold))"></span>Energy &amp; oil</span><span class="v">36.8%</span></div>
+      <div class="alloc-row"><span class="l"><span class="dot" style="background:hsl(213 50% 40%)"></span>Banking</span><span class="v">22.4%</span></div>
+      <div class="alloc-row"><span class="l"><span class="dot" style="background:hsl(150 50% 40%)"></span>IT services</span><span class="v">14.8%</span></div>
+      <div class="alloc-row"><span class="l"><span class="dot" style="background:hsl(0 60% 50%)"></span>Telecom</span><span class="v">8.5%</span></div>
+      <div class="alloc-row"><span class="l"><span class="dot" style="background:hsl(280 40% 50%)"></span>Cap-goods</span><span class="v">5.1%</span></div>
+      <div class="alloc-row"><span class="l"><span class="dot" style="background:hsl(38 60% 50%)"></span>Auto</span><span class="v">3.4%</span></div>
+      <div class="alloc-row"><span class="l"><span class="dot" style="background:hsl(195 60% 50%)"></span>Pharma</span><span class="v">2.5%</span></div>
+      <div class="alloc-row"><span class="l"><span class="dot" style="background:hsl(213 14% 60%)"></span>Other</span><span class="v">6.5%</span></div>
+    </div>
+
+    <div class="panel">
+      <h4>Concentration risk</h4>
+      <p class="muted body-sm" style="font-size:12px;margin:0 0 10px;line-height:1.5">Your top holding is <b>41.3%</b> of portfolio — above the 25% guideline. Consider trimming RELIANCE on next strength.</p>
+      <div style="height:8px;background:hsl(var(--muted));border-radius:4px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:82%;background:hsl(var(--negative))"></div></div>
+      <div class="flex justify-between" style="font-size:11px;color:hsl(var(--muted-foreground));font-family:var(--font-mono)"><span>Top1: 41.3%</span><span>Target ≤25%</span></div>
+    </div>
+
+    <div class="panel">
+      <h4>Recent transactions</h4>
+      <div class="alloc-row"><span class="l">BUY · RELIANCE +50</span><span class="v">14 min ago</span></div>
+      <div class="alloc-row"><span class="l">BUY · MARUTI +2</span><span class="v">2 days</span></div>
+      <div class="alloc-row"><span class="l">SELL · INFY −20</span><span class="v">1 wk</span></div>
+      <div class="alloc-row"><span class="l">DIV · BHARTIARTL ₹1,200</span><span class="v">2 wks</span></div>
+      <a href="#" class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px">All transactions →</a>
+    </div>
+  </aside>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

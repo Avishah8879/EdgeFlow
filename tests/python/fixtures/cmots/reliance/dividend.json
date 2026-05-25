@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "isin": "INE002A01018",
+      "divper": 55.0,
+      "remark": "Final",
+      "symbol": "RELIANCE",
+      "co_code": 476.0,
+      "co_name": "Reliance Industries Ltd",
+      "divdate": "2025-08-14T00:00:00",
+      "divamount": 5.5,
+      "recorddate": "2025-08-14T00:00:00",
+      "description": "",
+      "announcementdate": "2025-04-25T00:00:00"
+    }
+  ]
+}

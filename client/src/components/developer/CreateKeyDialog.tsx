@@ -122,7 +122,7 @@ export function CreateKeyDialog({ onCreate, isCreating }: CreateKeyDialogProps) 
             <DialogHeader>
               <DialogTitle>Create API Key</DialogTitle>
               <DialogDescription>
-                Generate a new API key for programmatic access to the Tiphub
+                Generate a new API key for programmatic access to the Equity Pro
                 API.
               </DialogDescription>
             </DialogHeader>

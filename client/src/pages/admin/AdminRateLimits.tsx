@@ -852,14 +852,12 @@ function ViolationsTab() {
 // Main component
 export default function AdminRateLimits() {
   return (
-    <AdminLayout>
+    <AdminLayout
+      eyebrow="Admin · API gateway"
+      title="Rate limit management"
+      description="Configure API rate limits by tier and manage user-specific overrides."
+    >
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Rate Limit Management</h1>
-          <p className="text-muted-foreground">
-            Configure API rate limits by tier and manage user-specific overrides
-          </p>
-        </div>
 
         <Tabs defaultValue="configs" className="space-y-4">
           <TabsList>

@@ -50,7 +50,8 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes (was Infinity)
       gcTime: 10 * 60 * 1000, // Keep unused data in cache for 10 minutes
-      retry: false,
+      retry: 1,
+      retryDelay: 2000,
     },
     mutations: {
       retry: false,

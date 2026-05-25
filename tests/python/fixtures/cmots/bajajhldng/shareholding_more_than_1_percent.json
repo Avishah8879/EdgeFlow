@@ -1,0 +1,758 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "Name": "Jamnalal Sons Pvt Ltd",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 18.01,
+      "NOOFshares": 20049515.0
+    },
+    {
+      "Name": "Parag Parikh Flexi Cap Fund",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 5.73,
+      "NOOFshares": 6381433.0
+    },
+    {
+      "Name": "Jaya Hind Industries Private Limited",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 5.33,
+      "NOOFshares": 5929451.0
+    },
+    {
+      "Name": "Niraj Bajaj Nirav Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 4.83,
+      "NOOFshares": 5378257.0
+    },
+    {
+      "Name": "Shekhar Bajaj Anant Bajaj Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 4.63,
+      "NOOFshares": 5153708.0
+    },
+    {
+      "Name": "Bachhraj And Company Pvt Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 3.77,
+      "NOOFshares": 4196813.0
+    },
+    {
+      "Name": "Sanjivnayan Bajaj Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 3.69,
+      "NOOFshares": 4105234.0
+    },
+    {
+      "Name": "Rajivnayan Bajaj Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 3.64,
+      "NOOFshares": 4055137.0
+    },
+    {
+      "Name": "Bajaj Sevashram Private Ltd",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 3.45,
+      "NOOFshares": 3840648.0
+    },
+    {
+      "Name": "Bajaj Auto Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 3.14,
+      "NOOFshares": 3500000.0
+    },
+    {
+      "Name": "Maharashtra Scooters Limited",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 3.04,
+      "NOOFshares": 3387036.0
+    },
+    {
+      "Name": "Sanraj Nayan Investments Pvt Ltd",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 2.57,
+      "NOOFshares": 2860318.0
+    },
+    {
+      "Name": "Niraj Bajaj (as A Trustee Of Yamuna Trust)",
+      "Type": "Public Shareholding",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 1.64,
+      "NOOFshares": 1829958.0
+    },
+    {
+      "Name": "Bachhraj Factories Private Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 1.25,
+      "NOOFshares": 1394754.0
+    },
+    {
+      "Name": "Baroda Industries Private Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.99,
+      "NOOFshares": 1098440.0
+    },
+    {
+      "Name": "Suman Jain",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.47,
+      "NOOFshares": 523504.0
+    },
+    {
+      "Name": "Hercules Investments Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.37,
+      "NOOFshares": 415516.0
+    },
+    {
+      "Name": "Rupa Equities Private Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.18,
+      "NOOFshares": 201150.0
+    },
+    {
+      "Name": "Rahul Securities Pvt Ltd",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.16,
+      "NOOFshares": 178910.0
+    },
+    {
+      "Name": "Kamalnayan Investment & Trading Pvt Ltd",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.08,
+      "NOOFshares": 91600.0
+    },
+    {
+      "Name": "Madhur Securities Pvt Ltd",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.07,
+      "NOOFshares": 73810.0
+    },
+    {
+      "Name": "Shekhar Holdings Pvt Ltd",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.06,
+      "NOOFshares": 63460.0
+    },
+    {
+      "Name": "Niraj Holdings Pvt Ltd",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.04,
+      "NOOFshares": 47200.0
+    },
+    {
+      "Name": "The Hindustan Housing Company Ltd",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.01,
+      "NOOFshares": 15391.0
+    },
+    {
+      "Name": "Bajaj Finance Limited",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 75.0
+    },
+    {
+      "Name": "Minal Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1000.0
+    },
+    {
+      "Name": "Neelima Bajaj Swamy",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1000.0
+    },
+    {
+      "Name": "Niraj Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1435.0
+    },
+    {
+      "Name": "Kumud Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 2000.0
+    },
+    {
+      "Name": "Rajivnayan Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1000.0
+    },
+    {
+      "Name": "Sanjivnayan Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1000.0
+    },
+    {
+      "Name": "Kiran Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1333.0
+    },
+    {
+      "Name": "Shekhar Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 4500.0
+    },
+    {
+      "Name": "Manish Kejriwal",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1000.0
+    },
+    {
+      "Name": "Shefali Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1000.0
+    },
+    {
+      "Name": "Pooja Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 333.0
+    },
+    {
+      "Name": "Geetika Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1000.0
+    },
+    {
+      "Name": "Nimisha Jaipuria",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1000.0
+    },
+    {
+      "Name": "Deepa Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1000.0
+    },
+    {
+      "Name": "Kriti Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1000.0
+    },
+    {
+      "Name": "Rishabnayan Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1200.0
+    },
+    {
+      "Name": "Niravnayan Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1000.0
+    },
+    {
+      "Name": "Sanjali Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1200.0
+    },
+    {
+      "Name": "Vanraj Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 334.0
+    },
+    {
+      "Name": "Nirvaan Kejriwal",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 200.0
+    },
+    {
+      "Name": "Aarav Swamy",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Vihaan Jaipuria",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Sheetal Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Rajivnayan Bajaj Huf (rajivnayan Bajaj)",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Sanjivnayan Bajaj Huf (sanjivnayan Bajaj)",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Aryan Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Siddhantnayan Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1200.0
+    },
+    {
+      "Name": "Aryaman Trust (manish Kejriwal)",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 100.0
+    },
+    {
+      "Name": "Aryaman Family Trust (rajivnayan Bajaj)",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Nirvaan Family Trust (rajivnayan Bajaj)",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Nimisha Trust (kumud Trust)",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Niravnayan Trust (niraj Bajaj)",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Sanjali Family Trust (sanjivnayan Trust)",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Siddhant Family Trust (sanjivnayan Trust)",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Rishab Family Trust (rajivnayan Bajaj)",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Neelima Bajaj Swamy Family Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Nimisha Jaipuria Family Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Neelima Bajaj Family Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Nimisha Bajaj Family Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Niravnayan Bajaj Family Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Kriti Bajaj Family Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Kumud Neelima Family Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Kumud Nimisha Family Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Madhur Neelima Family Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Madhur Nimisha Family Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Bajaj International Pvt. Ltd.",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Rose Realtors Pvt. Ltd.",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Emerald Acres Pvt. Ltd.",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Sankalp Resorts Pvt. Ltd.",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Hind Musafir Agency Ltd.",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Bajaj Integrated Health System Pvt. Ltd. (formerly Known As Bajaj Vitality Pvt. Ltd.)",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Indef Manufacturing Ltd.",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Bajaj Trading Company",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Geetika Shekhar Bajaj Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Vanraj Bajaj Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Aryan Nayan Realty Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Rdr Ventures Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Estate Of Rahulkumar Bajaj",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Srb & Family Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Drr & Family Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Nrb & Family Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Srjb Family Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Snrs Family Llp",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 0.0
+    },
+    {
+      "Name": "Aryaman Kejriwal",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 200.0
+    },
+    {
+      "Name": "Rajivnayan Bajaj Rishab Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1000.0
+    },
+    {
+      "Name": "Niraj Bajaj Deepa Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1000.0
+    },
+    {
+      "Name": "Sanjivnayan Bajaj Sanjali Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 1000.0
+    },
+    {
+      "Name": "Sanjivnayan Bajaj Siddhant Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 2000.0
+    },
+    {
+      "Name": "Late Sunaina Kejriwal Nirvaan Trust",
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "co_code": 50.0,
+      "perstake": 0.0,
+      "NOOFshares": 100.0
+    }
+  ]
+}

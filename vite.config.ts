@@ -17,9 +17,14 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
 
-    // Enable code splitting for better performance
     rollupOptions: {
+      // Plotly.js is loaded from CDN (see client/index.html) — exclude from bundle
+      external: ['plotly.js', 'plotly.js-dist-min'],
       output: {
+        globals: {
+          'plotly.js': 'Plotly',
+          'plotly.js-dist-min': 'Plotly',
+        },
         manualChunks(id: string) {
           if (id.includes('node_modules/lightweight-charts') || id.includes('node_modules/recharts')) {
             return 'vendor-charts';
@@ -64,6 +69,9 @@ export default defineConfig({
     fs: {
       strict: true,
       deny: ["**/.*"],
+    },
+    hmr: {
+      port: 3000,
     },
   },
 });

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EquityPro · Logo</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 48px; }
+  .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px; max-width: 1100px; margin: 0 auto; }
+
+  .card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--card-border));
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 32px;
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  .card.dark-field {
+    background: hsl(var(--brand-navy));
+    border-color: hsl(var(--brand-navy-deep));
+    color: #fff;
+  }
+  .card.dark-field .eyebrow { color: hsl(var(--brand-gold)); }
+
+  .field {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 280px;
+    border-radius: var(--radius);
+  }
+  .field.bg-white { background: #fff; border: 1px solid hsl(var(--border)); }
+  .field.bg-navy  { background: hsl(var(--brand-navy)); }
+  .field.bg-gold  { background: hsl(var(--brand-gold)); }
+
+  .field img { max-width: 70%; max-height: 240px; object-fit: contain; }
+
+  .lockup {
+    display: flex; align-items: center; gap: 16px;
+  }
+  .lockup img { height: 64px; width: auto; }
+  .lockup .stack { display: flex; flex-direction: column; line-height: 1; }
+  .lockup .name { font-size: 28px; font-weight: 800; letter-spacing: -0.015em; color: hsl(var(--brand-navy)); }
+  .lockup.on-dark .name { color: #fff; }
+  .lockup .tag { margin-top: 4px; font-size: 9.5px; font-weight: 600; letter-spacing: 0.18em; color: hsl(var(--brand-navy)); opacity: 0.7; }
+  .lockup.on-dark .tag { color: hsl(var(--brand-gold)); opacity: 1; }
+
+  .specs {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px;
+    font-size: 13px;
+  }
+  .specs .row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid hsl(var(--border)); }
+  .specs .row:last-child, .specs .row:nth-last-child(2) { border-bottom: 0; }
+  .specs .k { color: hsl(var(--muted-foreground)); text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; font-weight: 600; }
+  .specs .v { font-family: var(--font-mono); color: hsl(var(--brand-navy)); font-weight: 600; }
+
+  .swatch-row { display: flex; gap: 8px; margin-top: 8px; }
+  .sw { width: 28px; height: 28px; border-radius: 6px; border: 1px solid hsl(var(--border)); }
+  .clearance {
+    display: flex; align-items: center; justify-content: center;
+    background: repeating-linear-gradient(45deg, transparent 0 6px, hsla(212,51%,24%,0.06) 6px 12px);
+    border-radius: var(--radius);
+    padding: 32px;
+    flex: 1;
+  }
+  .clearance .inner {
+    background: #fff;
+    border: 1px dashed hsl(var(--brand-gold));
+    padding: 20px 24px;
+    border-radius: var(--radius);
+  }
+  .clearance img { height: 80px; }
+
+  .hero {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, hsl(var(--brand-navy)) 0%, hsl(var(--brand-navy-deep)) 100%);
+    color: #fff;
+    border-radius: var(--radius-xl);
+    padding: 56px 48px;
+    display: flex; align-items: center; gap: 48px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ""; position: absolute; right: -120px; top: -120px; width: 380px; height: 380px;
+    border-radius: 50%;
+    background: radial-gradient(circle, hsl(var(--brand-gold) / 0.35), transparent 70%);
+  }
+  .hero img { height: 200px; width: auto; position: relative; z-index: 1; }
+  .hero .copy { position: relative; z-index: 1; max-width: 480px; }
+  .hero h2 { color: #fff; font-size: 36px; margin: 0 0 12px; line-height: 1.1; }
+  .hero .tag { color: hsl(var(--brand-gold)); font-size: 12px; letter-spacing: 0.18em; font-weight: 600; }
+  .hero p { color: hsl(38 30% 92%); margin: 16px 0 0; line-height: 1.55; }
+</style>
+</head>
+<body>
+<div class="grid">
+
+  <div class="hero">
+    <img src="../assets/shield.png" alt="EquityPro shield">
+    <div class="copy">
+      <div class="tag">EQUITYPRO · EQUITYPRO.CO.IN</div>
+      <h2>The shield in lockup</h2>
+      <p>The crowned shield is the master mark. Use it on a navy field for hero
+      moments and on white wherever the surrounding UI is light. Keep at least
+      half-shield-height of clear space on every side, and never set the gold
+      at less than 24px high.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="eyebrow">Primary mark · light field</span>
+    <div class="field bg-white"><img src="../assets/shield.png" alt="EquityPro shield on white"></div>
+    <div class="lockup">
+      <img src="../assets/shield.png" alt="">
+      <div class="stack">
+        <span class="name">equitypro<span style="color:hsl(var(--brand-gold))">.co.in</span></span>
+        <span class="tag">TECHNICAL PRECISION · FUNDAMENTAL INSIGHT</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card dark-field">
+    <span class="eyebrow">Primary mark · navy field</span>
+    <div class="field bg-navy"><img src="../assets/shield.png" alt="EquityPro shield on navy"></div>
+    <div class="lockup on-dark">
+      <img src="../assets/shield.png" alt="">
+      <div class="stack">
+        <span class="name">equitypro<span style="color:hsl(var(--brand-gold))">.co.in</span></span>
+        <span class="tag">QUANTITATIVE RIGOR · INTEGRATED SOLUTIONS</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="eyebrow">Clear space · minimum size</span>
+    <div class="clearance"><div class="inner"><img src="../assets/shield.png" alt=""></div></div>
+    <div class="specs">
+      <div class="row"><span class="k">Min height</span><span class="v">32 px</span></div>
+      <div class="row"><span class="k">Clear space</span><span class="v">0.5×</span></div>
+      <div class="row"><span class="k">File</span><span class="v">logo.jpg</span></div>
+      <div class="row"><span class="k">Aspect</span><span class="v">1:1</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="eyebrow">Color elements pulled from the mark</span>
+    <div class="specs" style="grid-template-columns: 1fr;">
+      <div class="row"><span class="k">Shield body</span><span class="v">#1F3A5F · navy</span></div>
+      <div class="row"><span class="k">Crown · ring</span><span class="v">#C8A04A · gold</span></div>
+      <div class="row"><span class="k">Rising arrows</span><span class="v">#3FA9D6 · sky</span></div>
+      <div class="row"><span class="k">Central cube</span><span class="v">#F4A024 · amber</span></div>
+      <div class="row"><span class="k">Building blocks</span><span class="v">#B9B9B9 · silver</span></div>
+    </div>
+    <div class="swatch-row">
+      <div class="sw" style="background:#1F3A5F" title="navy"></div>
+      <div class="sw" style="background:#C8A04A" title="gold"></div>
+      <div class="sw" style="background:#3FA9D6" title="sky"></div>
+      <div class="sw" style="background:#F4A024" title="amber"></div>
+      <div class="sw" style="background:#B9B9B9" title="silver"></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

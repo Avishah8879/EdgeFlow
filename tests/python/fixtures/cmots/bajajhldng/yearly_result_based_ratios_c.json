@@ -1,0 +1,40 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "EV": 97289.7,
+      "PE": 10.09800814589981,
+      "EPS": 865.9,
+      "PBV": 1.330296765931316,
+      "ROA": 11.32473452227524,
+      "ROE": 11.1507,
+      "COGS": 38.89,
+      "EBIT": 10057.359999999999,
+      "MCAP": 97311.98,
+      "ROCE": 11.666,
+      "EBITDA": 10089.27,
+      "CO_CODE": 50,
+      "YearEnd": 202603,
+      "DIVYIELD": 2.2301005487710768,
+      "EV_Sales": 90.96065745432787,
+      "NetSales": 1069.58,
+      "BookValue": 6572.969718752806,
+      "EV_EBITDA": 9.642887939365286,
+      "Netprofit": 9636.75,
+      "EPSDiluted": 865.9,
+      "Debt_Equity": 0.0001,
+      "CurrentRatio": 1.4509,
+      "LongTermDebt": 9.62,
+      "AssetTurnover": 0.01256928897225221,
+      "EBITDA_Margin": 943.2926943286152,
+      "ShorttermDebt": 0.0,
+      "AnnualDividend": 2170.155,
+      "DividendPayout": 22.169503888069368,
+      "NetDebt_EBITDA": -0.002208286625295983,
+      "NetIncomeMargin": 900.984498588231,
+      "GrossIncomeMargin": 943.22537818583,
+      "TotalShareholdersEquity": 73150.57999999999
+    }
+  ]
+}

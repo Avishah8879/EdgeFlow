@@ -1,0 +1,121 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Email settings · Admin</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.ad-shell{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
+.ad-side{background:hsl(var(--brand-navy-deep));color:hsl(38 30% 88%);padding:18px 0;font-family:var(--font-mono)}
+.ad-side h4{padding:8px 18px;margin:0;font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--brand-gold));font-family:var(--font-display)}
+.ad-side a{display:block;padding:8px 18px;font-size:12.5px;color:hsl(38 30% 75%);text-decoration:none;border-left:3px solid transparent}
+.ad-side a.active{background:hsl(213 50% 18%);color:hsl(var(--brand-gold));border-left-color:hsl(var(--brand-gold));font-weight:700}
+.ad-side a:hover{background:hsl(213 50% 18%);color:white}
+.ad-main{padding:24px 32px 60px;background:hsl(var(--background))}
+.ad-hd{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+.ad-hd h1{font-family:var(--font-display);font-size:28px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .ad-hd h1{color:hsl(38 30% 95%)}
+
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px}
+.card h3{margin:0 0 14px;font-family:var(--font-display);font-size:16px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .card h3{color:hsl(38 30% 95%)}
+
+.fld{margin-bottom:12px}
+.fld label{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground));margin-bottom:5px}
+.fld input,.fld select,.fld textarea{width:100%;height:36px;padding:0 12px;border:1px solid hsl(var(--border));border-radius:var(--radius-md);background:hsl(var(--background));font-family:var(--font-mono);font-size:13px;color:hsl(var(--foreground))}
+.fld textarea{height:auto;padding:10px 12px;font-family:inherit;line-height:1.5}
+
+.dns{font-family:var(--font-mono);font-size:11.5px;background:hsl(var(--muted)/0.4);border:1px solid hsl(var(--border));border-radius:var(--radius-md);padding:12px}
+.dns .row2{display:grid;grid-template-columns:60px 1fr 50px;gap:10px;padding:6px 0;border-bottom:1px dashed hsl(var(--border)/0.7)}
+.dns .row2:last-child{border-bottom:0}
+.dns .ok{color:hsl(var(--positive));font-weight:800}
+.dns .bad{color:hsl(var(--negative));font-weight:800}
+
+.tmpl-list{font-family:var(--font-mono);font-size:12px}
+.tmpl-list .it{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;padding:10px 0;border-bottom:1px dashed hsl(var(--border));align-items:center}
+.tmpl-list .it:last-child{border-bottom:0}
+.tmpl-list .nm{font-family:var(--font-display);font-weight:700;font-size:13px;color:hsl(var(--foreground))}
+.tmpl-list .ds{font-family:inherit;color:hsl(var(--muted-foreground));font-size:11px;margin-top:1px}
+.tmpl-list .stat{font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:0.04em}
+.tmpl-list .stat.live{background:hsl(var(--positive)/0.15);color:hsl(var(--positive))}
+.tmpl-list .stat.draft{background:hsl(213 14% 50% / 0.15);color:hsl(213 14% 35%)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px}
+.metrics .k{padding:14px 18px;border-right:1px solid hsl(var(--border))}
+.metrics .k:last-child{border-right:0}
+.metrics .l{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.metrics .v{font-family:var(--font-mono);font-size:22px;font-weight:700;margin-top:4px;color:hsl(var(--foreground))}
+.toggle{position:relative;width:44px;height:24px;background:hsl(var(--muted));border-radius:12px;cursor:pointer}
+.toggle .knob{position:absolute;top:2px;left:2px;width:20px;height:20px;background:white;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,0.2);transition:left var(--t-fast)}
+.toggle.on{background:hsl(var(--brand-gold))}
+.toggle.on .knob{left:22px}
+</style></head>
+<body data-page="admin-email-settings" data-screen-label="Admin · 47 Email">
+<div class="shell"><div data-shell-topbar></div>
+
+<main class="ad-shell">
+  <aside class="ad-side">
+    <h4>Admin</h4>
+    <a href="admin-analytics.html">Analytics</a>
+    <a href="admin-users.html">Users</a>
+    <a href="admin-feature-flags.html">Feature flags</a>
+    <a href="admin-audit-logs.html">Audit logs</a>
+    <a href="admin-coin-packs.html">Coin packs</a>
+    <a href="admin-coin-transactions.html">Coin transactions</a>
+    <a href="admin-email-settings.html" class="active">Email settings</a>
+    <a href="admin-api-keys.html">API keys</a>
+  </aside>
+
+  <section class="ad-main">
+    <div class="ad-hd">
+      <div><span class="eyebrow">Admin · Comms</span><h1>Email settings</h1></div>
+      <div class="flex gap-2"><button class="btn btn-ghost btn-sm">Test send</button><button class="btn btn-primary btn-sm">Save</button></div>
+    </div>
+
+    <div class="metrics">
+      <div class="k"><div class="l">Sent (30d)</div><div class="v">412,820</div></div>
+      <div class="k"><div class="l">Open rate</div><div class="v">42.4%</div></div>
+      <div class="k"><div class="l">Click rate</div><div class="v">8.6%</div></div>
+      <div class="k"><div class="l">Bounce</div><div class="v change-down">0.4%</div></div>
+    </div>
+
+    <div class="row">
+      <div class="card">
+        <h3>SMTP / provider</h3>
+        <div class="fld"><label>Provider</label><select><option>AWS SES (ap-south-1)</option><option>SendGrid</option><option>Postmark</option></select></div>
+        <div class="fld"><label>From name</label><input type="text" value="EquityPro Team"></div>
+        <div class="fld"><label>From address</label><input type="text" value="hello@equitypro.in"></div>
+        <div class="fld"><label>Reply-to</label><input type="text" value="support@equitypro.in"></div>
+        <div class="fld"><label>SMTP host · port</label><input type="text" value="email-smtp.ap-south-1.amazonaws.com · 587"></div>
+        <div class="flex justify-between" style="font-family:var(--font-mono);font-size:12px;padding-top:8px"><span class="muted">Send rate · 14 / sec</span><span class="change-up">Health · OK</span></div>
+      </div>
+      <div class="card">
+        <h3>Domain authentication</h3>
+        <div class="dns">
+          <div class="row2"><span>SPF</span><span><b>v=spf1 include:amazonses.com −all</b></span><span class="ok">✓ ok</span></div>
+          <div class="row2"><span>DKIM</span><span><b>k1._domainkey.equitypro.in</b> CNAME</span><span class="ok">✓ ok</span></div>
+          <div class="row2"><span>DKIM</span><span><b>k2._domainkey.equitypro.in</b> CNAME</span><span class="ok">✓ ok</span></div>
+          <div class="row2"><span>DMARC</span><span><b>v=DMARC1; p=quarantine; rua=mailto:dmarc@equitypro.in</b></span><span class="ok">✓ ok</span></div>
+          <div class="row2"><span>BIMI</span><span><b>default._bimi</b> · logo SVG verified</span><span class="ok">✓ ok</span></div>
+          <div class="row2"><span>MX</span><span><b>10 inbound-smtp.ap-south-1.amazonaws.com</b></span><span class="ok">✓ ok</span></div>
+        </div>
+        <p class="muted body-sm" style="font-size:11.5px;margin:10px 0 0">Last verified 14 min ago. DMARC reports parsed daily into Audit logs.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Templates · 18 active</h3>
+      <div class="tmpl-list">
+        <div class="it"><div><div class="nm">welcome_signup</div><div class="ds">Triggered 0s after sign-up · variables: name, plan, broker</div></div><span class="muted">68% open · 14% click</span><span class="stat live">Live</span><div class="toggle on"><div class="knob"></div></div></div>
+        <div class="it"><div><div class="nm">trial_d3_nudge</div><div class="ds">3 days into trial · feature highlight reel</div></div><span class="muted">52% open · 18% click</span><span class="stat live">Live</span><div class="toggle on"><div class="knob"></div></div></div>
+        <div class="it"><div><div class="nm">trial_d11_convert</div><div class="ds">2 days before trial ends · upgrade CTA</div></div><span class="muted">48% open · 22% click</span><span class="stat live">Live</span><div class="toggle on"><div class="knob"></div></div></div>
+        <div class="it"><div><div class="nm">payment_failed</div><div class="ds">Stripe charge.failed webhook</div></div><span class="muted">82% open · 64% click</span><span class="stat live">Live</span><div class="toggle on"><div class="knob"></div></div></div>
+        <div class="it"><div><div class="nm">earnings_digest_weekly</div><div class="ds">Mon 7am IST · Pro+ · earnings calendar + flow</div></div><span class="muted">38% open · 12% click</span><span class="stat live">Live</span><div class="toggle on"><div class="knob"></div></div></div>
+        <div class="it"><div><div class="nm">price_alert_triggered</div><div class="ds">Push + email · alerts page</div></div><span class="muted">74% open · 48% click</span><span class="stat live">Live</span><div class="toggle on"><div class="knob"></div></div></div>
+        <div class="it"><div><div class="nm">welcome_pro_v3</div><div class="ds">Sent on Pro upgrade · onboarding checklist</div></div><span class="muted">—</span><span class="stat draft">Draft</span><div class="toggle"><div class="knob"></div></div></div>
+        <div class="it"><div><div class="nm">monthly_report_pdf</div><div class="ds">First of the month · portfolio P&amp;L PDF attached</div></div><span class="muted">62% open · 28% click</span><span class="stat live">Live</span><div class="toggle on"><div class="knob"></div></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+<script src="app.js"></script>
+</body></html>

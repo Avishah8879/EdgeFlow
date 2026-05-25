@@ -1,0 +1,153 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Feature flags · Admin</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.ad-shell{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
+.ad-side{background:hsl(var(--brand-navy-deep));color:hsl(38 30% 88%);padding:18px 0;font-family:var(--font-mono)}
+.ad-side h4{padding:8px 18px;margin:0;font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--brand-gold));font-family:var(--font-display)}
+.ad-side a{display:block;padding:8px 18px;font-size:12.5px;color:hsl(38 30% 75%);text-decoration:none;border-left:3px solid transparent}
+.ad-side a.active{background:hsl(213 50% 18%);color:hsl(var(--brand-gold));border-left-color:hsl(var(--brand-gold));font-weight:700}
+.ad-side a:hover{background:hsl(213 50% 18%);color:white}
+.ad-main{padding:24px 32px 60px;background:hsl(var(--background))}
+.ad-hd{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+.ad-hd h1{font-family:var(--font-display);font-size:28px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .ad-hd h1{color:hsl(38 30% 95%)}
+
+.flag-list{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.flag{padding:18px 22px;border-bottom:1px solid hsl(var(--border));display:grid;grid-template-columns:1fr auto 60px;gap:18px;align-items:center}
+.flag:last-child{border-bottom:0}
+.flag .top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.flag .key{font-family:var(--font-mono);font-size:13px;font-weight:700;color:hsl(var(--brand-navy))}
+.dark .flag .key{color:hsl(var(--brand-gold))}
+.flag .desc{font-size:12.5px;color:hsl(var(--muted-foreground));margin:0;line-height:1.5}
+.flag .meta{display:flex;gap:14px;margin-top:8px;font-family:var(--font-mono);font-size:11px;color:hsl(var(--muted-foreground))}
+.flag .meta b{color:hsl(var(--foreground))}
+.envs{display:flex;gap:8px}
+.env{padding:4px 10px;border:1px solid hsl(var(--border));border-radius:var(--radius-md);font-family:var(--font-mono);font-size:11px;font-weight:700;background:hsl(var(--background));color:hsl(var(--muted-foreground));display:flex;align-items:center;gap:5px}
+.env .dt{width:6px;height:6px;border-radius:50%;background:hsl(var(--muted-foreground))}
+.env.on{color:hsl(var(--positive));border-color:hsl(var(--positive)/0.4);background:hsl(var(--positive)/0.06)}
+.env.on .dt{background:hsl(var(--positive))}
+.env.off{color:hsl(var(--negative));border-color:hsl(var(--negative)/0.4);background:hsl(var(--negative)/0.06)}
+.env.off .dt{background:hsl(var(--negative))}
+.env.partial{color:hsl(var(--brand-gold));border-color:hsl(var(--brand-gold)/0.4);background:hsl(var(--brand-gold)/0.06)}
+.env.partial .dt{background:hsl(var(--brand-gold))}
+
+.tag{font-size:9.5px;padding:2px 7px;border-radius:var(--radius-pill);background:hsl(var(--muted));color:hsl(var(--muted-foreground));font-family:var(--font-mono);font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+.tag.exp{background:hsl(280 40% 50% / 0.15);color:hsl(280 40% 40%)}
+.tag.kill{background:hsl(0 60% 50% / 0.15);color:hsl(0 60% 45%)}
+.tag.beta{background:hsl(var(--brand-gold)/0.18);color:hsl(var(--brand-gold))}
+
+.toggle{position:relative;width:50px;height:28px;background:hsl(var(--muted));border-radius:14px;cursor:pointer;transition:background var(--t-fast)}
+.toggle .knob{position:absolute;top:2px;left:2px;width:24px;height:24px;background:white;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,0.2);transition:left var(--t-fast)}
+.toggle.on{background:hsl(var(--brand-gold))}
+.toggle.on .knob{left:24px}
+</style></head>
+<body data-page="admin-feature-flags" data-screen-label="Admin · 43 Feature flags">
+<div class="shell"><div data-shell-topbar></div>
+
+<main class="ad-shell">
+  <aside class="ad-side">
+    <h4>Admin</h4>
+    <a href="admin-analytics.html">Analytics</a>
+    <a href="admin-users.html">Users</a>
+    <a href="admin-feature-flags.html" class="active">Feature flags</a>
+    <a href="admin-audit-logs.html">Audit logs</a>
+    <a href="admin-coin-packs.html">Coin packs</a>
+    <a href="admin-coin-transactions.html">Coin transactions</a>
+    <a href="admin-email-settings.html">Email settings</a>
+    <a href="admin-api-keys.html">API keys</a>
+  </aside>
+
+  <section class="ad-main">
+    <div class="ad-hd">
+      <div><span class="eyebrow">Admin · Release tooling</span><h1>Feature flags · 18</h1></div>
+      <div class="flex gap-2"><button class="btn btn-ghost btn-sm">Audit log</button><button class="btn btn-primary btn-sm">+ New flag</button></div>
+    </div>
+
+    <div class="flag-list">
+      <article class="flag">
+        <div>
+          <div class="top"><span class="key">ai_research_assistant</span><span class="tag beta">Beta</span><span class="tag exp">Experiment · A/B</span></div>
+          <p class="desc">Surface the AI summary panel on Stock Detail page. Calls Claude Haiku with last-90-days news + filings.</p>
+          <div class="meta"><span>Owner · <b>@anjali</b></span><span>Updated <b>2 hrs ago</b></span><span>Variants · <b>2 (control, treatment)</b></span><span>Rollout · <b>50% of Pro</b></span></div>
+        </div>
+        <div class="envs"><div class="env on"><span class="dt"></span>dev</div><div class="env on"><span class="dt"></span>staging</div><div class="env partial"><span class="dt"></span>prod 50%</div></div>
+        <div class="toggle on"><div class="knob"></div></div>
+      </article>
+
+      <article class="flag">
+        <div>
+          <div class="top"><span class="key">advanced_chart_v2</span><span class="tag beta">Beta</span></div>
+          <p class="desc">New TradingView-style charting engine with multi-pane indicators. Falls back to v1 if WebGL unsupported.</p>
+          <div class="meta"><span>Owner · <b>@dev</b></span><span>Updated <b>1d ago</b></span><span>Rollout · <b>internal + Quant</b></span></div>
+        </div>
+        <div class="envs"><div class="env on"><span class="dt"></span>dev</div><div class="env on"><span class="dt"></span>staging</div><div class="env partial"><span class="dt"></span>prod 14%</div></div>
+        <div class="toggle on"><div class="knob"></div></div>
+      </article>
+
+      <article class="flag">
+        <div>
+          <div class="top"><span class="key">options_visualizer_3d</span><span class="tag exp">Experiment</span></div>
+          <p class="desc">3D payoff surface (price × time × P&amp;L) instead of the 2D curve. Heavier render — gated by GPU tier.</p>
+          <div class="meta"><span>Owner · <b>@meera</b></span><span>Updated <b>3d ago</b></span><span>Rollout · <b>opt-in</b></span></div>
+        </div>
+        <div class="envs"><div class="env on"><span class="dt"></span>dev</div><div class="env on"><span class="dt"></span>staging</div><div class="env off"><span class="dt"></span>prod off</div></div>
+        <div class="toggle"><div class="knob"></div></div>
+      </article>
+
+      <article class="flag">
+        <div>
+          <div class="top"><span class="key">community_forum_replies</span></div>
+          <p class="desc">Allow forum reply threading with @mentions and rich text. Migrating from comments-only.</p>
+          <div class="meta"><span>Owner · <b>@priya</b></span><span>Updated <b>4 days ago</b></span><span>Rollout · <b>100%</b></span></div>
+        </div>
+        <div class="envs"><div class="env on"><span class="dt"></span>dev</div><div class="env on"><span class="dt"></span>staging</div><div class="env on"><span class="dt"></span>prod 100%</div></div>
+        <div class="toggle on"><div class="knob"></div></div>
+      </article>
+
+      <article class="flag">
+        <div>
+          <div class="top"><span class="key">fyers_websocket_v3</span><span class="tag kill">Kill-switch</span></div>
+          <p class="desc">Use Fyers v3 websocket protocol. Kill-switch flag — toggle off if our load on their endpoint hits the throttle.</p>
+          <div class="meta"><span>Owner · <b>@dev</b></span><span>Updated <b>14h ago</b></span><span>Rollout · <b>100%</b></span></div>
+        </div>
+        <div class="envs"><div class="env on"><span class="dt"></span>dev</div><div class="env on"><span class="dt"></span>staging</div><div class="env on"><span class="dt"></span>prod 100%</div></div>
+        <div class="toggle on"><div class="knob"></div></div>
+      </article>
+
+      <article class="flag">
+        <div>
+          <div class="top"><span class="key">paywall_aggressive</span><span class="tag exp">Experiment · A/B</span></div>
+          <p class="desc">Stricter free-tier limits: 3 backtests/week (was 10) and no F&amp;O detail. Revenue test.</p>
+          <div class="meta"><span>Owner · <b>@anjali</b></span><span>Updated <b>2d ago</b></span><span>Rollout · <b>20% of Free</b></span></div>
+        </div>
+        <div class="envs"><div class="env on"><span class="dt"></span>dev</div><div class="env on"><span class="dt"></span>staging</div><div class="env partial"><span class="dt"></span>prod 20%</div></div>
+        <div class="toggle on"><div class="knob"></div></div>
+      </article>
+
+      <article class="flag">
+        <div>
+          <div class="top"><span class="key">indian_basis_swap_curve</span></div>
+          <p class="desc">Show INR OIS / G-sec basis swap curve in macro dashboard. Data feed from Refinitiv Eikon.</p>
+          <div class="meta"><span>Owner · <b>@dev</b></span><span>Updated <b>10d ago</b></span><span>Rollout · <b>Quant only</b></span></div>
+        </div>
+        <div class="envs"><div class="env on"><span class="dt"></span>dev</div><div class="env on"><span class="dt"></span>staging</div><div class="env partial"><span class="dt"></span>prod Quant</div></div>
+        <div class="toggle on"><div class="knob"></div></div>
+      </article>
+
+      <article class="flag">
+        <div>
+          <div class="top"><span class="key">copy_trading</span><span class="tag exp">Experiment</span></div>
+          <p class="desc">Allow following another user's portfolio with replicate-on-broker. Compliance review pending.</p>
+          <div class="meta"><span>Owner · <b>@product</b></span><span>Updated <b>14d ago</b></span><span>Rollout · <b>0%</b></span></div>
+        </div>
+        <div class="envs"><div class="env on"><span class="dt"></span>dev</div><div class="env off"><span class="dt"></span>staging</div><div class="env off"><span class="dt"></span>prod off</div></div>
+        <div class="toggle"><div class="knob"></div></div>
+      </article>
+    </div>
+  </section>
+</main>
+</div>
+<script src="app.js"></script>
+</body></html>

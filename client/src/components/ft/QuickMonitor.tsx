@@ -1,586 +1,625 @@
-import { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, Loader2, Gauge, Activity, Plus, X, RotateCcw } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { useStockQuote } from '@/hooks/useStockQuote';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSymbolSearch } from '@/hooks/useSymbolSearch';
+import { Loader2 } from 'lucide-react';
+import { useStockQuote } from '@/hooks/useStockQuote';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
 
-// Default indices to display (from DB)
-const DEFAULT_INDICES = [
-  { symbol: 'Nifty 50', label: 'NIFTY 50' },
-  { symbol: 'Nifty Bank', label: 'BANK NIFTY' },
-  { symbol: 'India VIX', label: 'INDIA VIX' },
-  { symbol: 'HangSeng BeES-NAV', label: 'HANGSENG' },
-];
-
-// Storage key for persisted indices
-const STORAGE_KEY = 'quickmonitor-indices';
-
+// ─── Types ───────────────────────────────────────────────────────────────────
 interface MarketMover {
   symbol: string;
-  trading_symbol?: string;
-  price: number;
-  change: number;
-  changePercent: number;
-  percent_change?: number;
-  volume: number;
-  rank?: number;
-  open_interest?: number;
-  net_change_open_interest?: number;
-  expiry_type?: string;
-  data_type?: string;
+  name?: string;
+  ltp: number;
+  price?: number;
+  change?: number;
+  change_percent?: number;
+  changePercent?: number;
+  category?: string; // GAINER | LOSER
 }
 
-interface MoversResponse {
-  gainers: MarketMover[];
-  losers: MarketMover[];
-  fetchedAt?: string;
-}
-
-interface SelectedIndex {
+interface ExtremeRow {
   symbol: string;
-  label: string;
+  name?: string;
+  ltp: number | null;
+  percent_change: number | null;
+  fifty_two_week_high: number | null;
+  fifty_two_week_low: number | null;
+  distance_pct: number | null; // % away from the 52w extreme
 }
 
-const getFearGreedLabel = (value: number) => {
-  if (value < 20) return 'Extreme Fear';
-  if (value < 40) return 'Fear';
-  if (value < 60) return 'Neutral';
-  if (value < 80) return 'Greed';
-  return 'Extreme Greed';
+interface ExtremesResponse {
+  highs: ExtremeRow[];
+  lows: ExtremeRow[];
+}
+
+interface RankRow {
+  symbol: string;
+  name?: string;
+  ltp: number | null;
+  pct: number | null;
+}
+
+interface FiiDiiRow {
+  date: string;
+  fiiNetBuySell: number;
+  diiNetBuySell: number;
+  fiiGrossBuy: number;
+  fiiGrossSell: number;
+  diiGrossBuy: number;
+  diiGrossSell: number;
+}
+
+interface NewsItem {
+  title: string;
+  source?: string;
+  publishedAt?: string;
+  published_at?: string;
+  link?: string;
+  url?: string;
+}
+
+interface SectorHeatRow {
+  sector: string;
+  avg_change_percent: number;
+  member_count: number;
+}
+
+// ─── Workspace tabs (visual presets — all currently render same content) ────
+const WORKSPACES = [
+  'Pre-market',
+  'Intraday',
+  'Earnings week',
+  'F&O dashboard',
+  'Macro',
+] as const;
+type Workspace = (typeof WORKSPACES)[number];
+
+// ─── Formatters ──────────────────────────────────────────────────────────────
+const fmt = (n: number | null | undefined, d = 2) =>
+  n == null || !Number.isFinite(n)
+    ? '—'
+    : n.toLocaleString('en-IN', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+const fmtCr = (rupees: number | null | undefined) => {
+  if (rupees == null || !Number.isFinite(rupees)) return '—';
+  const sign = rupees < 0 ? '−' : '+';
+  const abs = Math.abs(rupees);
+  if (abs >= 1000) return `${sign}₹${(abs / 1000).toFixed(1)}K cr`;
+  return `${sign}₹${abs.toFixed(0)}cr`;
 };
 
-const getFearGreedColor = (value: number) => {
-  if (value < 20) return 'text-green-500';
-  if (value < 40) return 'text-blue-500';
-  if (value < 60) return 'text-yellow-500';
-  if (value < 80) return 'text-orange-500';
-  return 'text-red-400';
+const fmtTime = (iso: string | undefined) => {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+  } catch {
+    return '';
+  }
 };
 
-// Index Item that fetches its own data
-function IndexItemWithData({ index, onRemove, canRemove }: {
-  index: SelectedIndex;
-  onRemove: () => void;
-  canRemove: boolean;
+// ─── Cell shell ──────────────────────────────────────────────────────────────
+function Cell({
+  title,
+  className,
+  goldBorder,
+  children,
+  bodyClassName,
+}: {
+  title: string;
+  className?: string;
+  goldBorder?: boolean;
+  bodyClassName?: string;
+  children: React.ReactNode;
 }) {
-  const { data: quote, isLoading, isError } = useStockQuote(index.symbol);
-
-  if (isLoading) {
-    return (
-      <div className="p-2 bg-card border border-border rounded relative group">
-        <div className="text-[9px] uppercase tracking-wide text-muted-foreground mb-1">
-          {index.label}
-        </div>
-        <div className="flex items-center justify-center h-8">
-          <Loader2 className="w-3 h-3 text-muted-foreground animate-spin" />
-        </div>
-      </div>
-    );
-  }
-
-  if (isError || !quote || typeof quote.price === 'undefined') {
-    return (
-      <div className="p-2 bg-card border border-border rounded relative group">
-        {canRemove && (
-          <button
-            onClick={onRemove}
-            className="absolute top-1 right-1 p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-destructive/20 transition-all"
-          >
-            <X className="w-3 h-3 text-destructive" />
-          </button>
-        )}
-        <div className="text-[9px] uppercase tracking-wide text-muted-foreground mb-1">
-          {index.label}
-        </div>
-        <div className="text-xs text-muted-foreground">Data Unavailable</div>
-      </div>
-    );
-  }
-
-  const isPositive = (quote.change || 0) >= 0;
-  const changePercent = quote.changePercent || 0;
-
   return (
-    <div className="p-2.5 bg-card border border-border rounded hover:bg-card/80 transition-colors relative group">
-      {canRemove && (
-        <button
-          onClick={onRemove}
-          className="absolute top-1 right-1 p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-destructive/20 transition-all"
-        >
-          <X className="w-3 h-3 text-destructive" />
-        </button>
+    <div
+      className={cn(
+        'rounded-md bg-card overflow-hidden flex flex-col min-h-0',
+        goldBorder ? 'border-2 border-[hsl(var(--brand-gold))]' : 'border border-border',
+        className,
       )}
-      <div className="text-[9px] uppercase tracking-wide text-muted-foreground mb-1.5">
-        {index.label}
+    >
+      <div className="px-2.5 py-1.5 border-b border-border bg-muted/40 flex items-center justify-between">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-uppercase text-muted-foreground">
+          {title}
+        </span>
       </div>
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="text-base font-mono text-foreground financial-price">
-          ₹{quote.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </span>
-        <span className={cn(
-          "text-[11px] font-mono font-medium",
-          isPositive ? 'text-[#00FF00]' : 'text-[#FF6B35]'
-        )}>
-          {isPositive ? '+' : ''}{changePercent.toFixed(2)}%
-        </span>
+      <div className={cn('flex-1 min-h-0 overflow-hidden', bodyClassName ?? 'p-2.5')}>
+        {children}
       </div>
     </div>
   );
 }
 
-// Add Index Search Component
-function AddIndexSearch({ onAdd, existingSymbols }: {
-  onAdd: (symbol: string, name: string) => void;
-  existingSymbols: string[];
+// ─── Quote tile ──────────────────────────────────────────────────────────────
+function QuoteTile({
+  symbol,
+  label,
+  goldBorder,
+}: {
+  symbol: string;
+  label: string;
+  goldBorder?: boolean;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [query, setQuery] = useState('');
-  const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const { data: searchResults = [] } = useSymbolSearch(query);
+  const { data: quote, isLoading } = useStockQuote(symbol, true, {
+    refetchInterval: 30000,
+  });
 
-  // Filter out already added symbols
-  const filteredResults = searchResults.filter(
-    r => !existingSymbols.includes(r.symbol)
-  ).slice(0, 8);
-
-  const handleSelect = (symbol: string, name: string) => {
-    onAdd(symbol, name);
-    setIsOpen(false);
-    setQuery('');
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      setIsOpen(false);
-      setQuery('');
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setHighlightedIndex(prev => Math.min(prev + 1, filteredResults.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setHighlightedIndex(prev => Math.max(prev - 1, 0));
-    } else if (e.key === 'Enter' && filteredResults.length > 0) {
-      e.preventDefault();
-      const selected = filteredResults[highlightedIndex];
-      handleSelect(selected.symbol, selected.name);
-    }
-  };
-
-  useEffect(() => {
-    setHighlightedIndex(0);
-  }, [searchResults]);
-
-  if (!isOpen) {
-    return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-6 w-6"
-        onClick={() => setIsOpen(true)}
-        title="Add index to monitor"
-      >
-        <Plus className="w-3.5 h-3.5" />
-      </Button>
-    );
-  }
+  const price = quote?.price;
+  const change = quote?.change;
+  // Indices don't always have percent_change populated in ltp_live, but
+  // change (= ltp - close) is computed downstream. Compute the percent
+  // locally as fallback when API returns 0.
+  const apiPct = quote?.changePercent;
+  const fallbackPct =
+    price != null &&
+    Number.isFinite(price) &&
+    change != null &&
+    Number.isFinite(change) &&
+    Math.abs(price - change) > 0
+      ? (change / (price - change)) * 100
+      : 0;
+  const changePct =
+    apiPct != null && Number.isFinite(apiPct) && apiPct !== 0 ? apiPct : fallbackPct;
+  const isPositive = (change ?? 0) >= 0;
 
   return (
-    <div className="relative">
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Search symbol..."
-        autoFocus
-        className="w-36 h-6 px-2 bg-card border border-primary rounded font-mono text-[10px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-      />
-      <button
-        onClick={() => { setIsOpen(false); setQuery(''); }}
-        className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5"
-      >
-        <X className="w-3 h-3 text-muted-foreground hover:text-foreground" />
-      </button>
+    <Cell title={label} goldBorder={goldBorder} bodyClassName="p-3 flex flex-col items-center justify-center text-center">
+      {isLoading || price == null || !Number.isFinite(price) ? (
+        <div className="flex items-center justify-center h-full">
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <>
+          <div className="font-display text-[20px] font-extrabold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground leading-none">
+            {label}
+          </div>
+          <div className="font-mono text-[28px] md:text-[30px] font-bold tabular-nums text-foreground mt-1.5 leading-none">
+            {fmt(price, 2)}
+          </div>
+          <div
+            className={cn(
+              'font-mono text-[12.5px] font-bold tabular-nums mt-1.5 leading-none',
+              isPositive ? 'text-positive' : 'text-negative',
+            )}
+          >
+            {isPositive ? '+' : ''}
+            {fmt(change, 2)} ({isPositive ? '+' : ''}
+            {(changePct ?? 0).toFixed(2)}%)
+          </div>
+        </>
+      )}
+    </Cell>
+  );
+}
 
-      {query.length >= 2 && filteredResults.length > 0 && (
-        <div className="absolute top-full left-0 mt-1 w-56 max-h-40 overflow-y-auto bg-card border border-border rounded shadow-lg z-50">
-          {filteredResults.map((result, idx) => (
-            <button
-              key={result.symbol}
-              onClick={() => handleSelect(result.symbol, result.name)}
-              onMouseEnter={() => setHighlightedIndex(idx)}
+// ─── Generic ranking cell ────────────────────────────────────────────────────
+function RankCell({
+  title,
+  rows,
+  isLoading,
+  emptyMessage = 'No data',
+}: {
+  title: string;
+  rows: RankRow[];
+  isLoading: boolean;
+  emptyMessage?: string;
+}) {
+  return (
+    <Cell title={title} bodyClassName="p-2 overflow-y-auto">
+      {isLoading ? (
+        <div className="h-full flex items-center justify-center">
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="h-full flex items-center justify-center text-[11px] text-muted-foreground">
+          {emptyMessage}
+        </div>
+      ) : (
+        <div className="font-mono text-[10.5px] space-y-0">
+          {rows.map((row) => {
+            const pct = row.pct ?? 0;
+            const positive = pct >= 0;
+            return (
+              <div
+                key={row.symbol}
+                className="flex items-center justify-between py-[3px] border-b border-dashed border-border/40 last:border-b-0 gap-1.5"
+              >
+                <span className="truncate min-w-0 flex-1">
+                  <span className="font-bold text-foreground">{row.symbol}</span>
+                </span>
+                <span
+                  className={cn(
+                    'tabular-nums font-bold flex-shrink-0 text-right whitespace-nowrap',
+                    positive ? 'text-positive' : 'text-negative',
+                  )}
+                >
+                  {positive ? '+' : ''}
+                  {pct.toFixed(2)}%
+                </span>
+                <span className="tabular-nums font-semibold flex-shrink-0 text-right text-muted-foreground whitespace-nowrap min-w-[3rem]">
+                  {fmt(row.ltp, 2)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Cell>
+  );
+}
+
+// ─── Movers data hook (shared by Gainers + Losers cells) ─────────────────────
+function useMovers() {
+  return useQuery<MarketMover[]>({
+    queryKey: ['/api/market-movers'],
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+    select: (raw: any) => {
+      const arr = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
+      return arr.map(
+        (m: any): MarketMover => ({
+          symbol: m.symbol ?? m.trading_symbol ?? '',
+          name: m.name ?? '',
+          ltp: Number(m.ltp ?? m.price ?? 0),
+          change_percent: Number(
+            m.change_percent ?? m.changePercent ?? m.change_pct ?? 0,
+          ),
+          category: m.category,
+        }),
+      );
+    },
+  });
+}
+
+function GainersCell() {
+  const { data, isLoading } = useMovers();
+  const rows: RankRow[] = useMemo(() => {
+    return (data ?? [])
+      .filter(
+        (m) =>
+          (m.symbol?.length ?? 0) > 0 &&
+          Number.isFinite(m.change_percent) &&
+          (m.change_percent ?? 0) > 0,
+      )
+      .slice()
+      .sort((a, b) => (b.change_percent ?? 0) - (a.change_percent ?? 0))
+      .slice(0, 10)
+      .map((m) => ({
+        symbol: m.symbol,
+        name: m.name,
+        ltp: m.ltp,
+        pct: m.change_percent ?? 0,
+      }));
+  }, [data]);
+  return <RankCell title="Top gainers · today" rows={rows} isLoading={isLoading} />;
+}
+
+function LosersCell() {
+  const { data, isLoading } = useMovers();
+  const rows: RankRow[] = useMemo(() => {
+    return (data ?? [])
+      .filter(
+        (m) =>
+          (m.symbol?.length ?? 0) > 0 &&
+          Number.isFinite(m.change_percent) &&
+          (m.change_percent ?? 0) < 0,
+      )
+      .slice()
+      .sort((a, b) => (a.change_percent ?? 0) - (b.change_percent ?? 0))
+      .slice(0, 10)
+      .map((m) => ({
+        symbol: m.symbol,
+        name: m.name,
+        ltp: m.ltp,
+        pct: m.change_percent ?? 0,
+      }));
+  }, [data]);
+  return <RankCell title="Top losers · today" rows={rows} isLoading={isLoading} />;
+}
+
+// ─── 52-week extremes hook (shared by Highs + Lows cells) ────────────────────
+function useExtremes() {
+  return useQuery<ExtremesResponse>({
+    queryKey: ['/api/monitor/extremes?limit=10'],
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
+    select: (raw: any): ExtremesResponse => {
+      const payload = raw?.data ?? raw ?? {};
+      return {
+        highs: Array.isArray(payload.highs) ? payload.highs : [],
+        lows: Array.isArray(payload.lows) ? payload.lows : [],
+      };
+    },
+  });
+}
+
+function HighsCell() {
+  const { data, isLoading } = useExtremes();
+  const rows: RankRow[] = useMemo(() => {
+    return (data?.highs ?? []).map((r) => ({
+      symbol: r.symbol,
+      name: r.name ?? undefined,
+      ltp: r.ltp,
+      pct: r.percent_change,
+    }));
+  }, [data]);
+  return (
+    <RankCell
+      title="52-week highs"
+      rows={rows}
+      isLoading={isLoading}
+      emptyMessage="None at 52w high"
+    />
+  );
+}
+
+function LowsCell() {
+  const { data, isLoading } = useExtremes();
+  const rows: RankRow[] = useMemo(() => {
+    return (data?.lows ?? []).map((r) => ({
+      symbol: r.symbol,
+      name: r.name ?? undefined,
+      ltp: r.ltp,
+      pct: r.percent_change,
+    }));
+  }, [data]);
+  return (
+    <RankCell
+      title="52-week lows"
+      rows={rows}
+      isLoading={isLoading}
+      emptyMessage="None at 52w low"
+    />
+  );
+}
+
+// ─── FII/DII cell (4 available rows) ─────────────────────────────────────────
+function FiiDiiCell() {
+  const { data, isLoading } = useQuery<FiiDiiRow[]>({
+    queryKey: ['/api/fii-dii'],
+    staleTime: 60 * 60 * 1000,
+  });
+
+  const summary = useMemo(() => {
+    if (!data || data.length === 0) return null;
+    const today = data[data.length - 1];
+    const monthStart = new Date(today.date);
+    monthStart.setDate(1);
+    const mtd = data.filter((r) => new Date(r.date) >= monthStart);
+    const fiiMtd = mtd.reduce((s, r) => s + r.fiiNetBuySell, 0);
+    const diiMtd = mtd.reduce((s, r) => s + r.diiNetBuySell, 0);
+    return {
+      fiiToday: today.fiiNetBuySell,
+      diiToday: today.diiNetBuySell,
+      fiiMtd,
+      diiMtd,
+      mtdSessions: mtd.length,
+    };
+  }, [data]);
+
+  return (
+    <Cell title="FII / DII flows">
+      {isLoading || !summary ? (
+        <div className="h-full flex items-center justify-center">
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <div className="font-mono text-[11px] space-y-0">
+          {[
+            { label: 'FII Cash today', v: summary.fiiToday },
+            { label: 'DII Cash today', v: summary.diiToday },
+            { label: 'FII MTD net', v: summary.fiiMtd },
+            { label: 'DII MTD net', v: summary.diiMtd },
+          ].map((row) => {
+            const positive = row.v >= 0;
+            return (
+              <div
+                key={row.label}
+                className="flex items-center justify-between py-[5px] border-b border-dashed border-border/40 last:border-b-0"
+              >
+                <span className="text-muted-foreground">{row.label}</span>
+                <span
+                  className={cn(
+                    'tabular-nums font-bold',
+                    positive ? 'text-positive' : 'text-negative',
+                  )}
+                >
+                  {fmtCr(row.v)}
+                </span>
+              </div>
+            );
+          })}
+          <p className="text-[9.5px] text-muted-foreground pt-2 leading-relaxed">
+            Provisional NSE/BSE data · {summary.mtdSessions} session
+            {summary.mtdSessions !== 1 ? 's' : ''} MTD
+          </p>
+        </div>
+      )}
+    </Cell>
+  );
+}
+
+// ─── News tape cell ──────────────────────────────────────────────────────────
+function NewsCell() {
+  const { data, isLoading } = useQuery<NewsItem[]>({
+    queryKey: ['/api/news/top?limit=8'],
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
+    select: (raw: any) => {
+      const arr = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
+      return arr.map(
+        (n: any): NewsItem => ({
+          title: n.title ?? n.headline ?? '',
+          source: n.source ?? n.publisher ?? '',
+          publishedAt: n.publishedAt ?? n.published_at ?? n.timestamp ?? '',
+          link: n.link ?? n.url ?? '',
+        }),
+      );
+    },
+  });
+
+  return (
+    <Cell title="News tape · live" bodyClassName="p-2.5 overflow-y-auto">
+      {isLoading ? (
+        <div className="h-full flex items-center justify-center">
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        </div>
+      ) : !data || data.length === 0 ? (
+        <div className="h-full flex items-center justify-center text-[11px] text-muted-foreground">
+          No news
+        </div>
+      ) : (
+        <div className="space-y-0">
+          {data.slice(0, 8).map((item, idx) => (
+            <a
+              key={`${item.title}-${idx}`}
+              href={item.link || '#'}
+              target={item.link ? '_blank' : undefined}
+              rel={item.link ? 'noreferrer' : undefined}
               className={cn(
-                "w-full px-2 py-1.5 text-left flex items-center gap-2 transition-colors",
-                highlightedIndex === idx ? "bg-primary/20" : "hover:bg-muted"
+                'block py-1.5 border-b border-dashed border-border/40 last:border-b-0',
+                'text-[10.5px] leading-snug',
+                item.link ? 'hover:bg-muted/30 transition-colors' : '',
               )}
             >
-              <span className="font-mono font-bold text-[10px] text-secondary">{result.symbol}</span>
-              <span className="text-[9px] text-muted-foreground truncate">{result.name}</span>
-            </button>
+              <span className="font-mono text-[9.5px] font-bold text-muted-foreground tracking-uppercase">
+                {fmtTime(item.publishedAt) || (item.source ?? '')}
+              </span>
+              <span className="font-semibold text-foreground ml-1.5">
+                · {item.title}
+              </span>
+            </a>
           ))}
         </div>
       )}
-
-      {query.length >= 2 && filteredResults.length === 0 && (
-        <div className="absolute top-full left-0 mt-1 w-56 bg-card border border-border rounded shadow-lg z-50 px-2 py-1.5">
-          <span className="text-[9px] text-muted-foreground">No results</span>
-        </div>
-      )}
-    </div>
+    </Cell>
   );
 }
 
-export function QuickMonitor() {
-  const [activeTab, setActiveTab] = useState('indices');
-  const [filterType, setFilterType] = useState<'all' | 'equity' | 'futures'>('equity');
-
-  // Load saved indices from localStorage
-  const [selectedIndices, setSelectedIndices] = useState<SelectedIndex[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {
-      console.warn('Failed to load saved indices:', e);
-    }
-    return DEFAULT_INDICES;
+// ─── Sector heat cell (3×3 grid) ─────────────────────────────────────────────
+function SectorHeatCell() {
+  const { data, isLoading } = useQuery<SectorHeatRow[]>({
+    queryKey: ['/api/monitor/sector-heat?limit=9'],
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
+    select: (raw: any) => (Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : []),
   });
-
-  // Save to localStorage when indices change
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedIndices));
-    } catch (e) {
-      console.warn('Failed to save indices:', e);
-    }
-  }, [selectedIndices]);
-
-  const handleAddIndex = (symbol: string, name: string) => {
-    if (selectedIndices.length >= 8) {
-      alert('Maximum 8 indices allowed');
-      return;
-    }
-    setSelectedIndices(prev => [...prev, {
-      symbol,
-      label: name || symbol
-    }]);
-  };
-
-  const handleRemoveIndex = (symbol: string) => {
-    setSelectedIndices(prev => prev.filter(i => i.symbol !== symbol));
-  };
-
-  const handleResetToDefaults = () => {
-    setSelectedIndices(DEFAULT_INDICES);
-  };
-
-  // Fetch fear & greed index from API
-  const {
-    data: fearGreedData,
-    isLoading: fearGreedLoading,
-    isError: fearGreedError,
-  } = useQuery<{
-    value: number;
-    label: string;
-    description: string;
-    symbol?: string;
-    lookback?: number;
-    sampleSize?: number;
-    updatedAt?: string;
-    source?: string;
-    interval?: string;
-  }>({
-    queryKey: ['/api/fear-greed'],
-    refetchInterval: 300000,
-  });
-
-  // Fetch market movers from API
-  const { data: moversData, isLoading: moversLoading } = useQuery<MoversResponse>({
-    queryKey: ['/api/market-movers'],
-    staleTime: 60000,
-    refetchInterval: 60000,
-  });
-
-  const fearGreedValue = typeof fearGreedData?.value === 'number' ? fearGreedData.value : null;
-  const fearGreedLabel = fearGreedData?.label
-    || (fearGreedValue !== null ? getFearGreedLabel(fearGreedValue) : 'Unavailable');
-  const fearGreedColor = fearGreedValue !== null ? getFearGreedColor(fearGreedValue) : 'text-muted-foreground';
-  const normalizedFearGreedValue = fearGreedValue !== null
-    ? Math.min(Math.max(fearGreedValue, 0), 100)
-    : 0;
-
-  // Helper function to determine if symbol is futures
-  const isFuturesSymbol = (sym: string) => {
-    return sym.includes('FUT') || sym.includes('25NOV') || sym.includes('25DEC') || sym.includes('26JAN');
-  };
-
-  // Get symbol from mover (handle both old and new field names)
-  const getMoverSymbol = (m: MarketMover) => m.symbol || m.trading_symbol || '';
-  const getMoverChange = (m: MarketMover) => m.changePercent ?? m.percent_change ?? 0;
-
-  // Filter movers based on selected tab
-  const filterMovers = (movers: MarketMover[]) => {
-    let filtered = movers;
-
-    if (filterType === 'equity') {
-      filtered = movers.filter(m => !isFuturesSymbol(getMoverSymbol(m)));
-    } else if (filterType === 'futures') {
-      filtered = movers.filter(m => isFuturesSymbol(getMoverSymbol(m)));
-    }
-
-    return filtered;
-  };
-
-  const filteredGainers = filterMovers(moversData?.gainers || []);
-  const filteredLosers = filterMovers(moversData?.losers || []);
-
-  // Color intensity system for movers
-  const getColorIntensity = (percentChange: number) => {
-    const absChange = Math.abs(percentChange);
-    if (absChange >= 5) return 'high';
-    if (absChange >= 3) return 'medium';
-    if (absChange >= 1) return 'low';
-    return 'minimal';
-  };
-
-  const getGainerColor = (percentChange: number, intensity: string) => {
-    const colors = {
-      high: 'text-[#00FF00] font-bold',
-      medium: 'text-[#00FF00]/80 font-semibold',
-      low: 'text-[#00FF00]/60',
-      minimal: 'text-[#00FF00]/40'
-    };
-    return colors[intensity as keyof typeof colors];
-  };
-
-  const getLoserColor = (percentChange: number, intensity: string) => {
-    const colors = {
-      high: 'text-[#FF6B35] font-bold',
-      medium: 'text-[#FF6B35]/80 font-semibold',
-      low: 'text-[#FF6B35]/60',
-      minimal: 'text-[#FF6B35]/40'
-    };
-    return colors[intensity as keyof typeof colors];
-  };
-
-  const getBackgroundHighlight = (percentChange: number, isGainer: boolean) => {
-    const absChange = Math.abs(percentChange);
-    if (absChange >= 7) {
-      return isGainer
-        ? 'bg-[#00FF00]/5 border-l-2 border-[#00FF00]/30'
-        : 'bg-[#FF6B35]/5 border-l-2 border-[#FF6B35]/30';
-    }
-    return '';
-  };
 
   return (
-    <div className="h-full flex flex-col bg-card">
-      {/* Fear & Greed Index - Always at top */}
-      <div className="px-3 py-2.5 border-b border-border">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-1.5">
-            <Gauge className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground">
-              Fear & Greed
-            </span>
-          </div>
-          {fearGreedData?.updatedAt && (
-            <span className="text-[8px] text-muted-foreground">
-              {formatDistanceToNow(new Date(fearGreedData.updatedAt), { addSuffix: true })}
-            </span>
-          )}
+    <Cell title="Sector heat · today" bodyClassName="p-1">
+      {isLoading ? (
+        <div className="h-full flex items-center justify-center">
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
         </div>
-        {fearGreedLoading ? (
-          <div className="flex items-center justify-center py-3">
-            <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
-          </div>
-        ) : fearGreedValue !== null ? (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-baseline gap-2">
-                <span className={cn("text-2xl font-bold font-mono", fearGreedColor)}>
-                  {fearGreedValue.toFixed(1)}
-                </span>
-                <Badge variant="outline" className={cn("text-[8px] px-1.5 py-0", fearGreedColor)}>
-                  {fearGreedLabel}
-                </Badge>
+      ) : !data || data.length === 0 ? (
+        <div className="h-full flex items-center justify-center text-[11px] text-muted-foreground">
+          No data
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 grid-rows-3 gap-[2px] h-full">
+          {data.slice(0, 9).map((s) => {
+            const pct = s.avg_change_percent;
+            const intensity = Math.min(1, Math.abs(pct) / 2);
+            const positive = pct >= 0;
+            const alpha = 0.25 + intensity * 0.55;
+            const bg = positive
+              ? `hsl(150 50% ${42 - intensity * 12}% / ${alpha.toFixed(2)})`
+              : `hsl(0 60% ${52 - intensity * 12}% / ${alpha.toFixed(2)})`;
+            return (
+              <div
+                key={s.sector}
+                className="rounded-sm flex flex-col justify-center px-2 py-1 text-white"
+                style={{ backgroundColor: bg }}
+                title={`${s.member_count} stocks averaged`}
+              >
+                <div className="font-display font-bold text-[10.5px] truncate leading-tight">
+                  {s.sector}
+                </div>
+                <div className="font-mono font-bold text-[12.5px] tabular-nums leading-tight">
+                  {positive ? '+' : ''}
+                  {pct.toFixed(2)}%
+                </div>
               </div>
-              <span className="text-[9px] text-muted-foreground">
-                {fearGreedData?.symbol || 'NIFTY 50'}
-              </span>
-            </div>
-            <Progress value={normalizedFearGreedValue} className="h-1.5" />
-          </div>
-        ) : (
-          <div className="text-[10px] text-muted-foreground py-2">
-            Index unavailable{fearGreedError ? ' (server error)' : ''}
-          </div>
-        )}
+            );
+          })}
+        </div>
+      )}
+    </Cell>
+  );
+}
+
+// ─── Panel ───────────────────────────────────────────────────────────────────
+export function QuickMonitor() {
+  const [workspace, setWorkspace] = useState<Workspace>('Intraday');
+
+  return (
+    <div className="h-full flex flex-col bg-background">
+      {/* Workspace tab strip */}
+      <div className="flex items-center justify-between px-4 md:px-6 py-2.5 border-b border-border bg-card flex-shrink-0">
+        <h2 className="font-display text-[18px] md:text-[20px] font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground hidden md:block">
+          Multi-asset workspace
+        </h2>
+        <div className="flex items-center gap-1.5 flex-wrap font-mono text-[11.5px]">
+          {WORKSPACES.map((w) => (
+            <button
+              key={w}
+              type="button"
+              onClick={() => setWorkspace(w)}
+              className={cn(
+                'h-7 px-3 rounded-md border font-bold transition-colors',
+                workspace === w
+                  ? 'bg-[hsl(var(--brand-navy))] text-white border-[hsl(var(--brand-navy))] dark:bg-[hsl(var(--brand-gold))] dark:text-[hsl(var(--brand-navy))] dark:border-[hsl(var(--brand-gold))]'
+                  : 'bg-background border-border text-muted-foreground hover:bg-muted',
+              )}
+            >
+              {w}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="w-full justify-start px-3 h-8 bg-background border-b rounded-none">
-          <TabsTrigger value="indices" className="text-[10px] h-6 px-3">Indices</TabsTrigger>
-          <TabsTrigger value="movers" className="text-[10px] h-6 px-3">Movers</TabsTrigger>
-        </TabsList>
+      {/* Dashboard grid — 12 cols, auto-flowing rows with sensible min heights.
+          Container scrolls on small viewports rather than squashing cells. */}
+      <div className="flex-1 overflow-y-auto bg-background">
+        <div className="grid grid-cols-12 gap-1.5 p-1.5">
+          {/* Row 1: 3 quote tiles (160px) */}
+          <div className="col-span-12 sm:col-span-4 h-[160px]">
+            <QuoteTile symbol="Nifty 50" label="NIFTY 50" goldBorder />
+          </div>
+          <div className="col-span-12 sm:col-span-4 h-[160px]">
+            <QuoteTile symbol="Nifty Bank" label="BANK NIFTY" />
+          </div>
+          <div className="col-span-12 sm:col-span-4 h-[160px]">
+            <QuoteTile symbol="India VIX" label="INDIA VIX" />
+          </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {/* Indices Tab */}
-          <TabsContent value="indices" className="m-0 p-3">
-            {/* Indices Header with Add/Reset */}
-            <div className="flex items-center justify-between mb-3">
-              <AddIndexSearch
-                onAdd={handleAddIndex}
-                existingSymbols={selectedIndices.map(i => i.symbol)}
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                onClick={handleResetToDefaults}
-                title="Reset to default indices"
-              >
-                <RotateCcw className="w-3 h-3" />
-              </Button>
-            </div>
+          {/* Row 2: 4 ranking tables — Top gainers / losers / 52w highs / lows */}
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3 h-[320px]">
+            <GainersCell />
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3 h-[320px]">
+            <LosersCell />
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3 h-[320px]">
+            <HighsCell />
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-3 h-[320px]">
+            <LowsCell />
+          </div>
 
-            {/* Indices Grid */}
-            <div className="grid grid-cols-2 gap-2.5">
-              {selectedIndices.map((index) => (
-                <IndexItemWithData
-                  key={index.symbol}
-                  index={index}
-                  onRemove={() => handleRemoveIndex(index.symbol)}
-                  canRemove={selectedIndices.length > 1}
-                />
-              ))}
-            </div>
-
-            {selectedIndices.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <p className="text-xs">No indices selected</p>
-                <p className="text-[10px] mt-1">Click "Add Index" to add some</p>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Top Movers Tab */}
-          <TabsContent value="movers" className="m-0 p-3">
-            {moversLoading ? (
-              <div className="flex items-center justify-center h-32">
-                <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
-              </div>
-            ) : (
-              <>
-                {/* Side-by-Side Layout */}
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Top Gainers */}
-                  <div>
-                    <div className="flex items-center gap-1 mb-2">
-                      <TrendingUp className="w-3 h-3 text-[#00FF00]" />
-                      <h4 className="text-[10px] font-mono text-[#00FF00]">GAINERS</h4>
-                    </div>
-                    <div className="space-y-0.5">
-                      {filteredGainers.length > 0 ? (
-                        filteredGainers.map((mover, idx) => {
-                          const pctChange = getMoverChange(mover);
-                          const sym = getMoverSymbol(mover);
-                          const intensity = getColorIntensity(pctChange);
-                          const colorClass = getGainerColor(pctChange, intensity);
-                          const bgHighlight = getBackgroundHighlight(pctChange, true);
-
-                          return (
-                            <div
-                              key={`${sym}-${idx}`}
-                              className={cn(
-                                "flex items-center justify-between py-1 px-1.5 rounded",
-                                bgHighlight,
-                                idx < 3 && "font-bold"
-                              )}
-                            >
-                              <span className={cn("text-[9px] font-mono truncate flex-1", colorClass)}>
-                                {sym}
-                              </span>
-                              <span className={cn("text-[10px] font-mono", colorClass)}>
-                                +{pctChange.toFixed(2)}%
-                              </span>
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className="text-[9px] text-muted-foreground py-4 text-center">
-                          No gainers available
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Top Losers */}
-                  <div>
-                    <div className="flex items-center gap-1 mb-2">
-                      <TrendingDown className="w-3 h-3 text-[#FF6B35]" />
-                      <h4 className="text-[10px] font-mono text-[#FF6B35]">LOSERS</h4>
-                    </div>
-                    <div className="space-y-0.5">
-                      {filteredLosers.length > 0 ? (
-                        filteredLosers.map((mover, idx) => {
-                          const pctChange = getMoverChange(mover);
-                          const sym = getMoverSymbol(mover);
-                          const intensity = getColorIntensity(pctChange);
-                          const colorClass = getLoserColor(pctChange, intensity);
-                          const bgHighlight = getBackgroundHighlight(pctChange, false);
-
-                          return (
-                            <div
-                              key={`${sym}-${idx}`}
-                              className={cn(
-                                "flex items-center justify-between py-1 px-1.5 rounded",
-                                bgHighlight,
-                                idx < 3 && "font-bold"
-                              )}
-                            >
-                              <span className={cn("text-[9px] font-mono truncate flex-1", colorClass)}>
-                                {sym}
-                              </span>
-                              <span className={cn("text-[10px] font-mono", colorClass)}>
-                                {pctChange.toFixed(2)}%
-                              </span>
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className="text-[9px] text-muted-foreground py-4 text-center">
-                          No losers available
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                {moversData?.fetchedAt && (
-                  <div className="mt-3 pt-2 border-t border-border">
-                    <div className="flex items-center justify-between text-[8px] text-muted-foreground">
-                      <span>
-                        Updated: {formatDistanceToNow(new Date(moversData.fetchedAt), { addSuffix: true })}
-                      </span>
-                      <span>{filteredGainers.length + filteredLosers.length} movers</span>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </TabsContent>
+          {/* Row 3: FII/DII + News + Sector heat — 260px */}
+          <div className="col-span-12 md:col-span-4 h-[260px]">
+            <FiiDiiCell />
+          </div>
+          <div className="col-span-12 md:col-span-4 h-[260px]">
+            <NewsCell />
+          </div>
+          <div className="col-span-12 md:col-span-4 h-[260px]">
+            <SectorHeatCell />
+          </div>
         </div>
-      </Tabs>
+      </div>
     </div>
   );
 }

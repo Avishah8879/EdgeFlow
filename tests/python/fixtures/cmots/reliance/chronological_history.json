@@ -1,0 +1,76 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "YRC": 202604.0,
+      "EQTY": 13532.534996,
+      "LNAME": "Reliance Industries Ltd",
+      "REMARKS": "Issued under ESOP Scheme",
+      "EQTYASON": "2026.04.16  "
+    },
+    {
+      "YRC": 202504.0,
+      "EQTY": 13532.468908,
+      "LNAME": "Reliance Industries Ltd",
+      "REMARKS": "Issued under ESOP Scheme",
+      "EQTYASON": "2025.04.30  "
+    },
+    {
+      "YRC": 202410.0,
+      "EQTY": 6765.960803,
+      "LNAME": "Reliance Industries Ltd",
+      "REMARKS": "Rights Partly Paid to Fully Paid Up",
+      "EQTYASON": "2024.10.04  "
+    },
+    {
+      "YRC": 202410.0,
+      "EQTY": 6765.977683,
+      "LNAME": "Reliance Industries Ltd",
+      "REMARKS": "Rights Partly Paid to Fully Paid Up",
+      "EQTYASON": "2024.10.09  "
+    },
+    {
+      "YRC": 202410.0,
+      "EQTY": 6766.077683,
+      "LNAME": "Reliance Industries Ltd",
+      "REMARKS": "Issued under ESOP Scheme",
+      "EQTYASON": "2024.10.10  "
+    },
+    {
+      "YRC": 202410.0,
+      "EQTY": 6766.098184,
+      "LNAME": "Reliance Industries Ltd",
+      "REMARKS": "Rights Partly Paid to Fully Paid Up",
+      "EQTYASON": "2024.10.15  "
+    },
+    {
+      "YRC": 202410.0,
+      "EQTY": 6766.12938,
+      "LNAME": "Reliance Industries Ltd",
+      "REMARKS": "Rights Partly Paid to Fully Paid Up",
+      "EQTYASON": "2024.10.21  "
+    },
+    {
+      "YRC": 202410.0,
+      "EQTY": 6766.184538,
+      "LNAME": "Reliance Industries Ltd",
+      "REMARKS": "Rights Partly Paid to Fully Paid Up",
+      "EQTYASON": "2024.10.24  "
+    },
+    {
+      "YRC": 202410.0,
+      "EQTY": 6766.184586,
+      "LNAME": "Reliance Industries Ltd",
+      "REMARKS": "Rights Partly Paid to Fully Paid Up",
+      "EQTYASON": "2024.10.25  "
+    },
+    {
+      "YRC": 202409.0,
+      "EQTY": 6765.815251,
+      "LNAME": "Reliance Industries Ltd",
+      "REMARKS": "Rights Partly Paid to Fully Paid Up",
+      "EQTYASON": "2024.09.09  "
+    }
+  ]
+}

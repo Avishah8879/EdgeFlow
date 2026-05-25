@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "lname": "Bajaj Holdings & Investment Ltd",
+      "PE_TTM": 23.68,
+      "EPS_Qtr": 27.9,
+      "EPS_TTM": 254.84,
+      "co_code": 50.0,
+      "PE_Yearly": 107.43,
+      "EBITDA_Qtr": 33.12,
+      "EPS_Yearly": 116.08,
+      "DivYield_TTM": 1.95,
+      "EBITDA_Yearly": 1446.02,
+      "Pat_Growth_Qtr": 71.51146725614814,
+      "Pat_Growth_TTM": 264.4287561056795,
+      "DivYield_Yearly": 0.007457600177657124,
+      "Pat_Growth_Yearly": -55.39969479985915,
+      "QuickRatio_Yearly": 11.403119487512763,
+      "CurrentRatio_Yearly": 1.11,
+      "NetSales_Growth_Qtr": -80.71700937243861,
+      "NetSales_Growth_TTM": 106.94619803406997,
+      "DebtEquityRatio_Yearly": 0.0,
+      "NetSales_Growth_Yearly": -50.4680990423887
+    }
+  ]
+}

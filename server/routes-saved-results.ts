@@ -12,6 +12,139 @@ import crypto from 'crypto';
 
 const router = Router();
 
+function parsePaging(req: Request) {
+  return {
+    limit: Math.min(parseInt(req.query.limit as string) || 20, 100),
+    offset: parseInt(req.query.offset as string) || 0,
+  };
+}
+
+async function getSavedLimit(req: Request, basicKey: string, premiumKey: string, basicDefault = '10', premiumDefault = '50') {
+  const userTier = req.user!.tier;
+  const isPremium = userTier === 'pro' || userTier === 'semi';
+  const configResult = await queryOne<{ value: string }>(
+    `SELECT value FROM system_config WHERE key = $1`,
+    [isPremium ? premiumKey : basicKey],
+  );
+  return parseInt(configResult?.value || (isPremium ? premiumDefault : basicDefault));
+}
+
+async function enforceSavedLimit(
+  req: Request,
+  tableName: string,
+  basicKey: string,
+  premiumKey: string,
+  res: Response,
+) {
+  const userId = req.user!.userId;
+  const limit = await getSavedLimit(req, basicKey, premiumKey);
+  const countResult = await queryOne<{ count: string }>(
+    `SELECT COUNT(*) as count FROM ${tableName} WHERE user_id = $1`,
+    [userId],
+  );
+  const currentCount = parseInt(countResult?.count || '0');
+
+  if (currentCount >= limit) {
+    res.status(400).json({
+      message: `You have reached the maximum of ${limit} saved results. Delete some to save new ones.`,
+    });
+    return false;
+  }
+
+  return true;
+}
+
+// ============================================================================
+// RECENT SAVED RUNS
+// ============================================================================
+
+/**
+ * GET /api/saved/recent
+ * List mixed recent saved runs for dashboard rails.
+ */
+router.get(
+  '/recent',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
+
+      const result = await query(
+        `SELECT *
+         FROM (
+           SELECT
+             id,
+             'screener' AS type,
+             name,
+             created_at,
+             jsonb_build_object(
+               'expression', expression,
+               'result_count', result_count
+             ) AS summary,
+             '/saved-results/screener/' || id::text AS detail_path
+           FROM saved_screener_results
+           WHERE user_id = $1
+
+           UNION ALL
+
+           SELECT
+             id,
+             'backtest' AS type,
+             name,
+             created_at,
+             jsonb_build_object(
+               'ticker', ticker,
+               'mode', mode,
+               'metrics', metrics
+             ) AS summary,
+             '/saved-results/backtest/' || id::text AS detail_path
+           FROM saved_backtest_results
+           WHERE user_id = $1
+
+           UNION ALL
+
+           SELECT
+             id,
+             'fundamental-screener' AS type,
+             name,
+             created_at,
+             jsonb_build_object(
+               'expression', expression,
+               'result_count', result_count
+             ) AS summary,
+             '/saved-results/fundamental-screener/' || id::text AS detail_path
+           FROM saved_fundamental_screener_results
+           WHERE user_id = $1
+
+           UNION ALL
+
+           SELECT
+             id,
+             'portfolio-optimizer' AS type,
+             name,
+             created_at,
+             jsonb_build_object(
+               'holdings_count', jsonb_array_length(holdings),
+               'params', params
+             ) AS summary,
+             '/saved-results/portfolio-optimizer/' || id::text AS detail_path
+           FROM saved_portfolio_optimizer_results
+           WHERE user_id = $1
+         ) runs
+         ORDER BY created_at DESC
+         LIMIT $2`,
+        [userId, limit],
+      );
+
+      res.json({ results: result.rows, total: result.rows.length, limit, offset: 0 });
+    } catch (error: any) {
+      console.error('[SAVED] Error listing recent runs:', error.message);
+      res.status(500).json({ message: 'Failed to list recent saved runs' });
+    }
+  }
+);
+
 // ============================================================================
 // SAVED SCREENER RESULTS
 // ============================================================================
@@ -137,10 +270,10 @@ router.post(
 
       // Check limit based on user tier
       const userTier = req.user!.tier;
-      const limitKey = userTier === 'premium'
+      const limitKey = userTier === 'pro' || userTier === 'semi'
         ? 'saved_screener_limit_premium'
         : 'saved_screener_limit_basic';
-      const defaultLimit = userTier === 'premium' ? '50' : '10';
+      const defaultLimit = userTier === 'pro' || userTier === 'semi' ? '50' : '10';
 
       const configResult = await queryOne<{ value: string }>(
         `SELECT value FROM system_config WHERE key = $1`,
@@ -240,6 +373,369 @@ router.post(
       });
     } catch (error: any) {
       console.error('[SAVED] Error sharing screener result:', error.message);
+      res.status(500).json({ message: 'Failed to share result' });
+    }
+  }
+);
+
+// ============================================================================
+// SAVED FUNDAMENTAL SCANNER RESULTS
+// ============================================================================
+
+router.get(
+  '/fundamental-screener',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const { limit, offset } = parsePaging(req);
+
+      const result = await query(
+        `SELECT id, name, expression, result_count, execution_time_ms, is_shared, share_token, created_at, updated_at
+         FROM saved_fundamental_screener_results
+         WHERE user_id = $1
+         ORDER BY created_at DESC
+         LIMIT $2 OFFSET $3`,
+        [userId, limit, offset],
+      );
+
+      const countResult = await queryOne<{ count: string }>(
+        'SELECT COUNT(*) as count FROM saved_fundamental_screener_results WHERE user_id = $1',
+        [userId],
+      );
+
+      res.json({
+        results: result.rows,
+        total: parseInt(countResult?.count || '0'),
+        limit,
+        offset,
+      });
+    } catch (error: any) {
+      console.error('[SAVED] Error listing fundamental scanner results:', error.message);
+      res.status(500).json({ message: 'Failed to list saved results' });
+    }
+  }
+);
+
+router.get(
+  '/fundamental-screener/shared/:token',
+  async (req: Request, res: Response) => {
+    try {
+      const result = await queryOne<any>(
+        `SELECT id, name, expression, result_count, matching_symbols, execution_time_ms, created_at
+         FROM saved_fundamental_screener_results
+         WHERE share_token = $1 AND is_shared = true`,
+        [req.params.token],
+      );
+
+      if (!result) {
+        res.status(404).json({ message: 'Shared result not found' });
+        return;
+      }
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('[SAVED] Error getting shared fundamental scanner result:', error.message);
+      res.status(500).json({ message: 'Failed to get shared result' });
+    }
+  }
+);
+
+router.get(
+  '/fundamental-screener/:id',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const result = await queryOne<any>(
+        `SELECT * FROM saved_fundamental_screener_results
+         WHERE id = $1 AND (user_id = $2 OR is_shared = true)`,
+        [req.params.id, req.user!.userId],
+      );
+
+      if (!result) {
+        res.status(404).json({ message: 'Result not found' });
+        return;
+      }
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('[SAVED] Error getting fundamental scanner result:', error.message);
+      res.status(500).json({ message: 'Failed to get saved result' });
+    }
+  }
+);
+
+router.post(
+  '/fundamental-screener',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const { name, expression, resultCount, matchingSymbols, executionTimeMs } = req.body;
+
+      if (!name || !expression || resultCount === undefined || !matchingSymbols) {
+        res.status(400).json({ message: 'Missing required fields' });
+        return;
+      }
+
+      const ok = await enforceSavedLimit(
+        req,
+        'saved_fundamental_screener_results',
+        'saved_fundamental_screener_limit_basic',
+        'saved_fundamental_screener_limit_premium',
+        res,
+      );
+      if (!ok) return;
+
+      const result = await queryOne<any>(
+        `INSERT INTO saved_fundamental_screener_results
+         (user_id, name, expression, result_count, matching_symbols, execution_time_ms)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING *`,
+        [userId, name, expression, resultCount, JSON.stringify(matchingSymbols), executionTimeMs],
+      );
+
+      res.status(201).json(result);
+    } catch (error: any) {
+      console.error('[SAVED] Error saving fundamental scanner result:', error.message);
+      res.status(500).json({ message: 'Failed to save result' });
+    }
+  }
+);
+
+router.delete(
+  '/fundamental-screener/:id',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const result = await query(
+        'DELETE FROM saved_fundamental_screener_results WHERE id = $1 AND user_id = $2 RETURNING id',
+        [req.params.id, req.user!.userId],
+      );
+
+      if (result.rowCount === 0) {
+        res.status(404).json({ message: 'Result not found or not owned by you' });
+        return;
+      }
+
+      res.json({ message: 'Result deleted successfully' });
+    } catch (error: any) {
+      console.error('[SAVED] Error deleting fundamental scanner result:', error.message);
+      res.status(500).json({ message: 'Failed to delete result' });
+    }
+  }
+);
+
+router.post(
+  '/fundamental-screener/:id/share',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const shareToken = crypto.randomBytes(32).toString('hex');
+      const result = await queryOne<any>(
+        `UPDATE saved_fundamental_screener_results
+         SET is_shared = true, share_token = $1, updated_at = NOW()
+         WHERE id = $2 AND user_id = $3
+         RETURNING id, share_token`,
+        [shareToken, req.params.id, req.user!.userId],
+      );
+
+      if (!result) {
+        res.status(404).json({ message: 'Result not found or not owned by you' });
+        return;
+      }
+
+      res.json({
+        shareToken: result.share_token,
+        shareUrl: `/shared/fundamental-screener/${result.share_token}`,
+      });
+    } catch (error: any) {
+      console.error('[SAVED] Error sharing fundamental scanner result:', error.message);
+      res.status(500).json({ message: 'Failed to share result' });
+    }
+  }
+);
+
+// ============================================================================
+// SAVED PORTFOLIO OPTIMIZER RESULTS
+// ============================================================================
+
+router.get(
+  '/portfolio-optimizer',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const { limit, offset } = parsePaging(req);
+
+      const result = await query(
+        `SELECT id, name, holdings, params, execution_time_ms, is_shared, share_token, created_at, updated_at
+         FROM saved_portfolio_optimizer_results
+         WHERE user_id = $1
+         ORDER BY created_at DESC
+         LIMIT $2 OFFSET $3`,
+        [userId, limit, offset],
+      );
+
+      const countResult = await queryOne<{ count: string }>(
+        'SELECT COUNT(*) as count FROM saved_portfolio_optimizer_results WHERE user_id = $1',
+        [userId],
+      );
+
+      res.json({
+        results: result.rows,
+        total: parseInt(countResult?.count || '0'),
+        limit,
+        offset,
+      });
+    } catch (error: any) {
+      console.error('[SAVED] Error listing portfolio optimizer results:', error.message);
+      res.status(500).json({ message: 'Failed to list saved results' });
+    }
+  }
+);
+
+router.get(
+  '/portfolio-optimizer/shared/:token',
+  async (req: Request, res: Response) => {
+    try {
+      const result = await queryOne<any>(
+        `SELECT id, name, holdings, params, result, execution_time_ms, created_at
+         FROM saved_portfolio_optimizer_results
+         WHERE share_token = $1 AND is_shared = true`,
+        [req.params.token],
+      );
+
+      if (!result) {
+        res.status(404).json({ message: 'Shared result not found' });
+        return;
+      }
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('[SAVED] Error getting shared portfolio optimizer result:', error.message);
+      res.status(500).json({ message: 'Failed to get shared result' });
+    }
+  }
+);
+
+router.get(
+  '/portfolio-optimizer/:id',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const result = await queryOne<any>(
+        `SELECT * FROM saved_portfolio_optimizer_results
+         WHERE id = $1 AND (user_id = $2 OR is_shared = true)`,
+        [req.params.id, req.user!.userId],
+      );
+
+      if (!result) {
+        res.status(404).json({ message: 'Result not found' });
+        return;
+      }
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('[SAVED] Error getting portfolio optimizer result:', error.message);
+      res.status(500).json({ message: 'Failed to get saved result' });
+    }
+  }
+);
+
+router.post(
+  '/portfolio-optimizer',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const { name, holdings, params, result: optimizerResult, executionTimeMs } = req.body;
+
+      if (!name || !holdings || !optimizerResult) {
+        res.status(400).json({ message: 'Missing required fields' });
+        return;
+      }
+
+      const ok = await enforceSavedLimit(
+        req,
+        'saved_portfolio_optimizer_results',
+        'saved_portfolio_optimizer_limit_basic',
+        'saved_portfolio_optimizer_limit_premium',
+        res,
+      );
+      if (!ok) return;
+
+      const result = await queryOne<any>(
+        `INSERT INTO saved_portfolio_optimizer_results
+         (user_id, name, holdings, params, result, execution_time_ms)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING *`,
+        [
+          userId,
+          name,
+          JSON.stringify(holdings),
+          JSON.stringify(params || {}),
+          JSON.stringify(optimizerResult),
+          executionTimeMs,
+        ],
+      );
+
+      res.status(201).json(result);
+    } catch (error: any) {
+      console.error('[SAVED] Error saving portfolio optimizer result:', error.message);
+      res.status(500).json({ message: 'Failed to save result' });
+    }
+  }
+);
+
+router.delete(
+  '/portfolio-optimizer/:id',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const result = await query(
+        'DELETE FROM saved_portfolio_optimizer_results WHERE id = $1 AND user_id = $2 RETURNING id',
+        [req.params.id, req.user!.userId],
+      );
+
+      if (result.rowCount === 0) {
+        res.status(404).json({ message: 'Result not found or not owned by you' });
+        return;
+      }
+
+      res.json({ message: 'Result deleted successfully' });
+    } catch (error: any) {
+      console.error('[SAVED] Error deleting portfolio optimizer result:', error.message);
+      res.status(500).json({ message: 'Failed to delete result' });
+    }
+  }
+);
+
+router.post(
+  '/portfolio-optimizer/:id/share',
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const shareToken = crypto.randomBytes(32).toString('hex');
+      const result = await queryOne<any>(
+        `UPDATE saved_portfolio_optimizer_results
+         SET is_shared = true, share_token = $1, updated_at = NOW()
+         WHERE id = $2 AND user_id = $3
+         RETURNING id, share_token`,
+        [shareToken, req.params.id, req.user!.userId],
+      );
+
+      if (!result) {
+        res.status(404).json({ message: 'Result not found or not owned by you' });
+        return;
+      }
+
+      res.json({
+        shareToken: result.share_token,
+        shareUrl: `/shared/portfolio-optimizer/${result.share_token}`,
+      });
+    } catch (error: any) {
+      console.error('[SAVED] Error sharing portfolio optimizer result:', error.message);
       res.status(500).json({ message: 'Failed to share result' });
     }
   }
@@ -394,10 +890,10 @@ router.post(
 
       // Check limit based on user tier
       const userTier = req.user!.tier;
-      const limitKey = userTier === 'premium'
+      const limitKey = userTier === 'pro' || userTier === 'semi'
         ? 'saved_backtest_limit_premium'
         : 'saved_backtest_limit_basic';
-      const defaultLimit = userTier === 'premium' ? '25' : '5';
+      const defaultLimit = userTier === 'pro' || userTier === 'semi' ? '25' : '5';
 
       const configResult = await queryOne<{ value: string }>(
         `SELECT value FROM system_config WHERE key = $1`,

@@ -1,0 +1,51 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "co_code": 301.0,
+      "Acq_Sale": "SALE",
+      "SecurityName": "ITC Ltd",
+      "ModeofBuy_Sale": "Market",
+      "TransactionPeriod": "28/05/2025",
+      "TransactedQuantity": "313000000",
+      "ExchangeReportedDate": "2025-05-29T00:00:00",
+      "NameofAcquirer_Seller": "Tobacco Manufacturers (India) Ltd & PACs",
+      "Promoter_PromoterGroup": "NO",
+      "TransactedQuantity_PerChange": "2.5",
+      "HoldingAfterTransactionQuantity": "2869762693",
+      "HoldingAfterTransaction_PerChange_TotalCapital": "22.93",
+      "HoldingAfterTransaction_PerChange_DilutedCapital": "22.93"
+    },
+    {
+      "co_code": 301.0,
+      "Acq_Sale": "ACQ",
+      "SecurityName": "ITC Ltd",
+      "ModeofBuy_Sale": "Bulk Deal",
+      "TransactionPeriod": "28/05/2025 - 29/05/2025",
+      "TransactedQuantity": "63356095",
+      "ExchangeReportedDate": "2025-05-29T00:00:00",
+      "NameofAcquirer_Seller": "GQG Partners LLC & Others",
+      "Promoter_PromoterGroup": "NO",
+      "TransactedQuantity_PerChange": "0.51",
+      "HoldingAfterTransactionQuantity": "684422537",
+      "HoldingAfterTransaction_PerChange_TotalCapital": "5.47",
+      "HoldingAfterTransaction_PerChange_DilutedCapital": "5.47"
+    },
+    {
+      "co_code": 301.0,
+      "Acq_Sale": "SALE",
+      "SecurityName": "ITC LTD.",
+      "ModeofBuy_Sale": "Market",
+      "TransactionPeriod": "13/03/2024",
+      "TransactedQuantity": "436851457",
+      "ExchangeReportedDate": "2024-03-14T00:00:00",
+      "NameofAcquirer_Seller": "Tobacco Manufacturers India Ltd & PACs (Revised)",
+      "Promoter_PromoterGroup": "No",
+      "TransactedQuantity_PerChange": "3.5",
+      "HoldingAfterTransactionQuantity": "3182762693",
+      "HoldingAfterTransaction_PerChange_TotalCapital": "25.51",
+      "HoldingAfterTransaction_PerChange_DilutedCapital": "25.51"
+    }
+  ]
+}

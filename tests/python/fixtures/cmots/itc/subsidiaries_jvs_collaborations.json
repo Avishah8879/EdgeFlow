@@ -1,0 +1,20 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "LNAME": "ITC Ltd",
+      "PERC_SH": 32.0,
+      "COLL_CTRY": "UK",
+      "COLL_NAME": "British American Tobacco Group",
+      "COLL_Country": "United Kingdom"
+    },
+    {
+      "LNAME": "ITC Ltd",
+      "PERC_SH": 0.0,
+      "COLL_CTRY": "US",
+      "COLL_NAME": "Liqui Box Collaborator",
+      "COLL_Country": "United States"
+    }
+  ]
+}

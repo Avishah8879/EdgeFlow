@@ -1,8 +1,15 @@
 import { Link } from "wouter";
-import { TiphubLogo } from "@/components/TiphubLogo";
+import { EquityProLogo } from "@/components/EquityProLogo";
+import { getEquityProAiUrl } from "@/lib/external-links";
+
+interface FooterLink {
+  label: string;
+  href: string;
+  external?: boolean;
+}
 
 export default function Footer() {
-  const footerSections = [
+  const footerSections: { title: string; links: FooterLink[] }[] = [
     {
       title: "Products",
       links: [
@@ -14,7 +21,7 @@ export default function Footer() {
       title: "Tools",
       links: [
         { label: "Expert Screener", href: "/screener" },
-        { label: "Alpha Generation", href: "/alpha-generation" },
+        { label: "EquityPro AI ↗", href: getEquityProAiUrl(), external: true },
         { label: "Portfolio", href: "/portfolio" },
       ],
     },
@@ -45,7 +52,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
           <div className="col-span-2 md:col-span-4 lg:col-span-1">
             <Link href="/">
-              <TiphubLogo size="lg" className="cursor-pointer" />
+              <EquityProLogo size="lg" className="cursor-pointer" />
             </Link>
             <p className="text-sm text-muted-foreground mt-4">
               For the people.
@@ -60,11 +67,22 @@ export default function Footer() {
               <ul className="space-y-2">
                 {section.links.map((link) => (
                   <li key={link.label}>
-                    <Link href={link.href}>
-                      <span className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                    {link.external ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                      >
                         {link.label}
-                      </span>
-                    </Link>
+                      </a>
+                    ) : (
+                      <Link href={link.href}>
+                        <span className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                          {link.label}
+                        </span>
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -74,7 +92,7 @@ export default function Footer() {
 
         <div className="border-t border-border mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © 2026 Tiphub. All rights reserved.
+            © 2026 EquityPro. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <Link href="#">

@@ -1,0 +1,42 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "yrc": 202503.0,
+      "Profit": 1291.83,
+      "ebitda": 1446.02,
+      "co_code": 50.0,
+      "sect_name": "Finance",
+      "TotalAssets": 19865.27,
+      "TotalRevenue": 1572.94,
+      "sharecapital": 111.29,
+      "TotalExpenditure": 187.52999999999997,
+      "TotalLiabilities": 19865.27
+    },
+    {
+      "yrc": 202403.0,
+      "Profit": 2896.46,
+      "ebitda": 3054.77,
+      "co_code": 50.0,
+      "sect_name": "Finance",
+      "TotalAssets": 19704.29,
+      "TotalRevenue": 3175.61,
+      "sharecapital": 111.29,
+      "TotalExpenditure": 154.87,
+      "TotalLiabilities": 19704.289999999997
+    },
+    {
+      "yrc": 202303.0,
+      "Profit": 1711.58,
+      "ebitda": 1817.63,
+      "co_code": 50.0,
+      "sect_name": "Finance",
+      "TotalAssets": 16324.55,
+      "TotalRevenue": 1936.45,
+      "sharecapital": 111.29,
+      "TotalExpenditure": 158.16,
+      "TotalLiabilities": 16324.550000000001
+    }
+  ]
+}

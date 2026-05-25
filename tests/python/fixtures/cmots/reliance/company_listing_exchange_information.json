@@ -1,0 +1,56 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "sc_code": "500325",
+      "groupname": "BSE_SENSEX",
+      "index_code": 20558.0
+    },
+    {
+      "sc_code": "500325",
+      "groupname": "NIFTY",
+      "index_code": 20559.0
+    },
+    {
+      "sc_code": "500325",
+      "groupname": "BSE_500",
+      "index_code": 21552.0
+    },
+    {
+      "sc_code": "500325",
+      "groupname": "BSE_100",
+      "index_code": 21558.0
+    },
+    {
+      "sc_code": "500325",
+      "groupname": "BSE_200",
+      "index_code": 21559.0
+    },
+    {
+      "sc_code": "500325",
+      "groupname": "BSEDOLLEX",
+      "index_code": 21560.0
+    },
+    {
+      "sc_code": "500325",
+      "groupname": "CNX500",
+      "index_code": 22115.0
+    },
+    {
+      "sc_code": "500325",
+      "groupname": "DOL30  ",
+      "index_code": 22205.0
+    },
+    {
+      "sc_code": "500325",
+      "groupname": "BSEOIL",
+      "index_code": 25114.0
+    },
+    {
+      "sc_code": "500325",
+      "groupname": "CNXENERGY",
+      "index_code": 26768.0
+    }
+  ]
+}

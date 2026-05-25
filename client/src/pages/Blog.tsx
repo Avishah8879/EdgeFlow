@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Calendar, Clock, ChevronRight, TrendingUp } from "lucide-react";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { SEO } from "@/components/SEO";
 import { PAGE_SEO } from "@/lib/seo-config";
 
@@ -18,7 +19,7 @@ const blogPosts: BlogPost[] = [
   {
     slug: "advanced-strategies",
     title: "The Search for Alpha: A Complete Guide to Strategy Development",
-    description: "Learn how institutional traders generate alpha and how you can apply the same quantitative approach using Tiphub's strategy backtesting engine.",
+    description: "Learn how institutional traders generate alpha and how you can apply the same quantitative approach using EquityPro's strategy backtesting engine.",
     date: "2025-01-15",
     readTime: "8 min read",
     category: "Strategy",
@@ -36,8 +37,13 @@ export default function Blog() {
       />
       <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-8">
         {/* Header */}
-        <header className="mb-10">
-          <h1 className="text-3xl font-bold mb-3">Blog</h1>
+        <header className="mb-10 space-y-3">
+          <Eyebrow tone="gold" rule>
+            Editorial
+          </Eyebrow>
+          <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+            Blog
+          </h1>
           <p className="text-lg text-muted-foreground">
             Insights, guides, and strategies for smarter trading
           </p>

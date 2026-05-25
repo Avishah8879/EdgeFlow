@@ -1,0 +1,114 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "slno": 2.0,
+      "year": 2025.0,
+      "dir_desg": "Chairman & Managing Director",
+      "dir_name": "Sanjiv Puri"
+    },
+    {
+      "slno": 4.0,
+      "year": 2025.0,
+      "dir_desg": "Executive VP & CS",
+      "dir_name": "Rajendra Kumar Singhi"
+    },
+    {
+      "slno": 5.0,
+      "year": 2025.0,
+      "dir_desg": "Whole-time Director",
+      "dir_name": "Sumant Bhargavan"
+    },
+    {
+      "slno": 6.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "Ajit Kumar Seth"
+    },
+    {
+      "slno": 7.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "Anand Nayak"
+    },
+    {
+      "slno": 8.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "Hemant Bhargava"
+    },
+    {
+      "slno": 10.0,
+      "year": 2025.0,
+      "dir_desg": "Non Executive Director",
+      "dir_name": "Sunil Panray"
+    },
+    {
+      "slno": 11.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "Shyamal Mukherjee"
+    },
+    {
+      "slno": 12.0,
+      "year": 2025.0,
+      "dir_desg": "Whole Time Director & Chief Financial Officer",
+      "dir_name": "SUPRATIM DUTTA"
+    },
+    {
+      "slno": 13.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "Atul Singh"
+    },
+    {
+      "slno": 14.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "PUSHPA SUBRAHMANYAM"
+    },
+    {
+      "slno": 15.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "Alka Marezban Bharucha"
+    },
+    {
+      "slno": 16.0,
+      "year": 2025.0,
+      "dir_desg": "Whole-time Director",
+      "dir_name": "ABHIJEET NARESH RAUT"
+    },
+    {
+      "slno": 20.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "CHANDRA KISHORE MISHRA"
+    },
+    {
+      "slno": 21.0,
+      "year": 2025.0,
+      "dir_desg": "Non Executive Director",
+      "dir_name": "Siddhartha Mohanty"
+    },
+    {
+      "slno": 22.0,
+      "year": 2025.0,
+      "dir_desg": "Whole Time Director",
+      "dir_name": "Hemant Malik"
+    },
+    {
+      "slno": 23.0,
+      "year": 2025.0,
+      "dir_desg": "Director",
+      "dir_name": "Amitabh Kant"
+    },
+    {
+      "slno": 24.0,
+      "year": 2025.0,
+      "dir_desg": "Non Executive Director",
+      "dir_name": "Navin Agarwal"
+    }
+  ]
+}

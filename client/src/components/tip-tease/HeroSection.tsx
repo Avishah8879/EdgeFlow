@@ -40,7 +40,7 @@ export default function HeroSection({
           <Sparkles className="w-6 h-6 text-primary" />
         </div>
         <SectionHeader
-          title="TipHub AI"
+          title="EquityPro AI"
           description="AI-powered financial insights for Indian markets"
           size="lg"
         />

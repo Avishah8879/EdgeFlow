@@ -1,0 +1,120 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Watchlists · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.wl-app{display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 64px);background:hsl(var(--background))}
+.wl-side{border-right:1px solid hsl(var(--border));background:hsl(var(--card));display:flex;flex-direction:column}
+.wl-side-hd{padding:16px;border-bottom:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center}
+.wl-side-hd h2{font-family:var(--font-display);font-size:16px;margin:0;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .wl-side-hd h2{color:hsl(38 30% 95%)}
+.wl-list{flex:1;overflow-y:auto;padding:8px}
+.wl-item{padding:10px 12px;border-radius:var(--radius-md);cursor:pointer;margin-bottom:2px;display:flex;align-items:center;gap:10px;border-left:2px solid transparent}
+.wl-item:hover{background:hsl(var(--muted))}
+.wl-item.active{background:hsl(var(--accent));border-left-color:hsl(var(--brand-gold))}
+.wl-item .nm{font-size:13px;font-weight:600;color:hsl(var(--foreground))}
+.wl-item .ct{font-size:11px;color:hsl(var(--muted-foreground));margin-top:1px;font-family:var(--font-mono)}
+.wl-item .dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+.wl-main{display:flex;flex-direction:column;overflow:hidden}
+.wl-hd{padding:18px 24px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card));display:flex;justify-content:space-between;align-items:center}
+.wl-hd h1{font-family:var(--font-display);font-size:24px;letter-spacing:-0.01em;margin:0 0 4px;color:hsl(var(--brand-navy));display:flex;align-items:center;gap:10px}
+.dark .wl-hd h1{color:hsl(38 30% 95%)}
+.wl-hd p{margin:0;font-size:12px;color:hsl(var(--muted-foreground));font-family:var(--font-mono)}
+.wl-hd-stats{display:flex;gap:24px;margin-top:6px}
+.wl-hd-stats span{font-family:var(--font-mono);font-size:12px}
+.wl-hd-stats .l{color:hsl(var(--muted-foreground));font-size:10.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;margin-right:6px}
+
+.wl-tbl{flex:1;overflow:auto}
+.wl-tbl table{width:100%;border-collapse:collapse;font-size:13px;font-family:var(--font-mono)}
+.wl-tbl th{background:hsl(var(--muted)/0.6);font-size:10.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:10px 12px;text-align:right;position:sticky;top:0;border-bottom:1px solid hsl(var(--border))}
+.wl-tbl th:first-child,.wl-tbl th:nth-child(2){text-align:left}
+.wl-tbl td{padding:10px 12px;border-bottom:1px solid hsl(var(--border));text-align:right}
+.wl-tbl td:first-child,.wl-tbl td:nth-child(2){text-align:left}
+.wl-tbl tr{transition:background-color var(--t-fast)}
+.wl-tbl tr:hover{background:hsl(var(--muted)/0.4)}
+.wl-tbl .sym{font-family:var(--font-display);font-weight:700;font-size:14px;color:hsl(var(--brand-navy))}
+.dark .wl-tbl .sym{color:hsl(38 30% 95%)}
+.wl-tbl .nm{font-size:11.5px;color:hsl(var(--muted-foreground));font-family:inherit}
+.wl-tbl .spark{width:84px;display:inline-block;vertical-align:middle}
+.wl-tbl .spark svg{height:24px;width:84px}
+.wl-tbl .pos{color:hsl(var(--positive))}
+.wl-tbl .neg{color:hsl(var(--negative))}
+.wl-tbl td.act{text-align:center;width:40px}
+.wl-tbl .px{font-weight:700}
+.score{display:inline-block;width:32px;height:18px;border-radius:9px;text-align:center;font-size:10.5px;line-height:18px;font-weight:700;font-family:var(--font-mono)}
+.score.s1{background:hsl(150 50% 40% / 0.15);color:hsl(150 50% 30%)}
+.score.s2{background:hsl(38 75% 50% / 0.15);color:hsl(38 60% 38%)}
+.score.s3{background:hsl(0 60% 50% / 0.15);color:hsl(0 60% 45%)}
+.dark .score.s1{color:hsl(150 50% 60%)}
+.dark .score.s2{color:hsl(var(--brand-gold))}
+.dark .score.s3{color:hsl(0 60% 65%)}
+</style></head>
+<body data-page="watchlist" data-screen-label="18 Watchlists">
+<div class="shell"><div data-shell-topbar></div>
+
+<main class="wl-app">
+  <aside class="wl-side">
+    <div class="wl-side-hd">
+      <h2>Watchlists</h2>
+      <button class="btn btn-primary btn-sm">+ New</button>
+    </div>
+    <div class="wl-list">
+      <div class="wl-item active"><span class="dot" style="background:hsl(var(--brand-gold))"></span><div><div class="nm">Core long-term</div><div class="ct">12 stocks · +1.4% today</div></div></div>
+      <div class="wl-item"><span class="dot" style="background:hsl(213 50% 40%)"></span><div><div class="nm">F&amp;O active retail</div><div class="ct">42 stocks · +2.2%</div></div></div>
+      <div class="wl-item"><span class="dot" style="background:hsl(150 50% 40%)"></span><div><div class="nm">Banking deep dive</div><div class="ct">18 stocks · +0.8%</div></div></div>
+      <div class="wl-item"><span class="dot" style="background:hsl(0 60% 50%)"></span><div><div class="nm">Earnings this week</div><div class="ct">8 stocks · −0.4%</div></div></div>
+      <div class="wl-item"><span class="dot" style="background:hsl(280 40% 50%)"></span><div><div class="nm">Defense plays</div><div class="ct">6 stocks · +3.6%</div></div></div>
+      <div class="wl-item"><span class="dot" style="background:hsl(38 75% 50%)"></span><div><div class="nm">PSU rerating</div><div class="ct">14 stocks · +1.8%</div></div></div>
+      <div class="wl-item"><span class="dot" style="background:hsl(195 60% 50%)"></span><div><div class="nm">Cement &amp; capex</div><div class="ct">9 stocks · +1.1%</div></div></div>
+      <div class="wl-item"><span class="dot" style="background:hsl(213 14% 60%)"></span><div><div class="nm">Avoid · valuations stretched</div><div class="ct">22 stocks · −0.6%</div></div></div>
+    </div>
+  </aside>
+
+  <section class="wl-main">
+    <header class="wl-hd">
+      <div>
+        <h1><span style="font-size:14px;color:hsl(var(--brand-gold));font-weight:700;letter-spacing:0.05em;font-family:var(--font-mono);text-transform:uppercase">Core · long-term</span></h1>
+        <h1 style="margin:2px 0 0">12 compounders held since 2019</h1>
+        <div class="wl-hd-stats">
+          <span><span class="l">Today</span><span class="change-up">+1.4%</span></span>
+          <span><span class="l">YTD</span><span class="change-up">+24.6%</span></span>
+          <span><span class="l">3Y</span><span class="change-up">+98.2%</span></span>
+          <span><span class="l">Updated</span>2 min ago</span>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost btn-sm">+ Add stock</button>
+        <button class="btn btn-ghost btn-sm">Export CSV</button>
+        <button class="btn btn-ghost btn-sm">Share</button>
+        <button class="btn btn-primary btn-sm">Backtest as portfolio</button>
+      </div>
+    </header>
+
+    <div class="wl-tbl">
+      <table>
+        <thead><tr>
+          <th></th><th>Symbol</th><th>LTP</th><th>Chg %</th><th>Day</th><th>5D</th><th>1M</th><th>YTD</th><th>Vol</th><th>Mcap (cr)</th><th>P/E</th><th>Score</th><th>Trend</th><th></th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="act">⋮</td><td><div class="sym">RELIANCE</div><div class="nm">Reliance Industries</div></td><td class="px">2,948.55</td><td class="pos">+0.82</td><td class="pos">+0.82</td><td class="pos">+2.4</td><td class="pos">+5.6</td><td class="pos">+18.4</td><td>4.2M</td><td>19,93,420</td><td>24.6</td><td><span class="score s2">71</span></td><td><span class="spark"><svg viewBox="0 0 84 24"><path d="M0,18 L12,16 L24,12 L36,14 L48,10 L60,8 L72,6 L84,4" fill="none" stroke="hsl(var(--positive))" stroke-width="1.4"/></svg></span></td><td>★</td></tr>
+          <tr><td class="act">⋮</td><td><div class="sym">HDFCBANK</div><div class="nm">HDFC Bank</div></td><td class="px">1,520.40</td><td class="pos">+1.22</td><td class="pos">+1.22</td><td class="pos">+3.8</td><td class="pos">+4.2</td><td class="neg">−2.4</td><td>8.6M</td><td>11,54,210</td><td>18.2</td><td><span class="score s1">82</span></td><td><span class="spark"><svg viewBox="0 0 84 24"><path d="M0,8 L12,14 L24,10 L36,16 L48,12 L60,8 L72,4 L84,6" fill="none" stroke="hsl(var(--positive))" stroke-width="1.4"/></svg></span></td><td>★</td></tr>
+          <tr><td class="act">⋮</td><td><div class="sym">TCS</div><div class="nm">Tata Consultancy</div></td><td class="px">3,842.10</td><td class="neg">−0.34</td><td class="neg">−0.34</td><td class="neg">−1.2</td><td class="neg">−2.8</td><td class="pos">+8.4</td><td>1.2M</td><td>13,90,820</td><td>28.4</td><td><span class="score s2">68</span></td><td><span class="spark"><svg viewBox="0 0 84 24"><path d="M0,6 L12,8 L24,10 L36,8 L48,12 L60,14 L72,16 L84,14" fill="none" stroke="hsl(var(--negative))" stroke-width="1.4"/></svg></span></td><td>★</td></tr>
+          <tr><td class="act">⋮</td><td><div class="sym">INFY</div><div class="nm">Infosys</div></td><td class="px">1,422.80</td><td class="pos">+0.46</td><td class="pos">+0.46</td><td class="neg">−0.8</td><td class="pos">+1.6</td><td class="pos">+5.4</td><td>3.8M</td><td>5,90,180</td><td>24.8</td><td><span class="score s2">64</span></td><td><span class="spark"><svg viewBox="0 0 84 24"><path d="M0,14 L12,12 L24,14 L36,10 L48,12 L60,8 L72,10 L84,6" fill="none" stroke="hsl(var(--positive))" stroke-width="1.4"/></svg></span></td><td>★</td></tr>
+          <tr><td class="act">⋮</td><td><div class="sym">ICICIBANK</div><div class="nm">ICICI Bank</div></td><td class="px">1,148.20</td><td class="pos">+1.84</td><td class="pos">+1.84</td><td class="pos">+4.2</td><td class="pos">+6.8</td><td class="pos">+12.4</td><td>9.4M</td><td>8,04,120</td><td>16.8</td><td><span class="score s1">86</span></td><td><span class="spark"><svg viewBox="0 0 84 24"><path d="M0,18 L12,16 L24,14 L36,10 L48,8 L60,6 L72,4 L84,2" fill="none" stroke="hsl(var(--positive))" stroke-width="1.4"/></svg></span></td><td>★</td></tr>
+          <tr><td class="act">⋮</td><td><div class="sym">BHARTIARTL</div><div class="nm">Bharti Airtel</div></td><td class="px">1,524.60</td><td class="pos">+0.94</td><td class="pos">+0.94</td><td class="pos">+2.1</td><td class="pos">+3.6</td><td class="pos">+14.2</td><td>2.4M</td><td>8,82,420</td><td>32.6</td><td><span class="score s1">78</span></td><td><span class="spark"><svg viewBox="0 0 84 24"><path d="M0,16 L12,14 L24,12 L36,10 L48,8 L60,10 L72,6 L84,4" fill="none" stroke="hsl(var(--positive))" stroke-width="1.4"/></svg></span></td><td>★</td></tr>
+          <tr><td class="act">⋮</td><td><div class="sym">LT</div><div class="nm">Larsen &amp; Toubro</div></td><td class="px">3,624.40</td><td class="pos">+1.42</td><td class="pos">+1.42</td><td class="pos">+3.4</td><td class="pos">+5.2</td><td class="pos">+22.8</td><td>1.6M</td><td>4,98,640</td><td>34.2</td><td><span class="score s2">72</span></td><td><span class="spark"><svg viewBox="0 0 84 24"><path d="M0,18 L12,16 L24,14 L36,12 L48,10 L60,6 L72,4 L84,2" fill="none" stroke="hsl(var(--positive))" stroke-width="1.4"/></svg></span></td><td>★</td></tr>
+          <tr><td class="act">⋮</td><td><div class="sym">ITC</div><div class="nm">ITC</div></td><td class="px">428.20</td><td class="neg">−0.66</td><td class="neg">−0.66</td><td class="pos">+0.4</td><td class="neg">−1.4</td><td class="pos">+4.2</td><td>14.2M</td><td>5,32,460</td><td>26.4</td><td><span class="score s2">58</span></td><td><span class="spark"><svg viewBox="0 0 84 24"><path d="M0,8 L12,12 L24,14 L36,10 L48,12 L60,16 L72,14 L84,16" fill="none" stroke="hsl(var(--negative))" stroke-width="1.4"/></svg></span></td><td>★</td></tr>
+          <tr><td class="act">⋮</td><td><div class="sym">ASIANPAINT</div><div class="nm">Asian Paints</div></td><td class="px">2,842.40</td><td class="neg">−1.24</td><td class="neg">−1.24</td><td class="neg">−2.6</td><td class="neg">−4.8</td><td class="neg">−8.4</td><td>0.8M</td><td>2,72,640</td><td>52.8</td><td><span class="score s3">42</span></td><td><span class="spark"><svg viewBox="0 0 84 24"><path d="M0,4 L12,6 L24,8 L36,12 L48,14 L60,18 L72,16 L84,20" fill="none" stroke="hsl(var(--negative))" stroke-width="1.4"/></svg></span></td><td>★</td></tr>
+          <tr><td class="act">⋮</td><td><div class="sym">MARUTI</div><div class="nm">Maruti Suzuki</div></td><td class="px">12,148.60</td><td class="pos">+2.42</td><td class="pos">+2.42</td><td class="pos">+5.6</td><td class="pos">+8.2</td><td class="pos">+18.6</td><td>0.4M</td><td>3,67,320</td><td>28.2</td><td><span class="score s1">76</span></td><td><span class="spark"><svg viewBox="0 0 84 24"><path d="M0,18 L12,16 L24,12 L36,10 L48,8 L60,4 L72,6 L84,2" fill="none" stroke="hsl(var(--positive))" stroke-width="1.4"/></svg></span></td><td>★</td></tr>
+          <tr><td class="act">⋮</td><td><div class="sym">SUNPHARMA</div><div class="nm">Sun Pharma</div></td><td class="px">1,624.20</td><td class="pos">+0.62</td><td class="pos">+0.62</td><td class="pos">+1.4</td><td class="pos">+2.6</td><td class="pos">+11.2</td><td>1.8M</td><td>3,89,820</td><td>30.4</td><td><span class="score s2">68</span></td><td><span class="spark"><svg viewBox="0 0 84 24"><path d="M0,16 L12,14 L24,12 L36,12 L48,10 L60,8 L72,6 L84,8" fill="none" stroke="hsl(var(--positive))" stroke-width="1.4"/></svg></span></td><td>★</td></tr>
+          <tr><td class="act">⋮</td><td><div class="sym">TITAN</div><div class="nm">Titan Company</div></td><td class="px">3,486.40</td><td class="pos">+0.84</td><td class="pos">+0.84</td><td class="pos">+1.8</td><td class="pos">+3.4</td><td class="pos">+9.6</td><td>0.6M</td><td>3,09,420</td><td>62.4</td><td><span class="score s2">66</span></td><td><span class="spark"><svg viewBox="0 0 84 24"><path d="M0,14 L12,12 L24,14 L36,10 L48,8 L60,10 L72,6 L84,4" fill="none" stroke="hsl(var(--positive))" stroke-width="1.4"/></svg></span></td><td>★</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+</div>
+<script src="app.js"></script>
+</body></html>

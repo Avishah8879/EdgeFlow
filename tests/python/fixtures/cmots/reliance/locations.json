@@ -1,0 +1,126 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "PIN": 484110.0,
+      "ADD1": "(Oil & Gas) Tehsil Burhar     ",
+      "ADD2": "Village & PO Lalpur           ",
+      "ADD3": "                              ",
+      "CITY": "Shahdol                       ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 476.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 382330.0,
+      "ADD1": "103/106 (Textiles)            ",
+      "ADD2": "Naroda Industrial Estate      ",
+      "ADD3": "                              ",
+      "CITY": "Ahmedabad                     ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 476.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 396235.0,
+      "ADD1": "342 Kharadpada (Oil to Chem)  ",
+      "ADD2": "Naroli Near Silvassa          ",
+      "ADD3": "                              ",
+      "CITY": "Silvassa                      ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 476.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 410220.0,
+      "ADD1": "B-1/B-5 & A3 MIDC Indl Area   ",
+      "ADD2": "PO Rasayani Patalganga(Oil toC",
+      "ADD3": "                              ",
+      "CITY": "Raigad                        ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 476.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 225123.0,
+      "ADD1": "Dewa Road (Oil to Chem)       ",
+      "ADD2": "P O Somaiya Nagar             ",
+      "ADD3": "                              ",
+      "CITY": "Barabanki                     ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 476.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 146024.0,
+      "ADD1": "Dharmshala Road VPO Chohal    ",
+      "ADD2": "Dist Hoshiarpur (Oil to Chem) ",
+      "ADD3": "                              ",
+      "CITY": "Hoshiarpur                    ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 476.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 361280.0,
+      "ADD1": "DTA / SEZ Vill Meghpar/Padana ",
+      "ADD2": "Taluka Lalpur (Oil to Chem)   ",
+      "ADD3": "                              ",
+      "CITY": "Jamnagar                      ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 476.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 391510.0,
+      "ADD1": "Oil & Gas Halol Expressway    ",
+      "ADD2": "Village Asoj Tal - Waghodia   ",
+      "ADD3": "                              ",
+      "CITY": "Vadodara                      ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 476.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 392130.0,
+      "ADD1": "P O Dahej (Oil to Chemicals)  ",
+      "ADD2": "Vagra Taluka                  ",
+      "ADD3": "                              ",
+      "CITY": "Bharuch                       ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 476.0,
+      "ST_NAME": null
+    },
+    {
+      "PIN": 391346.0,
+      "ADD1": "P O Petrochemicals            ",
+      "ADD2": "(Oil to Chemicals)            ",
+      "ADD3": "                              ",
+      "CITY": "Vadodara                      ",
+      "FAX1": "                                   ",
+      "TEL1": "                                   ",
+      "TYPE": "PLN",
+      "CO_CODE": 476.0,
+      "ST_NAME": null
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Financial results · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.fr-hd{padding:18px 32px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card));display:flex;justify-content:space-between;align-items:end;gap:18px}
+.fr-hd h1{font-family:var(--font-display);font-size:26px;letter-spacing:-0.02em;margin:0;color:hsl(var(--brand-navy))}
+.dark .fr-hd h1{color:hsl(38 30% 95%)}
+
+.fr-tabs{display:flex;gap:0;padding:0 32px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card));margin-bottom:-1px}
+.fr-tabs button{height:42px;padding:0 18px;background:transparent;border:0;border-bottom:2px solid transparent;font-size:13px;font-weight:600;color:hsl(var(--muted-foreground));cursor:pointer}
+.fr-tabs button.active{color:hsl(var(--brand-navy));border-bottom-color:hsl(var(--brand-gold))}
+.dark .fr-tabs button.active{color:hsl(var(--brand-gold))}
+
+.fr-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;padding:24px 32px 60px}
+
+.fr-tbl{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.fr-tbl .hd{padding:14px 18px;border-bottom:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center}
+.fr-tbl h3{margin:0;font-family:var(--font-display);font-size:18px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .fr-tbl h3{color:hsl(38 30% 95%)}
+.fr-tbl table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12px}
+.fr-tbl th{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:9px 10px;background:hsl(var(--muted)/0.5);text-align:right}
+.fr-tbl th:first-child{text-align:left;padding-left:18px}
+.fr-tbl td{padding:9px 10px;border-bottom:1px solid hsl(var(--border)/0.5);text-align:right}
+.fr-tbl td:first-child{text-align:left;padding-left:18px}
+.fr-tbl .sym{font-family:var(--font-display);font-weight:700;font-size:13px;color:hsl(var(--brand-navy))}
+.dark .fr-tbl .sym{color:hsl(38 30% 95%)}
+.fr-tbl .nm{font-family:inherit;font-size:11px;color:hsl(var(--muted-foreground))}
+.fr-tbl .pos{color:hsl(var(--positive));font-weight:700}
+.fr-tbl .neg{color:hsl(var(--negative));font-weight:700}
+.fr-tbl .beat{background:hsl(var(--positive)/0.10)}
+.fr-tbl .miss{background:hsl(var(--negative)/0.10)}
+.fr-tbl tr.day-sep td{background:hsl(var(--brand-navy)/0.06);font-weight:700;color:hsl(var(--brand-navy));font-family:var(--font-display);font-size:13px}
+.dark .fr-tbl tr.day-sep td{background:hsl(var(--brand-gold)/0.10);color:hsl(var(--brand-gold))}
+.expect{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px}
+.expect .b{font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:0.04em}
+.expect .b.beat{background:hsl(var(--positive)/0.18);color:hsl(var(--positive))}
+.expect .b.miss{background:hsl(var(--negative)/0.18);color:hsl(var(--negative))}
+.expect .b.inline{background:hsl(var(--muted));color:hsl(var(--muted-foreground))}
+
+.fr-side .panel{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:18px;margin-bottom:14px}
+.fr-side h4{margin:0 0 12px;font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.fr-side .stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed hsl(var(--border));font-family:var(--font-mono);font-size:12px}
+.fr-side .stat:last-child{border-bottom:0}
+.fr-side .stat .l{color:hsl(var(--muted-foreground))}
+.fr-side .stat b{color:hsl(var(--foreground));font-weight:700}
+.fr-side .ring{display:flex;align-items:center;gap:14px;padding:10px 0}
+.fr-side .ring svg{width:80px;height:80px;flex-shrink:0}
+.fr-side .ring .v{font-family:var(--font-mono);font-size:24px;font-weight:700}
+.fr-side .ring .l{font-size:10.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700}
+</style></head>
+<body data-page="financial-results" data-screen-label="Terminal · 36 Earnings">
+<div class="shell"><div data-shell-topbar></div>
+
+<div class="fr-hd">
+  <div>
+    <span class="eyebrow">Terminal · Earnings</span>
+    <h1>Q4 FY26 results tracker</h1>
+    <p class="muted body-sm" style="margin:4px 0 0">142 of 500 NIFTY 500 reported · Beat ratio 64% · Avg surprise +3.2%</p>
+  </div>
+  <div class="flex gap-2">
+    <button class="btn btn-ghost btn-sm">Export to Excel</button>
+    <button class="btn btn-ghost btn-sm">Email digest</button>
+    <button class="btn btn-primary btn-sm">+ Add stock</button>
+  </div>
+</div>
+
+<div class="fr-tabs">
+  <button class="active">Calendar</button>
+  <button>Beats &amp; misses</button>
+  <button>Surprise leaderboard</button>
+  <button>Sector roll-up</button>
+  <button>Conference calls</button>
+  <button>Investor presentations</button>
+</div>
+
+<main class="fr-grid">
+  <div class="fr-tbl">
+    <div class="hd"><h3>Reporting calendar · this week</h3><span class="muted body-sm">Source: BSE/NSE corporate filings · est. consensus from FactSet</span></div>
+    <table>
+      <thead><tr><th>Symbol</th><th>Sector</th><th>Date · Time</th><th>Consensus EPS</th><th>Reported EPS</th><th>Surprise</th><th>Revenue ₹cr</th><th>YoY Rev</th><th>Vs cons</th><th>Stock Δ</th></tr></thead>
+      <tbody>
+        <tr class="day-sep"><td colspan="10">Mon · 22 Apr 2026</td></tr>
+        <tr class="beat"><td><div class="sym">RELIANCE</div><div class="nm">Reliance Industries</div></td><td>Energy</td><td>22 Apr · post-mkt</td><td>26.40</td><td>27.84</td><td class="pos">+5.4%</td><td>2,42,800</td><td class="pos">+8.4%</td><td><span class="expect"><span class="b beat">Beat</span></span></td><td class="pos">+2.84%</td></tr>
+        <tr class="beat"><td><div class="sym">HDFCBANK</div><div class="nm">HDFC Bank</div></td><td>Banking</td><td>22 Apr · post-mkt</td><td>21.20</td><td>22.46</td><td class="pos">+5.9%</td><td>30,648</td><td class="pos">+12.4%</td><td><span class="expect"><span class="b beat">Beat</span></span></td><td class="pos">+3.42%</td></tr>
+        <tr><td><div class="sym">JSWSTEEL</div><div class="nm">JSW Steel</div></td><td>Metals</td><td>22 Apr · post-mkt</td><td>14.20</td><td>—</td><td class="muted">—</td><td>—</td><td class="muted">—</td><td><span class="expect"><span class="b inline">Awaited</span></span></td><td>−0.42%</td></tr>
+
+        <tr class="day-sep"><td colspan="10">Tue · 23 Apr 2026</td></tr>
+        <tr class="beat"><td><div class="sym">TCS</div><div class="nm">Tata Consultancy</div></td><td>IT</td><td>23 Apr · 16:00</td><td>132.00</td><td>136.40</td><td class="pos">+3.3%</td><td>62,420</td><td class="pos">+5.4%</td><td><span class="expect"><span class="b beat">Beat</span></span></td><td class="pos">+1.84%</td></tr>
+        <tr class="miss"><td><div class="sym">WIPRO</div><div class="nm">Wipro</div></td><td>IT</td><td>23 Apr · 16:30</td><td>5.40</td><td>5.12</td><td class="neg">−5.2%</td><td>22,418</td><td class="neg">−2.4%</td><td><span class="expect"><span class="b miss">Miss</span></span></td><td class="neg">−4.62%</td></tr>
+        <tr><td><div class="sym">TECHM</div><div class="nm">Tech Mahindra</div></td><td>IT</td><td>23 Apr · 18:00</td><td>16.40</td><td>16.34</td><td>−0.4%</td><td>13,420</td><td>+0.4%</td><td><span class="expect"><span class="b inline">Inline</span></span></td><td>+0.24%</td></tr>
+
+        <tr class="day-sep"><td colspan="10">Wed · 24 Apr 2026</td></tr>
+        <tr class="beat"><td><div class="sym">BAJFINANCE</div><div class="nm">Bajaj Finance</div></td><td>NBFC</td><td>24 Apr · post-mkt</td><td>184.40</td><td>196.20</td><td class="pos">+6.4%</td><td>14,820</td><td class="pos">+18.4%</td><td><span class="expect"><span class="b beat">Beat</span></span></td><td class="pos">+5.84%</td></tr>
+        <tr><td><div class="sym">AXISBANK</div><div class="nm">Axis Bank</div></td><td>Banking</td><td>24 Apr · 17:30</td><td>26.40</td><td>—</td><td class="muted">—</td><td>—</td><td class="muted">—</td><td><span class="expect"><span class="b inline">Awaited</span></span></td><td>+0.84%</td></tr>
+        <tr><td><div class="sym">ULTRACEMCO</div><div class="nm">UltraTech Cement</div></td><td>Cement</td><td>24 Apr · 18:30</td><td>168.40</td><td>—</td><td class="muted">—</td><td>—</td><td class="muted">—</td><td><span class="expect"><span class="b inline">Awaited</span></span></td><td>+1.84%</td></tr>
+
+        <tr class="day-sep"><td colspan="10">Thu · 25 Apr 2026</td></tr>
+        <tr><td><div class="sym">ICICIBANK</div><div class="nm">ICICI Bank</div></td><td>Banking</td><td>25 Apr · 17:00</td><td>11.40</td><td>—</td><td class="muted">—</td><td>—</td><td class="muted">—</td><td><span class="expect"><span class="b inline">Est</span></span></td><td>+1.84%</td></tr>
+        <tr><td><div class="sym">NESTLEIND</div><div class="nm">Nestle India</div></td><td>FMCG</td><td>25 Apr · 18:00</td><td>26.40</td><td>—</td><td class="muted">—</td><td>—</td><td class="muted">—</td><td><span class="expect"><span class="b inline">Est</span></span></td><td>+0.42%</td></tr>
+        <tr><td><div class="sym">MARUTI</div><div class="nm">Maruti Suzuki</div></td><td>Auto</td><td>25 Apr · 18:30</td><td>118.40</td><td>—</td><td class="muted">—</td><td>—</td><td class="muted">—</td><td><span class="expect"><span class="b inline">Est</span></span></td><td>+2.42%</td></tr>
+
+        <tr class="day-sep"><td colspan="10">Fri · 26 Apr 2026</td></tr>
+        <tr><td><div class="sym">SUNPHARMA</div><div class="nm">Sun Pharma</div></td><td>Pharma</td><td>26 Apr · 16:30</td><td>11.40</td><td>—</td><td class="muted">—</td><td>—</td><td class="muted">—</td><td><span class="expect"><span class="b inline">Est</span></span></td><td>+0.62%</td></tr>
+        <tr><td><div class="sym">ASIANPAINT</div><div class="nm">Asian Paints</div></td><td>Paints</td><td>26 Apr · 18:00</td><td>16.40</td><td>—</td><td class="muted">—</td><td>—</td><td class="muted">—</td><td><span class="expect"><span class="b inline">Est</span></span></td><td>−1.24%</td></tr>
+        <tr><td><div class="sym">DRREDDY</div><div class="nm">Dr Reddy's</div></td><td>Pharma</td><td>26 Apr · 18:30</td><td>62.40</td><td>—</td><td class="muted">—</td><td>—</td><td class="muted">—</td><td><span class="expect"><span class="b inline">Est</span></span></td><td>+0.34%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <aside class="fr-side">
+    <div class="panel">
+      <h4>Beat / miss ratio · season</h4>
+      <div class="ring">
+        <svg viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="32" fill="none" stroke="hsl(var(--muted))" stroke-width="10"/>
+          <circle cx="40" cy="40" r="32" fill="none" stroke="hsl(var(--positive))" stroke-width="10" stroke-dasharray="129 200" stroke-dashoffset="0" transform="rotate(-90 40 40)"/>
+          <text x="40" y="45" text-anchor="middle" font-family="ui-monospace" font-size="14" font-weight="700" fill="hsl(var(--foreground))">64%</text>
+        </svg>
+        <div><div class="l">Beat ratio</div><div class="v change-up">64%</div><div class="muted body-sm" style="font-size:11px">91 of 142 reported</div></div>
+      </div>
+      <div class="stat"><span class="l">Avg surprise</span><b class="change-up">+3.2%</b></div>
+      <div class="stat"><span class="l">Avg revenue surprise</span><b class="change-up">+1.8%</b></div>
+      <div class="stat"><span class="l">5y season avg</span><b>58%</b></div>
+    </div>
+
+    <div class="panel">
+      <h4>Sector beats</h4>
+      <div class="stat"><span class="l">Banking</span><b class="change-up">82% (14/17)</b></div>
+      <div class="stat"><span class="l">IT</span><b class="change-up">71% (10/14)</b></div>
+      <div class="stat"><span class="l">Auto</span><b>54% (7/13)</b></div>
+      <div class="stat"><span class="l">Cement</span><b>50% (4/8)</b></div>
+      <div class="stat"><span class="l">FMCG</span><b class="change-down">38% (5/13)</b></div>
+      <div class="stat"><span class="l">Metals</span><b class="change-down">36% (4/11)</b></div>
+    </div>
+
+    <div class="panel">
+      <h4>Top surprises</h4>
+      <div class="stat"><span class="l"><b>BAJFINANCE</b></span><b class="change-up">+6.4%</b></div>
+      <div class="stat"><span class="l"><b>HDFCBANK</b></span><b class="change-up">+5.9%</b></div>
+      <div class="stat"><span class="l"><b>RELIANCE</b></span><b class="change-up">+5.4%</b></div>
+      <div class="stat"><span class="l"><b>WIPRO</b></span><b class="change-down">−5.2%</b></div>
+      <div class="stat"><span class="l"><b>HINDUNILVR</b></span><b class="change-down">−4.8%</b></div>
+    </div>
+  </aside>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

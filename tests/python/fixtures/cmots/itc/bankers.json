@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "LNAME": "ITC Ltd",
+      "BNK_NAME": "No Bankers Details in A.R"
+    }
+  ]
+}

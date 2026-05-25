@@ -200,7 +200,10 @@ function setCorsHeaders(res: Response, origin: string | undefined): boolean {
   if (!origin) return true; // No origin = not a browser request, no CORS needed
 
   const corsOrigins = (process.env.CORS_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean);
-  const defaultOrigins = ['http://localhost:5173', 'http://localhost:5000'];
+  // Loopback dev origins — only trusted outside production
+  const defaultOrigins = process.env.NODE_ENV !== 'production'
+    ? ['http://localhost:5173', 'http://localhost:5000']
+    : [];
   const allAllowed = [...corsOrigins, ...defaultOrigins];
 
   if (allAllowed.includes(origin) || corsOrigins.includes('*')) {
@@ -490,7 +493,7 @@ router.get('/', async (req: Request, res: Response) => {
           message: 'This endpoint requires a premium or enterprise API key.',
           currentTier: apiKey.tier,
           requiredTier: 'premium',
-          upgrade: 'https://tiphub.ai/developers',
+          upgrade: 'https://your-domain.com/developers',
         },
       });
     }
@@ -649,9 +652,9 @@ router.get('/', async (req: Request, res: Response) => {
     error: {
       code: 'AUTH_REQUIRED',
       message: 'Authentication required. Include an API key via X-API-Key header, or sign in to use the web application.',
-      docs: 'https://tiphub.ai/developers',
+      docs: 'https://your-domain.com/developers',
       help: [
-        'Get a free API key at https://tiphub.ai/developers',
+        'Get a free API key at https://your-domain.com/developers',
         'Include it as: X-API-Key: tphb_live_YOUR_KEY',
         'For SSE streams: ?api_key=tphb_live_YOUR_KEY',
       ],

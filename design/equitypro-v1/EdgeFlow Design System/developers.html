@@ -1,0 +1,178 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Developers · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.page-hd{padding:32px 0;border-bottom:1px solid hsl(var(--border));background:linear-gradient(155deg,hsl(var(--brand-navy)),hsl(var(--brand-navy-deep)));color:white}
+.page-hd h1{font-family:var(--font-display);font-size:38px;letter-spacing:-0.02em;color:white;margin:6px 0 6px}
+.page-hd h1 em{color:hsl(var(--brand-gold));font-style:italic}
+.page-hd .eyebrow{color:hsl(var(--brand-gold))}
+.page-hd p{color:hsl(38 30% 88%);margin:0;max-width:60ch;font-size:14px;line-height:1.55}
+.layout{display:grid;grid-template-columns:240px 1fr 360px;gap:24px;padding:24px 0 60px;align-items:start}
+.toc{position:sticky;top:80px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:14px}
+.toc h4{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));margin:6px 8px 6px}
+.toc a{display:block;padding:6px 10px;font-size:13px;color:hsl(var(--foreground));text-decoration:none;border-radius:var(--radius-sm)}
+.toc a:hover{background:hsl(var(--muted)/0.5)}
+.toc a.active{background:hsl(var(--accent));color:hsl(var(--brand-navy));font-weight:600}
+.dark .toc a.active{color:hsl(var(--brand-gold))}
+
+.doc-section{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:24px;margin-bottom:16px}
+.doc-section h2{font-family:var(--font-display);font-size:22px;letter-spacing:-0.01em;color:hsl(var(--brand-navy));margin:0 0 6px}
+.dark .doc-section h2{color:hsl(38 30% 95%)}
+.doc-section p{font-size:13.5px;line-height:1.65;color:hsl(var(--foreground));margin:8px 0}
+.doc-section .muted-text{color:hsl(var(--muted-foreground))}
+
+.endpoint{display:flex;gap:10px;align-items:center;padding:12px 14px;background:hsl(var(--muted)/0.4);border:1px solid hsl(var(--border));border-radius:var(--radius-md);margin:14px 0;font-family:var(--font-mono);font-size:13px}
+.endpoint .method{padding:3px 9px;border-radius:var(--radius-sm);font-size:10.5px;font-weight:700;letter-spacing:0.04em}
+.endpoint .method.get{background:hsl(var(--positive));color:white}
+.endpoint .method.post{background:hsl(var(--brand-gold));color:white}
+.endpoint .url{flex:1;font-weight:600;color:hsl(var(--brand-navy))}
+.dark .endpoint .url{color:hsl(38 30% 90%)}
+
+pre.code{background:hsl(var(--brand-navy-deep));color:#e8e8e8;border-radius:var(--radius-md);padding:16px 18px;font-family:var(--font-mono);font-size:12px;line-height:1.65;overflow-x:auto;margin:8px 0;border:1px solid hsl(var(--brand-navy))}
+pre.code .k{color:hsl(38 75% 65%)}
+pre.code .s{color:hsl(150 60% 65%)}
+pre.code .c{color:hsl(213 14% 60%)}
+
+table.params{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:12px}
+table.params th,table.params td{padding:10px 12px;text-align:left;border-bottom:1px solid hsl(var(--border))}
+table.params th{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));background:hsl(var(--muted)/0.4)}
+table.params code{font-family:var(--font-mono);background:hsl(var(--muted));padding:2px 6px;border-radius:3px;font-size:12px}
+
+.right{position:sticky;top:80px;display:flex;flex-direction:column;gap:14px}
+.kp{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:16px}
+.kp h4{font-family:var(--font-display);font-size:15px;color:hsl(var(--brand-navy));margin:0 0 10px}
+.dark .kp h4{color:hsl(38 30% 95%)}
+.key{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:hsl(var(--muted)/0.4);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:11.5px;margin-bottom:8px}
+.usage-bar{height:6px;background:hsl(var(--muted));border-radius:3px;margin-top:10px;overflow:hidden}
+.usage-bar i{display:block;height:100%;width:42%;background:hsl(var(--brand-gold))}
+.usage-row{display:flex;justify-content:space-between;font-size:12px;margin-top:6px}
+.usage-row span:last-child{font-family:var(--font-mono);font-weight:700}
+
+.signing{padding:12px;background:hsl(var(--accent));border:1px solid hsl(var(--brand-gold)/0.4);border-radius:var(--radius-md);font-size:12px;line-height:1.55}
+.dark .signing{background:hsl(var(--muted))}
+</style></head>
+<body data-screen-label="09 Developers · API">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="page-hd"><div class="container">
+  <span class="eyebrow">Developers · v3.2</span>
+  <h1>Build on the<br><em>EquityPro API.</em></h1>
+  <p>REST + WebSocket. Indian markets, real-time. HMAC-signed webhooks. Available on the Quant tier.</p>
+</div></section>
+
+<main class="container"><div class="layout">
+
+  <aside class="toc">
+    <h4>Quickstart</h4>
+    <a href="#auth" class="active">Authentication</a>
+    <a href="#req">Making requests</a>
+    <a href="#rate">Rate limits</a>
+    <h4>API reference</h4>
+    <a href="#quote">GET /quote/:symbol</a>
+    <a href="#hist">GET /history</a>
+    <a href="#sentiment">GET /sentiment</a>
+    <a href="#screen">POST /screen/run</a>
+    <a href="#bt">POST /backtest</a>
+    <h4>Streaming</h4>
+    <a href="#ws">WebSocket · ticks</a>
+    <a href="#wh">Webhook signatures</a>
+  </aside>
+
+  <div>
+    <section class="doc-section" id="auth">
+      <h2>Authentication</h2>
+      <p>Every request must include a Bearer token in the <code>Authorization</code> header. Tokens are scoped per workspace and rotated automatically every 90 days.</p>
+      <pre class="code"><span class="c"># Curl example</span>
+curl https://api.equitypro.in/v3/quote/RELIANCE \
+  <span class="k">-H</span> <span class="s">"Authorization: Bearer eqp_live_a1b2c3..."</span> \
+  <span class="k">-H</span> <span class="s">"Accept: application/json"</span></pre>
+    </section>
+
+    <section class="doc-section" id="quote">
+      <div class="endpoint"><span class="method get">GET</span><span class="url">/v3/quote/:symbol</span><span class="muted body-sm">Real-time</span></div>
+      <p>Returns the current quote, change %, open/high/low/close, and last update timestamp.</p>
+      <table class="params">
+        <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>symbol</code></td><td>string</td><td>yes</td><td>NSE symbol, e.g. <code>RELIANCE</code></td></tr>
+          <tr><td><code>fields</code></td><td>csv</td><td>no</td><td>Subset of fields to return; defaults to all</td></tr>
+          <tr><td><code>include_extended</code></td><td>boolean</td><td>no</td><td>Include pre/post market data when available</td></tr>
+        </tbody>
+      </table>
+      <pre class="code">{
+  <span class="k">"symbol"</span>: <span class="s">"RELIANCE"</span>,
+  <span class="k">"price"</span>: 2948.55,
+  <span class="k">"change"</span>: 42.40,
+  <span class="k">"change_pct"</span>: 1.46,
+  <span class="k">"volume"</span>: 8420516,
+  <span class="k">"updated_at"</span>: <span class="s">"2026-05-05T08:32:14Z"</span>
+}</pre>
+    </section>
+
+    <section class="doc-section" id="screen">
+      <div class="endpoint"><span class="method post">POST</span><span class="url">/v3/screen/run</span><span class="muted body-sm">Async</span></div>
+      <p>Run a saved or inline screen. Returns a result handle; poll <code>GET /screen/:id</code> or subscribe via webhook.</p>
+      <pre class="code">{
+  <span class="k">"name"</span>: <span class="s">"Magic Formula · my variant"</span>,
+  <span class="k">"universe"</span>: <span class="s">"NIFTY_500"</span>,
+  <span class="k">"rules"</span>: [
+    {<span class="k">"field"</span>: <span class="s">"roc_ttm"</span>, <span class="k">"op"</span>: <span class="s">"&gt;="</span>, <span class="k">"value"</span>: 20},
+    {<span class="k">"field"</span>: <span class="s">"earnings_yield"</span>, <span class="k">"op"</span>: <span class="s">"&gt;="</span>, <span class="k">"value"</span>: 0.08},
+    {<span class="k">"field"</span>: <span class="s">"market_cap_cr"</span>, <span class="k">"op"</span>: <span class="s">"&gt;"</span>, <span class="k">"value"</span>: 2000}
+  ],
+  <span class="k">"sort"</span>: {<span class="k">"by"</span>: <span class="s">"magic_score"</span>, <span class="k">"dir"</span>: <span class="s">"desc"</span>},
+  <span class="k">"limit"</span>: 50
+}</pre>
+    </section>
+
+    <section class="doc-section" id="ws">
+      <h2>WebSocket streaming</h2>
+      <p>Subscribe to tick data, depth updates, or aggregate index quotes. The connection uses bidirectional JSON frames over <code>wss://stream.equitypro.in/v3</code>.</p>
+      <pre class="code"><span class="c">// JS client</span>
+<span class="k">const</span> ws = <span class="k">new</span> WebSocket(<span class="s">"wss://stream.equitypro.in/v3?token=eqp_live_..."</span>);
+ws.onopen = () =&gt; ws.send(JSON.stringify({
+  <span class="k">action</span>: <span class="s">"subscribe"</span>,
+  <span class="k">channels</span>: [<span class="s">"ticks:RELIANCE"</span>, <span class="s">"ticks:TCS"</span>, <span class="s">"index:NIFTY50"</span>]
+}));
+ws.onmessage = (e) =&gt; console.log(JSON.parse(e.data));</pre>
+    </section>
+  </div>
+
+  <aside class="right">
+    <div class="kp">
+      <h4>Your API keys</h4>
+      <div class="key"><span>eqp_live_a1b2…f7e9</span><button class="btn btn-ghost btn-sm">Copy</button></div>
+      <div class="key"><span style="opacity:0.6">eqp_test_x4y5…h8k0</span><button class="btn btn-ghost btn-sm">Copy</button></div>
+      <button class="btn btn-primary btn-sm" style="width:100%;margin-top:6px">+ Generate new key</button>
+    </div>
+
+    <div class="kp">
+      <h4>Usage · this month</h4>
+      <div class="usage-row"><span>Requests</span><span>248,142 / 600,000</span></div>
+      <div class="usage-bar"><i style="width:41%"></i></div>
+      <div class="usage-row" style="margin-top:14px"><span>WebSocket minutes</span><span>1,842 / 10,000</span></div>
+      <div class="usage-bar"><i style="width:18%;background:hsl(var(--positive))"></i></div>
+      <div class="usage-row" style="margin-top:14px"><span>Backtests run</span><span>62 / 200</span></div>
+      <div class="usage-bar"><i style="width:31%;background:hsl(var(--brand-navy))"></i></div>
+    </div>
+
+    <div class="kp">
+      <h4>Webhook signatures</h4>
+      <div class="signing">
+        Verify each webhook by computing <code>HMAC-SHA256(body, secret)</code> and comparing with the <code>X-EQP-Signature</code> header. Reject anything older than 5 minutes (replay protection).
+      </div>
+    </div>
+
+    <div class="kp">
+      <h4>Status</h4>
+      <div class="usage-row" style="margin:0"><span><span class="dot pulse"></span> All systems</span><span class="text-positive">Operational</span></div>
+      <div class="muted body-sm" style="margin-top:8px;font-size:11.5px">REST 99.98 % · WS 99.94 % · 30-day uptime</div>
+    </div>
+  </aside>
+
+</div></main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

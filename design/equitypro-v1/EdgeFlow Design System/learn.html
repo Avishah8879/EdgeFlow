@@ -1,0 +1,184 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Learn · EquityPro Academy</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.l-hero{padding:64px 0 48px;background:linear-gradient(155deg,hsl(var(--brand-navy)),hsl(var(--brand-navy-deep)));color:white;border-bottom:1px solid hsl(var(--border));position:relative;overflow:hidden}
+.l-hero::before{content:"";position:absolute;right:-100px;top:-50px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,hsl(var(--brand-gold)/0.28),transparent 70%);filter:blur(40px)}
+.l-hero .container{position:relative;z-index:1}
+.l-hero h1{font-family:var(--font-display);font-size:52px;letter-spacing:-0.025em;color:white;margin:8px 0 12px}
+.l-hero h1 em{font-style:italic;color:hsl(var(--brand-gold))}
+.l-hero p{color:hsl(38 30% 88%);max-width:62ch;font-size:16px;line-height:1.55;margin:0 0 24px}
+.l-hero .stats{display:flex;gap:48px;margin-top:28px}
+.l-hero .stat .v{font-family:var(--font-mono);font-size:32px;font-weight:700;color:hsl(var(--brand-gold))}
+.l-hero .stat .l{font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(38 30% 75%);margin-top:2px}
+
+.l-paths{padding:48px 0;border-bottom:1px solid hsl(var(--border))}
+.l-paths .hd{display:flex;justify-content:space-between;align-items:end;margin-bottom:22px}
+.l-paths h2{font-family:var(--font-display);font-size:28px;letter-spacing:-0.02em;color:hsl(var(--brand-navy));margin:0}
+.dark .l-paths h2{color:hsl(38 30% 95%)}
+.path-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.path{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column;transition:all var(--t-base);cursor:pointer}
+.path:hover{border-color:hsl(var(--brand-gold)/0.5);transform:translateY(-3px);box-shadow:var(--shadow-card-lg)}
+.path .top{aspect-ratio:5/3;background:linear-gradient(135deg,hsl(213 35% 22%),hsl(213 35% 14%));position:relative;overflow:hidden;display:flex;align-items:end;padding:18px}
+.path .top.p2{background:linear-gradient(135deg,hsl(38 75% 50%),hsl(38 60% 30%))}
+.path .top.p3{background:linear-gradient(135deg,hsl(0 50% 45%),hsl(0 50% 25%))}
+.path .top svg{position:absolute;inset:0;width:100%;height:100%}
+.path .top .lbl{position:relative;z-index:1;color:white}
+.path .top .lbl .lvl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--brand-gold))}
+.path .top.p2 .lbl .lvl{color:white;opacity:0.9}
+.path .top .lbl h3{font-family:var(--font-display);font-size:24px;letter-spacing:-0.02em;margin:4px 0 0;color:white}
+.path .body{padding:18px 20px}
+.path .body p{font-size:13px;color:hsl(var(--muted-foreground));margin:0 0 14px;line-height:1.55}
+.path .body .stats{display:flex;gap:14px;font-size:11px;color:hsl(var(--muted-foreground));font-family:var(--font-mono)}
+.path .progress{height:4px;background:hsl(var(--muted));border-radius:2px;overflow:hidden;margin-top:12px}
+.path .progress span{display:block;height:100%;background:hsl(var(--brand-gold))}
+
+.l-modules{padding:48px 0}
+.l-modules h2{font-family:var(--font-display);font-size:28px;letter-spacing:-0.02em;color:hsl(var(--brand-navy));margin:0 0 22px}
+.dark .l-modules h2{color:hsl(38 30% 95%)}
+.module{display:grid;grid-template-columns:64px 1fr auto;gap:18px;align-items:center;padding:18px 0;border-bottom:1px solid hsl(var(--border))}
+.module:last-child{border-bottom:0}
+.module .num{font-family:var(--font-display);font-size:36px;font-weight:700;color:hsl(var(--brand-gold));font-style:italic}
+.module .meta h4{font-family:var(--font-display);font-size:18px;margin:0 0 4px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .module .meta h4{color:hsl(38 30% 95%)}
+.module .meta p{font-size:13px;color:hsl(var(--muted-foreground));margin:0}
+.module .badges{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.module .stats{font-family:var(--font-mono);font-size:12px;color:hsl(var(--muted-foreground));text-align:right}
+.module .stats .lessons{font-size:11px}
+.module .stats .duration{margin-top:2px;color:hsl(var(--brand-gold));font-weight:700}
+
+.cta-band{padding:60px 0 80px}
+.cta{background:hsl(var(--card));border:1px solid hsl(var(--brand-gold)/0.3);border-radius:var(--radius-xl);padding:48px;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center;background:radial-gradient(circle at 80% 30%,hsl(var(--brand-gold)/0.08),transparent 60%),hsl(var(--card))}
+.cta h3{font-family:var(--font-display);font-size:28px;letter-spacing:-0.02em;margin:0 0 6px;color:hsl(var(--brand-navy))}
+.dark .cta h3{color:hsl(38 30% 95%)}
+.cta p{margin:0;color:hsl(var(--muted-foreground));font-size:14px;max-width:52ch}
+</style></head>
+<body data-page="learn" data-screen-label="14 Learn">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="l-hero"><div class="container">
+  <span class="eyebrow" style="color:hsl(var(--brand-gold))">EquityPro Academy</span>
+  <h1>Learn the markets,<br><em>like a professional.</em></h1>
+  <p>Free, structured curriculum from absolute basics to quantitative strategy design. Built by working analysts. No fluff, no upsell, no get-rich-fast.</p>
+  <div class="stats">
+    <div class="stat"><div class="v">142</div><div class="l">Lessons</div></div>
+    <div class="stat"><div class="v">6</div><div class="l">Learning paths</div></div>
+    <div class="stat"><div class="v">38h</div><div class="l">Total content</div></div>
+    <div class="stat"><div class="v">28k</div><div class="l">Active students</div></div>
+  </div>
+</div></section>
+
+<main class="container">
+  <section class="l-paths">
+    <div class="hd">
+      <div><span class="eyebrow">Pick your level</span><h2>Learning paths</h2></div>
+      <a href="#" class="btn btn-ghost btn-sm">All paths →</a>
+    </div>
+    <div class="path-grid">
+      <article class="path">
+        <div class="top"><svg viewBox="0 0 240 144"><path d="M0,120 Q60,90 120,100 T240,80" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="2"/></svg><div class="lbl"><span class="lvl">Level 1 · Beginner</span><h3>Markets fundamentals</h3></div></div>
+        <div class="body">
+          <p>Stocks, indices, exchanges, settlement, and the language of trading — explained from first principles.</p>
+          <div class="stats"><span>📚 22 lessons</span><span>⏱ 6.5 hrs</span><span>★ 4.8</span></div>
+          <div class="progress"><span style="width:18%"></span></div>
+        </div>
+      </article>
+      <article class="path">
+        <div class="top p2"><svg viewBox="0 0 240 144"><polyline points="0,100 30,90 60,80 90,70 120,60 150,40 180,50 210,30 240,20" fill="none" stroke="white" stroke-width="2"/><polyline points="0,110 30,105 60,98 90,92 120,86 150,78 180,76 210,68 240,62" fill="none" stroke="white" stroke-width="1.5" opacity="0.5"/></svg><div class="lbl"><span class="lvl">Level 2 · Intermediate</span><h3>Technical analysis</h3></div></div>
+        <div class="body">
+          <p>Trend, momentum, volume, support &amp; resistance, candlestick patterns. Pure pattern-recognition built on data.</p>
+          <div class="stats"><span>📚 28 lessons</span><span>⏱ 8 hrs</span><span>★ 4.7</span></div>
+          <div class="progress"><span style="width:0%"></span></div>
+        </div>
+      </article>
+      <article class="path">
+        <div class="top p3"><svg viewBox="0 0 240 144"><circle cx="180" cy="40" r="50" fill="white" opacity="0.15"/><rect x="20" y="80" width="200" height="40" fill="white" opacity="0.2" rx="4"/></svg><div class="lbl"><span class="lvl">Level 2 · Intermediate</span><h3>Reading financials</h3></div></div>
+        <div class="body">
+          <p>P&amp;L, balance sheet, cash flow, and the ratios that actually matter. With Indian-listed examples throughout.</p>
+          <div class="stats"><span>📚 24 lessons</span><span>⏱ 7 hrs</span><span>★ 4.9</span></div>
+          <div class="progress"><span style="width:0%"></span></div>
+        </div>
+      </article>
+      <article class="path">
+        <div class="top"><svg viewBox="0 0 240 144"><polyline points="0,100 60,80 120,60 180,40 240,20" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="2"/><polyline points="0,80 60,100 120,90 180,110 240,80" fill="none" stroke="hsl(38 75% 56%)" stroke-width="1.5" opacity="0.5"/></svg><div class="lbl"><span class="lvl">Level 3 · Advanced</span><h3>Options &amp; derivatives</h3></div></div>
+        <div class="body">
+          <p>Greeks, payoff diagrams, IV vs HV, multi-leg strategies. With live Indian options chain examples.</p>
+          <div class="stats"><span>📚 32 lessons</span><span>⏱ 9 hrs</span><span>★ 4.8</span></div>
+          <div class="progress"><span style="width:0%"></span></div>
+        </div>
+      </article>
+      <article class="path">
+        <div class="top p2"><svg viewBox="0 0 240 144"><rect x="20" y="40" width="40" height="80" fill="white" opacity="0.6"/><rect x="70" y="60" width="40" height="60" fill="white" opacity="0.6"/><rect x="120" y="30" width="40" height="90" fill="white"/><rect x="170" y="50" width="40" height="70" fill="white" opacity="0.6"/></svg><div class="lbl"><span class="lvl">Level 3 · Advanced</span><h3>Quantitative strategy</h3></div></div>
+        <div class="body">
+          <p>From data to backtest to live deployment. Factor models, regime detection, position sizing, the works.</p>
+          <div class="stats"><span>📚 28 lessons</span><span>⏱ 8.5 hrs</span><span>★ 4.9</span></div>
+          <div class="progress"><span style="width:0%"></span></div>
+        </div>
+      </article>
+      <article class="path">
+        <div class="top p3"><svg viewBox="0 0 240 144"><circle cx="60" cy="72" r="28" fill="none" stroke="white" stroke-width="2"/><circle cx="120" cy="72" r="28" fill="none" stroke="white" stroke-width="2"/><circle cx="180" cy="72" r="28" fill="none" stroke="white" stroke-width="2"/><line x1="88" y1="72" x2="92" y2="72" stroke="white" stroke-width="2"/><line x1="148" y1="72" x2="152" y2="72" stroke="white" stroke-width="2"/></svg><div class="lbl"><span class="lvl">All levels</span><h3>Risk &amp; psychology</h3></div></div>
+        <div class="body">
+          <p>Position sizing, drawdown management, and the cognitive biases that quietly destroy retail portfolios.</p>
+          <div class="stats"><span>📚 18 lessons</span><span>⏱ 5 hrs</span><span>★ 4.9</span></div>
+          <div class="progress"><span style="width:32%"></span></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="l-modules">
+    <h2>Continue · Markets fundamentals</h2>
+    <div class="module">
+      <div class="num">04</div>
+      <div class="meta">
+        <h4>How a stock trade actually settles in T+1</h4>
+        <p>From order entry on your broker app to credit in your demat — the four hops, three intermediaries, and why holidays matter.</p>
+        <div class="badges"><span class="badge">Markets infra</span><span class="badge badge-gold">Up next</span></div>
+      </div>
+      <div class="stats"><div class="lessons">3 of 6 lessons</div><div class="duration">42 min</div></div>
+    </div>
+    <div class="module">
+      <div class="num">05</div>
+      <div class="meta">
+        <h4>Indices: what Nifty 50 actually measures (and what it misses)</h4>
+        <p>Free-float weighting, periodic rebalancing, and why Nifty Next 50 is a different animal from Nifty 100.</p>
+        <div class="badges"><span class="badge">Indices</span></div>
+      </div>
+      <div class="stats"><div class="lessons">0 of 5 lessons</div><div class="duration">38 min</div></div>
+    </div>
+    <div class="module">
+      <div class="num">06</div>
+      <div class="meta">
+        <h4>Reading a quote: bid, ask, depth, and the real cost of trading</h4>
+        <p>Why "the price" is a fiction; how to read the order book; why retail trades don't always fill at LTP.</p>
+        <div class="badges"><span class="badge">Microstructure</span></div>
+      </div>
+      <div class="stats"><div class="lessons">0 of 7 lessons</div><div class="duration">52 min</div></div>
+    </div>
+    <div class="module">
+      <div class="num">07</div>
+      <div class="meta">
+        <h4>Corporate actions: splits, bonuses, dividends, and adjustments</h4>
+        <p>How splits and bonuses change your charts (or should). Ex-date vs record-date. Cash flows you've forgotten about.</p>
+        <div class="badges"><span class="badge">Corp actions</span></div>
+      </div>
+      <div class="stats"><div class="lessons">0 of 4 lessons</div><div class="duration">28 min</div></div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="cta">
+      <div>
+        <span class="eyebrow">Certification</span>
+        <h3>Earn the EquityPro Markets Professional badge</h3>
+        <p>Complete all 6 paths and pass the proctored exam. Top scorers get an interview at our partner brokerage and AMC desks.</p>
+      </div>
+      <a href="#" class="btn btn-gold btn-lg">Start the path →</a>
+    </div>
+  </section>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

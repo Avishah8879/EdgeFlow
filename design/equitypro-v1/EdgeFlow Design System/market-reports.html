@@ -1,0 +1,172 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Market reports · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.mr-hd{padding:28px 0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.mr-hd h1{font-family:var(--font-display);font-size:34px;letter-spacing:-0.025em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .mr-hd h1{color:hsl(38 30% 95%)}
+.mr-grid{display:grid;grid-template-columns:240px 1fr;gap:32px;padding:28px 0 60px}
+.mr-side h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));margin:0 0 10px}
+.mr-side ul{list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:2px}
+.mr-side li a{display:flex;justify-content:space-between;padding:8px 12px;font-size:13px;color:hsl(var(--foreground));border-radius:var(--radius-md);transition:background-color var(--t-fast)}
+.mr-side li a:hover{background:hsl(var(--muted))}
+.mr-side li a.active{background:hsl(var(--accent));color:hsl(var(--brand-navy));font-weight:600}
+.dark .mr-side li a.active{color:hsl(var(--brand-gold))}
+.mr-side li a span{color:hsl(var(--muted-foreground));font-size:11px;font-family:var(--font-mono)}
+
+.report-list{display:flex;flex-direction:column;gap:14px}
+.report{display:grid;grid-template-columns:140px 1fr auto;gap:24px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:22px;align-items:center;transition:all var(--t-base)}
+.report:hover{border-color:hsl(var(--brand-gold)/0.4);transform:translateX(2px);box-shadow:var(--shadow-card-lg)}
+.report .cover{aspect-ratio:1;border-radius:var(--radius-md);background:linear-gradient(155deg,hsl(var(--brand-navy)),hsl(var(--brand-navy-deep)));display:flex;flex-direction:column;justify-content:space-between;padding:14px;color:white;position:relative;overflow:hidden}
+.report .cover::after{content:"";position:absolute;right:-30px;top:-30px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,hsl(var(--brand-gold)/0.4),transparent 70%)}
+.report .cover .ey{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--brand-gold));position:relative;z-index:1}
+.report .cover .nm{font-family:var(--font-display);font-size:14px;letter-spacing:-0.01em;line-height:1.2;position:relative;z-index:1}
+.report .cover .yr{font-family:var(--font-mono);font-size:11px;color:hsl(38 30% 80%);position:relative;z-index:1}
+
+.report .meta{display:flex;flex-direction:column;gap:4px}
+.report .ttl{font-family:var(--font-display);font-size:18px;letter-spacing:-0.01em;margin:0;color:hsl(var(--brand-navy))}
+.dark .report .ttl{color:hsl(38 30% 95%)}
+.report .desc{color:hsl(var(--muted-foreground));font-size:13px;margin:4px 0 8px;line-height:1.5}
+.report .pills{display:flex;gap:6px;flex-wrap:wrap}
+.report .pill{font-size:11px;background:hsl(var(--muted));padding:2px 8px;border-radius:var(--radius-pill);color:hsl(var(--muted-foreground));font-weight:600;border:1px solid hsl(var(--border))}
+.report .stats{display:flex;align-items:center;gap:14px;margin-top:10px;font-size:11px;color:hsl(var(--muted-foreground));font-family:var(--font-mono)}
+.report .actions{display:flex;flex-direction:column;gap:8px;align-items:end}
+.report .pages{font-family:var(--font-mono);font-size:11px;color:hsl(var(--muted-foreground))}
+</style></head>
+<body data-page="market-reports" data-screen-label="12 Market reports">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="mr-hd"><div class="container">
+  <span class="eyebrow">Markets · Research library</span>
+  <h1>Market reports</h1>
+  <p class="muted body-sm" style="margin:6px 0 0">Daily wraps, weekly thematics, sector deep-dives and quarterly outlooks. Authored by the EquityPro research desk.</p>
+</div></section>
+
+<main class="container mr-grid">
+  <aside class="mr-side">
+    <h4>Frequency</h4>
+    <ul>
+      <li><a href="#" class="active">All reports <span>184</span></a></li>
+      <li><a href="#">Daily wrap <span>62</span></a></li>
+      <li><a href="#">Weekly <span>48</span></a></li>
+      <li><a href="#">Monthly <span>32</span></a></li>
+      <li><a href="#">Quarterly <span>14</span></a></li>
+      <li><a href="#">Annual <span>4</span></a></li>
+      <li><a href="#">Special <span>24</span></a></li>
+    </ul>
+    <h4>Theme</h4>
+    <ul>
+      <li><a href="#">Macro &amp; rates <span>34</span></a></li>
+      <li><a href="#">Banking &amp; NBFC <span>22</span></a></li>
+      <li><a href="#">IT services <span>18</span></a></li>
+      <li><a href="#">Energy &amp; commodities <span>14</span></a></li>
+      <li><a href="#">Pharma &amp; healthcare <span>12</span></a></li>
+      <li><a href="#">Mid &amp; small-caps <span>16</span></a></li>
+      <li><a href="#">F&amp;O strategies <span>20</span></a></li>
+    </ul>
+    <h4>Author</h4>
+    <ul>
+      <li><a href="#">Shreya Rao <span>34</span></a></li>
+      <li><a href="#">Vikram Iyengar <span>28</span></a></li>
+      <li><a href="#">Manish Pillai <span>22</span></a></li>
+      <li><a href="#">Anjali Sethi <span>17</span></a></li>
+    </ul>
+  </aside>
+
+  <section class="report-list">
+    <article class="report">
+      <div class="cover">
+        <div class="ey">Q-OUTLOOK</div>
+        <div class="nm">Indian equities · Q1 FY26</div>
+        <div class="yr">APR · 2026</div>
+      </div>
+      <div class="meta">
+        <h3 class="ttl">India Q1 FY26 outlook: profits over P/E expansion</h3>
+        <p class="desc">After 18 months of multiple expansion, the next leg has to come from earnings. We map the 8 sectors where consensus EPS is being revised up, and the 4 where the consensus is too optimistic.</p>
+        <div class="pills"><span class="pill">Quarterly</span><span class="pill">Macro</span><span class="pill">Featured</span></div>
+        <div class="stats"><span>👁  4,218 reads</span><span>⏱ 22 min</span><span>By Shreya Rao</span><span>· 12 Apr 2026</span></div>
+      </div>
+      <div class="actions"><span class="pages">PDF · 38 pp</span><a href="#" class="btn btn-primary btn-sm">Open report</a><a href="#" class="btn btn-ghost btn-sm">Download</a></div>
+    </article>
+
+    <article class="report">
+      <div class="cover">
+        <div class="ey">WEEKLY</div>
+        <div class="nm">Tape — Week 15</div>
+        <div class="yr">12 APR 2026</div>
+      </div>
+      <div class="meta">
+        <h3 class="ttl">Weekly tape: rate cuts get priced out, banks lead</h3>
+        <p class="desc">Nifty +1.4%, Bank Nifty +2.6%. FII flows turn positive after 3 weeks of selling. We highlight 12 stocks that broke out of multi-month consolidations on rising volume.</p>
+        <div class="pills"><span class="pill">Weekly</span><span class="pill">Tape</span></div>
+        <div class="stats"><span>👁  2,847 reads</span><span>⏱ 8 min</span><span>By EquityPro Desk</span><span>· 12 Apr 2026</span></div>
+      </div>
+      <div class="actions"><span class="pages">PDF · 12 pp</span><a href="#" class="btn btn-primary btn-sm">Open report</a><a href="#" class="btn btn-ghost btn-sm">Download</a></div>
+    </article>
+
+    <article class="report">
+      <div class="cover">
+        <div class="ey">SECTOR</div>
+        <div class="nm">Banks · Q4 preview</div>
+        <div class="yr">10 APR 2026</div>
+      </div>
+      <div class="meta">
+        <h3 class="ttl">Banks Q4 preview: NIM compression bites; deposit war intensifies</h3>
+        <p class="desc">We model 24 banks across PSU, private and small-finance baskets. Top picks: ICICIBANK, AXISBANK, FEDERALBNK. Avoid: PSU mid-tier on asset-quality optics.</p>
+        <div class="pills"><span class="pill">Sector</span><span class="pill">Earnings</span><span class="pill">Banking</span></div>
+        <div class="stats"><span>👁  3,124 reads</span><span>⏱ 14 min</span><span>By Vikram Iyengar</span><span>· 10 Apr 2026</span></div>
+      </div>
+      <div class="actions"><span class="pages">PDF · 24 pp</span><a href="#" class="btn btn-primary btn-sm">Open report</a><a href="#" class="btn btn-ghost btn-sm">Download</a></div>
+    </article>
+
+    <article class="report">
+      <div class="cover">
+        <div class="ey">F&amp;O</div>
+        <div class="nm">Options playbook</div>
+        <div class="yr">APR 2026</div>
+      </div>
+      <div class="meta">
+        <h3 class="ttl">April expiry options playbook: straddles, ratios &amp; calendar spreads</h3>
+        <p class="desc">10 setups with defined risk-reward, IV percentile filters, and exit rules. Designed for retail traders with ₹2-10L deployable capital. Two trades already triggered this week.</p>
+        <div class="pills"><span class="pill">F&amp;O</span><span class="pill">Strategy</span></div>
+        <div class="stats"><span>👁  1,942 reads</span><span>⏱ 18 min</span><span>By Manish Pillai</span><span>· 8 Apr 2026</span></div>
+      </div>
+      <div class="actions"><span class="pages">PDF · 28 pp</span><a href="#" class="btn btn-primary btn-sm">Open report</a><a href="#" class="btn btn-ghost btn-sm">Download</a></div>
+    </article>
+
+    <article class="report">
+      <div class="cover">
+        <div class="ey">DAILY</div>
+        <div class="nm">Tape — 12 Apr</div>
+        <div class="yr">FRIDAY</div>
+      </div>
+      <div class="meta">
+        <h3 class="ttl">Daily wrap: Nifty closes above 22,400; rate-sensitives in focus</h3>
+        <p class="desc">Top gainers, losers, sector heatmap, FII/DII flows, F&amp;O OI shift, and the three names worth watching into Monday's open.</p>
+        <div class="pills"><span class="pill">Daily</span><span class="pill">Tape</span></div>
+        <div class="stats"><span>👁  1,124 reads</span><span>⏱ 5 min</span><span>By EquityPro Desk</span><span>· 12 Apr 2026</span></div>
+      </div>
+      <div class="actions"><span class="pages">PDF · 6 pp</span><a href="#" class="btn btn-primary btn-sm">Open report</a><a href="#" class="btn btn-ghost btn-sm">Download</a></div>
+    </article>
+
+    <article class="report">
+      <div class="cover">
+        <div class="ey">SECTOR</div>
+        <div class="nm">IT services</div>
+        <div class="yr">APR 2026</div>
+      </div>
+      <div class="meta">
+        <h3 class="ttl">IT services: from optical recovery to real demand revival</h3>
+        <p class="desc">BFSI clients budgeted +4% IT spend for FY26 — first uptick in seven quarters. Mid-tier names with healthcare exposure are best positioned. We rank 14 names.</p>
+        <div class="pills"><span class="pill">Sector</span><span class="pill">IT</span></div>
+        <div class="stats"><span>👁  2,418 reads</span><span>⏱ 16 min</span><span>By Anjali Sethi</span><span>· 6 Apr 2026</span></div>
+      </div>
+      <div class="actions"><span class="pages">PDF · 22 pp</span><a href="#" class="btn btn-primary btn-sm">Open report</a><a href="#" class="btn btn-ghost btn-sm">Download</a></div>
+    </article>
+  </section>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

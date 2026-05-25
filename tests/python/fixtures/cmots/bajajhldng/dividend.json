@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "isin": "INE118A01012",
+      "divper": 280.0,
+      "remark": "Final",
+      "symbol": "BAJAJHLDNG",
+      "co_code": 50.0,
+      "co_name": "Bajaj Holdings & Investment Ltd",
+      "divdate": "2025-06-27T00:00:00",
+      "divamount": 28.0,
+      "recorddate": "2025-06-27T00:00:00",
+      "description": "",
+      "announcementdate": "2025-05-30T00:00:00"
+    },
+    {
+      "isin": "INE118A01012",
+      "divper": 650.0,
+      "remark": "Interim 1",
+      "symbol": "BAJAJHLDNG",
+      "co_code": 50.0,
+      "co_name": "Bajaj Holdings & Investment Ltd",
+      "divdate": "2025-09-22T00:00:00",
+      "divamount": 65.0,
+      "recorddate": "2025-09-22T00:00:00",
+      "description": "",
+      "announcementdate": "2025-09-16T00:00:00"
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Mukesh D Ambani",
+      "co_code": 476.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Nita M Ambani",
+      "co_code": 476.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Isha M Ambani",
+      "co_code": 476.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Akash M Ambani",
+      "co_code": 476.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Anant M Ambani",
+      "co_code": 476.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "K D Ambani",
+      "co_code": 476.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Srichakra Commercials Llp",
+      "co_code": 476.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Devarshi Commercials Llp",
+      "co_code": 476.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Karuna Commercials Llp",
+      "co_code": 476.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    },
+    {
+      "Type": "Shareholding of Promoter and Promoter Group",
+      "date": "2026-03-31T00:00:00",
+      "name": "Tattvam Enterprises Llp",
+      "co_code": 476.0,
+      "TotalPledgeShares": 0.0,
+      "Perc_TotalSharesHeld": 0.0
+    }
+  ]
+}

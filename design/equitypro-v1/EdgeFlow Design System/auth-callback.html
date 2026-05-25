@@ -1,0 +1,49 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connecting · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.cb-wrap{min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:60px 24px;background:radial-gradient(circle at 30% 20%,hsl(var(--brand-gold)/0.08),transparent 60%),hsl(var(--background))}
+.cb{width:100%;max-width:520px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-xl);padding:40px;box-shadow:var(--shadow-card-lg);text-align:center}
+.cb .ring{width:96px;height:96px;margin:0 auto 24px;position:relative;display:flex;align-items:center;justify-content:center}
+.cb .ring svg{position:absolute;inset:0;animation:cb-spin 1.4s linear infinite}
+@keyframes cb-spin{to{transform:rotate(360deg)}}
+.cb .ring .logo{width:36px;height:36px;border-radius:50%;background:hsl(var(--brand-gold));display:flex;align-items:center;justify-content:center;color:hsl(var(--brand-navy-deep));font-weight:800;font-size:14px;font-family:var(--font-display)}
+.cb h1{font-family:var(--font-display);font-size:24px;letter-spacing:-0.01em;margin:0 0 8px;color:hsl(var(--brand-navy))}
+.dark .cb h1{color:hsl(38 30% 95%)}
+.cb p{color:hsl(var(--muted-foreground));font-size:14px;margin:0 0 24px;line-height:1.55}
+.cb-steps{text-align:left;border:1px solid hsl(var(--border));border-radius:var(--radius-md);padding:14px 16px;margin-top:18px;background:hsl(var(--muted)/0.4)}
+.cb-step{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;color:hsl(var(--foreground));font-family:var(--font-mono)}
+.cb-step .ind{width:14px;height:14px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px}
+.cb-step.done .ind{background:hsl(var(--positive));color:white}
+.cb-step.now .ind{background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));animation:cb-pulse 1.5s ease-in-out infinite}
+.cb-step.todo .ind{background:hsl(var(--border));color:hsl(var(--muted-foreground))}
+.cb-step.todo{color:hsl(var(--muted-foreground))}
+@keyframes cb-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:0.7}}
+.cb .meta{margin-top:18px;font-size:11px;color:hsl(var(--muted-foreground));font-family:var(--font-mono)}
+</style></head>
+<body data-page="oauth" data-screen-label="A4 Auth Callback">
+<div class="shell"><div data-shell-topbar></div>
+<main class="cb-wrap">
+  <div class="cb">
+    <div class="ring">
+      <svg viewBox="0 0 96 96" width="96" height="96"><circle cx="48" cy="48" r="42" fill="none" stroke="hsl(var(--border))" stroke-width="3"/><circle cx="48" cy="48" r="42" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="3" stroke-linecap="round" stroke-dasharray="80 264"/></svg>
+      <div class="logo">F</div>
+    </div>
+    <h1>Connecting your Fyers account</h1>
+    <p>Hold on — exchanging the authorization code for an access token. This usually takes 2–4 seconds.</p>
+
+    <div class="cb-steps">
+      <div class="cb-step done"><span class="ind">✓</span><span>Redirect from Fyers received</span></div>
+      <div class="cb-step done"><span class="ind">✓</span><span>State parameter validated</span></div>
+      <div class="cb-step now"><span class="ind">●</span><span>Exchanging code for access_token…</span></div>
+      <div class="cb-step todo"><span class="ind">○</span><span>Fetching profile &amp; trading permissions</span></div>
+      <div class="cb-step todo"><span class="ind">○</span><span>Persisting credentials &amp; redirecting</span></div>
+    </div>
+
+    <div class="meta">code · 0xA94…F2C7 &nbsp;·&nbsp; state · verified &nbsp;·&nbsp; broker · fyers</div>
+  </div>
+</main>
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

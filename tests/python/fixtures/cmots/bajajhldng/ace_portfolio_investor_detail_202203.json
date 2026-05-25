@@ -1,0 +1,38 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "yrc": 202203.0,
+      "ytdret": -1.7525503531258142,
+      "co_code": 614.0,
+      "EST_CODE": 50.0,
+      "bseprice": 187.8,
+      "nseprice": 187.8,
+      "TotalValue": 236671.8582848,
+      "Bsetraddate": "2026-05-13T00:00:00",
+      "CompanyName": "Wipro Ltd",
+      "Nsetraddate": "2026-05-13T00:00:00",
+      "InvestorName": "Premji And Associates",
+      "TotalQuantity": 3997835444.0,
+      "Company_per_stake": 72.94,
+      "HoldingPercentage": 99.8081
+    },
+    {
+      "yrc": 202203.0,
+      "ytdret": 14.4199529192039,
+      "co_code": 40963.0,
+      "EST_CODE": 50.0,
+      "bseprice": 2940.65,
+      "nseprice": 2941.0,
+      "TotalValue": 455.0745873,
+      "Bsetraddate": "2026-05-13T00:00:00",
+      "CompanyName": "Tube Investments of India Ltd",
+      "Nsetraddate": "2026-05-13T00:00:00",
+      "InvestorName": "Premji And Associates",
+      "TotalQuantity": 2808929.0,
+      "Company_per_stake": 1.46,
+      "HoldingPercentage": 0.1919
+    }
+  ]
+}

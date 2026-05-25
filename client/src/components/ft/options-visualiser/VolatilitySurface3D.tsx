@@ -248,8 +248,9 @@ export function VolatilitySurface3D({
       )}
 
       {/* 3D Plot */}
-      <div className="flex-1 min-h-0 rounded border border-border overflow-hidden">
+      <div className="flex-1 min-h-[500px] rounded border border-border overflow-hidden">
         <Plot
+          revision={surfaceData.timestamp ? Date.parse(surfaceData.timestamp) : 0}
           data={traces}
           layout={{
             autosize: true,

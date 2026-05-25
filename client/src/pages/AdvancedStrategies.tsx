@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import {
   ChevronRight,
   ArrowRight,
@@ -27,20 +28,24 @@ export default function AdvancedStrategies() {
         </nav>
 
         {/* Header */}
-        <header className="mb-10">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
-            <span className="bg-accent px-2 py-0.5 rounded">Strategy</span>
+        <header className="mb-10 space-y-3">
+          <Eyebrow tone="gold" rule>
+            Editorial · Strategy
+          </Eyebrow>
+          <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+            The Search for Alpha
+          </h1>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>January 15, 2025</span>
-            <span>•</span>
+            <span>·</span>
             <span>8 min read</span>
           </div>
-          <h1 className="text-3xl font-bold mb-3">The Search for Alpha</h1>
         </header>
 
         {/* Top Disclaimer */}
         <Card className="p-3 bg-amber-500/10 border-l-4 border-l-amber-500 mb-6">
           <p className="text-xs text-muted-foreground italic">
-            This content is for educational and research purposes only. Tiphub.ai does not provide buy/sell recommendations. Users must conduct independent analysis and consult qualified professionals before any trading decisions.
+            This content is for educational and research purposes only. Equity Pro does not provide buy/sell recommendations. Users must conduct independent analysis and consult qualified professionals before any trading decisions.
           </p>
         </Card>
 
@@ -103,11 +108,11 @@ export default function AdvancedStrategies() {
             </p>
           </section>
 
-          {/* Section 3: Tiphub Platform */}
+          {/* Section 3: Equity Pro Platform */}
           <section className="mb-12">
             <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
               <Target className="h-6 w-6 text-primary" />
-              Tiphub: Democratizing Market Research
+              Equity Pro: Democratizing Market Research
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               Retail trading has never had a shortage of indicators—RSI, MACD,
@@ -118,7 +123,7 @@ export default function AdvancedStrategies() {
               , and doing it in a way that avoids endless manual tinkering.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              That's exactly what Tiphub is built for: you choose the instrument
+              That's exactly what Equity Pro is built for: you choose the instrument
               (script), choose the indicators you trust, and our generative AI
               framework designs <strong>symbolic alpha expressions</strong>{" "}
               (i.e., interpretable trading signals), <strong>backtests</strong>{" "}
@@ -128,7 +133,7 @@ export default function AdvancedStrategies() {
               for TradingView.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              The Tiphub workflow is exactly how quants in Wall Street funds
+              The Equity Pro workflow is exactly how quants in Wall Street funds
               generate alpha for their firms; it is built by a team of cracked
               researchers and traders with solid experience of working in
               high-frequency trading firms and top investment banks, with one
@@ -385,7 +390,7 @@ export default function AdvancedStrategies() {
         {/* Bottom Disclaimer */}
         <Card className="p-3 bg-amber-500/10 border-l-4 border-l-amber-500 mt-8">
           <p className="text-xs text-muted-foreground italic">
-            This content is for educational and research purposes only. Tiphub.ai does not provide buy/sell recommendations. Users must conduct independent analysis and consult qualified professionals before any trading decisions.
+            This content is for educational and research purposes only. Equity Pro does not provide buy/sell recommendations. Users must conduct independent analysis and consult qualified professionals before any trading decisions.
           </p>
         </Card>
 
@@ -403,7 +408,7 @@ export default function AdvancedStrategies() {
             </div>
             <Link href="/alpha-generation">
               <Button size="lg" className="gap-2">
-                Try Alpha Generation
+                EquityPro AI
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>

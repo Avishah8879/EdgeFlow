@@ -15,7 +15,7 @@ export interface SubscriptionPlan {
   id: string;
   name: string;
   description: string | null;
-  tier: 'basic' | 'premium';
+  tier: 'free' | 'semi' | 'pro';
   price_cents: number;
   currency: string;
   billing_interval: 'month' | 'year' | 'lifetime' | null;
@@ -33,7 +33,7 @@ export interface SubscriptionPlan {
  */
 export interface UserSubscription {
   userId: string;
-  tier: 'basic' | 'premium';
+  tier: 'free' | 'semi' | 'pro';
   subscriptionStatus: SubscriptionStatus;
   subscriptionPlanId: string | null;
   subscriptionStart: Date | null;
@@ -325,9 +325,9 @@ export async function downgradeToBasic(
 ): Promise<UserSubscription> {
   const sql = `
     UPDATE users SET
-      tier = 'basic',
+      tier = 'free',
       subscription_status = 'none',
-      subscription_plan_id = 'basic',
+      subscription_plan_id = 'free',
       subscription_start = NULL,
       subscription_end = NULL,
       trial_end = NULL,
@@ -404,7 +404,7 @@ export async function getSubscriptionHistory(userId: string, limit: number = 20)
 export async function expireEndedTrials(): Promise<number> {
   const sql = `
     UPDATE users SET
-      tier = 'basic',
+      tier = 'free',
       subscription_status = 'expired',
       updated_at = NOW()
     WHERE subscription_status = 'trialing'
@@ -437,7 +437,7 @@ export async function expireEndedTrials(): Promise<number> {
 export async function expireEndedSubscriptions(): Promise<number> {
   const sql = `
     UPDATE users SET
-      tier = 'basic',
+      tier = 'free',
       subscription_status = 'expired',
       updated_at = NOW()
     WHERE subscription_status IN ('active', 'cancelled')

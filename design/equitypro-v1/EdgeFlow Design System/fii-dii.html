@@ -1,0 +1,153 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FII / DII flows · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.fd-hd{padding:18px 32px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.fd-hd h1{font-family:var(--font-display);font-size:26px;letter-spacing:-0.02em;margin:0;color:hsl(var(--brand-navy))}
+.dark .fd-hd h1{color:hsl(38 30% 95%)}
+
+.fd-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;margin:18px 32px 0}
+.fd-strip .k{padding:18px 24px;border-right:1px solid hsl(var(--border))}
+.fd-strip .k:last-child{border-right:0}
+.fd-strip .ey{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground))}
+.fd-strip .v{font-family:var(--font-mono);font-size:26px;font-weight:700;margin-top:4px}
+.fd-strip .c{font-family:var(--font-mono);font-size:12px;margin-top:2px}
+
+.fd-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:24px 32px 24px}
+
+.flow-chart{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px}
+.flow-chart .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.flow-chart h3{margin:0;font-family:var(--font-display);font-size:18px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .flow-chart h3{color:hsl(38 30% 95%)}
+.flow-chart svg{width:100%;height:280px}
+
+.fd-tbl{margin:0 32px 60px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.fd-tbl .hd{padding:14px 18px;border-bottom:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center}
+.fd-tbl h3{margin:0;font-family:var(--font-display);font-size:16px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .fd-tbl h3{color:hsl(38 30% 95%)}
+.fd-tbl table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12.5px}
+.fd-tbl th{font-size:10.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:11px 14px;background:hsl(var(--muted)/0.5);text-align:right}
+.fd-tbl th:first-child{text-align:left}
+.fd-tbl td{padding:10px 14px;border-bottom:1px solid hsl(var(--border));text-align:right}
+.fd-tbl td:first-child{text-align:left}
+.fd-tbl tr:last-child td{border-bottom:0}
+.fd-tbl .pos{color:hsl(var(--positive));font-weight:700}
+.fd-tbl .neg{color:hsl(var(--negative));font-weight:700}
+.fd-tbl .da{font-weight:700;color:hsl(var(--foreground));font-family:var(--font-display);font-size:13px}
+</style></head>
+<body data-page="fii-dii" data-screen-label="Terminal · 29 FII/DII">
+<div class="shell"><div data-shell-topbar></div>
+
+<div class="fd-hd">
+  <span class="eyebrow">Terminal · Institutional flows</span>
+  <h1>FII &amp; DII activity</h1>
+  <p class="muted body-sm" style="margin:4px 0 0">Cash market net flows by FIIs/FPIs and DIIs from NSE/BSE provisional data. Updated post 06:00 PM IST daily.</p>
+</div>
+
+<div class="fd-strip">
+  <div class="k">
+    <div class="ey">FII cash · today (prov)</div>
+    <div class="v change-down">−₹2,148cr</div>
+    <div class="c muted">22 Apr 2026 · sellers</div>
+  </div>
+  <div class="k">
+    <div class="ey">DII cash · today</div>
+    <div class="v change-up">+₹3,420cr</div>
+    <div class="c muted">strong absorbers</div>
+  </div>
+  <div class="k">
+    <div class="ey">FII Apr MTD</div>
+    <div class="v change-up">+₹14,820cr</div>
+    <div class="c change-up">14 of 16 sessions positive</div>
+  </div>
+  <div class="k">
+    <div class="ey">DII Apr MTD</div>
+    <div class="v change-up">+₹38,420cr</div>
+    <div class="c change-up">all 16 sessions positive</div>
+  </div>
+</div>
+
+<main class="fd-grid">
+  <div class="flow-chart">
+    <div class="hd"><h3>Daily net flows · last 30 sessions</h3><div class="tabs"><button class="active">Cash</button><button>F&amp;O</button><button>Sectoral</button></div></div>
+    <svg viewBox="0 0 800 280" preserveAspectRatio="none">
+      <line x1="0" y1="140" x2="800" y2="140" stroke="hsl(var(--border))"/>
+      <g font-family="ui-monospace" font-size="10" fill="hsl(var(--muted-foreground))">
+        <text x="0" y="20">+5,000cr</text><text x="0" y="80">+2,500</text><text x="0" y="144">0</text><text x="0" y="208">−2,500</text><text x="0" y="268">−5,000cr</text>
+      </g>
+      <!-- 30 paired bars: FII (gold) / DII (blue) -->
+      <g>
+        <!-- helper: each pair 24 wide -->
+        <g fill="hsl(var(--brand-gold))" opacity="0.85"><!-- FII -->
+          <rect x="60" y="140" width="10" height="42"/><rect x="84" y="100" width="10" height="40"/><rect x="108" y="140" width="10" height="60"/>
+          <rect x="132" y="118" width="10" height="22"/><rect x="156" y="140" width="10" height="34"/><rect x="180" y="84" width="10" height="56"/>
+          <rect x="204" y="140" width="10" height="48"/><rect x="228" y="92" width="10" height="48"/><rect x="252" y="140" width="10" height="32"/>
+          <rect x="276" y="74" width="10" height="66"/><rect x="300" y="140" width="10" height="56"/><rect x="324" y="98" width="10" height="42"/>
+          <rect x="348" y="86" width="10" height="54"/><rect x="372" y="140" width="10" height="38"/><rect x="396" y="62" width="10" height="78"/>
+          <rect x="420" y="78" width="10" height="62"/><rect x="444" y="140" width="10" height="46"/><rect x="468" y="140" width="10" height="62"/>
+          <rect x="492" y="86" width="10" height="54"/><rect x="516" y="58" width="10" height="82"/><rect x="540" y="78" width="10" height="62"/>
+          <rect x="564" y="92" width="10" height="48"/><rect x="588" y="140" width="10" height="38"/><rect x="612" y="62" width="10" height="78"/>
+          <rect x="636" y="86" width="10" height="54"/><rect x="660" y="64" width="10" height="76"/><rect x="684" y="140" width="10" height="44"/>
+          <rect x="708" y="74" width="10" height="66"/><rect x="732" y="140" width="10" height="58"/><rect x="756" y="140" width="10" height="86"/>
+        </g>
+        <g fill="hsl(213 50% 50%)" opacity="0.85"><!-- DII -->
+          <rect x="72" y="98" width="10" height="42"/><rect x="96" y="118" width="10" height="22"/><rect x="120" y="80" width="10" height="60"/>
+          <rect x="144" y="62" width="10" height="78"/><rect x="168" y="86" width="10" height="54"/><rect x="192" y="118" width="10" height="22"/>
+          <rect x="216" y="92" width="10" height="48"/><rect x="240" y="60" width="10" height="80"/><rect x="264" y="80" width="10" height="60"/>
+          <rect x="288" y="56" width="10" height="84"/><rect x="312" y="86" width="10" height="54"/><rect x="336" y="68" width="10" height="72"/>
+          <rect x="360" y="50" width="10" height="90"/><rect x="384" y="78" width="10" height="62"/><rect x="408" y="48" width="10" height="92"/>
+          <rect x="432" y="62" width="10" height="78"/><rect x="456" y="86" width="10" height="54"/><rect x="480" y="42" width="10" height="98"/>
+          <rect x="504" y="62" width="10" height="78"/><rect x="528" y="40" width="10" height="100"/><rect x="552" y="68" width="10" height="72"/>
+          <rect x="576" y="80" width="10" height="60"/><rect x="600" y="56" width="10" height="84"/><rect x="624" y="44" width="10" height="96"/>
+          <rect x="648" y="68" width="10" height="72"/><rect x="672" y="38" width="10" height="102"/><rect x="696" y="86" width="10" height="54"/>
+          <rect x="720" y="62" width="10" height="78"/><rect x="744" y="86" width="10" height="54"/><rect x="768" y="32" width="10" height="108"/>
+        </g>
+      </g>
+      <g transform="translate(640,8)" font-family="ui-monospace" font-size="10"><rect width="148" height="22" rx="11" fill="hsl(var(--card)/0.92)" stroke="hsl(var(--border))"/><rect x="14" y="8" width="8" height="8" fill="hsl(var(--brand-gold))"/><text x="26" y="15" fill="hsl(var(--foreground))">FII</text><rect x="78" y="8" width="8" height="8" fill="hsl(213 50% 50%)"/><text x="90" y="15" fill="hsl(var(--foreground))">DII</text></g>
+    </svg>
+  </div>
+
+  <div class="flow-chart">
+    <div class="hd"><h3>Cumulative flow vs NIFTY</h3><div class="tabs"><button>3M</button><button class="active">YTD</button><button>1Y</button></div></div>
+    <svg viewBox="0 0 800 280" preserveAspectRatio="none">
+      <defs><pattern id="g4" width="100" height="56" patternUnits="userSpaceOnUse"><path d="M100 0H0V56" fill="none" stroke="hsl(var(--border))" stroke-width="0.4"/></pattern></defs>
+      <rect width="100%" height="100%" fill="url(#g4)"/>
+      <line x1="0" y1="140" x2="800" y2="140" stroke="hsl(var(--border))"/>
+      <!-- NIFTY line (right axis) -->
+      <path d="M0,180 L80,170 L160,176 L240,160 L320,148 L400,130 L480,112 L560,128 L640,98 L720,76 L800,62" fill="none" stroke="hsl(var(--muted-foreground))" stroke-width="1.6" stroke-dasharray="4 3"/>
+      <!-- FII cumulative -->
+      <path d="M0,140 L80,130 L160,148 L240,136 L320,126 L400,108 L480,86 L560,98 L640,72 L720,80 L800,68" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="2.4"/>
+      <!-- DII cumulative -->
+      <path d="M0,140 L80,120 L160,98 L240,82 L320,68 L400,52 L480,42 L560,34 L640,22 L720,16 L800,8" fill="none" stroke="hsl(213 50% 50%)" stroke-width="2.4"/>
+      <g font-family="ui-monospace" font-size="10" fill="hsl(var(--muted-foreground))">
+        <text x="0" y="14">+50k cr</text><text x="0" y="144">0</text><text x="0" y="276">−50k cr</text>
+        <text x="0" y="296">Jan</text><text x="200" y="296">Feb</text><text x="400" y="296">Mar</text><text x="600" y="296">Apr '26</text>
+      </g>
+      <g transform="translate(560,16)" font-family="ui-monospace" font-size="10"><rect width="220" height="38" rx="6" fill="hsl(var(--card)/0.95)" stroke="hsl(var(--border))"/><line x1="14" y1="14" x2="36" y2="14" stroke="hsl(var(--brand-gold))" stroke-width="2"/><text x="42" y="18" fill="hsl(var(--foreground))">FII +₹14.8k cr YTD</text><line x1="14" y1="30" x2="36" y2="30" stroke="hsl(213 50% 50%)" stroke-width="2"/><text x="42" y="34" fill="hsl(var(--foreground))">DII +₹62.2k cr YTD</text></g>
+    </svg>
+  </div>
+</main>
+
+<div class="fd-tbl">
+  <div class="hd"><h3>Session-by-session · last 14 days</h3><span class="muted body-sm">Source: NSE/BSE provisional · ₹ crore</span></div>
+  <table>
+    <thead><tr><th>Date</th><th>FII Buy</th><th>FII Sell</th><th>FII Net</th><th>DII Buy</th><th>DII Sell</th><th>DII Net</th><th>NIFTY close</th><th>Δ</th></tr></thead>
+    <tbody>
+      <tr><td><span class="da">22 Apr</span> · Mon</td><td>14,824</td><td>16,972</td><td class="neg">−2,148</td><td>12,420</td><td>9,000</td><td class="pos">+3,420</td><td>22,418.40</td><td class="pos">+0.64%</td></tr>
+      <tr><td><span class="da">19 Apr</span> · Fri</td><td>16,420</td><td>14,140</td><td class="pos">+2,280</td><td>10,840</td><td>8,420</td><td class="pos">+2,420</td><td>22,275.20</td><td class="pos">+1.18%</td></tr>
+      <tr><td><span class="da">18 Apr</span> · Thu</td><td>13,820</td><td>15,640</td><td class="neg">−1,820</td><td>11,420</td><td>7,820</td><td class="pos">+3,600</td><td>22,016.40</td><td class="pos">+0.44%</td></tr>
+      <tr><td><span class="da">17 Apr</span> · Wed</td><td>14,240</td><td>11,180</td><td class="pos">+3,060</td><td>9,820</td><td>7,420</td><td class="pos">+2,400</td><td>21,920.40</td><td class="pos">+0.86%</td></tr>
+      <tr><td><span class="da">16 Apr</span> · Tue</td><td>15,420</td><td>14,180</td><td class="pos">+1,240</td><td>10,640</td><td>8,420</td><td class="pos">+2,220</td><td>21,732.20</td><td class="neg">−0.34%</td></tr>
+      <tr><td><span class="da">15 Apr</span> · Mon</td><td>13,840</td><td>15,420</td><td class="neg">−1,580</td><td>12,420</td><td>8,820</td><td class="pos">+3,600</td><td>21,807.40</td><td class="pos">+0.42%</td></tr>
+      <tr><td><span class="da">12 Apr</span> · Fri</td><td>14,420</td><td>12,140</td><td class="pos">+2,280</td><td>9,820</td><td>7,420</td><td class="pos">+2,400</td><td>21,716.20</td><td class="pos">+1.42%</td></tr>
+      <tr><td><span class="da">11 Apr</span> · Thu</td><td>16,420</td><td>14,820</td><td class="pos">+1,600</td><td>11,240</td><td>9,820</td><td class="pos">+1,420</td><td>21,412.40</td><td class="neg">−0.62%</td></tr>
+      <tr><td><span class="da">10 Apr</span> · Wed</td><td>13,420</td><td>15,820</td><td class="neg">−2,400</td><td>14,420</td><td>10,820</td><td class="pos">+3,600</td><td>21,547.40</td><td class="pos">+0.34%</td></tr>
+      <tr><td><span class="da">09 Apr</span> · Tue</td><td>15,420</td><td>13,820</td><td class="pos">+1,600</td><td>10,820</td><td>9,240</td><td class="pos">+1,580</td><td>21,475.20</td><td class="pos">+0.18%</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

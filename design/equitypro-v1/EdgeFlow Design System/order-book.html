@@ -1,0 +1,150 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Order Book / DOM · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.ob-hd{padding:18px 32px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card));display:flex;align-items:center;gap:24px}
+.ob-hd h1{font-family:var(--font-display);font-size:22px;letter-spacing:-0.01em;margin:0;color:hsl(var(--brand-navy))}
+.dark .ob-hd h1{color:hsl(38 30% 95%)}
+.ob-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;padding:24px 32px}
+
+.dom-panel{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.dom-panel .hd{padding:14px 18px;border-bottom:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center}
+.dom-panel h3{margin:0;font-family:var(--font-display);font-size:16px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .dom-panel h3{color:hsl(38 30% 95%)}
+.dom-tbl{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12px}
+.dom-tbl th{font-size:10.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:8px 12px;background:hsl(var(--muted)/0.5);text-align:right}
+.dom-tbl th:first-child{text-align:left}
+.dom-tbl td{padding:7px 12px;text-align:right;position:relative}
+.dom-tbl td:first-child{text-align:left}
+.dom-tbl tr.bid td.px{color:hsl(var(--positive));font-weight:700}
+.dom-tbl tr.ask td.px{color:hsl(var(--negative));font-weight:700}
+.dom-tbl tr.bid td.qty{position:relative}
+.dom-tbl tr.bid td.qty::before,.dom-tbl tr.ask td.qty::before{content:"";position:absolute;top:0;bottom:0;background:currentColor;opacity:0.08;width:var(--w);right:0}
+.dom-tbl tr.ask{color:hsl(var(--negative))}
+.dom-tbl tr.bid{color:hsl(var(--positive))}
+.dom-tbl tr.spread td{background:hsl(var(--muted)/0.6);font-weight:700;color:hsl(var(--foreground));border-top:1px solid hsl(var(--border));border-bottom:1px solid hsl(var(--border))}
+.dom-tbl tr.spread td.spd{color:hsl(var(--brand-gold))}
+
+/* depth ladder */
+.depth-svg{width:100%;height:340px}
+
+.imbal{display:flex;flex-direction:column;gap:14px;padding:18px}
+.imbal .ring{display:flex;align-items:center;justify-content:center;position:relative}
+.imbal .ring svg{width:160px;height:160px}
+.imbal .ring .center{position:absolute;text-align:center}
+.imbal .ring .center .v{font-family:var(--font-mono);font-size:30px;font-weight:700;color:hsl(var(--positive))}
+.imbal .ring .center .l{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700}
+.imbal-bars{display:flex;flex-direction:column;gap:8px}
+.imbal-bars .b{display:grid;grid-template-columns:60px 1fr 70px;gap:10px;align-items:center;font-family:var(--font-mono);font-size:11.5px}
+.imbal-bars .bg{height:8px;background:hsl(var(--muted));border-radius:4px;overflow:hidden}
+.imbal-bars .bg span{display:block;height:100%;background:hsl(var(--positive))}
+
+.iceberg-list{font-family:var(--font-mono);font-size:11.5px}
+.iceberg-list div{padding:8px 18px;border-bottom:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center}
+.iceberg-list div:last-child{border-bottom:0}
+.iceberg-list .px{font-weight:700;color:hsl(var(--foreground))}
+.iceberg-list .b{color:hsl(var(--positive))}
+.iceberg-list .s{color:hsl(var(--negative))}
+.iceberg-list .qty{color:hsl(var(--muted-foreground))}
+</style></head>
+<body data-page="order-book" data-screen-label="Terminal · 22 Order book">
+<div class="shell"><div data-shell-topbar></div>
+
+<div class="ob-hd">
+  <h1>RELIANCE <span class="muted body-sm" style="font-weight:400">· Order book / DOM</span></h1>
+  <span style="font-family:var(--font-mono);font-weight:700;font-size:18px">2,948.55</span>
+  <span class="change-up" style="font-family:var(--font-mono)">+24.10 (+0.82%)</span>
+  <span class="badge badge-pos" style="margin-left:auto">L2 live · NSE</span>
+  <button class="btn btn-ghost btn-sm">Group ticks</button>
+  <button class="btn btn-ghost btn-sm">Export depth</button>
+</div>
+
+<main class="ob-grid">
+  <section class="dom-panel">
+    <div class="hd"><h3>Level-2 depth · 20 levels</h3><span class="muted body-sm">Top of book: 2,948.50 / 2,948.55</span></div>
+    <table class="dom-tbl">
+      <thead><tr><th>Bid qty</th><th>Bid orders</th><th>Bid</th><th>Ask</th><th>Ask orders</th><th>Ask qty</th></tr></thead>
+      <tbody>
+        <tr class="bid"><td class="qty" style="--w:38%">820</td><td>4</td><td class="px">2,947.85</td><td class="px">2,949.20</td><td>3</td><td class="qty" style="--w:42%">980</td></tr>
+        <tr class="bid"><td class="qty" style="--w:42%">980</td><td>5</td><td class="px">2,947.95</td><td class="px">2,949.10</td><td>5</td><td class="qty" style="--w:48%">1,140</td></tr>
+        <tr class="bid"><td class="qty" style="--w:54%">1,290</td><td>7</td><td class="px">2,948.05</td><td class="px">2,949.00</td><td>8</td><td class="qty" style="--w:72%">1,920</td></tr>
+        <tr class="bid"><td class="qty" style="--w:48%">1,180</td><td>6</td><td class="px">2,948.15</td><td class="px">2,948.95</td><td>6</td><td class="qty" style="--w:48%">1,120</td></tr>
+        <tr class="bid"><td class="qty" style="--w:42%">980</td><td>5</td><td class="px">2,948.25</td><td class="px">2,948.90</td><td>5</td><td class="qty" style="--w:48%">1,120</td></tr>
+        <tr class="bid"><td class="qty" style="--w:80%">2,140</td><td>11</td><td class="px">2,948.30</td><td class="px">2,948.80</td><td>4</td><td class="qty" style="--w:38%">820</td></tr>
+        <tr class="bid"><td class="qty" style="--w:54%">1,290</td><td>7</td><td class="px">2,948.40</td><td class="px">2,948.70</td><td>7</td><td class="qty" style="--w:62%">1,640</td></tr>
+        <tr class="bid"><td class="qty" style="--w:60%">1,420</td><td>8</td><td class="px">2,948.50</td><td class="px">2,948.55</td><td>5</td><td class="qty" style="--w:42%">982</td></tr>
+        <tr class="spread"><td colspan="2"></td><td class="spd">↕ 0.05</td><td class="spd">spread 1.7 bps</td><td colspan="2"></td></tr>
+        <tr class="ask"><td class="qty" style="--w:42%">982</td><td>5</td><td class="px">2,948.55</td><td class="px">2,948.60</td><td>4</td><td class="qty" style="--w:36%">820</td></tr>
+        <tr class="ask"><td class="qty" style="--w:62%">1,640</td><td>7</td><td class="px">2,948.60</td><td class="px">2,948.65</td><td>6</td><td class="qty" style="--w:54%">1,280</td></tr>
+        <tr class="ask"><td class="qty" style="--w:38%">820</td><td>4</td><td class="px">2,948.65</td><td class="px">2,948.70</td><td>7</td><td class="qty" style="--w:62%">1,640</td></tr>
+        <tr class="ask"><td class="qty" style="--w:48%">1,120</td><td>5</td><td class="px">2,948.70</td><td class="px">2,948.80</td><td>4</td><td class="qty" style="--w:38%">820</td></tr>
+        <tr class="ask"><td class="qty" style="--w:48%">1,120</td><td>5</td><td class="px">2,948.75</td><td class="px">2,948.85</td><td>4</td><td class="qty" style="--w:36%">780</td></tr>
+        <tr class="ask"><td class="qty" style="--w:72%">1,920</td><td>8</td><td class="px">2,948.80</td><td class="px">2,948.90</td><td>5</td><td class="qty" style="--w:48%">1,120</td></tr>
+        <tr class="ask"><td class="qty" style="--w:42%">980</td><td>5</td><td class="px">2,948.85</td><td class="px">2,948.95</td><td>5</td><td class="qty" style="--w:42%">980</td></tr>
+        <tr class="ask"><td class="qty" style="--w:38%">820</td><td>4</td><td class="px">2,948.90</td><td class="px">2,949.10</td><td>3</td><td class="qty" style="--w:32%">680</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="dom-panel">
+    <div class="hd"><h3>Cumulative depth ladder</h3></div>
+    <div style="padding:14px">
+      <svg class="depth-svg" viewBox="0 0 400 300" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="bidg" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="hsl(var(--positive))" stop-opacity="0.5"/><stop offset="1" stop-color="hsl(var(--positive))" stop-opacity="0.05"/></linearGradient>
+          <linearGradient id="askg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="hsl(var(--negative))" stop-opacity="0.5"/><stop offset="1" stop-color="hsl(var(--negative))" stop-opacity="0.05"/></linearGradient>
+        </defs>
+        <line x1="200" y1="0" x2="200" y2="300" stroke="hsl(var(--brand-gold))" stroke-dasharray="3 3"/>
+        <!-- bids (left side) staircase -->
+        <path d="M200,30 L200,60 L180,60 L180,90 L150,90 L150,120 L130,120 L130,150 L100,150 L100,180 L70,180 L70,210 L40,210 L40,240 L20,240 L20,270 L0,270 L0,300 L200,300 Z" fill="url(#bidg)" stroke="hsl(var(--positive))" stroke-width="1"/>
+        <!-- asks staircase -->
+        <path d="M200,30 L200,60 L220,60 L220,90 L250,90 L250,120 L280,120 L280,150 L300,150 L300,180 L330,180 L330,210 L360,210 L360,240 L380,240 L380,270 L400,270 L400,300 L200,300 Z" fill="url(#askg)" stroke="hsl(var(--negative))" stroke-width="1"/>
+        <g font-family="ui-monospace" font-size="10" fill="hsl(var(--muted-foreground))">
+          <text x="0" y="295">2,947.85</text>
+          <text x="200" y="295" text-anchor="middle">mid</text>
+          <text x="400" y="295" text-anchor="end">2,949.20</text>
+          <text x="395" y="40" text-anchor="end">cum qty</text>
+        </g>
+        <text x="100" y="34" text-anchor="middle" font-family="ui-monospace" font-size="11" fill="hsl(var(--positive))" font-weight="700">BIDS · 11,720 sh</text>
+        <text x="300" y="34" text-anchor="middle" font-family="ui-monospace" font-size="11" fill="hsl(var(--negative))" font-weight="700">ASKS · 12,940 sh</text>
+      </svg>
+    </div>
+    <div class="iceberg-list">
+      <div><span class="muted body-sm" style="font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700">Iceberg / hidden detected</span><span class="muted">2 nodes</span></div>
+      <div><span><span class="b">BUY ⛁</span> · 2,948.30 · refilling 500/lvl</span><span class="qty">total ~12k sh</span></div>
+      <div><span><span class="s">SELL ⛁</span> · 2,948.85 · refilling 800/lvl</span><span class="qty">total ~16k sh</span></div>
+    </div>
+  </section>
+
+  <section class="dom-panel">
+    <div class="hd"><h3>Imbalance</h3></div>
+    <div class="imbal">
+      <div class="ring">
+        <svg viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="60" fill="none" stroke="hsl(var(--negative)/0.25)" stroke-width="20"/>
+          <circle cx="80" cy="80" r="60" fill="none" stroke="hsl(var(--positive))" stroke-width="20" stroke-dasharray="195 377" stroke-linecap="butt" transform="rotate(-90 80 80)"/>
+        </svg>
+        <div class="center"><div class="v">+52%</div><div class="l">Bid pressure</div></div>
+      </div>
+      <div class="imbal-bars">
+        <div class="b"><span>Bid qty</span><div class="bg"><span style="width:62%;background:hsl(var(--positive))"></span></div><span style="text-align:right">11,720</span></div>
+        <div class="b"><span>Ask qty</span><div class="bg"><span style="width:38%;background:hsl(var(--negative))"></span></div><span style="text-align:right">12,940</span></div>
+        <div class="b"><span>Bid orders</span><div class="bg"><span style="width:58%;background:hsl(var(--positive))"></span></div><span style="text-align:right">81</span></div>
+        <div class="b"><span>Ask orders</span><div class="bg"><span style="width:42%;background:hsl(var(--negative))"></span></div><span style="text-align:right">68</span></div>
+      </div>
+    </div>
+    <div class="iceberg-list" style="border-top:1px solid hsl(var(--border))">
+      <div><span class="muted body-sm" style="font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700">Last prints</span><span class="muted">live</span></div>
+      <div><span class="px">2,948.55</span><span class="b">BUY 5,420</span><span class="qty">09:42:14</span></div>
+      <div><span class="px">2,948.40</span><span class="s">SELL 8,200</span><span class="qty">09:42:12</span></div>
+      <div><span class="px">2,948.30</span><span class="s">SELL 12,400</span><span class="qty">09:42:10</span></div>
+      <div><span class="px">2,948.45</span><span class="b">BUY 1,820</span><span class="qty">09:42:08</span></div>
+      <div><span class="px">2,948.20</span><span class="b">BUY 1,420</span><span class="qty">09:42:11</span></div>
+    </div>
+  </section>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

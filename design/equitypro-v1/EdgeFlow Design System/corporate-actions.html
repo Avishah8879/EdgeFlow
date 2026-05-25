@@ -1,0 +1,161 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Corporate actions · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.ca-hd{padding:18px 32px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.ca-hd h1{font-family:var(--font-display);font-size:26px;letter-spacing:-0.02em;margin:0;color:hsl(var(--brand-navy))}
+.dark .ca-hd h1{color:hsl(38 30% 95%)}
+.ca-tabs{display:flex;gap:0;margin-top:14px;border-bottom:1px solid hsl(var(--border));margin-bottom:-1px}
+.ca-tabs button{height:42px;padding:0 18px;background:transparent;border:0;border-bottom:2px solid transparent;font-size:13px;font-weight:600;color:hsl(var(--muted-foreground));cursor:pointer;display:flex;align-items:center;gap:8px}
+.ca-tabs button.active{color:hsl(var(--brand-navy));border-bottom-color:hsl(var(--brand-gold))}
+.dark .ca-tabs button.active{color:hsl(var(--brand-gold))}
+
+.ca-bar{display:flex;justify-content:space-between;align-items:center;padding:18px 32px;gap:14px;flex-wrap:wrap}
+.ca-bar .filt{display:flex;gap:8px}
+.chip{height:30px;padding:0 12px;border-radius:var(--radius-pill);border:1px solid hsl(var(--border));background:hsl(var(--card));font-size:12px;font-weight:600;color:hsl(var(--muted-foreground));cursor:pointer}
+.chip.active{background:hsl(var(--brand-navy));color:white;border-color:hsl(var(--brand-navy))}
+.dark .chip.active{background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));border-color:hsl(var(--brand-gold))}
+
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:0 32px 24px}
+.day-hd{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:8px 0;text-align:center}
+.day{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-md);padding:10px 12px;min-height:120px;display:flex;flex-direction:column;gap:6px}
+.day .dn{font-family:var(--font-mono);font-size:11.5px;font-weight:700;color:hsl(var(--muted-foreground));display:flex;justify-content:space-between}
+.day.today{border-color:hsl(var(--brand-gold));border-width:2px;background:hsl(var(--brand-gold)/0.06)}
+.day.today .dn{color:hsl(var(--brand-gold))}
+.day.dim{background:hsl(var(--muted)/0.4);opacity:0.6}
+.evt{font-size:10.5px;padding:4px 6px;border-radius:var(--radius-sm);font-family:var(--font-mono);font-weight:600;line-height:1.3;cursor:pointer}
+.evt .ti{font-family:var(--font-display);font-weight:800;font-size:11px}
+.evt.div{background:hsl(150 50% 40% / 0.15);color:hsl(150 50% 30%);border-left:3px solid hsl(150 50% 40%)}
+.dark .evt.div{color:hsl(150 50% 60%)}
+.evt.split{background:hsl(213 50% 40% / 0.15);color:hsl(213 50% 35%);border-left:3px solid hsl(213 50% 40%)}
+.dark .evt.split{color:hsl(213 50% 65%)}
+.evt.bonus{background:hsl(38 75% 50% / 0.15);color:hsl(38 60% 35%);border-left:3px solid hsl(38 75% 50%)}
+.dark .evt.bonus{color:hsl(var(--brand-gold))}
+.evt.earnings{background:hsl(280 40% 50% / 0.15);color:hsl(280 40% 40%);border-left:3px solid hsl(280 40% 50%)}
+.dark .evt.earnings{color:hsl(280 60% 70%)}
+.evt.agm{background:hsl(0 60% 50% / 0.15);color:hsl(0 60% 40%);border-left:3px solid hsl(0 60% 50%)}
+.dark .evt.agm{color:hsl(0 60% 65%)}
+
+.ca-side{padding:0 32px 60px;display:grid;grid-template-columns:1fr 360px;gap:18px}
+.ca-tbl{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.ca-tbl .hd{padding:14px 18px;border-bottom:1px solid hsl(var(--border))}
+.ca-tbl h3{margin:0;font-family:var(--font-display);font-size:16px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .ca-tbl h3{color:hsl(38 30% 95%)}
+.ca-tbl table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12px}
+.ca-tbl th{font-size:10.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:10px 12px;background:hsl(var(--muted)/0.5);text-align:left}
+.ca-tbl td{padding:9px 12px;border-bottom:1px solid hsl(var(--border))}
+.ca-tbl .sym{font-family:var(--font-display);font-weight:700;font-size:13px;color:hsl(var(--brand-navy))}
+.dark .ca-tbl .sym{color:hsl(38 30% 95%)}
+.ca-tbl .badge{font-size:10px;padding:2px 7px;border-radius:var(--radius-pill);font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+.ca-tbl .b-d{background:hsl(150 50% 40% / 0.15);color:hsl(150 50% 30%)}
+.ca-tbl .b-s{background:hsl(213 50% 40% / 0.15);color:hsl(213 50% 35%)}
+.ca-tbl .b-b{background:hsl(38 75% 50% / 0.15);color:hsl(38 60% 35%)}
+.ca-tbl .b-e{background:hsl(280 40% 50% / 0.15);color:hsl(280 40% 40%)}
+
+.ca-aside .panel{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:16px;margin-bottom:14px}
+.ca-aside h4{margin:0 0 12px;font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.div-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed hsl(var(--border));font-size:12px;font-family:var(--font-mono)}
+.div-row:last-child{border-bottom:0}
+.div-row .l b{font-family:var(--font-display)}
+</style></head>
+<body data-page="corporate-actions" data-screen-label="Terminal · 30 Corporate actions">
+<div class="shell"><div data-shell-topbar></div>
+
+<div class="ca-hd">
+  <span class="eyebrow">Terminal · Corporate actions</span>
+  <h1>Calendar of events</h1>
+  <p class="muted body-sm" style="margin:4px 0 0">Dividends, splits, bonus, buybacks, AGMs, earnings, ex-dates &amp; record dates across NSE/BSE listed companies.</p>
+  <div class="ca-tabs">
+    <button class="active">Calendar view</button>
+    <button>List view</button>
+    <button>My watchlists only</button>
+    <button>Past events</button>
+  </div>
+</div>
+
+<div class="ca-bar">
+  <div class="filt">
+    <button class="chip active">All</button>
+    <button class="chip">Dividends</button>
+    <button class="chip">Splits</button>
+    <button class="chip">Bonus</button>
+    <button class="chip">Buyback</button>
+    <button class="chip">Earnings</button>
+    <button class="chip">AGM/EGM</button>
+  </div>
+  <div class="flex gap-2 items-center">
+    <button class="btn btn-ghost btn-sm">‹</button>
+    <span style="font-family:var(--font-display);font-weight:700;font-size:18px;color:hsl(var(--foreground));margin:0 12px">April 2026</span>
+    <button class="btn btn-ghost btn-sm">›</button>
+    <button class="btn btn-ghost btn-sm" style="margin-left:14px">Today</button>
+  </div>
+</div>
+
+<main class="cal-grid">
+  <div class="day-hd">Mon</div><div class="day-hd">Tue</div><div class="day-hd">Wed</div><div class="day-hd">Thu</div><div class="day-hd">Fri</div><div class="day-hd">Sat</div><div class="day-hd">Sun</div>
+
+  <div class="day"><div class="dn"><span>20</span></div><div class="evt earnings"><span class="ti">RELIANCE</span> · Q4 results</div><div class="evt earnings"><span class="ti">HDFCBANK</span> · Q4 results</div></div>
+  <div class="day"><div class="dn"><span>21</span></div><div class="evt agm"><span class="ti">TCS</span> · AGM</div><div class="evt earnings"><span class="ti">WIPRO</span> · Q4</div></div>
+  <div class="day today"><div class="dn"><span>22 · today</span><span style="color:hsl(var(--brand-gold))">●</span></div><div class="evt div"><span class="ti">ITC</span> · Ex-div ₹6.25</div><div class="evt earnings"><span class="ti">INFY</span> · Q4 results</div><div class="evt bonus"><span class="ti">BALKRISIND</span> · 1:1 bonus</div></div>
+  <div class="day"><div class="dn"><span>23</span></div><div class="evt earnings"><span class="ti">TECHM</span> · Q4</div><div class="evt earnings"><span class="ti">BAJFINANCE</span> · Q4</div></div>
+  <div class="day"><div class="dn"><span>24</span></div><div class="evt div"><span class="ti">SBIN</span> · Record ₹13.70</div><div class="evt split"><span class="ti">VEDL</span> · 5:1 split</div></div>
+  <div class="day dim"><div class="dn"><span>25</span></div></div>
+  <div class="day dim"><div class="dn"><span>26</span></div></div>
+
+  <div class="day"><div class="dn"><span>27</span></div><div class="evt earnings"><span class="ti">ICICIBANK</span> · Q4</div><div class="evt earnings"><span class="ti">NESTLEIND</span> · Q1</div></div>
+  <div class="day"><div class="dn"><span>28</span></div><div class="evt div"><span class="ti">HCLTECH</span> · Ex-div ₹18</div><div class="evt earnings"><span class="ti">MARUTI</span> · Q4</div></div>
+  <div class="day"><div class="dn"><span>29</span></div><div class="evt agm"><span class="ti">RELIANCE</span> · AGM</div><div class="evt earnings"><span class="ti">SUNPHARMA</span> · Q4</div></div>
+  <div class="day"><div class="dn"><span>30</span></div><div class="evt bonus"><span class="ti">TATAELXSI</span> · 1:5 bonus</div><div class="evt div"><span class="ti">BAJAJFINSV</span> · Ex-div</div><div class="evt earnings"><span class="ti">ASIANPAINT</span> · Q4</div></div>
+  <div class="day"><div class="dn"><span>1 May</span></div><div class="evt agm"><span class="ti">LT</span> · Holiday — Maharashtra Day</div></div>
+  <div class="day dim"><div class="dn"><span>2</span></div><div class="evt earnings"><span class="ti">DRREDDY</span> · Q4</div></div>
+  <div class="day dim"><div class="dn"><span>3</span></div></div>
+</main>
+
+<section class="ca-side">
+  <div class="ca-tbl">
+    <div class="hd"><h3>Upcoming · next 30 days · all events</h3></div>
+    <table>
+      <thead><tr><th>Date</th><th>Symbol</th><th>Event</th><th>Detail</th><th>Record</th><th>Ex-date</th><th>Impact</th></tr></thead>
+      <tbody>
+        <tr><td>22 Apr</td><td><span class="sym">ITC</span></td><td><span class="badge b-d">Dividend</span></td><td>Final ₹6.25 per share</td><td>23 Apr</td><td>22 Apr</td><td>1.46% yield</td></tr>
+        <tr><td>22 Apr</td><td><span class="sym">BALKRISIND</span></td><td><span class="badge b-b">Bonus</span></td><td>1:1 bonus issue</td><td>22 Apr</td><td>22 Apr</td><td>2× shares</td></tr>
+        <tr><td>22 Apr</td><td><span class="sym">INFY</span></td><td><span class="badge b-e">Earnings</span></td><td>Q4 FY26 results &amp; FY27 guidance</td><td>—</td><td>—</td><td>5.2% IV move</td></tr>
+        <tr><td>24 Apr</td><td><span class="sym">SBIN</span></td><td><span class="badge b-d">Dividend</span></td><td>Final ₹13.70 per share</td><td>24 Apr</td><td>24 Apr</td><td>1.78% yield</td></tr>
+        <tr><td>24 Apr</td><td><span class="sym">VEDL</span></td><td><span class="badge b-s">Split</span></td><td>FV ₹5 → ₹1 (5:1)</td><td>26 Apr</td><td>24 Apr</td><td>5× shares</td></tr>
+        <tr><td>27 Apr</td><td><span class="sym">ICICIBANK</span></td><td><span class="badge b-e">Earnings</span></td><td>Q4 FY26 results</td><td>—</td><td>—</td><td>3.4% IV move</td></tr>
+        <tr><td>28 Apr</td><td><span class="sym">HCLTECH</span></td><td><span class="badge b-d">Dividend</span></td><td>Final ₹18.00</td><td>29 Apr</td><td>28 Apr</td><td>1.32% yield</td></tr>
+        <tr><td>29 Apr</td><td><span class="sym">RELIANCE</span></td><td><span class="badge b-e">AGM</span></td><td>47th Annual General Meeting</td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td>30 Apr</td><td><span class="sym">TATAELXSI</span></td><td><span class="badge b-b">Bonus</span></td><td>1:5 bonus issue</td><td>02 May</td><td>30 Apr</td><td>+20% shares</td></tr>
+        <tr><td>30 Apr</td><td><span class="sym">BAJAJFINSV</span></td><td><span class="badge b-d">Dividend</span></td><td>Interim ₹4.00</td><td>02 May</td><td>30 Apr</td><td>0.24% yield</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <aside class="ca-aside">
+    <div class="panel">
+      <h4>This week — your portfolio</h4>
+      <div class="div-row"><span class="l"><b>ITC</b> · Ex-div ₹6.25</span><span>22 Apr</span></div>
+      <div class="div-row"><span class="l"><b>SBIN</b> · Record ₹13.70</span><span>24 Apr</span></div>
+      <div class="div-row"><span class="l"><b>HDFCBANK</b> · Q4 results</span><span>20 Apr</span></div>
+      <div class="div-row"><span class="l"><b>RELIANCE</b> · Q4 + AGM</span><span>20–29</span></div>
+      <p class="muted body-sm" style="font-size:11.5px;margin:10px 0 0;line-height:1.5">Estimated dividend cash <b class="change-up">+₹14,820</b> credited Apr 25–28.</p>
+    </div>
+    <div class="panel">
+      <h4>Earnings risk · this week</h4>
+      <div class="div-row"><span class="l"><b>INFY</b></span><span>±5.2% IV-implied</span></div>
+      <div class="div-row"><span class="l"><b>BAJFINANCE</b></span><span>±4.8%</span></div>
+      <div class="div-row"><span class="l"><b>TECHM</b></span><span>±3.6%</span></div>
+      <div class="div-row"><span class="l"><b>WIPRO</b></span><span>±3.4%</span></div>
+    </div>
+    <div class="panel">
+      <h4>Buybacks open</h4>
+      <div class="div-row"><span class="l"><b>TCS</b> · ₹17,000cr · ₹4,150 floor</span><span>21% accept</span></div>
+      <div class="div-row"><span class="l"><b>WIPRO</b> · ₹12,000cr · ₹445 floor</span><span>14% accept</span></div>
+    </div>
+  </aside>
+</section>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Help &amp; support · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.hp-hero{padding:48px 0;background:linear-gradient(155deg,hsl(var(--brand-navy)),hsl(var(--brand-navy-deep)));color:white;text-align:center;position:relative;overflow:hidden}
+.hp-hero::before{content:"";position:absolute;right:-100px;top:-100px;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,hsl(var(--brand-gold)/0.25),transparent 70%);filter:blur(40px)}
+.hp-hero .container{position:relative}
+.hp-hero h1{font-family:var(--font-display);font-size:42px;letter-spacing:-0.025em;margin:6px 0 0;color:white}
+.hp-hero .ey{color:hsl(var(--brand-gold));font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:var(--ls-uppercase);text-transform:uppercase}
+.hp-hero p{margin:12px auto 0;color:hsl(38 30% 88%);max-width:60ch;font-size:15px;line-height:1.55}
+.hp-hero .search{max-width:560px;margin:24px auto 0;position:relative}
+.hp-hero .search input{width:100%;height:54px;padding:0 24px 0 52px;border:0;border-radius:var(--radius-pill);background:white;font-size:15px;color:hsl(var(--brand-navy));font-weight:500}
+.hp-hero .search svg{position:absolute;left:20px;top:18px;width:18px;height:18px;color:hsl(var(--muted-foreground))}
+
+.hp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:36px 0}
+.cat-card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px;cursor:pointer;transition:all var(--t-base)}
+.cat-card:hover{border-color:hsl(var(--brand-gold)/0.5);transform:translateY(-1px);box-shadow:var(--shadow-card-lg)}
+.cat-card .icn{width:42px;height:42px;border-radius:var(--radius-md);background:hsl(var(--brand-gold)/0.15);color:hsl(var(--brand-gold));display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-family:var(--font-display);font-weight:800;font-size:18px}
+.cat-card h3{font-family:var(--font-display);font-size:16px;margin:0 0 4px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .cat-card h3{color:hsl(38 30% 95%)}
+.cat-card .desc{font-size:12.5px;color:hsl(var(--muted-foreground));line-height:1.5;margin:0 0 10px}
+.cat-card .ct{font-family:var(--font-mono);font-size:11px;color:hsl(var(--brand-gold));font-weight:700}
+
+.hp-section{padding:24px 0}
+.hp-section h2{font-family:var(--font-display);font-size:26px;letter-spacing:-0.02em;color:hsl(var(--brand-navy));margin:0 0 18px}
+.dark .hp-section h2{color:hsl(38 30% 95%)}
+
+.faq{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.faq details{padding:0}
+.faq summary{padding:18px 22px;cursor:pointer;font-family:var(--font-display);font-size:15px;font-weight:700;color:hsl(var(--foreground));list-style:none;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid hsl(var(--border))}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary:hover{background:hsl(var(--muted)/0.4)}
+.faq summary::after{content:"+";font-family:var(--font-mono);font-size:18px;color:hsl(var(--brand-gold));transition:transform var(--t-fast)}
+.faq details[open] summary::after{content:"−"}
+.faq details:last-child summary{border-bottom:0}
+.faq details[open] summary{border-bottom:1px solid hsl(var(--border));background:hsl(var(--brand-gold)/0.04)}
+.faq .answer{padding:16px 22px 22px;font-size:13.5px;line-height:1.65;color:hsl(var(--muted-foreground));border-bottom:1px solid hsl(var(--border))}
+.faq .answer p{margin:0 0 8px}
+
+.contact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px}
+.contact{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:24px;text-align:center}
+.contact .ic{width:48px;height:48px;border-radius:50%;background:hsl(var(--brand-gold)/0.15);color:hsl(var(--brand-gold));display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 12px}
+.contact h4{font-family:var(--font-display);font-size:16px;margin:0 0 4px;color:hsl(var(--brand-navy))}
+.dark .contact h4{color:hsl(38 30% 95%)}
+.contact p{margin:0 0 8px;font-size:12.5px;color:hsl(var(--muted-foreground));line-height:1.5}
+.contact .v{font-family:var(--font-mono);font-weight:700;color:hsl(var(--foreground));font-size:13px}
+</style></head>
+<body data-page="help" data-screen-label="40 Help">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="hp-hero">
+  <div class="container">
+    <span class="ey">Support center</span>
+    <h1>How can we help?</h1>
+    <p>Browse 240 articles, watch tutorials, or talk to a human. Phone &amp; chat support is included on Pro plans.</p>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" placeholder="Search articles, e.g. 'Fyers token expired'…">
+    </div>
+  </div>
+</section>
+
+<main class="container">
+  <section class="hp-grid">
+    <article class="cat-card"><div class="icn">▶</div><h3>Getting started</h3><p class="desc">First-time setup, broker connect, dashboards, watchlists.</p><span class="ct">42 articles →</span></article>
+    <article class="cat-card"><div class="icn">📊</div><h3>Charts &amp; terminal</h3><p class="desc">Layouts, indicators, drawing tools, keyboard shortcuts.</p><span class="ct">68 articles →</span></article>
+    <article class="cat-card"><div class="icn">🔍</div><h3>Screeners &amp; backtests</h3><p class="desc">Building screens, factor library, walk-forward validation.</p><span class="ct">38 articles →</span></article>
+    <article class="cat-card"><div class="icn">⚙</div><h3>Account &amp; billing</h3><p class="desc">Plans, invoices, GST, refunds, downgrade flow.</p><span class="ct">24 articles →</span></article>
+    <article class="cat-card"><div class="icn">🔌</div><h3>Broker integration</h3><p class="desc">Fyers, Zerodha, Angel, ICICIDirect tokens &amp; reconnect.</p><span class="ct">22 articles →</span></article>
+    <article class="cat-card"><div class="icn">🛠</div><h3>API &amp; developers</h3><p class="desc">REST endpoints, websocket, rate limits, code samples.</p><span class="ct">28 articles →</span></article>
+    <article class="cat-card"><div class="icn">💼</div><h3>F&amp;O &amp; options</h3><p class="desc">Greeks, payoff visualizer, IV percentile, Black-Scholes.</p><span class="ct">14 articles →</span></article>
+    <article class="cat-card"><div class="icn">🔒</div><h3>Security &amp; privacy</h3><p class="desc">2FA, sessions, data deletion, what we store.</p><span class="ct">8 articles →</span></article>
+  </section>
+
+  <section class="hp-section">
+    <h2>Frequently asked</h2>
+    <div class="faq">
+      <details open>
+        <summary>How do I connect my Fyers account?</summary>
+        <div class="answer">
+          <p>Go to <b>Account → Broker integration</b>, click <b>Connect Fyers</b>, and you'll be redirected to Fyers' OAuth screen. Approve the read-only scopes and you'll come back to EquityPro automatically. Tokens are stored encrypted (AES-256) and refresh every 24 hours.</p>
+          <p>If your token expired, click the <b>Re-authorize</b> banner and re-do the OAuth flow — takes 15 seconds.</p>
+        </div>
+      </details>
+      <details>
+        <summary>Why is my watchlist quote 15 minutes delayed?</summary>
+        <div class="answer">
+          <p>Free plans show end-of-day data. Pro and Quant plans include NSE realtime feed (sub-second tick) for all listed equities &amp; F&amp;O. Upgrade from <b>Account → Plan</b>.</p>
+        </div>
+      </details>
+      <details>
+        <summary>Can I export backtest results to PDF or Excel?</summary>
+        <div class="answer">
+          <p>Yes. From any backtest report, click the <b>Export</b> button. PDF includes the full curve, drawdown chart, monthly heatmap, and trade list. Excel exports the trade ledger, daily returns, and rolling Sharpe. Pro plan and above.</p>
+        </div>
+      </details>
+      <details>
+        <summary>How is my data secured?</summary>
+        <div class="answer">
+          <p>All credentials are encrypted at rest (AES-256-GCM) and in transit (TLS 1.3). We never store your broker password — only OAuth tokens with read-only scopes. SOC 2 Type II audited annually. Data residency: AWS Mumbai (ap-south-1).</p>
+        </div>
+      </details>
+      <details>
+        <summary>Do you have a refund policy?</summary>
+        <div class="answer">
+          <p>Yes — 14-day no-questions-asked refund on all annual plans. Monthly plans can be cancelled any time with no penalty. Refunds processed within 5 business days to the original payment method.</p>
+        </div>
+      </details>
+      <details>
+        <summary>How many devices can I use?</summary>
+        <div class="answer">
+          <p>Pro plan: 3 simultaneous sessions. Quant plan: 5. Web, iOS, and Android each count as one session. You can manage active sessions and revoke them from <b>Account → Security</b>.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="hp-section" style="padding-bottom:60px">
+    <h2>Get in touch</h2>
+    <div class="contact-grid">
+      <article class="contact"><div class="ic">💬</div><h4>Live chat</h4><p>9 AM – 9 PM IST · all plans · usual response in &lt; 2 min</p><span class="v">Chat now →</span></article>
+      <article class="contact"><div class="ic">☎</div><h4>Priority phone</h4><p>Pro &amp; Quant only · 9 AM – 6 PM IST · queue-free line</p><span class="v">+91 80 4920 0000</span></article>
+      <article class="contact"><div class="ic">✉</div><h4>Email support</h4><p>Always-on · 24-hour response SLA · attach screenshots / logs</p><span class="v">help@equitypro.in</span></article>
+    </div>
+  </section>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

@@ -1,5 +1,5 @@
-# Robots.txt for Tiphub - AI-Powered Stock Analysis Platform
-# https://tiphub.ai
+# Robots.txt for Equity Pro - AI-Powered Stock Analysis Platform
+# https://equitypro.ai
 
 User-agent: *
 Allow: /
@@ -60,7 +60,7 @@ User-agent: CCBot
 Disallow: /
 
 # Sitemap location
-Sitemap: https://tiphub.ai/sitemap.xml
+Sitemap: https://equitypro.ai/sitemap.xml
 
 # Crawl delay (optional - be respectful to server resources)
 Crawl-delay: 1

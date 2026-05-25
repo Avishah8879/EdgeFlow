@@ -1,0 +1,51 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "YRC": 202503.0,
+      "FLAG": "A",
+      "YEAR": 2025.0,
+      "CAPITAL": 13.9562,
+      "CO_CODE": 301.0,
+      "RECURRING": 187.6849,
+      "PERCENTAGE": 0.27
+    },
+    {
+      "YRC": 202403.0,
+      "FLAG": "A",
+      "YEAR": 2024.0,
+      "CAPITAL": 14.1554,
+      "CO_CODE": 301.0,
+      "RECURRING": 170.3741,
+      "PERCENTAGE": 0.27
+    },
+    {
+      "YRC": 202303.0,
+      "FLAG": "A",
+      "YEAR": 2023.0,
+      "CAPITAL": 9.669,
+      "CO_CODE": 301.0,
+      "RECURRING": 161.314,
+      "PERCENTAGE": 0.25
+    },
+    {
+      "YRC": 202203.0,
+      "FLAG": "A",
+      "YEAR": 2022.0,
+      "CAPITAL": 20.167,
+      "CO_CODE": 301.0,
+      "RECURRING": 143.585,
+      "PERCENTAGE": 0.28
+    },
+    {
+      "YRC": 202103.0,
+      "FLAG": "A",
+      "YEAR": 2021.0,
+      "CAPITAL": 12.12,
+      "CO_CODE": 301.0,
+      "RECURRING": 131.22,
+      "PERCENTAGE": 0.3
+    }
+  ]
+}

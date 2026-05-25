@@ -5,7 +5,7 @@
  * Creates a complete authentication session for a user.
  */
 
-import { generateTokenPair, UserRole } from './jwt';
+import { generateTokenPair, UserRole, UserTier } from './jwt';
 import { createSessionV2, sanitizeUserV2, DbUser } from './store-v2';
 
 /**
@@ -26,7 +26,7 @@ export interface AuthSessionPayloadV2 {
     name: string | null;
     avatarUrl: string | null;
     provider: 'password' | 'google';
-    tier: 'basic' | 'premium';
+    tier: UserTier;
     role: UserRole;
     emailVerified: boolean;
     // Phone fields
@@ -64,6 +64,7 @@ export async function createJwtSessionPayload(
   metadata?: {
     deviceInfo?: string;
     ipAddress?: string;
+    platformId?: string | null;
   }
 ): Promise<AuthSessionPayloadV2> {
   // Generate JWT token pair
@@ -74,6 +75,7 @@ export async function createJwtSessionPayload(
     tier: user.tier,
     provider: user.provider,
     role: user.role || 'user',
+    primaryPlatformId: metadata?.platformId ?? user.primary_platform_id,
   });
 
   // Store session in database (for revocation)

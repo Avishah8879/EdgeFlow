@@ -28,16 +28,24 @@ app.use(helmet({
 // Enable CORS with explicit allowed origins
 // Parse CORS_ORIGINS from environment, or use defaults
 const corsOriginsEnv = process.env.CORS_ORIGINS || '';
+const isProduction = process.env.NODE_ENV === 'production';
 const defaultOrigins = [
-  'http://localhost:5173',  // Vite dev server
-  'http://localhost:5000',  // Production self-origin
+  // Loopback dev origins — only trusted outside production
+  ...(!isProduction
+    ? [
+        'http://localhost:5173',  // Vite dev server
+        'http://localhost:5000',  // Local self-origin
+      ]
+    : []),
   process.env.VITE_GRADIO_BASE_URL,  // Python backend URL
   process.env.VITE_AUTH_BASE_URL,     // Node backend URL (ngrok)
+  process.env.VITE_OPTIONS_TRADING_URL, // OptionsFlow / sibling app origin
 ];
 
-const allowedOrigins = corsOriginsEnv
-  ? corsOriginsEnv.split(',').map(o => o.trim()).filter(Boolean)
-  : defaultOrigins.filter(Boolean);
+const allowedOrigins = Array.from(new Set([
+  ...defaultOrigins.filter(Boolean),
+  ...corsOriginsEnv.split(',').map(o => o.trim()).filter(Boolean),
+]));
 
 console.log('[CORS] Allowed origins:', allowedOrigins);
 console.log('[CORS] CORS_ORIGINS env:', process.env.CORS_ORIGINS);
@@ -106,6 +114,7 @@ app.use((req, res, next) => {
   // (Dynamic import to avoid ES6 hoisting issues)
   const { default: passport } = await import('./auth/oauth-google.js');
   const { default: authV2Routes } = await import('./routes-auth-v2.js');
+  const { default: authV3Routes } = await import('./routes-auth-v3.js');
   const { default: oauthGoogleRoutes } = await import('./routes-oauth-google.js');
   const { default: subscriptionRoutes } = await import('./routes-subscription.js');
   const { default: adminRoutes } = await import('./routes-admin.js');
@@ -113,8 +122,12 @@ app.use((req, res, next) => {
   const { default: notificationRoutes } = await import('./routes-notifications.js');
   const { default: publicConfigRoutes } = await import('./routes-public-config.js');
   const { default: savedResultsRoutes } = await import('./routes-saved-results.js');
+  const { default: userTemplatesRoutes } = await import('./routes-user-templates.js');
   const { default: trackingRoutes } = await import('./routes-tracking.js');
   const { default: developerRoutes } = await import('./routes-developer.js');
+  const { default: platformsRoutes } = await import('./routes-platforms.js');
+  const { default: coinsRoutes }    = await import('./routes-coins.js');
+  const { default: paymentsRoutes } = await import('./routes-payments.js');
   const { default: apiKeyAuthRouter } = await import('./middleware/api-key-auth.js');
   const { testAuthDbConnection } = await import('./db/auth-connection.js');
   const { initSubscriptionCronJobs, stopSubscriptionCronJobs } = await import('./cron/subscription-tasks.js');
@@ -125,6 +138,7 @@ app.use((req, res, next) => {
 
   // Mount new V2 authentication routes
   app.use('/auth', authV2Routes);
+  app.use('/auth', authV3Routes);
   app.use('/auth', oauthGoogleRoutes);
 
   // Mount subscription routes
@@ -132,6 +146,15 @@ app.use((req, res, next) => {
 
   // Mount admin routes (requires admin role)
   app.use('/api/admin', adminRoutes);
+
+  // Mount admin platforms routes (sub-resource under /api/admin)
+  app.use('/api/admin/platforms', platformsRoutes);
+
+  // Mount coin wallet routes (balance, packs, debit/refund, admin grant)
+  app.use('/', coinsRoutes);
+
+  // Mount payment routes (Cashfree checkout + webhook)
+  app.use('/', paymentsRoutes);
 
   // Mount privacy consent routes
   app.use('/api/privacy', privacyRoutes);
@@ -144,6 +167,12 @@ app.use((req, res, next) => {
 
   // Mount saved results routes (screener/backtest)
   app.use('/api/saved', savedResultsRoutes);
+
+  // Mount user-owned Expert Screener template routes (Save as Template).
+  // Note: FastAPI owns the other /api/expert-screener/* routes (run, validate,
+  // built-in templates). Node only handles /user-templates*; the frontend
+  // resolves base URLs per call (Auth base here, Python base for the others).
+  app.use('/api/expert-screener', userTemplatesRoutes);
 
   // Mount tracking routes (page views, clicks, feature usage)
   app.use('/api/track', trackingRoutes);
@@ -172,6 +201,11 @@ app.use((req, res, next) => {
   if (authDbConnected) {
     log('[AUTH] ✓ Authentication database connected successfully');
 
+    // Run idempotent self-healing schema fixes (e.g. drift in check_tier
+    // between migrations folder and the live RGX_Auth database)
+    const { runSelfHealingMigrations } = await import('./db/self-heal.js');
+    await runSelfHealingMigrations();
+
     // Initialize subscription cron jobs (only if DB is connected)
     initSubscriptionCronJobs();
 
@@ -181,10 +215,33 @@ app.use((req, res, next) => {
     log('[AUTH] ⚠️  WARNING: Authentication database connection failed. V2 auth may not work.');
   }
 
-  // Mount FinTerminal-specific routes (chart, options, streaming, watchlist, layouts, forum)
+  // ── Coin-gated feature interceptors ─────────────────────────────────────
+  // Registered BEFORE registerTerminalRoutes() so they intercept requests
+  // for routes that the terminal layer also handles (pair-trading,
+  // portfolio, fundamental-screener). Express routes match in registration
+  // order, so the gate fires first; on success it forwards to Python via
+  // pythonCatchAllProxy, bypassing the terminal-route handlers (which are
+  // also just thin proxies — no business logic that we'd lose).
+  const { coinGate } = await import('./middleware/coin-gate.js');
+  const { pythonCatchAllProxy } = await import('./routes.js');
+  const { requireAuth: requireAuthMW } = await import('./middleware/auth.js');
+
+  app.post('/api/strategy-backtest/start',        requireAuthMW, coinGate('backtest.run'),             pythonCatchAllProxy);
+  app.post('/api/strategy-backtest/hybrid/start', requireAuthMW, coinGate('backtest.run'),             pythonCatchAllProxy);
+  app.post('/api/expert-screener/start',          requireAuthMW, coinGate('screener.run'),             pythonCatchAllProxy);
+  app.post('/api/sentiment-analysis',             requireAuthMW, coinGate('sentiment.analyze'),        pythonCatchAllProxy);
+  app.post('/api/sentiment-analysis/start',       requireAuthMW, coinGate('sentiment.analyze'),        pythonCatchAllProxy);
+  app.post('/api/tip-tease/chat/start',           requireAuthMW, coinGate('tip_tease.chat'),           pythonCatchAllProxy);
+  app.post('/api/portfolio/optimize',             requireAuthMW, coinGate('portfolio.optimize'),       pythonCatchAllProxy);
+  app.post('/api/fundamental-screener/start',     requireAuthMW, coinGate('fundamental_screener.run'), pythonCatchAllProxy);
+  app.get ('/api/pair-trading/matrix',            requireAuthMW, coinGate('pair_trading.run'),         pythonCatchAllProxy);
+  log('[COIN_GATE] Coin-gated interceptors mounted (backtest, screener, sentiment, tip-tease, portfolio, fundamental, pair-trading)');
+  // ────────────────────────────────────────────────────────────────────────
+
+  // Mount EquityPro-specific routes (chart, options, streaming, watchlist, layouts, forum)
   const { registerTerminalRoutes } = await import('./routes-terminal.js');
   registerTerminalRoutes(app);
-  log('[TERMINAL] FinTerminal routes mounted');
+  log('[TERMINAL] EquityPro routes mounted');
 
   const server = await registerRoutes(app);
 
@@ -192,6 +249,28 @@ app.use((req, res, next) => {
   const { initAdminBroadcast } = await import('./ws-admin-broadcast.js');
   initAdminBroadcast(server);
   log('[WS] Admin broadcast WebSocket initialized at /ws/admin-updates');
+
+  // Proxy WebSocket upgrade requests for /ws/depth/* to Python FastAPI backend
+  const { default: httpProxy } = await import('http-proxy');
+  const PYTHON_WS_PORT = parseInt(process.env.PYTHON_PORT || '8100', 10);
+  const pythonTarget = `http://localhost:${PYTHON_WS_PORT}`;
+
+  const wsProxy = httpProxy.createProxyServer({ target: pythonTarget, ws: true, changeOrigin: true });
+  wsProxy.on('error', (err, _req, res) => {
+    log(`[WS-PROXY] Error: ${err.message}`);
+    if (res && 'writeHead' in res) {
+      (res as any).writeHead?.(502);
+      (res as any).end?.('WebSocket proxy error');
+    }
+  });
+
+  server.on('upgrade', (req, socket, head) => {
+    const url = req.url || '';
+    if (!url.startsWith('/ws/depth/')) return;
+    wsProxy.ws(req, socket, head);
+  });
+
+  log(`[WS-PROXY] Depth WebSocket proxy active → ws://localhost:${PYTHON_WS_PORT}/ws/depth/*`);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

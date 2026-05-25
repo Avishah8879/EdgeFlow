@@ -239,7 +239,7 @@ export function notifyTierChange(userId: string, newTier: string, oldTier?: stri
   broadcastToUser(userId, {
     type: 'TIER_CHANGED',
     payload: { tier: newTier, previousTier: oldTier },
-    message: `Your account has been ${newTier === 'premium' ? 'upgraded to Premium' : 'changed to Basic'}`,
+    message: `Your account has been ${newTier === 'pro' ? 'upgraded to Pro' : newTier === 'semi' ? 'upgraded to Semi' : 'changed to Free'}`,
   });
 }
 

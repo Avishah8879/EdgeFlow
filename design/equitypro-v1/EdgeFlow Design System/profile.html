@@ -1,0 +1,146 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profile · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.page-hd{padding:24px 0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.page-hd h1{font-family:var(--font-display);font-size:32px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .page-hd h1{color:hsl(38 30% 95%)}
+.layout{display:grid;grid-template-columns:240px 1fr;gap:24px;padding:24px 0 60px;align-items:start}
+.side{position:sticky;top:80px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.side a{display:flex;align-items:center;gap:10px;padding:11px 18px;font-size:13px;font-weight:500;color:hsl(var(--foreground));text-decoration:none;border-left:3px solid transparent;transition:all var(--t-fast)}
+.side a:hover{background:hsl(var(--muted)/0.4)}
+.side a.active{background:hsl(var(--accent));border-left-color:hsl(var(--brand-gold));font-weight:600;color:hsl(var(--brand-navy))}
+.dark .side a.active{color:hsl(var(--brand-gold))}
+
+.section{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:24px;margin-bottom:18px}
+.section h2{font-family:var(--font-display);font-size:20px;margin:0 0 4px;color:hsl(var(--brand-navy))}
+.dark .section h2{color:hsl(38 30% 95%)}
+.section .desc{font-size:13px;color:hsl(var(--muted-foreground));margin:0 0 18px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column}
+.field.full{grid-column:1/-1}
+.field label{font-size:11.5px;font-weight:600;margin-bottom:6px}
+.field input,.field select,.field textarea{height:38px;border:1px solid hsl(var(--border));background:hsl(var(--background));border-radius:var(--radius-sm);padding:0 12px;font-size:13px;color:inherit;font-family:inherit}
+.field textarea{height:auto;padding:10px 12px}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:18px;border-top:1px solid hsl(var(--border))}
+
+.avatar-row{display:flex;gap:18px;align-items:center;margin-bottom:18px}
+.av-big{width:80px;height:80px;border-radius:50%;background:hsl(var(--brand-navy));color:white;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:30px;font-weight:700}
+
+.toggles{display:flex;flex-direction:column;gap:0}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-top:1px solid hsl(var(--border))}
+.toggle-row:first-child{border-top:0;padding-top:0}
+.toggle-row .nm{font-size:14px;font-weight:600}
+.toggle-row .sub{font-size:12px;color:hsl(var(--muted-foreground));margin-top:2px}
+.switch{width:42px;height:24px;border-radius:14px;background:hsl(var(--muted-foreground));position:relative;cursor:pointer;flex-shrink:0;transition:background var(--t-fast)}
+.switch.on{background:hsl(var(--brand-gold))}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:white;transition:transform var(--t-fast);box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.switch.on::after{transform:translateX(18px)}
+
+.plan-card{display:flex;justify-content:space-between;align-items:center;padding:18px;border:1px solid hsl(var(--brand-gold)/0.4);border-radius:var(--radius-md);background:hsl(var(--accent));margin-bottom:18px}
+.dark .plan-card{background:hsl(var(--muted));border-color:hsl(var(--brand-gold)/0.5)}
+.plan-card .nm{font-family:var(--font-display);font-size:20px;color:hsl(var(--brand-navy));margin:0 0 2px}
+.dark .plan-card .nm{color:hsl(38 30% 95%)}
+
+.invoice-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.invoice-tbl th,.invoice-tbl td{padding:11px 0;text-align:left;border-bottom:1px solid hsl(var(--border))}
+.invoice-tbl th{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground))}
+.invoice-tbl td.num{font-family:var(--font-mono);text-align:right}
+</style></head>
+<body data-screen-label="08 Profile / Settings">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="page-hd"><div class="container">
+  <span class="eyebrow">Account</span>
+  <h1>Profile &amp; settings</h1>
+  <p class="muted body-sm" style="margin:4px 0 0">Manage your identity, preferences, billing and integrations.</p>
+</div></section>
+
+<main class="container"><div class="layout">
+
+  <aside class="side">
+    <a href="#prof" class="active">👤 Profile</a>
+    <a href="#prefs">⚙️ Preferences</a>
+    <a href="#notif">🔔 Notifications</a>
+    <a href="#sec">🔒 Security</a>
+    <a href="#bill">💳 Billing</a>
+    <a href="developers.html">🔧 API &amp; webhooks</a>
+    <a href="#" style="color:hsl(var(--negative))">⤴︎ Sign out</a>
+  </aside>
+
+  <div>
+    <section class="section" id="prof">
+      <h2>Profile</h2>
+      <p class="desc">This is what fellow investors and your RIA contacts will see.</p>
+      <div class="avatar-row">
+        <div class="av-big">AS</div>
+        <div>
+          <div style="font-weight:600">Profile photo</div>
+          <div class="muted body-sm">PNG or JPG. 200×200 minimum.</div>
+          <div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-ghost btn-sm">Upload</button><button class="btn btn-ghost btn-sm" style="color:hsl(var(--negative))">Remove</button></div>
+        </div>
+      </div>
+      <div class="fields">
+        <div class="field"><label>First name</label><input value="Arjun"></div>
+        <div class="field"><label>Last name</label><input value="Sharma"></div>
+        <div class="field"><label>Display handle</label><input value="@arjun_invests"></div>
+        <div class="field"><label>Email</label><input value="arjun@example.in"></div>
+        <div class="field"><label>Phone</label><input value="+91 98XXX 22418"></div>
+        <div class="field"><label>City</label><input value="Pune, Maharashtra"></div>
+        <div class="field full"><label>Bio</label><textarea rows="3">Independent investor focused on Indian small &amp; mid-cap quality. Coffee Can portfolios + occasional momentum overlays.</textarea></div>
+      </div>
+      <div class="actions"><button class="btn btn-ghost btn-sm">Cancel</button><button class="btn btn-primary btn-sm">Save profile</button></div>
+    </section>
+
+    <section class="section" id="prefs">
+      <h2>Preferences</h2>
+      <p class="desc">Display, formatting and locale.</p>
+      <div class="fields">
+        <div class="field"><label>Default landing</label><select><option>Dashboard</option><option>Watchlist</option><option>Indices</option></select></div>
+        <div class="field"><label>Theme</label><select><option>System</option><option>Light</option><option selected>Dark</option></select></div>
+        <div class="field"><label>Currency</label><select><option selected>INR (₹)</option><option>USD ($)</option></select></div>
+        <div class="field"><label>Number format</label><select><option selected>Indian (lakh / crore)</option><option>Western (M / B)</option></select></div>
+        <div class="field"><label>Timezone</label><select><option selected>Asia/Kolkata · IST</option></select></div>
+        <div class="field"><label>Default chart timeframe</label><select><option>1D</option><option selected>1Y</option><option>5Y</option></select></div>
+      </div>
+    </section>
+
+    <section class="section" id="notif">
+      <h2>Notifications</h2>
+      <p class="desc">Pick what you want to hear about. Quiet hours: 21:00 – 08:00 IST.</p>
+      <div class="toggles">
+        <div class="toggle-row"><div><div class="nm">Daily market briefing</div><div class="sub">Email at 08:30 IST · NIFTY summary, watchlist, sentiment shifts</div></div><div class="switch on"></div></div>
+        <div class="toggle-row"><div><div class="nm">Watchlist price alerts</div><div class="sub">Push when a watched stock crosses a threshold</div></div><div class="switch on"></div></div>
+        <div class="toggle-row"><div><div class="nm">Earnings &amp; corporate actions</div><div class="sub">Email + push 24h before any holding's earnings</div></div><div class="switch on"></div></div>
+        <div class="toggle-row"><div><div class="nm">Backtest completion</div><div class="sub">Push when a long-running QGA finishes</div></div><div class="switch on"></div></div>
+        <div class="toggle-row"><div><div class="nm">Product news</div><div class="sub">Monthly roundup of new screens, indicators, etc.</div></div><div class="switch"></div></div>
+      </div>
+    </section>
+
+    <section class="section" id="bill">
+      <h2>Billing</h2>
+      <p class="desc">Current subscription and invoice history.</p>
+      <div class="plan-card">
+        <div><div class="nm">EquityPro Pro · Annual</div><div class="muted body-sm">₹17,988 / yr · renews 14 Jan 2027</div></div>
+        <div style="text-align:right"><div class="muted body-sm">VISA ending 4218</div><div style="margin-top:6px;display:flex;gap:6px"><button class="btn btn-ghost btn-sm">Update card</button><button class="btn btn-ghost btn-sm">Manage plan</button></div></div>
+      </div>
+      <table class="invoice-tbl">
+        <thead><tr><th>Invoice</th><th>Date</th><th>Plan</th><th class="num">Amount</th><th class="num">Status</th></tr></thead>
+        <tbody>
+          <tr><td>EQ-2026-0142</td><td>14 Jan 2026</td><td>Pro Annual</td><td class="num">₹21,225 inc GST</td><td class="num"><span class="badge badge-pos">Paid</span></td></tr>
+          <tr><td>EQ-2025-1408</td><td>14 Jan 2025</td><td>Pro Annual</td><td class="num">₹19,830 inc GST</td><td class="num"><span class="badge badge-pos">Paid</span></td></tr>
+          <tr><td>EQ-2024-0916</td><td>14 Jan 2024</td><td>Pro Monthly × 12</td><td class="num">₹21,228 inc GST</td><td class="num"><span class="badge badge-pos">Paid</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+  </div>
+</div></main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+<script>
+document.querySelectorAll('.switch').forEach(s=>s.addEventListener('click',()=>s.classList.toggle('on')));
+</script>
+</body></html>

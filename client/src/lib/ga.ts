@@ -32,7 +32,7 @@ const ROUTE_TITLES: Record<string, string> = {
   '/stocks': 'Stocks',
   '/screener': 'Expert Screener',
   '/indices': 'Indices',
-  '/alpha-generation': 'Alpha Generation',
+  '/alpha-generation': 'EquityPro AI Redirect',
   '/portfolio': 'Portfolio',
   '/watchlist': 'Watchlist',
   '/news': 'News',

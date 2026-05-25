@@ -1,0 +1,232 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tip Tease · AI co-pilot · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.tt-app{display:grid;grid-template-columns:280px 1fr 320px;height:calc(100vh - 64px);background:hsl(var(--background))}
+
+/* sidebar — conversation list */
+.tt-side{border-right:1px solid hsl(var(--border));background:hsl(var(--card));display:flex;flex-direction:column;overflow:hidden}
+.tt-side-hd{padding:16px;border-bottom:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center}
+.tt-side-hd h2{font-family:var(--font-display);font-size:16px;margin:0;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .tt-side-hd h2{color:hsl(38 30% 95%)}
+.tt-side-list{flex:1;overflow-y:auto;padding:8px}
+.tt-conv{padding:10px 12px;border-radius:var(--radius-md);cursor:pointer;margin-bottom:2px;transition:background-color var(--t-fast)}
+.tt-conv:hover{background:hsl(var(--muted))}
+.tt-conv.active{background:hsl(var(--accent));border-left:2px solid hsl(var(--brand-gold))}
+.tt-conv .t{font-size:13px;font-weight:600;color:hsl(var(--foreground));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tt-conv .s{font-size:11px;color:hsl(var(--muted-foreground));margin-top:2px;display:flex;justify-content:space-between}
+.tt-conv .s span:last-child{font-family:var(--font-mono)}
+.tt-side-foot{padding:12px;border-top:1px solid hsl(var(--border));font-size:11px;color:hsl(var(--muted-foreground));font-family:var(--font-mono);display:flex;justify-content:space-between}
+
+/* main chat */
+.tt-main{display:flex;flex-direction:column;overflow:hidden;background:hsl(var(--background))}
+.tt-thread{flex:1;overflow-y:auto;padding:32px 36px;display:flex;flex-direction:column;gap:22px;max-width:880px;width:100%;margin:0 auto}
+.tt-msg{display:flex;gap:14px}
+.tt-msg .av{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;font-family:var(--font-display)}
+.tt-msg.user .av{background:hsl(var(--brand-navy));color:white}
+.tt-msg.bot .av{background:linear-gradient(135deg,hsl(var(--brand-gold)),hsl(38 80% 50%));color:hsl(var(--brand-navy-deep))}
+.tt-msg .body{flex:1;font-size:14px;line-height:1.6;color:hsl(var(--foreground))}
+.tt-msg .body .who{font-weight:700;font-size:13px;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.tt-msg .body .who .ts{font-weight:400;color:hsl(var(--muted-foreground));font-size:11px;font-family:var(--font-mono)}
+.tt-msg .body p{margin:0 0 10px}
+.tt-msg .body code{background:hsl(var(--muted));padding:1px 5px;border-radius:3px;font-size:0.88em}
+
+.tt-card{margin-top:8px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-md);padding:14px}
+.tt-card .ti{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--brand-gold));margin-bottom:8px}
+.tt-tickers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tt-ticker{padding:10px;border-radius:var(--radius-sm);background:hsl(var(--muted)/0.4);border:1px solid hsl(var(--border))}
+.tt-ticker .sym{font-weight:700;font-family:var(--font-display);font-size:14px;color:hsl(var(--foreground))}
+.tt-ticker .pr{font-family:var(--font-mono);font-size:13px;color:hsl(var(--foreground));margin-top:2px}
+.tt-ticker .ch{font-size:11px;font-family:var(--font-mono)}
+
+.tt-followups{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.tt-followups button{padding:6px 12px;border:1px solid hsl(var(--border));background:hsl(var(--card));border-radius:var(--radius-pill);font-size:12px;color:hsl(var(--foreground));cursor:pointer;transition:all var(--t-fast)}
+.tt-followups button:hover{border-color:hsl(var(--brand-gold));background:hsl(var(--brand-gold)/0.08)}
+
+/* composer */
+.tt-composer{border-top:1px solid hsl(var(--border));background:hsl(var(--card));padding:14px 24px}
+.tt-composer-inner{max-width:880px;margin:0 auto;display:flex;align-items:end;gap:10px;background:hsl(var(--background));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:10px 12px;transition:border-color var(--t-fast)}
+.tt-composer-inner:focus-within{border-color:hsl(var(--brand-gold));box-shadow:var(--shadow-glow-gold)}
+.tt-composer textarea{flex:1;border:0;background:transparent;color:hsl(var(--foreground));font-family:inherit;font-size:14px;resize:none;outline:none;height:24px;padding:4px 0;line-height:1.5}
+.tt-composer-toolbar{display:flex;gap:6px;align-items:center}
+.tt-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius-pill);background:hsl(var(--brand-gold)/0.12);color:hsl(var(--brand-navy));font-size:11px;font-weight:600;border:1px solid hsl(var(--brand-gold)/0.3)}
+.dark .tt-pill{color:hsl(var(--brand-gold))}
+
+/* right panel — context */
+.tt-right{border-left:1px solid hsl(var(--border));background:hsl(var(--card));overflow-y:auto;padding:18px}
+.tt-right h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));margin:0 0 10px}
+.tt-context-card{background:hsl(var(--muted)/0.3);border:1px solid hsl(var(--border));border-radius:var(--radius-md);padding:12px;margin-bottom:10px;font-size:12px}
+.tt-context-card .ttl{font-weight:700;font-size:13px;color:hsl(var(--foreground));margin-bottom:4px}
+.tt-context-card .meta{font-family:var(--font-mono);font-size:11px;color:hsl(var(--muted-foreground))}
+.tt-suggestions{display:flex;flex-direction:column;gap:6px}
+.tt-suggestions button{text-align:left;padding:10px 12px;background:hsl(var(--background));border:1px solid hsl(var(--border));border-radius:var(--radius-md);font-size:12px;color:hsl(var(--foreground));cursor:pointer;transition:all var(--t-fast);display:flex;align-items:start;gap:8px}
+.tt-suggestions button:hover{border-color:hsl(var(--brand-gold))}
+.tt-suggestions button .ic{flex-shrink:0;color:hsl(var(--brand-gold));margin-top:2px}
+
+.tt-coins{margin-top:18px;background:linear-gradient(155deg,hsl(var(--brand-navy)),hsl(var(--brand-navy-deep)));color:white;border-radius:var(--radius-md);padding:16px}
+.tt-coins .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--brand-gold))}
+.tt-coins .v{font-family:var(--font-mono);font-size:24px;font-weight:700;margin:4px 0}
+.tt-coins .meter{height:6px;background:hsl(var(--brand-navy-deep));border-radius:3px;overflow:hidden;margin:8px 0}
+.tt-coins .meter span{display:block;height:100%;width:62%;background:hsl(var(--brand-gold))}
+.tt-coins .small{font-size:11px;color:hsl(38 30% 80%);font-family:var(--font-mono)}
+</style></head>
+<body data-page="tip-tease" data-screen-label="A8 Tip Tease">
+<div class="shell"><div data-shell-topbar></div>
+
+<main class="tt-app">
+  <!-- Sidebar -->
+  <aside class="tt-side">
+    <div class="tt-side-hd">
+      <h2>Tip Tease</h2>
+      <button class="btn btn-primary btn-sm">+ New</button>
+    </div>
+    <div class="tt-side-list">
+      <div class="tt-conv active">
+        <div class="t">RELIANCE — Q4 setup</div>
+        <div class="s"><span>14 messages</span><span>now</span></div>
+      </div>
+      <div class="tt-conv">
+        <div class="t">Bank Nifty options for FOMC week</div>
+        <div class="s"><span>22 msgs</span><span>3h</span></div>
+      </div>
+      <div class="tt-conv">
+        <div class="t">IT sector underperformance — why</div>
+        <div class="s"><span>8 msgs</span><span>yesterday</span></div>
+      </div>
+      <div class="tt-conv">
+        <div class="t">Backtest: RSI mean-rev on midcaps</div>
+        <div class="s"><span>11 msgs</span><span>2d</span></div>
+      </div>
+      <div class="tt-conv">
+        <div class="t">Pair candidates: HDFCBANK / ICICIBANK</div>
+        <div class="s"><span>17 msgs</span><span>4d</span></div>
+      </div>
+      <div class="tt-conv">
+        <div class="t">Cement sector — capacity wave</div>
+        <div class="s"><span>6 msgs</span><span>1w</span></div>
+      </div>
+      <div class="tt-conv">
+        <div class="t">PSU bank rerating thesis</div>
+        <div class="s"><span>19 msgs</span><span>2w</span></div>
+      </div>
+    </div>
+    <div class="tt-side-foot">
+      <span>Model · gpt-fin-4.2</span><span>Coins · 28k</span>
+    </div>
+  </aside>
+
+  <!-- Thread -->
+  <section class="tt-main">
+    <div class="tt-thread">
+      <div class="tt-msg user">
+        <div class="av">A</div>
+        <div class="body">
+          <div class="who">You<span class="ts">10:14 IST</span></div>
+          <p>I'm holding 200 RELIANCE at avg ₹2,718. Q4 results next Friday. Should I trim into the print or hold? Show me what the screen says.</p>
+        </div>
+      </div>
+
+      <div class="tt-msg bot">
+        <div class="av">T</div>
+        <div class="body">
+          <div class="who">Tip Tease<span class="ts">10:14 IST · 2 coins</span></div>
+          <p>You're up <strong>+8.5%</strong> on the position. Here's what the data says before I give you a lean — context first, opinion second.</p>
+
+          <div class="tt-card">
+            <div class="ti">Position summary</div>
+            <div class="tt-tickers">
+              <div class="tt-ticker"><div class="sym">RELIANCE</div><div class="pr">₹2,948.55</div><div class="ch change-up">+8.5% on cost</div></div>
+              <div class="tt-ticker"><div class="sym">Avg cost</div><div class="pr">₹2,718.00</div><div class="ch">200 shares</div></div>
+              <div class="tt-ticker"><div class="sym">P&amp;L</div><div class="pr">₹46,110</div><div class="ch change-up">unrealised</div></div>
+            </div>
+          </div>
+
+          <p style="margin-top:10px">Three things stand out from the scorecard:</p>
+          <ul style="padding-left:20px;margin:0 0 10px">
+            <li><strong>Technical strength · 78</strong> — price is above the 50/100/200-DMA stack and within 2% of the 52-wk high.</li>
+            <li><strong>Earnings momentum · slowing</strong> — consensus EPS revision down 2.4% over the last 30 days; option IV rising into print.</li>
+            <li><strong>F&amp;O positioning</strong> — FII shorts up 12% week-on-week; PCR at 0.78 (light put protection).</li>
+          </ul>
+
+          <p><strong>My lean:</strong> if you're long-term, hold; the chart structure is clean. If you treat this as a tactical position, <strong>trim 50% before the print</strong> — IV crush after results often more than cancels the directional payoff at these levels.</p>
+
+          <div class="tt-followups">
+            <button>Show me the IV term structure</button>
+            <button>What if results miss by 3%?</button>
+            <button>Set an alert at ₹2,920</button>
+            <button>Compare to ONGC for a hedge</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tt-msg user">
+        <div class="av">A</div>
+        <div class="body">
+          <div class="who">You<span class="ts">10:16 IST</span></div>
+          <p>What's the probability the stock closes below ₹2,850 on results day?</p>
+        </div>
+      </div>
+
+      <div class="tt-msg bot">
+        <div class="av">T</div>
+        <div class="body">
+          <div class="who">Tip Tease<span class="ts">10:16 IST · 3 coins · 2 sources</span></div>
+          <p>Using current ATM IV of <code>26.8%</code>, 11 trading days to expiry, and a Black-Scholes implied move:</p>
+          <p>&nbsp;&nbsp;<strong>P(close &lt; ₹2,850) ≈ 31%</strong></p>
+          <p>For context, that's the 1-σ left tail. Historical analog (last 8 RELIANCE Q4 prints): close below the strike <strong>3 of 8 times</strong> — empirical 37%. The two estimates converge around <strong>1 in 3</strong>, which lines up with my "trim half" suggestion.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Composer -->
+    <div class="tt-composer">
+      <div class="tt-composer-inner">
+        <div class="tt-pill"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>RELIANCE in context</div>
+        <textarea placeholder="Ask anything about your portfolio, the markets, or a screen you've saved…">Show me the Bank Nifty straddle p/l curve for next expiry</textarea>
+        <div class="tt-composer-toolbar">
+          <button class="btn btn-quiet btn-sm btn-icon" title="Attach screen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05L12 20.5a6 6 0 0 1-8.5-8.5l9.45-9.45a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83L15 6.5"/></svg></button>
+          <button class="btn btn-quiet btn-sm btn-icon" title="Voice"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3"/></svg></button>
+          <button class="btn btn-primary btn-sm">Send · 1 coin</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Right context -->
+  <aside class="tt-right">
+    <h4>Context attached</h4>
+    <div class="tt-context-card">
+      <div class="ttl">RELIANCE position</div>
+      <div class="meta">200 sh · avg ₹2,718 · +8.5%</div>
+    </div>
+    <div class="tt-context-card">
+      <div class="ttl">RELIANCE scorecard</div>
+      <div class="meta">Tech 78 · Fund 64 · Quant 71</div>
+    </div>
+    <div class="tt-context-card">
+      <div class="ttl">Q4 calendar</div>
+      <div class="meta">19 Apr · pre-market · IV 26.8%</div>
+    </div>
+
+    <h4 style="margin-top:24px">Quick prompts</h4>
+    <div class="tt-suggestions">
+      <button><span class="ic">★</span><span>Find midcaps with rising EPS revisions and falling float</span></button>
+      <button><span class="ic">★</span><span>Build a momentum screen using my last backtest's params</span></button>
+      <button><span class="ic">★</span><span>What's the 5-day correlation of my holdings to Nifty?</span></button>
+      <button><span class="ic">★</span><span>Suggest a hedge for my RELIANCE position</span></button>
+    </div>
+
+    <div class="tt-coins">
+      <div class="lbl">Coins remaining</div>
+      <div class="v">28,420</div>
+      <div class="meter"><span></span></div>
+      <div class="small">Pro plan · 62% used this month · resets 1 May</div>
+      <a href="pricing.html" class="btn btn-gold btn-sm" style="margin-top:10px;width:100%">Top up coins</a>
+    </div>
+  </aside>
+</main>
+
+</div>
+<script src="app.js"></script>
+</body></html>

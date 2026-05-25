@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin:0; padding:24px; background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-sans); }
+  .grid { display:grid; grid-template-columns: repeat(6, 1fr); gap:16px; }
+  .swatch { display:flex; flex-direction:column; }
+  .chip { height:60px; border-radius:8px; border:1px solid hsl(var(--border)); }
+  .name { font-size:11px; margin-top:6px; color: hsl(var(--foreground)); }
+  .val { font-family: var(--font-mono); font-size:10px; color: hsl(var(--muted-foreground)); }
+  h1 { font-size:13px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color: hsl(var(--muted-foreground)); margin:0 0 14px; }
+</style></head>
+<body>
+  <h1>Surfaces — dark</h1>
+  <div class="grid">
+    <div class="swatch"><div class="chip" style="background: hsl(var(--background))"></div><div class="name">background</div><div class="val">#0D1117</div></div>
+    <div class="swatch"><div class="chip" style="background: hsl(var(--sidebar))"></div><div class="name">sidebar</div><div class="val">#0A0F14</div></div>
+    <div class="swatch"><div class="chip" style="background: hsl(var(--card))"></div><div class="name">card</div><div class="val">#151B23</div></div>
+    <div class="swatch"><div class="chip" style="background: hsl(var(--popover))"></div><div class="name">popover</div><div class="val">#1A2230</div></div>
+    <div class="swatch"><div class="chip" style="background: hsl(var(--muted))"></div><div class="name">muted</div><div class="val">#1A2330</div></div>
+    <div class="swatch"><div class="chip" style="background: hsl(var(--border))"></div><div class="name">border</div><div class="val">#1E2A3A</div></div>
+  </div>
+</body></html>

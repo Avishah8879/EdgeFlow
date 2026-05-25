@@ -172,7 +172,7 @@ router.get('/trial-eligibility', requireAuth, async (req: Request, res: Response
  * Requires authentication.
  *
  * Request body:
- * - planId: string (e.g., 'premium_monthly', 'premium_yearly')
+ * - planId: string (e.g., 'semi_monthly', 'pro_monthly', 'pro_yearly')
  */
 router.post('/start-trial', requireAuth, async (req: Request, res: Response) => {
   const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
@@ -314,8 +314,8 @@ router.post('/downgrade', requireAuth, async (req: Request, res: Response) => {
       return res.status(404).json({ error: { code: 'USER_NOT_FOUND', message: 'User not found' } });
     }
 
-    if (currentSub.tier === 'basic' && currentSub.subscriptionStatus === 'none') {
-      return res.status(400).json({ error: { code: 'ALREADY_BASIC', message: 'Already on basic tier' } });
+    if (currentSub.tier === 'free' && currentSub.subscriptionStatus === 'none') {
+      return res.status(400).json({ error: { code: 'ALREADY_FREE', message: 'Already on free tier' } });
     }
 
     // Downgrade immediately

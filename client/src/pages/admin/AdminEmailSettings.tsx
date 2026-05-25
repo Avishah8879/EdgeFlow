@@ -376,7 +376,7 @@ function SettingsTab() {
               <Input
                 value={formData.from_name || ""}
                 onChange={(e) => handleChange("from_name", e.target.value)}
-                placeholder="Tiphub Notifications"
+                placeholder="Equity Pro Notifications"
               />
             </div>
           </div>
@@ -755,14 +755,12 @@ export default function AdminEmailSettings() {
   const isSuperAdmin = user?.role === "super_admin";
 
   return (
-    <AdminLayout>
+    <AdminLayout
+      eyebrow="Admin · Comms"
+      title="Email notifications"
+      description="Configure email notification preferences, SES + SMTP settings, and templates."
+    >
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-semibold">Email Notifications</h1>
-          <p className="text-muted-foreground">
-            Configure email notification preferences and settings
-          </p>
-        </div>
 
         <Tabs defaultValue="preferences" className="space-y-6">
           <TabsList>

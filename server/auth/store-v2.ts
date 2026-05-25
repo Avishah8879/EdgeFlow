@@ -12,7 +12,7 @@
 import crypto from 'crypto';
 import { query, queryOne, transaction } from '../db/auth-connection';
 import { hashPasswordBcrypt, verifyPasswordBcrypt } from './password-bcrypt';
-import type { UserRole } from './jwt';
+import type { UserRole, UserTier } from './jwt';
 
 /**
  * Subscription Status Type
@@ -33,7 +33,7 @@ export interface DbUser {
   google_id: string | null;
   email_verified: boolean;
   is_active: boolean;
-  tier: 'basic' | 'premium';
+  tier: UserTier;
   role: UserRole;
   last_login_at: Date | null;
   last_login_ip: string | null;
@@ -57,6 +57,8 @@ export interface DbUser {
   cancelled_at: Date | null;
   cancel_at_period_end: boolean;
   stripe_customer_id: string | null;
+  // Multi-platform (added in migration 024)
+  primary_platform_id: string | null;
 }
 
 /**
@@ -69,7 +71,7 @@ export interface PublicUserProfileV2 {
   name: string | null;
   avatarUrl: string | null;
   provider: 'password' | 'google';
-  tier: 'basic' | 'premium';
+  tier: UserTier;
   role: UserRole;
   emailVerified: boolean;
   createdAt: string;
@@ -201,7 +203,7 @@ export async function createPasswordUserV2(payload: {
   username: string;
   password: string;
   name?: string;
-  tier?: 'basic' | 'premium';
+  tier?: UserTier;
   countryOfResidence: string;
   dateOfBirth: string; // ISO format: YYYY-MM-DD
   phoneNumber: string;
@@ -271,7 +273,7 @@ export async function createOAuthUserV2(payload: {
   name?: string;
   googleId: string;
   avatarUrl?: string;
-  tier?: 'basic' | 'premium';
+  tier?: UserTier;
   countryOfResidence: string;
   dateOfBirth: string; // ISO format: YYYY-MM-DD
   phoneNumber: string;
@@ -543,12 +545,18 @@ export async function revokeSessionV2(
 
 /**
  * Revoke a session by refresh token
- * Used during token refresh to clean up the old session
+ * Used during token refresh to clean up the old session.
+ *
+ * Returns the number of rows actually revoked. The UPDATE only matches a
+ * *live* session (`revoked = FALSE`), so a return of 0 means the refresh
+ * token's session was already revoked (logout, prior rotation) or never
+ * existed. Callers can treat 0 as "this refresh token is no longer valid"
+ * and reject, instead of minting a fresh session from a dead lineage.
  */
 export async function revokeSessionByRefreshTokenV2(
   refreshToken: string,
   reason: string = 'token_refresh'
-): Promise<void> {
+): Promise<number> {
   const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
 
   const sql = `
@@ -557,7 +565,8 @@ export async function revokeSessionByRefreshTokenV2(
     WHERE refresh_token_hash = $2 AND revoked = FALSE
   `;
 
-  await query(sql, [reason, refreshTokenHash]);
+  const result = await query(sql, [reason, refreshTokenHash]);
+  return Number(result.rowCount ?? 0);
 }
 
 /**

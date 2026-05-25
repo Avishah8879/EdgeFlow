@@ -57,7 +57,7 @@ export function useSankeyYears(ticker: string | undefined) {
       }
 
       const response = await fetch(
-        `${baseUrl}/api/sankey/years/${encodeURIComponent(ticker)}`
+        `${baseUrl}/v1/api/sankey/years/${encodeURIComponent(ticker)}`
       );
 
       if (!response.ok) {
@@ -103,8 +103,8 @@ export function useSankey(
       }
 
       const url = year
-        ? `${baseUrl}/api/sankey/${statementType}/${encodeURIComponent(ticker)}?year=${year}`
-        : `${baseUrl}/api/sankey/${statementType}/${encodeURIComponent(ticker)}`;
+        ? `${baseUrl}/v1/api/sankey/${statementType}/${encodeURIComponent(ticker)}?year=${year}`
+        : `${baseUrl}/v1/api/sankey/${statementType}/${encodeURIComponent(ticker)}`;
 
       const response = await fetch(url);
 

@@ -1,0 +1,198 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Options visualizer · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.ov-hd{padding:18px 32px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card));display:flex;justify-content:space-between;align-items:center;gap:18px}
+.ov-hd h1{font-family:var(--font-display);font-size:24px;letter-spacing:-0.01em;margin:0;color:hsl(var(--brand-navy))}
+.dark .ov-hd h1{color:hsl(38 30% 95%)}
+
+.ov-grid{display:grid;grid-template-columns:340px 1fr 280px;gap:0;height:calc(100vh - 64px - 76px)}
+.ov-builder,.ov-greeks{background:hsl(var(--card));overflow-y:auto}
+.ov-builder{border-right:1px solid hsl(var(--border))}
+.ov-greeks{border-left:1px solid hsl(var(--border));padding:18px}
+
+.ov-builder .sec{padding:16px 18px;border-bottom:1px solid hsl(var(--border))}
+.ov-builder h4{margin:0 0 12px;font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.tmpl{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tmpl button{padding:10px 12px;border:1px solid hsl(var(--border));background:hsl(var(--background));border-radius:var(--radius-md);text-align:left;cursor:pointer}
+.tmpl button:hover{border-color:hsl(var(--brand-gold)/0.5)}
+.tmpl button.active{background:hsl(var(--brand-gold)/0.12);border-color:hsl(var(--brand-gold))}
+.tmpl button .nm{display:block;font-weight:700;font-size:12.5px;color:hsl(var(--foreground))}
+.tmpl button .ds{display:block;font-size:10.5px;color:hsl(var(--muted-foreground));font-family:var(--font-mono);margin-top:2px}
+
+.legs-tbl{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:11.5px}
+.legs-tbl th{font-size:9.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:6px 6px;text-align:left;background:hsl(var(--muted)/0.5)}
+.legs-tbl td{padding:6px 6px;border-bottom:1px solid hsl(var(--border)/0.5)}
+.legs-tbl select,.legs-tbl input{font-family:var(--font-mono);font-size:11px;padding:3px 6px;border:1px solid hsl(var(--border));background:hsl(var(--background));border-radius:var(--radius-sm);color:hsl(var(--foreground));width:100%}
+.legs-tbl .b{color:hsl(var(--positive));font-weight:700}
+.legs-tbl .s{color:hsl(var(--negative));font-weight:700}
+
+.ov-canvas{position:relative;background:hsl(var(--background));overflow:hidden;display:flex;flex-direction:column}
+.ov-canvas .top{padding:14px 24px;border-bottom:1px solid hsl(var(--border));display:flex;align-items:center;gap:18px;background:hsl(var(--card)/0.6)}
+.ov-canvas .pl{display:flex;gap:24px;font-family:var(--font-mono);font-size:11px}
+.ov-canvas .pl span .l{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700}
+.ov-canvas .pl span .v{font-size:16px;font-weight:700;color:hsl(var(--foreground))}
+.ov-canvas .chart{flex:1;padding:14px}
+.ov-canvas svg{width:100%;height:100%}
+
+.greeks-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.greeks-grid div{padding:10px 12px;border:1px solid hsl(var(--border));border-radius:var(--radius-md);background:hsl(var(--background))}
+.greeks-grid .l{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700}
+.greeks-grid .v{font-family:var(--font-mono);font-size:18px;font-weight:700;color:hsl(var(--foreground));margin-top:4px}
+.greeks-grid .v.pos{color:hsl(var(--positive))}
+.greeks-grid .v.neg{color:hsl(var(--negative))}
+
+.scenario{font-family:var(--font-mono);font-size:11.5px;border:1px solid hsl(var(--border));border-radius:var(--radius-md)}
+.scenario .row{display:grid;grid-template-columns:60px 1fr 70px;gap:8px;padding:8px 12px;border-bottom:1px solid hsl(var(--border));align-items:center}
+.scenario .row:last-child{border-bottom:0}
+.scenario .row .bg{height:6px;background:hsl(var(--muted));border-radius:3px;overflow:hidden}
+.scenario .row .bg span{display:block;height:100%}
+.scenario .row .v{text-align:right;font-weight:700}
+.scenario .row .v.pos{color:hsl(var(--positive))}
+.scenario .row .v.neg{color:hsl(var(--negative))}
+</style></head>
+<body data-page="options-visualizer" data-screen-label="Terminal · 27 Options visualizer">
+<div class="shell"><div data-shell-topbar></div>
+
+<div class="ov-hd">
+  <div>
+    <span class="eyebrow">Terminal · Options visualizer</span>
+    <h1>NIFTY · Iron Condor 02 May</h1>
+  </div>
+  <div class="flex gap-2">
+    <button class="btn btn-ghost btn-sm">Save strategy</button>
+    <button class="btn btn-ghost btn-sm">Backtest</button>
+    <button class="btn btn-primary btn-sm">Send to broker</button>
+  </div>
+</div>
+
+<main class="ov-grid">
+  <aside class="ov-builder">
+    <div class="sec">
+      <h4>Underlying &amp; expiry</h4>
+      <div class="flex gap-2 items-center" style="font-family:var(--font-mono);font-size:13px">
+        <button class="btn btn-ghost btn-sm" style="font-weight:700">NIFTY ▾</button>
+        <button class="btn btn-ghost btn-sm">02 May ▾</button>
+        <span class="muted" style="margin-left:auto">Spot 22,418</span>
+      </div>
+    </div>
+    <div class="sec">
+      <h4>Templates</h4>
+      <div class="tmpl">
+        <button class="active"><span class="nm">Iron Condor</span><span class="ds">range, theta+</span></button>
+        <button><span class="nm">Bull Call</span><span class="ds">moderate up</span></button>
+        <button><span class="nm">Bear Put</span><span class="ds">moderate down</span></button>
+        <button><span class="nm">Long Straddle</span><span class="ds">vol expansion</span></button>
+        <button><span class="nm">Short Strangle</span><span class="ds">income, theta+</span></button>
+        <button><span class="nm">Calendar</span><span class="ds">term skew</span></button>
+        <button><span class="nm">Butterfly</span><span class="ds">pinpoint</span></button>
+        <button><span class="nm">Custom</span><span class="ds">build legs</span></button>
+      </div>
+    </div>
+    <div class="sec">
+      <h4>Legs · 4 active</h4>
+      <table class="legs-tbl">
+        <thead><tr><th>Side</th><th>Type</th><th>Strike</th><th>Px</th><th>Qty</th></tr></thead>
+        <tbody>
+          <tr><td><span class="b">BUY</span></td><td>PE</td><td>22,000</td><td>22.40</td><td>1</td></tr>
+          <tr><td><span class="s">SELL</span></td><td>PE</td><td>22,200</td><td>38.20</td><td>1</td></tr>
+          <tr><td><span class="s">SELL</span></td><td>CE</td><td>22,600</td><td>36.20</td><td>1</td></tr>
+          <tr><td><span class="b">BUY</span></td><td>CE</td><td>22,800</td><td>8.40</td><td>1</td></tr>
+        </tbody>
+      </table>
+      <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px">+ Add leg</button>
+    </div>
+    <div class="sec">
+      <h4>Settings</h4>
+      <div style="font-family:var(--font-mono);font-size:11.5px">
+        <div class="flex justify-between" style="padding:6px 0"><span class="muted">Vol model</span><b>Black-Scholes</b></div>
+        <div class="flex justify-between" style="padding:6px 0"><span class="muted">Risk-free</span><b>6.84%</b></div>
+        <div class="flex justify-between" style="padding:6px 0"><span class="muted">DTE</span><b>11 days</b></div>
+        <div class="flex justify-between" style="padding:6px 0"><span class="muted">Lot size</span><b>50</b></div>
+      </div>
+    </div>
+  </aside>
+
+  <section class="ov-canvas">
+    <div class="top">
+      <div class="pl">
+        <span><span class="l">Net debit</span><span class="v change-down">−₹3,200</span></span>
+        <span><span class="l">Max profit</span><span class="v change-up">₹6,800</span></span>
+        <span><span class="l">Max loss</span><span class="v change-down">−₹3,200</span></span>
+        <span><span class="l">Breakevens</span><span class="v">22,168 / 22,664</span></span>
+        <span><span class="l">PoP</span><span class="v">68%</span></span>
+        <span><span class="l">Margin</span><span class="v">₹78k</span></span>
+      </div>
+    </div>
+    <div class="chart">
+      <svg viewBox="0 0 800 380" preserveAspectRatio="none">
+        <defs><pattern id="og" width="50" height="38" patternUnits="userSpaceOnUse"><path d="M50 0H0V38" fill="none" stroke="hsl(var(--border))" stroke-width="0.4"/></pattern></defs>
+        <rect width="100%" height="100%" fill="url(#og)"/>
+        <line x1="0" y1="190" x2="800" y2="190" stroke="hsl(var(--border))" stroke-width="1"/>
+        <line x1="400" y1="0" x2="400" y2="370" stroke="hsl(var(--brand-gold))" stroke-dasharray="3 3" opacity="0.6"/>
+        <text x="406" y="18" font-family="ui-monospace" font-size="10" fill="hsl(var(--brand-gold))">spot 22,418</text>
+
+        <!-- Profit zone fill -->
+        <path d="M180,190 L240,90 L560,90 L620,190 L560,190 L240,190 Z" fill="hsl(var(--positive)/0.16)"/>
+        <!-- Loss zones -->
+        <path d="M0,260 L180,190 L180,370 L0,370 Z" fill="hsl(var(--negative)/0.10)"/>
+        <path d="M620,190 L800,260 L800,370 L620,370 Z" fill="hsl(var(--negative)/0.10)"/>
+
+        <!-- T+0 curve (smooth) -->
+        <path d="M0,228 C100,200 180,180 240,138 C320,108 480,108 560,138 C620,180 700,200 800,228" fill="none" stroke="hsl(213 50% 50%)" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <!-- Expiry payoff (kinked) -->
+        <path d="M0,260 L180,190 L240,90 L560,90 L620,190 L800,260" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="2.5"/>
+
+        <!-- Strike markers -->
+        <g font-family="ui-monospace" font-size="9" fill="hsl(var(--muted-foreground))">
+          <line x1="180" y1="190" x2="180" y2="200" stroke="hsl(var(--muted-foreground))"/><text x="180" y="216" text-anchor="middle">22,000</text>
+          <line x1="240" y1="190" x2="240" y2="200" stroke="hsl(var(--muted-foreground))"/><text x="240" y="216" text-anchor="middle">22,200</text>
+          <line x1="560" y1="190" x2="560" y2="200" stroke="hsl(var(--muted-foreground))"/><text x="560" y="216" text-anchor="middle">22,600</text>
+          <line x1="620" y1="190" x2="620" y2="200" stroke="hsl(var(--muted-foreground))"/><text x="620" y="216" text-anchor="middle">22,800</text>
+          <text x="6" y="194">+₹6,800</text>
+          <text x="6" y="306">−₹3,200</text>
+        </g>
+        <!-- Breakevens -->
+        <g><line x1="216" y1="0" x2="216" y2="370" stroke="hsl(var(--positive))" stroke-dasharray="2 2" opacity="0.6"/><text x="220" y="14" font-family="ui-monospace" font-size="9" fill="hsl(var(--positive))">BE 22,168</text>
+        <line x1="584" y1="0" x2="584" y2="370" stroke="hsl(var(--positive))" stroke-dasharray="2 2" opacity="0.6"/><text x="580" y="14" font-family="ui-monospace" font-size="9" fill="hsl(var(--positive))" text-anchor="end">BE 22,664</text></g>
+
+        <g transform="translate(580,300)" font-family="ui-monospace" font-size="10">
+          <rect width="200" height="60" rx="6" fill="hsl(var(--card)/0.95)" stroke="hsl(var(--border))"/>
+          <line x1="14" y1="20" x2="36" y2="20" stroke="hsl(var(--brand-gold))" stroke-width="2"/><text x="42" y="24" fill="hsl(var(--foreground))">At expiry</text>
+          <line x1="14" y1="40" x2="36" y2="40" stroke="hsl(213 50% 50%)" stroke-width="2" stroke-dasharray="4 3"/><text x="42" y="44" fill="hsl(var(--foreground))">T+0 today</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <aside class="ov-greeks">
+    <h4 style="margin:0 0 14px;font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))">Net greeks</h4>
+    <div class="greeks-grid">
+      <div><div class="l">Delta</div><div class="v">+0.04</div></div>
+      <div><div class="l">Gamma</div><div class="v neg">−0.02</div></div>
+      <div><div class="l">Theta</div><div class="v pos">+₹284</div></div>
+      <div><div class="l">Vega</div><div class="v neg">−₹186</div></div>
+      <div><div class="l">Rho</div><div class="v">+0.04</div></div>
+      <div><div class="l">IV avg</div><div class="v">14.4</div></div>
+    </div>
+
+    <h4 style="margin:18px 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))">Scenario · spot ±5%</h4>
+    <div class="scenario">
+      <div class="row"><span class="muted">−5%</span><div class="bg"><span style="width:70%;background:hsl(var(--negative));margin-left:30%"></span></div><span class="v neg">−3,200</span></div>
+      <div class="row"><span class="muted">−2%</span><div class="bg"><span style="width:62%;background:hsl(var(--positive))"></span></div><span class="v pos">+4,200</span></div>
+      <div class="row"><span class="muted">−1%</span><div class="bg"><span style="width:88%;background:hsl(var(--positive))"></span></div><span class="v pos">+6,800</span></div>
+      <div class="row"><span class="muted">spot</span><div class="bg"><span style="width:88%;background:hsl(var(--positive))"></span></div><span class="v pos">+6,800</span></div>
+      <div class="row"><span class="muted">+1%</span><div class="bg"><span style="width:74%;background:hsl(var(--positive))"></span></div><span class="v pos">+5,400</span></div>
+      <div class="row"><span class="muted">+2%</span><div class="bg"><span style="width:32%;background:hsl(var(--positive))"></span></div><span class="v pos">+1,200</span></div>
+      <div class="row"><span class="muted">+5%</span><div class="bg"><span style="width:70%;background:hsl(var(--negative));margin-left:30%"></span></div><span class="v neg">−3,200</span></div>
+    </div>
+
+    <h4 style="margin:18px 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))">Time decay</h4>
+    <p class="muted body-sm" style="font-size:11.5px;margin:0;line-height:1.55">Theta is positive ₹284/day. Strategy makes ~₹3,100 from decay alone if vol &amp; spot stay flat for the remaining 11 days.</p>
+  </aside>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

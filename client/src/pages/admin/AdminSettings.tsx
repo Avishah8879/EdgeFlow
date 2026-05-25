@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import {
 import { AdminLayout } from "@/components/admin";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Settings,
   AlertCircle,
@@ -34,6 +35,7 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
+  Key,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getAuthBaseUrl } from "@/lib/api-config";
@@ -457,6 +459,118 @@ function LoadingSkeleton() {
   );
 }
 
+function FyersTokenCard() {
+  const authBaseUrl = getAuthBaseUrl();
+  const [tokenJson, setTokenJson] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const { data: statusData, refetch: refetchStatus } = useQuery<{ data: { status: string; expiry: string; generated_at: string } }>({
+    queryKey: ["fyers-token-status"],
+    queryFn: async () => {
+      const res = await fetch(`${authBaseUrl}/api/admin/fyers-token`, { credentials: "include" });
+      return res.json();
+    },
+    refetchInterval: 60000,
+  });
+
+  const status = statusData?.data;
+
+  const handleSave = async () => {
+    setSaveError(null);
+    let parsed: any;
+    try {
+      parsed = JSON.parse(tokenJson.trim());
+    } catch {
+      setSaveError("Invalid JSON — paste the full token object");
+      return;
+    }
+    if (!parsed.access_token) {
+      setSaveError("JSON must contain an access_token field");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch(`${authBaseUrl}/api/admin/fyers-token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(parsed),
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        setSaveError(result?.detail || result?.error || "Failed to save token");
+      } else {
+        setTokenJson("");
+        refetchStatus();
+        toast.success("Fyers token updated — depth ingester will reload within 60s");
+      }
+    } catch (e: any) {
+      setSaveError(e.message || "Network error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Key className="h-5 w-5" />
+          Fyers TBT Token
+        </CardTitle>
+        <CardDescription>
+          Paste today's Fyers token JSON to update the Order Book depth feed. Tokens expire daily.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Current status */}
+        {status && (
+          <div className="flex items-center gap-3 p-3 rounded-md bg-muted/30 text-sm">
+            {status.status === "valid" ? (
+              <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+            ) : status.status === "expired" ? (
+              <XCircle className="h-4 w-4 text-destructive shrink-0" />
+            ) : (
+              <AlertCircle className="h-4 w-4 text-yellow-500 shrink-0" />
+            )}
+            <div>
+              <span className="font-medium capitalize">{status.status}</span>
+              {status.expiry && (
+                <span className="text-muted-foreground ml-2">
+                  Expires: {new Date(status.expiry).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Paste area */}
+        <div className="space-y-2">
+          <Label>Paste token JSON</Label>
+          <Textarea
+            placeholder={`{\n  "access_token": "eyJ...",\n  "generated_at": "2026-04-07T...",\n  "expiry": "2026-04-08T..."\n}`}
+            value={tokenJson}
+            onChange={(e) => { setTokenJson(e.target.value); setSaveError(null); }}
+            className="font-mono text-xs min-h-[120px]"
+          />
+        </div>
+
+        {saveError && (
+          <p className="text-sm text-destructive flex items-center gap-1">
+            <AlertCircle className="h-3.5 w-3.5" /> {saveError}
+          </p>
+        )}
+
+        <Button onClick={handleSave} disabled={saving || !tokenJson.trim()} className="w-full sm:w-auto">
+          {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+          {saving ? "Saving..." : "Update Token"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function AdminSettings() {
   const { data, isLoading, error, refetch } = useSystemConfig();
   const updateConfig = useUpdateConfig();
@@ -494,20 +608,19 @@ export default function AdminSettings() {
   };
 
   return (
-    <AdminLayout>
+    <AdminLayout
+      eyebrow="Admin · Platform"
+      title="Settings"
+      description="Manage system configuration and global toggles."
+      rightSlot={
+        <Button variant="outline" onClick={() => refetch()}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
+      }
+    >
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Settings</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage system configuration and settings
-            </p>
-          </div>
-          <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
+        <FyersTokenCard />
 
         {error && (
           <Card className="border-destructive">

@@ -1,0 +1,139 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Notes &amp; journal · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.nt-grid{display:grid;grid-template-columns:280px 320px 1fr;height:calc(100vh - 64px);background:hsl(var(--background))}
+.nt-side{border-right:1px solid hsl(var(--border));background:hsl(var(--card));display:flex;flex-direction:column}
+.nt-side .hd{padding:14px 16px;border-bottom:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center}
+.nt-side h2{font-family:var(--font-display);font-size:15px;margin:0;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .nt-side h2{color:hsl(38 30% 95%)}
+.nt-side .filt{padding:8px}
+.nt-side .item{padding:8px 10px;border-radius:var(--radius-md);font-size:12px;color:hsl(var(--muted-foreground));cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.nt-side .item:hover{background:hsl(var(--muted))}
+.nt-side .item.active{background:hsl(var(--accent));color:hsl(var(--foreground));font-weight:700}
+.nt-side .item .ct{font-family:var(--font-mono);font-size:10.5px}
+
+.nt-list{border-right:1px solid hsl(var(--border));background:hsl(var(--card));display:flex;flex-direction:column}
+.nt-list .hd{padding:12px 14px;border-bottom:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center}
+.nt-list h3{font-family:var(--font-display);font-size:14px;margin:0;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .nt-list h3{color:hsl(38 30% 95%)}
+.nt-list .search{padding:8px 12px;border-bottom:1px solid hsl(var(--border))}
+.nt-list .search input{width:100%;height:32px;padding:0 10px;border:1px solid hsl(var(--border));border-radius:var(--radius-md);background:hsl(var(--background));color:hsl(var(--foreground));font-size:12px}
+.nt-list .scroll{flex:1;overflow-y:auto}
+.note-it{padding:12px 14px;border-bottom:1px solid hsl(var(--border));cursor:pointer}
+.note-it:hover{background:hsl(var(--muted)/0.4)}
+.note-it.active{background:hsl(var(--brand-gold)/0.08);border-left:3px solid hsl(var(--brand-gold))}
+.note-it .ti{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-size:10px;color:hsl(var(--muted-foreground));text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700}
+.note-it h4{font-family:var(--font-display);font-size:14px;color:hsl(var(--brand-navy));margin:4px 0;letter-spacing:-0.01em}
+.dark .note-it h4{color:hsl(38 30% 95%)}
+.note-it p{font-size:11.5px;color:hsl(var(--muted-foreground));margin:0;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.note-it .tags{display:flex;gap:4px;margin-top:6px}
+.note-it .tag{font-size:9.5px;padding:1px 6px;border-radius:var(--radius-pill);background:hsl(var(--muted));font-family:var(--font-mono);color:hsl(var(--muted-foreground));font-weight:700}
+.note-it .tag.long{background:hsl(150 50% 40% / 0.18);color:hsl(150 50% 30%)}
+.note-it .tag.short{background:hsl(0 60% 50% / 0.18);color:hsl(0 60% 45%)}
+.dark .note-it .tag.long{color:hsl(150 50% 65%)}
+.dark .note-it .tag.short{color:hsl(0 60% 70%)}
+
+.nt-edit{display:flex;flex-direction:column;background:hsl(var(--background));overflow:hidden}
+.nt-edit .toolbar{padding:14px 24px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card));display:flex;justify-content:space-between;align-items:center}
+.nt-edit h1{font-family:var(--font-display);font-size:24px;margin:0;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .nt-edit h1{color:hsl(38 30% 95%)}
+.nt-edit .meta-row{padding:12px 24px;border-bottom:1px solid hsl(var(--border));font-family:var(--font-mono);font-size:11.5px;color:hsl(var(--muted-foreground));display:flex;gap:24px}
+.nt-edit .meta-row b{color:hsl(var(--foreground));font-weight:700}
+.nt-edit .body{flex:1;overflow-y:auto;padding:32px 48px;max-width:780px}
+.nt-edit .body p{font-size:15px;line-height:1.7;color:hsl(var(--foreground));margin:0 0 14px}
+.nt-edit .body h3{font-family:var(--font-display);font-size:18px;margin:24px 0 10px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .nt-edit .body h3{color:hsl(38 30% 95%)}
+.nt-edit .body ul{padding-left:20px;font-size:14px;line-height:1.7}
+.linked{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-md);padding:14px 18px;margin:18px 0;display:flex;gap:18px;align-items:center}
+.linked .sym{font-family:var(--font-display);font-weight:800;font-size:18px;color:hsl(var(--brand-navy))}
+.dark .linked .sym{color:hsl(38 30% 95%)}
+.linked .px{font-family:var(--font-mono);font-weight:700;font-size:14px}
+.linked svg{width:80px;height:24px;margin-left:auto}
+blockquote{border-left:3px solid hsl(var(--brand-gold));padding:6px 18px;margin:18px 0;font-style:italic;color:hsl(var(--muted-foreground));background:hsl(var(--brand-gold)/0.06);font-size:14px;line-height:1.6}
+</style></head>
+<body data-page="notes" data-screen-label="Terminal · 34 Notes">
+<div class="shell"><div data-shell-topbar></div>
+
+<main class="nt-grid">
+  <aside class="nt-side">
+    <div class="hd"><h2>Journal</h2><button class="btn btn-primary btn-sm">+ Note</button></div>
+    <div class="filt">
+      <div class="item active"><span>📓 All notes</span><span class="ct">42</span></div>
+      <div class="item"><span>★ Starred</span><span class="ct">8</span></div>
+      <div class="item"><span>📈 Theses</span><span class="ct">14</span></div>
+      <div class="item"><span>📊 Trade journal</span><span class="ct">18</span></div>
+      <div class="item"><span>📰 News reactions</span><span class="ct">6</span></div>
+      <div class="item"><span>🔍 Research</span><span class="ct">12</span></div>
+      <div class="item"><span>🗑 Archive</span><span class="ct">14</span></div>
+      <h2 style="font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));margin:16px 8px 8px;font-weight:700">Tags</h2>
+      <div class="item"><span>#cement</span><span class="ct">6</span></div>
+      <div class="item"><span>#banking</span><span class="ct">9</span></div>
+      <div class="item"><span>#earnings</span><span class="ct">14</span></div>
+      <div class="item"><span>#post-mortem</span><span class="ct">7</span></div>
+      <div class="item"><span>#playbook</span><span class="ct">4</span></div>
+    </div>
+  </aside>
+
+  <section class="nt-list">
+    <div class="hd"><h3>All notes · 42</h3><button class="btn btn-ghost btn-sm">Sort ▾</button></div>
+    <div class="search"><input type="text" placeholder="Search title, body, tags…"></div>
+    <div class="scroll">
+      <article class="note-it active"><div class="ti"><span>22 APR · 09:14</span><span>★</span></div><h4>Cement thesis Q1FY26</h4><p>Capacity-utilisation wave + south pricing. UltraTech leading. Watching Shree, Dalmia. Q1 results sequence is the catalyst window…</p><div class="tags"><span class="tag long">long</span><span class="tag">#cement</span><span class="tag">#thesis</span></div></article>
+      <article class="note-it"><div class="ti"><span>21 APR · 18:42</span></div><h4>Trade post-mortem · INFY short</h4><p>Entered 1,486 short, exited 1,422. Caught the post-results gap-down but missed the morning bounce. Lessons: tighten stop after 2× ATR…</p><div class="tags"><span class="tag short">short</span><span class="tag">#post-mortem</span><span class="tag">INFY</span></div></article>
+      <article class="note-it"><div class="ti"><span>20 APR · 22:08</span><span>★</span></div><h4>RELIANCE Q4 — Jio listing trigger</h4><p>Board approval for Jio listing. Implied SOTP unlock ~₹160/share. Earnings beat on retail margin. Telecom ARPU stable. Reduce on 3,150…</p><div class="tags"><span class="tag long">long</span><span class="tag">#earnings</span><span class="tag">RELIANCE</span></div></article>
+      <article class="note-it"><div class="ti"><span>19 APR · 10:24</span></div><h4>Pair: TCS / INFY · z = 2.1</h4><p>Spread hit +2σ. Long INFY / Short TCS at the close. Target z=0; stop z=2.6. Sized 1 lot each…</p><div class="tags"><span class="tag">#pair</span><span class="tag">#playbook</span></div></article>
+      <article class="note-it"><div class="ti"><span>17 APR · 14:18</span></div><h4>BANKNIFTY · IV at 78 percentile</h4><p>Selling 47800 PE / 48600 CE strangle, buying 47200 / 49200 wings. Iron condor for the week…</p><div class="tags"><span class="tag">#FNO</span><span class="tag">#playbook</span></div></article>
+      <article class="note-it"><div class="ti"><span>16 APR · 09:48</span></div><h4>Earnings calendar · Apr 22-30</h4><p>RELIANCE, HDFCBANK, INFY, TCS, ICICIBANK, MARUTI, ASIANPAINT, SUNPHARMA. Position sizing notes per name…</p><div class="tags"><span class="tag">#earnings</span></div></article>
+      <article class="note-it"><div class="ti"><span>14 APR · 21:32</span></div><h4>Defense plays — Modi 3.0 budget read</h4><p>HAL, BEL, BDL, Mazgaon Dock. Order book multi-year visibility. Watching for monthly defense order announcements…</p><div class="tags"><span class="tag long">long</span><span class="tag">#thesis</span></div></article>
+    </div>
+  </section>
+
+  <article class="nt-edit">
+    <div class="toolbar">
+      <div>
+        <span class="eyebrow">Thesis · long</span>
+        <h1>Cement thesis · Q1FY26</h1>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost btn-sm">★ Star</button>
+        <button class="btn btn-ghost btn-sm">Share</button>
+        <button class="btn btn-ghost btn-sm">⋯</button>
+      </div>
+    </div>
+    <div class="meta-row">
+      <span>Created <b>22 Apr 2026 · 09:14</b></span>
+      <span>Updated <b>2 hrs ago</b></span>
+      <span>Author <b>Anjali</b></span>
+      <span>Tags <b>#cement #thesis</b></span>
+      <span>Linked <b>3 stocks · 2 reports</b></span>
+    </div>
+    <div class="body">
+      <p><b>One-liner:</b> Capacity-utilisation wave + south-region pricing recovery + sector consolidation should re-rate large-cap cement names through Q1–Q3 FY26.</p>
+
+      <h3>Setup</h3>
+      <p>Industry capacity-utilisation has crossed <b>72%</b> nationally — the historical level above which cement majors have shown durable pricing power. South India, the laggard for the past 3 quarters, finally moved from ₹325/bag → ₹360/bag in April. The two largest acquirers (UltraTech, Adani Cement) are absorbing distressed assets, reducing fragmentation.</p>
+
+      <h3>What I'm long</h3>
+      <div class="linked"><div class="sym">ULTRACEMCO</div><div class="px">11,420 · <span class="change-up">+1.84%</span></div><svg viewBox="0 0 80 24"><path d="M0,18 L20,14 L40,16 L60,10 L80,4" fill="none" stroke="hsl(var(--positive))" stroke-width="1.5"/></svg></div>
+      <div class="linked"><div class="sym">SHREECEM</div><div class="px">28,420 · <span class="change-up">+0.84%</span></div><svg viewBox="0 0 80 24"><path d="M0,16 L20,18 L40,12 L60,14 L80,8" fill="none" stroke="hsl(var(--positive))" stroke-width="1.5"/></svg></div>
+      <div class="linked"><div class="sym">DALBHARAT</div><div class="px">2,148 · <span class="change-up">+1.42%</span></div><svg viewBox="0 0 80 24"><path d="M0,20 L20,16 L40,18 L60,10 L80,6" fill="none" stroke="hsl(var(--positive))" stroke-width="1.5"/></svg></div>
+
+      <h3>Catalysts (next 90 days)</h3>
+      <ul><li>Q1FY26 results from UltraTech (29 May) — guidance on FY26 volume +13%</li><li>South India price action through monsoon — closely watch ICICI Cements channel checks</li><li>Adani Cement consolidation timeline — likely H2FY26</li><li>Government infra capex run-rate — already +18% YoY in April</li></ul>
+
+      <blockquote>"The cement cycle inflects when utilisation crosses 72%. We're there. The lag from utilisation to pricing is 1–2 quarters." — broker note, 18 Apr</blockquote>
+
+      <h3>Risk</h3>
+      <ul><li>Monsoon failure → demand cliff in H1</li><li>Coal/petcoke spike → margin headwind</li><li>South-pricing reversal if new capacity comes online faster</li></ul>
+
+      <h3>Position</h3>
+      <p>3% portfolio weight on UltraTech as core, 1% each on Shree and Dalmia. Trim 50% if South pricing reverses, exit fully below 200-DMA on UltraTech.</p>
+    </div>
+  </article>
+</main>
+
+</div>
+<script src="app.js"></script>
+</body></html>

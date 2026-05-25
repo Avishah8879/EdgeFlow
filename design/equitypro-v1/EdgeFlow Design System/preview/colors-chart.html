@@ -1,0 +1,18 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin:0; padding:24px; background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-sans); }
+  .row { display:flex; gap:8px; }
+  .chip { flex:1; height:56px; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:11px; }
+  h1 { font-size:13px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color: hsl(var(--muted-foreground)); margin:0 0 14px; }
+</style></head>
+<body>
+  <h1>Chart palette</h1>
+  <div class="row">
+    <div class="chip" style="background: hsl(var(--chart-1)); color:#000">chart-1</div>
+    <div class="chip" style="background: hsl(var(--chart-2)); color:#000">chart-2</div>
+    <div class="chip" style="background: hsl(var(--chart-3)); color:#000">chart-3</div>
+    <div class="chip" style="background: hsl(var(--chart-4)); color:#fff">chart-4</div>
+    <div class="chip" style="background: hsl(var(--chart-5)); color:#fff">chart-5</div>
+  </div>
+</body></html>

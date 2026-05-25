@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback } from "react";
-import { getApiBaseUrl } from "@/lib/api-config";
+import { getApiBaseUrl, getAuthBaseUrl } from "@/lib/api-config";
 
 export interface ChatMessage {
   id: string;
@@ -31,7 +31,7 @@ interface UseTipTeaseChatReturn {
 }
 
 /**
- * Hook for TipHub AI chat with SSE streaming support.
+ * Hook for Equity Pro AI chat with SSE streaming support.
  *
  * Features:
  * - Real-time streaming responses (typewriter effect)
@@ -50,6 +50,8 @@ export function useTipTeaseChat(): UseTipTeaseChatReturn {
   const streamIdRef = useRef<string | null>(null);
   const currentAssistantMessageIdRef = useRef<string | null>(null);
   const baseUrl = getApiBaseUrl();
+  // /chat/start goes through Node so coinGate can debit. SSE stream + cancel hit Python directly.
+  const gateBaseUrl = getAuthBaseUrl();
 
   /**
    * Fetch today's market summary and contextual hint.
@@ -62,7 +64,7 @@ export function useTipTeaseChat(): UseTipTeaseChatReturn {
         setSummary(envelope.data ?? envelope);
       }
     } catch (err) {
-      console.error("[TipHub] Failed to fetch summary:", err);
+      console.error("[Equity Pro] Failed to fetch summary:", err);
     }
   }, [baseUrl]);
 
@@ -90,7 +92,7 @@ export function useTipTeaseChat(): UseTipTeaseChatReturn {
           method: "POST",
         });
       } catch (err) {
-        console.error("[TipHub] Failed to cancel stream:", err);
+        console.error("[Equity Pro] Failed to cancel stream:", err);
       }
     }
     cleanup();
@@ -138,7 +140,7 @@ export function useTipTeaseChat(): UseTipTeaseChatReturn {
         setIsStreaming(true);
 
         // Start the chat stream
-        const startResponse = await fetch(`${baseUrl}/api/tip-tease/chat/start`, {
+        const startResponse = await fetch(`${gateBaseUrl}/api/tip-tease/chat/start`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -220,7 +222,7 @@ export function useTipTeaseChat(): UseTipTeaseChatReturn {
                 break;
             }
           } catch (parseError) {
-            console.error("[TipHub] Failed to parse SSE event:", parseError);
+            console.error("[Equity Pro] Failed to parse SSE event:", parseError);
           }
         };
 
@@ -245,7 +247,7 @@ export function useTipTeaseChat(): UseTipTeaseChatReturn {
         setError(errorMessage);
         setStatus("error");
         setIsStreaming(false);
-        console.error("[TipHub] Send message error:", err);
+        console.error("[Equity Pro] Send message error:", err);
       }
     },
     [baseUrl, messages, cleanup]

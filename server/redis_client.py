@@ -223,7 +223,8 @@ def get_ttl(key: str) -> int:
 def cache_result(
     key_prefix: str,
     ttl_seconds: int = 300,
-    key_builder: Optional[Callable[..., str]] = None
+    key_builder: Optional[Callable[..., str]] = None,
+    log_level: int = logging.DEBUG,
 ):
     """
     Decorator to cache function results in Redis.
@@ -235,6 +236,12 @@ def cache_result(
         key_prefix: Prefix for cache keys (e.g., "indicators")
         ttl_seconds: Cache TTL in seconds (default: 5 minutes)
         key_builder: Optional custom function to build cache key from args
+        log_level: Python logging level for HIT/MISS messages. Defaults to
+            DEBUG (invisible at default log config). Pass ``logging.INFO``
+            to surface cache-boundary observability in standard logs —
+            useful for the CMOTS accessors so cache HIT/MISS is visible
+            without re-tuning the global log level. Kept permanent (not
+            tied to any specific bug) per §9 design note.
 
     Example:
         @cache_result("indicators", ttl_seconds=300)
@@ -258,10 +265,10 @@ def cache_result(
             # Try to get from cache
             cached = get_cached(cache_key)
             if cached is not None:
-                logger.debug(f"Cache HIT: {cache_key}")
+                logger.log(log_level, f"Cache HIT: {cache_key}")
                 return cached
 
-            logger.debug(f"Cache MISS: {cache_key}")
+            logger.log(log_level, f"Cache MISS: {cache_key}")
 
             # Execute function
             result = func(*args, **kwargs)
@@ -285,10 +292,10 @@ def cache_result(
             # Try to get from cache
             cached = get_cached(cache_key)
             if cached is not None:
-                logger.debug(f"Cache HIT: {cache_key}")
+                logger.log(log_level, f"Cache HIT: {cache_key}")
                 return cached
 
-            logger.debug(f"Cache MISS: {cache_key}")
+            logger.log(log_level, f"Cache MISS: {cache_key}")
 
             # Execute function
             result = await func(*args, **kwargs)
@@ -337,6 +344,9 @@ LOCK_TTL_SECTOR_MEDIANS = 30        # 30 sec lock for sector median query
 TTL_SHAREHOLDING = 21600            # 6 hours (shareholding data changes quarterly)
 TTL_QUOTE = 60                      # 1 minute (matches LTP freshness)
 TTL_QUOTE_HISTORICAL = 300          # 5 minutes (candles change less frequently)
+TTL_PATTERN_SEARCH = 900            # 15 minutes (pattern scan is expensive, results stable)
+TTL_SEASONALITY = 3600              # 1 hour (historical seasonality changes slowly)
+TTL_FUNDAMENTAL_SCREENER = 600      # 10 minutes (fundamentals update infrequently)
 
 
 def make_indicator_key(ticker: str, timeframe: str = "1hour") -> str:

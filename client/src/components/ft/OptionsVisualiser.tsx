@@ -48,7 +48,7 @@ export function OptionsVisualiser({ defaultSymbol = 'NIFTY' }: OptionsVisualiser
   }, []);
 
   return (
-    <div className="h-full flex flex-col bg-background">
+    <div className="flex flex-col bg-background overflow-auto" style={{ height: 'calc(100vh - 6rem)' }}>
       {/* Header Controls */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-sidebar">
         {/* Symbol Selector */}

@@ -1,0 +1,683 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pair Trading · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.page-hd{padding:24px 0 0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.page-hd h1{font-family:var(--font-display);font-size:32px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .page-hd h1{color:hsl(38 30% 95%)}
+.crumbs{display:flex;align-items:center;gap:8px;font-size:12px;color:hsl(var(--muted-foreground));margin-bottom:6px}
+.crumbs svg{width:12px;height:12px}
+.tab-bar{display:flex;gap:0;border-bottom:1px solid hsl(var(--border));margin-top:18px;margin-bottom:-1px}
+.tab-bar button{height:42px;padding:0 18px;background:transparent;border:0;border-bottom:2px solid transparent;font-size:13px;font-weight:600;color:hsl(var(--muted-foreground));cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.tab-bar button.active{color:hsl(var(--brand-navy));border-bottom-color:hsl(var(--brand-gold))}
+.dark .tab-bar button.active{color:hsl(var(--brand-gold))}
+.tab-bar .pill{display:inline-flex;align-items:center;height:18px;padding:0 7px;font-size:10px;font-weight:700;border-radius:var(--radius-pill);background:hsl(var(--muted));color:hsl(var(--muted-foreground))}
+
+/* ---------- Filter rail ---------- */
+.filter-rail{display:flex;flex-wrap:wrap;align-items:end;gap:14px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:14px 16px;margin:20px 0 0}
+.filter-rail .field{display:flex;flex-direction:column;gap:5px}
+.filter-rail label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground))}
+.filter-rail input,.filter-rail select{height:34px;border:1px solid hsl(var(--border));background:hsl(var(--background));border-radius:var(--radius-sm);padding:0 10px;font-size:13px;color:inherit;font-family:inherit;min-width:140px}
+.filter-rail .search-input{padding-left:30px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2398a2b3' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='m21 21-4.3-4.3'/></svg>");background-repeat:no-repeat;background-position:9px center}
+.spacer{flex:1}
+.view-toggle{display:inline-flex;border:1px solid hsl(var(--border));border-radius:var(--radius-md);overflow:hidden;background:hsl(var(--background))}
+.view-toggle button{height:34px;padding:0 14px;background:transparent;border:0;font-size:12px;font-weight:600;color:hsl(var(--muted-foreground));cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.view-toggle button.active{background:hsl(var(--brand-navy));color:white}
+.dark .view-toggle button.active{background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep))}
+
+/* ---------- Summary chips ---------- */
+.summary{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 8px;align-items:center}
+.summary .chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:var(--radius-pill);background:hsl(var(--muted));border:1px solid hsl(var(--border));font-size:12px;font-weight:600;color:hsl(var(--foreground))}
+.summary .chip .ky{color:hsl(var(--muted-foreground));font-weight:600}
+.summary .chip .vl{font-family:var(--font-mono);color:hsl(var(--brand-navy))}
+.dark .summary .chip .vl{color:hsl(var(--brand-gold))}
+.summary .meta{margin-left:auto;font-size:12px;color:hsl(var(--muted-foreground));font-family:var(--font-mono)}
+.summary .meta b{color:hsl(var(--positive));font-weight:700}
+
+/* ---------- Matrix ---------- */
+.matrix-wrap{display:grid;grid-template-columns:1fr 280px;gap:18px;padding:18px 0 28px}
+.matrix-card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.matrix-hd{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid hsl(var(--border))}
+.matrix-hd h3{font-family:var(--font-display);font-size:16px;margin:0;color:hsl(var(--brand-navy))}
+.dark .matrix-hd h3{color:hsl(38 30% 95%)}
+.matrix-hd .tools{display:flex;gap:6px;align-items:center}
+.matrix-table{width:100%;border-collapse:separate;border-spacing:0;font-family:var(--font-mono);font-size:11px;table-layout:fixed}
+.matrix-table th,.matrix-table td{padding:0;text-align:center;border-bottom:1px solid hsl(var(--border));border-right:1px solid hsl(var(--border));height:46px;width:46px;position:relative;transition:transform 0.12s ease,filter 0.12s ease}
+.matrix-table th:last-child,.matrix-table td:last-child{border-right:0}
+.matrix-table thead th{background:hsl(var(--muted)/0.4);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:hsl(var(--muted-foreground));height:36px}
+.matrix-table th.sticky-y,.matrix-table td.sticky-y{position:sticky;left:0;background:hsl(var(--muted)/0.4);width:120px;text-align:right;padding-right:12px;font-weight:700;font-size:11px;color:hsl(var(--foreground));z-index:5;border-right:2px solid hsl(var(--border))}
+.matrix-table th.sticky-y{z-index:6}
+.matrix-table td.diag{background:hsl(var(--muted));color:hsl(var(--muted-foreground))}
+.matrix-table td.cell{cursor:pointer;font-weight:600}
+.matrix-table td.cell:hover{filter:brightness(1.08);transform:scale(1.02);z-index:2;outline:2px solid hsl(var(--brand-gold));outline-offset:-2px}
+.matrix-table td.cell.selected{outline:2px solid hsl(var(--brand-gold));outline-offset:-2px;z-index:3}
+
+/* Heat colors — coral/gold positive scale, slate negative scale */
+.h-strong{background:hsl(var(--positive)/0.85);color:white}
+.h-high{background:hsl(var(--positive)/0.65);color:white}
+.h-mid{background:hsl(var(--positive)/0.40);color:hsl(var(--brand-navy-deep))}
+.h-low{background:hsl(var(--positive)/0.20);color:hsl(var(--foreground))}
+.h-neutral{background:hsl(var(--muted)/0.5);color:hsl(var(--muted-foreground))}
+.h-neg-low{background:hsl(var(--negative)/0.18);color:hsl(var(--foreground))}
+.h-neg-mid{background:hsl(var(--negative)/0.40);color:hsl(var(--brand-navy-deep))}
+.h-neg-high{background:hsl(var(--negative)/0.65);color:white}
+.dark .h-mid,.dark .h-low,.dark .h-neg-low,.dark .h-neg-mid{color:hsl(38 30% 92%)}
+
+/* ---------- Side panel: legend + top pairs ---------- */
+.side-panel{display:flex;flex-direction:column;gap:14px}
+.legend-card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:14px 16px}
+.legend-card h4{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));margin:0 0 10px}
+.legend-bar{display:flex;height:14px;border-radius:4px;overflow:hidden;border:1px solid hsl(var(--border))}
+.legend-bar i{flex:1;display:block}
+.legend-marks{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;color:hsl(var(--muted-foreground));margin-top:4px}
+.legend-card p{font-size:11.5px;color:hsl(var(--muted-foreground));margin:10px 0 0;line-height:1.55}
+.top-pairs{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:14px 16px}
+.top-pairs h4{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));margin:0 0 12px;display:flex;justify-content:space-between}
+.top-pairs h4 a{font-size:10px;color:hsl(var(--brand-gold));text-transform:none;letter-spacing:0;font-weight:600}
+.pair-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid hsl(var(--border));cursor:pointer}
+.pair-row:last-child{border-bottom:0}
+.pair-row:hover{background:hsl(var(--muted)/0.3)}
+.pair-row .pp{font-family:var(--font-mono);font-size:12px;font-weight:700;color:hsl(var(--foreground))}
+.pair-row .pp .vs{color:hsl(var(--muted-foreground));font-weight:400;margin:0 4px}
+.pair-row .sc{font-family:var(--font-mono);font-size:13px;font-weight:700}
+.pair-row .pv{font-family:var(--font-mono);font-size:10.5px;color:hsl(var(--muted-foreground));margin-top:1px}
+
+/* ---------- Detail view ---------- */
+.detail-section{padding:14px 0 60px;display:none}
+.detail-section.active{display:block}
+.matrix-section.hidden{display:none}
+
+.pair-hero{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:24px;margin-top:18px}
+.pair-hero-top{display:flex;align-items:start;justify-content:space-between;flex-wrap:wrap;gap:18px}
+.pair-hero .back{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:hsl(var(--muted-foreground));margin-bottom:14px;cursor:pointer}
+.pair-hero .back:hover{color:hsl(var(--brand-gold))}
+.pair-hero h2{font-family:var(--font-display);font-size:36px;letter-spacing:-0.02em;margin:0;color:hsl(var(--brand-navy))}
+.dark .pair-hero h2{color:hsl(38 30% 95%)}
+.pair-hero h2 .sym{font-family:var(--font-mono);font-weight:700;color:inherit}
+.pair-hero h2 .vs{color:hsl(var(--muted-foreground));font-style:italic;font-weight:400;margin:0 10px;font-size:30px}
+.pair-hero .sub{font-size:13px;color:hsl(var(--muted-foreground));margin-top:6px;font-family:var(--font-mono)}
+
+.pair-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid hsl(var(--border));border-radius:var(--radius-md);overflow:hidden;margin-top:20px;background:hsl(var(--background))}
+.pair-metrics .m{padding:14px 18px;border-right:1px solid hsl(var(--border))}
+.pair-metrics .m:last-child{border-right:0}
+.pair-metrics .ey{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground))}
+.pair-metrics .v{font-family:var(--font-mono);font-size:24px;font-weight:700;margin-top:4px;color:hsl(var(--brand-navy))}
+.dark .pair-metrics .v{color:hsl(38 30% 95%)}
+.pair-metrics .v.gold{color:hsl(38 60% 38%)}
+.dark .pair-metrics .v.gold{color:hsl(var(--brand-gold))}
+.pair-metrics .v.pos{color:hsl(var(--positive))}
+.pair-metrics .sub{font-size:11px;color:hsl(var(--muted-foreground));margin-top:2px;font-family:var(--font-mono)}
+
+.pair-actions{display:flex;gap:8px;align-items:center}
+
+/* Trade idea callout */
+.trade-idea{margin-top:18px;background:linear-gradient(155deg,hsl(var(--brand-navy)),hsl(var(--brand-navy-deep)));color:white;border-radius:var(--radius-lg);padding:18px 22px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:18px;align-items:center}
+.trade-idea .ey{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--brand-gold))}
+.trade-idea h4{font-family:var(--font-display);font-size:18px;margin:4px 0 0;color:white}
+.trade-idea .leg{font-family:var(--font-mono);font-size:13px}
+.trade-idea .leg b{color:hsl(var(--brand-gold))}
+.trade-idea .z{font-family:var(--font-mono);font-size:11px;color:hsl(38 30% 88%);margin-top:2px}
+
+/* Charts */
+.chart-card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px;margin-top:18px}
+.chart-card .hd{display:flex;justify-content:space-between;align-items:start;margin-bottom:14px}
+.chart-card h4{font-family:var(--font-display);font-size:16px;margin:0;color:hsl(var(--brand-navy))}
+.dark .chart-card h4{color:hsl(38 30% 95%)}
+.chart-card .desc{font-size:11.5px;color:hsl(var(--muted-foreground));margin:2px 0 0}
+.chart-legend{display:flex;gap:14px;font-size:11px;font-weight:600;color:hsl(var(--muted-foreground))}
+.chart-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}
+
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+
+/* Coming soon panel */
+.coming-soon{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px;background:hsl(var(--card));border:1px dashed hsl(var(--border));border-radius:var(--radius-lg);margin-top:20px}
+.coming-soon .icon{width:54px;height:54px;border-radius:50%;background:hsl(var(--brand-gold)/0.15);display:flex;align-items:center;justify-content:center;color:hsl(38 60% 40%);margin-bottom:14px}
+.dark .coming-soon .icon{color:hsl(var(--brand-gold))}
+.coming-soon h3{font-family:var(--font-display);font-size:22px;margin:0 0 6px;color:hsl(var(--brand-navy))}
+.dark .coming-soon h3{color:hsl(38 30% 95%)}
+.coming-soon p{font-size:13.5px;color:hsl(var(--muted-foreground));max-width:48ch;line-height:1.55;margin:0 0 14px}
+.coming-soon .feat{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.coming-soon .feat span{padding:5px 10px;font-size:11px;font-weight:600;border-radius:var(--radius-pill);background:hsl(var(--muted));color:hsl(var(--muted-foreground));border:1px solid hsl(var(--border))}
+
+@media (max-width:1100px){
+  .matrix-wrap{grid-template-columns:1fr}
+  .pair-metrics{grid-template-columns:repeat(2,1fr)}
+  .pair-metrics .m:nth-child(2){border-right:0}
+  .pair-metrics .m:nth-child(1),.pair-metrics .m:nth-child(2){border-bottom:1px solid hsl(var(--border))}
+  .chart-grid{grid-template-columns:1fr}
+  .trade-idea{grid-template-columns:1fr 1fr}
+}
+</style></head>
+<body data-page="pair-trading" data-screen-label="11 Pair Trading">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="page-hd"><div class="container">
+  <div class="crumbs">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12L12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
+    <span>Terminal</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+    <span>Pair Trading</span>
+  </div>
+  <span class="eyebrow">Statistical arbitrage · feasibility</span>
+  <h1>Pair Trading.</h1>
+  <p class="muted body-sm" style="margin:4px 0 18px">Find tradeable spreads in any sector. Test correlation, cointegration, and residual mean-reversion across 142 NSE constituents.</p>
+  <div class="tab-bar">
+    <button class="active" data-tab="feasibility">Feasibility</button>
+    <button data-tab="test-lab">Test Lab <span class="pill">SOON</span></button>
+    <button data-tab="scanner">Scanner <span class="pill">SOON</span></button>
+    <button data-tab="watchlist">Watchlist <span class="pill">2</span></button>
+  </div>
+</div></section>
+
+<main class="container">
+
+<!-- =========== FEASIBILITY (matrix + drilldown) =========== -->
+<div class="tab-pane" data-pane="feasibility">
+
+  <!-- Filter rail -->
+  <div class="filter-rail">
+    <div class="field">
+      <label>Search symbol</label>
+      <input class="search-input" placeholder="HDFCBANK" id="symSearch" style="min-width:160px">
+    </div>
+    <div class="field">
+      <label>Group type</label>
+      <select id="groupType"><option>Sector</option><option>Industry</option><option>Index</option><option>Custom basket</option></select>
+    </div>
+    <div class="field">
+      <label>Sector</label>
+      <select id="group" style="min-width:200px">
+        <option>Banks (Private + Public)</option>
+        <option>Information Technology</option>
+        <option>Pharmaceuticals</option>
+        <option>FMCG</option>
+        <option>Auto &amp; Ancillaries</option>
+        <option>Metals &amp; Mining</option>
+        <option>Oil &amp; Gas</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Method</label>
+      <select id="method"><option>Cointegration (Engle-Granger)</option><option>Correlation (Pearson)</option><option>Distance (SSD)</option></select>
+    </div>
+    <div class="field">
+      <label>Lookback (days)</label>
+      <input type="number" value="120" min="10" max="500" style="min-width:90px">
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary btn-sm" style="height:34px">Apply</button>
+    <button class="btn btn-ghost btn-sm" style="height:34px">Reset</button>
+    <div class="view-toggle">
+      <button class="active" data-view="matrix">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Matrix
+      </button>
+      <button data-view="chart">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+        Chart
+      </button>
+    </div>
+    <button class="btn btn-ghost btn-sm btn-icon" style="height:34px;width:34px" title="Refresh">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+    </button>
+  </div>
+
+  <!-- Summary chips -->
+  <div class="summary">
+    <span class="chip"><span class="ky">Sector</span> <span class="vl">Banks · 14 stocks</span></span>
+    <span class="chip"><span class="ky">Method</span> <span class="vl">Cointegration</span></span>
+    <span class="chip"><span class="ky">Lookback</span> <span class="vl">120d</span></span>
+    <span class="chip"><span class="ky">Significance</span> <span class="vl">p &lt; 0.05</span></span>
+    <div class="meta">Last refresh <span style="color:hsl(var(--foreground))">14:32 IST</span> · <b>● live</b> · 91 of 91 cells</div>
+  </div>
+
+  <!-- ============ MATRIX VIEW ============ -->
+  <div class="matrix-section" id="matrixSection">
+    <div class="matrix-wrap">
+      <div class="matrix-card">
+        <div class="matrix-hd">
+          <div>
+            <h3>Cointegration matrix · Banks</h3>
+            <p class="body-sm muted" style="margin:2px 0 0">Click any cell to drill into the pair. Score = (1 − p-value) × 100; ≥ 95 is statistically significant.</p>
+          </div>
+          <div class="tools">
+            <button class="btn btn-ghost btn-sm">Export CSV</button>
+            <button class="btn btn-ghost btn-sm">Save view</button>
+          </div>
+        </div>
+        <div style="overflow:auto;max-height:560px">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th class="sticky-y"></th>
+                <th>HDFCBNK</th><th>ICICIBNK</th><th>SBIN</th><th>AXISBNK</th><th>KOTKBNK</th><th>INDUSBNK</th><th>BANKBARODA</th><th>PNB</th><th>FEDERLBNK</th><th>IDFCFIRST</th><th>RBLBANK</th><th>YESBANK</th><th>AUBANK</th><th>BANDHANBNK</th>
+              </tr>
+            </thead>
+            <tbody id="matrixBody">
+              <!-- generated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="side-panel">
+        <div class="legend-card">
+          <h4>Heat scale</h4>
+          <div class="legend-bar">
+            <i style="background:hsl(var(--negative)/0.65)"></i>
+            <i style="background:hsl(var(--negative)/0.40)"></i>
+            <i style="background:hsl(var(--negative)/0.18)"></i>
+            <i style="background:hsl(var(--muted)/0.5)"></i>
+            <i style="background:hsl(var(--positive)/0.20)"></i>
+            <i style="background:hsl(var(--positive)/0.40)"></i>
+            <i style="background:hsl(var(--positive)/0.65)"></i>
+            <i style="background:hsl(var(--positive)/0.85)"></i>
+          </div>
+          <div class="legend-marks"><span>0</span><span>50</span><span>95</span><span>100</span></div>
+          <p>Cells ≥ 95 indicate the pair is cointegrated at 5% significance — the spread is stationary, mean-reversion strategies are viable.</p>
+        </div>
+
+        <div class="top-pairs">
+          <h4>Top significant pairs <a href="#">View all →</a></h4>
+          <div class="pair-row" data-pair="HDFCBANK,ICICIBANK">
+            <div><div class="pp">HDFCBANK <span class="vs">/</span> ICICIBANK</div><div class="pv">p = 0.0042 · β = 1.024</div></div>
+            <div class="sc" style="color:hsl(var(--positive))">98</div>
+          </div>
+          <div class="pair-row" data-pair="SBIN,BANKBARODA">
+            <div><div class="pp">SBIN <span class="vs">/</span> BANKBARODA</div><div class="pv">p = 0.0089 · β = 0.872</div></div>
+            <div class="sc" style="color:hsl(var(--positive))">96</div>
+          </div>
+          <div class="pair-row" data-pair="AXISBANK,KOTAKBANK">
+            <div><div class="pp">AXISBANK <span class="vs">/</span> KOTAKBANK</div><div class="pv">p = 0.0142 · β = 1.118</div></div>
+            <div class="sc" style="color:hsl(var(--positive))">94</div>
+          </div>
+          <div class="pair-row" data-pair="ICICIBANK,AXISBANK">
+            <div><div class="pp">ICICIBANK <span class="vs">/</span> AXISBANK</div><div class="pv">p = 0.0186 · β = 0.946</div></div>
+            <div class="sc" style="color:hsl(var(--positive))">93</div>
+          </div>
+          <div class="pair-row" data-pair="PNB,BANKBARODA">
+            <div><div class="pp">PNB <span class="vs">/</span> BANKBARODA</div><div class="pv">p = 0.0214 · β = 0.798</div></div>
+            <div class="sc" style="color:hsl(var(--positive))">91</div>
+          </div>
+          <div class="pair-row" data-pair="FEDERALBNK,RBLBANK">
+            <div><div class="pp">FEDERALBNK <span class="vs">/</span> RBLBANK</div><div class="pv">p = 0.0418 · β = 1.204</div></div>
+            <div class="sc" style="color:hsl(38 60% 50%)">82</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DETAIL VIEW ============ -->
+  <div class="detail-section" id="detailSection">
+    <div class="pair-hero">
+      <span class="back" id="backToMatrix">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        Back to matrix
+      </span>
+      <div class="pair-hero-top">
+        <div>
+          <h2><span class="sym">HDFCBANK</span><span class="vs">vs</span><span class="sym">ICICIBANK</span></h2>
+          <div class="sub">Cointegration · 120 trading days · last 6 months · daily close prices</div>
+        </div>
+        <div class="pair-actions">
+          <button class="btn btn-ghost btn-sm">+ Watchlist</button>
+          <button class="btn btn-ghost btn-sm">Export</button>
+          <button class="btn btn-primary btn-sm">Backtest spread →</button>
+        </div>
+      </div>
+
+      <div class="pair-metrics">
+        <div class="m">
+          <div class="ey">Cointegration score</div>
+          <div class="v pos">98<span style="font-size:14px;color:hsl(var(--muted-foreground))"> / 100</span></div>
+          <div class="sub">p-value = 0.0042</div>
+        </div>
+        <div class="m">
+          <div class="ey">Correlation (ρ)</div>
+          <div class="v">0.948</div>
+          <div class="sub">strong + linear</div>
+        </div>
+        <div class="m">
+          <div class="ey">Hedge ratio (β)</div>
+          <div class="v gold">1.024</div>
+          <div class="sub">y = β·x · OLS</div>
+        </div>
+        <div class="m">
+          <div class="ey">σ(residuals)</div>
+          <div class="v">1.42<span style="font-size:14px;color:hsl(var(--muted-foreground))">%</span></div>
+          <div class="sub">half-life 14d · ADF=−4.21</div>
+        </div>
+      </div>
+
+      <!-- Trade idea -->
+      <div class="trade-idea">
+        <div>
+          <div class="ey">Strategy idea</div>
+          <h4>Long–short spread, ±2σ entry</h4>
+          <div class="z" style="margin-top:6px">Mean-reversion · z &gt; 2 short spread · z &lt; −2 long spread</div>
+        </div>
+        <div>
+          <div class="ey">Current z-score</div>
+          <div class="leg" style="font-size:24px;margin-top:4px">+1.84</div>
+          <div class="z">approaching short threshold</div>
+        </div>
+        <div>
+          <div class="ey">Suggested legs</div>
+          <div class="leg">SHORT <b>HDFCBANK</b> · 100 sh</div>
+          <div class="leg">LONG <b>ICICIBANK</b> · 102 sh</div>
+        </div>
+        <div>
+          <div class="ey">Expected window</div>
+          <div class="leg" style="font-size:18px;margin-top:4px">8–14 days</div>
+          <div class="z">based on residual half-life</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance comparison chart -->
+    <div class="chart-card">
+      <div class="hd">
+        <div>
+          <h4>Performance comparison · % change</h4>
+          <p class="desc">Both legs normalized to 100 on day 0 · log scale</p>
+        </div>
+        <div class="chart-legend">
+          <span><i style="background:hsl(var(--brand-navy))"></i>HDFCBANK</span>
+          <span><i style="background:hsl(var(--brand-gold))"></i>ICICIBANK</span>
+        </div>
+      </div>
+      <svg viewBox="0 0 1080 300" style="width:100%;height:280px">
+        <defs>
+          <linearGradient id="navyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="hsl(213 45% 22%)" stop-opacity="0.18"/><stop offset="100%" stop-color="hsl(213 45% 22%)" stop-opacity="0"/></linearGradient>
+        </defs>
+        <!-- gridlines -->
+        <g stroke="hsl(var(--border))" stroke-width="1">
+          <line x1="60" y1="40" x2="1060" y2="40"/>
+          <line x1="60" y1="100" x2="1060" y2="100"/>
+          <line x1="60" y1="160" x2="1060" y2="160"/>
+          <line x1="60" y1="220" x2="1060" y2="220"/>
+          <line x1="60" y1="280" x2="1060" y2="280"/>
+        </g>
+        <g font-family="ui-monospace,monospace" font-size="10" fill="hsl(var(--muted-foreground))">
+          <text x="50" y="44" text-anchor="end">+12%</text>
+          <text x="50" y="104" text-anchor="end">+6%</text>
+          <text x="50" y="164" text-anchor="end">0%</text>
+          <text x="50" y="224" text-anchor="end">−6%</text>
+          <text x="50" y="284" text-anchor="end">−12%</text>
+        </g>
+        <g font-family="ui-monospace,monospace" font-size="10" fill="hsl(var(--muted-foreground))" text-anchor="middle">
+          <text x="60" y="296">Aug 14</text><text x="260" y="296">Sep 19</text><text x="460" y="296">Oct 24</text><text x="660" y="296">Nov 28</text><text x="860" y="296">Jan 03</text><text x="1060" y="296">Feb 08</text>
+        </g>
+        <!-- HDFC navy line -->
+        <path d="M60,160 L120,154 L180,148 L240,158 L300,142 L360,138 L420,124 L480,118 L540,128 L600,114 L660,98 L720,108 L780,92 L840,84 L900,96 L960,82 L1020,68 L1060,72" fill="none" stroke="hsl(213 45% 22%)" stroke-width="2"/>
+        <!-- ICICI gold line -->
+        <path d="M60,160 L120,156 L180,152 L240,162 L300,148 L360,140 L420,128 L480,120 L540,132 L600,118 L660,102 L720,112 L780,96 L840,86 L900,98 L960,84 L1020,70 L1060,76" fill="none" stroke="hsl(38 75% 50%)" stroke-width="2" stroke-dasharray="0"/>
+      </svg>
+    </div>
+
+    <!-- Two-up: regression + residuals -->
+    <div class="chart-grid">
+      <div class="chart-card" style="margin-top:0">
+        <div class="hd">
+          <div>
+            <h4>Pair regression</h4>
+            <p class="desc">ICICIBANK = β · HDFCBANK · OLS fit</p>
+          </div>
+          <div class="chart-legend"><span><i style="background:hsl(var(--brand-gold))"></i>fit · β=1.024</span></div>
+        </div>
+        <svg viewBox="0 0 520 320" style="width:100%;height:280px">
+          <g stroke="hsl(var(--border))" stroke-width="1">
+            <line x1="50" y1="40" x2="510" y2="40"/>
+            <line x1="50" y1="110" x2="510" y2="110"/>
+            <line x1="50" y1="180" x2="510" y2="180"/>
+            <line x1="50" y1="250" x2="510" y2="250"/>
+            <line x1="50" y1="40" x2="50" y2="280"/>
+            <line x1="280" y1="40" x2="280" y2="280"/>
+            <line x1="510" y1="40" x2="510" y2="280"/>
+          </g>
+          <g font-family="ui-monospace,monospace" font-size="10" fill="hsl(var(--muted-foreground))">
+            <text x="42" y="44" text-anchor="end">+10%</text>
+            <text x="42" y="184" text-anchor="end">0%</text>
+            <text x="42" y="284" text-anchor="end">−7%</text>
+            <text x="50" y="298" text-anchor="middle">−6%</text>
+            <text x="280" y="298" text-anchor="middle">0%</text>
+            <text x="510" y="298" text-anchor="middle">+10%</text>
+            <text x="280" y="312" text-anchor="middle" font-size="9" font-weight="700">HDFCBANK %change</text>
+          </g>
+          <text x="14" y="160" font-family="ui-monospace,monospace" font-size="9" font-weight="700" fill="hsl(var(--muted-foreground))" transform="rotate(-90 14 160)">ICICIBANK %change</text>
+          <!-- regression line -->
+          <line x1="50" y1="282" x2="510" y2="34" stroke="hsl(38 75% 50%)" stroke-width="2"/>
+          <!-- scatter points (around line, modest noise) -->
+          <g fill="hsl(213 45% 22%)" fill-opacity="0.65">
+            <circle cx="80" cy="262" r="3"/><circle cx="98" cy="252" r="3"/><circle cx="116" cy="248" r="3"/><circle cx="142" cy="240" r="3"/><circle cx="160" cy="226" r="3"/><circle cx="184" cy="222" r="3"/><circle cx="208" cy="210" r="3"/><circle cx="226" cy="200" r="3"/><circle cx="248" cy="194" r="3"/><circle cx="266" cy="188" r="3"/><circle cx="282" cy="180" r="3"/><circle cx="300" cy="174" r="3"/><circle cx="320" cy="166" r="3"/><circle cx="340" cy="158" r="3"/><circle cx="360" cy="146" r="3"/><circle cx="382" cy="138" r="3"/><circle cx="400" cy="128" r="3"/><circle cx="418" cy="118" r="3"/><circle cx="438" cy="106" r="3"/><circle cx="458" cy="94" r="3"/><circle cx="478" cy="80" r="3"/><circle cx="492" cy="62" r="3"/>
+            <circle cx="124" cy="232" r="3"/><circle cx="172" cy="206" r="3"/><circle cx="218" cy="184" r="3"/><circle cx="262" cy="170" r="3"/><circle cx="308" cy="156" r="3"/><circle cx="354" cy="138" r="3"/><circle cx="396" cy="116" r="3"/><circle cx="440" cy="92" r="3"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="chart-card" style="margin-top:0">
+        <div class="hd">
+          <div>
+            <h4>Residuals · z-score</h4>
+            <p class="desc">Spread = ICICIBANK − β·HDFCBANK · ±2σ bands</p>
+          </div>
+          <div class="chart-legend"><span><i style="background:hsl(var(--brand-gold))"></i>spread</span><span><i style="background:hsl(var(--negative))"></i>±2σ</span></div>
+        </div>
+        <svg viewBox="0 0 520 320" style="width:100%;height:280px">
+          <g stroke="hsl(var(--border))" stroke-width="1">
+            <line x1="50" y1="40" x2="510" y2="40"/>
+            <line x1="50" y1="110" x2="510" y2="110"/>
+            <line x1="50" y1="180" x2="510" y2="180"/>
+            <line x1="50" y1="250" x2="510" y2="250"/>
+          </g>
+          <!-- ±2σ bands -->
+          <line x1="50" y1="80" x2="510" y2="80" stroke="hsl(var(--negative))" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
+          <line x1="50" y1="240" x2="510" y2="240" stroke="hsl(var(--negative))" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
+          <!-- mean -->
+          <line x1="50" y1="160" x2="510" y2="160" stroke="hsl(var(--muted-foreground))" stroke-width="1" opacity="0.5"/>
+          <g font-family="ui-monospace,monospace" font-size="10" fill="hsl(var(--muted-foreground))">
+            <text x="42" y="44" text-anchor="end">+3σ</text>
+            <text x="42" y="84" text-anchor="end">+2σ</text>
+            <text x="42" y="164" text-anchor="end">μ</text>
+            <text x="42" y="244" text-anchor="end">−2σ</text>
+            <text x="42" y="284" text-anchor="end">−3σ</text>
+          </g>
+          <!-- residuals path -->
+          <path d="M50,168 L70,164 L90,158 L110,148 L130,138 L150,144 L170,132 L190,118 L210,108 L230,118 L250,128 L270,142 L290,158 L310,170 L330,182 L350,196 L370,210 L390,222 L410,232 L430,228 L450,210 L470,194 L490,168 L510,118"
+                fill="none" stroke="hsl(38 75% 50%)" stroke-width="2"/>
+          <!-- current point -->
+          <circle cx="510" cy="118" r="5" fill="hsl(var(--brand-navy))" stroke="hsl(var(--card))" stroke-width="2"/>
+          <text x="500" y="108" text-anchor="end" font-family="ui-monospace,monospace" font-size="10" font-weight="700" fill="hsl(var(--brand-navy))">+1.84σ</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Trade history table -->
+    <div class="chart-card">
+      <div class="hd">
+        <div>
+          <h4>Recent z-score crossings</h4>
+          <p class="desc">Hypothetical mean-reversion trades on this spread, last 6 months</p>
+        </div>
+        <button class="btn btn-ghost btn-sm">Backtest full window →</button>
+      </div>
+      <table class="tbl" style="margin-top:6px">
+        <thead><tr><th>Entry</th><th>Direction</th><th>Entry z</th><th>Exit</th><th>Exit z</th><th>Hold</th><th class="text-right">Spread P&amp;L</th><th class="text-right">Outcome</th></tr></thead>
+        <tbody>
+          <tr><td>22 Aug 2025</td><td>Long spread</td><td class="num">−2.18</td><td>04 Sep 2025</td><td class="num">−0.12</td><td>9d</td><td class="num change-up">+1.84%</td><td class="text-right"><span class="badge badge-pos">Mean-revert</span></td></tr>
+          <tr><td>14 Sep 2025</td><td>Short spread</td><td class="num">+2.42</td><td>26 Sep 2025</td><td class="num">+0.08</td><td>8d</td><td class="num change-up">+2.18%</td><td class="text-right"><span class="badge badge-pos">Mean-revert</span></td></tr>
+          <tr><td>11 Oct 2025</td><td>Long spread</td><td class="num">−2.06</td><td>22 Oct 2025</td><td class="num">+0.18</td><td>7d</td><td class="num change-up">+1.94%</td><td class="text-right"><span class="badge badge-pos">Mean-revert</span></td></tr>
+          <tr><td>08 Nov 2025</td><td>Short spread</td><td class="num">+2.32</td><td>21 Nov 2025</td><td class="num">+1.42</td><td>9d</td><td class="num change-down">−0.74%</td><td class="text-right"><span class="badge">Stop hit</span></td></tr>
+          <tr><td>02 Dec 2025</td><td>Long spread</td><td class="num">−2.24</td><td>15 Dec 2025</td><td class="num">−0.04</td><td>9d</td><td class="num change-up">+2.06%</td><td class="text-right"><span class="badge badge-pos">Mean-revert</span></td></tr>
+          <tr><td>26 Jan 2026</td><td>Short spread</td><td class="num">+2.12</td><td>04 Feb 2026</td><td class="num">+0.22</td><td>7d</td><td class="num change-up">+1.62%</td><td class="text-right"><span class="badge badge-pos">Mean-revert</span></td></tr>
+        </tbody>
+      </table>
+      <div style="display:flex;gap:18px;justify-content:flex-end;margin-top:14px;padding-top:14px;border-top:1px solid hsl(var(--border));font-family:var(--font-mono);font-size:12px">
+        <span class="muted">Trades: <b style="color:hsl(var(--foreground))">6</b></span>
+        <span class="muted">Win rate: <b style="color:hsl(var(--positive))">83%</b></span>
+        <span class="muted">Avg hold: <b style="color:hsl(var(--foreground))">8.2d</b></span>
+        <span class="muted">Total P&amp;L: <b style="color:hsl(var(--positive))">+8.90%</b></span>
+        <span class="muted">Sharpe (sim): <b style="color:hsl(var(--foreground))">1.94</b></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== TEST LAB =========== -->
+<div class="tab-pane" data-pane="test-lab" hidden>
+  <div class="coming-soon">
+    <div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6"/><path d="M10 3v7l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3L14 10V3"/><path d="M8 14h8"/></svg></div>
+    <h3>Pair Test Lab</h3>
+    <p>Stress-test any spread across rolling windows. Compare entry rules (z-score, Bollinger, Kalman). Generate the equity curve before you risk capital.</p>
+    <div class="feat">
+      <span>Rolling cointegration</span><span>Half-life sensitivity</span><span>Slippage model</span><span>Walk-forward fold</span>
+    </div>
+  </div>
+</div>
+
+<!-- =========== SCANNER =========== -->
+<div class="tab-pane" data-pane="scanner" hidden>
+  <div class="coming-soon">
+    <div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/><path d="M11 8v3l2 2"/></svg></div>
+    <h3>Cross-sector Scanner</h3>
+    <p>Scan the entire NSE for pairs hitting ±2σ today. Filter by liquidity, sector, market cap, and significance threshold. Streaming alerts.</p>
+    <div class="feat">
+      <span>Real-time z-score</span><span>Liquidity filter</span><span>Alert webhooks</span><span>SMS · email</span>
+    </div>
+  </div>
+</div>
+
+<!-- =========== WATCHLIST =========== -->
+<div class="tab-pane" data-pane="watchlist" hidden>
+  <div style="padding:20px 0">
+    <div class="filter-rail" style="margin:0 0 18px">
+      <div class="field"><label>Search pair</label><input class="search-input" placeholder="HDFCBANK / ICICIBANK"></div>
+      <div class="field"><label>Status</label><select><option>All</option><option>In window (|z| &gt; 2)</option><option>Approaching</option><option>Mean</option></select></div>
+      <div class="spacer"></div>
+      <button class="btn btn-primary btn-sm" style="height:34px">+ Add pair</button>
+    </div>
+
+    <div style="background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden">
+      <table class="tbl">
+        <thead><tr><th>Pair</th><th>Method</th><th class="text-right">Score</th><th class="text-right">β</th><th class="text-right">Current z</th><th class="text-right">Half-life</th><th>Status</th><th class="text-right">Last alert</th><th></th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b style="font-family:var(--font-mono)">HDFCBANK</b> <span class="muted">/</span> <b style="font-family:var(--font-mono)">ICICIBANK</b></td>
+            <td><span class="badge">Cointeg.</span></td>
+            <td class="num text-right" style="color:hsl(var(--positive));font-weight:700">98</td>
+            <td class="num text-right">1.024</td>
+            <td class="num text-right" style="color:hsl(38 60% 40%)">+1.84</td>
+            <td class="num text-right">14d</td>
+            <td><span class="badge badge-gold">Approaching +2σ</span></td>
+            <td class="num text-right muted">2h ago</td>
+            <td class="text-right"><a href="#" class="muted body-sm">Open →</a></td>
+          </tr>
+          <tr>
+            <td><b style="font-family:var(--font-mono)">TCS</b> <span class="muted">/</span> <b style="font-family:var(--font-mono)">INFY</b></td>
+            <td><span class="badge">Cointeg.</span></td>
+            <td class="num text-right" style="color:hsl(var(--positive));font-weight:700">96</td>
+            <td class="num text-right">0.872</td>
+            <td class="num text-right" style="color:hsl(var(--positive))">−2.18</td>
+            <td class="num text-right">11d</td>
+            <td><span class="badge badge-pos">In window · LONG spread</span></td>
+            <td class="num text-right muted">12 min ago</td>
+            <td class="text-right"><a href="#" class="muted body-sm">Open →</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+<script>
+// --- Generate the cointegration matrix (deterministic-looking) ---
+(function(){
+  const symbols = ['HDFCBNK','ICICIBNK','SBIN','AXISBNK','KOTKBNK','INDUSBNK','BANKBARODA','PNB','FEDERLBNK','IDFCFIRST','RBLBANK','YESBANK','AUBANK','BANDHANBNK'];
+  // Hand-tuned symmetric matrix (banking sector — high cointegration cluster among big PSU+Private)
+  const seed = [
+    [100, 98, 86, 89, 88, 72, 78, 64, 74, 62, 56, 38, 68, 51], // HDFCBANK
+    [ 98,100, 84, 91, 86, 70, 74, 60, 71, 64, 54, 36, 65, 48], // ICICIBANK
+    [ 86, 84,100, 81, 71, 65, 96, 89, 78, 58, 51, 42, 60, 49], // SBIN
+    [ 89, 91, 81,100, 94, 76, 71, 58, 70, 67, 56, 33, 67, 44], // AXISBANK
+    [ 88, 86, 71, 94,100, 78, 64, 50, 68, 70, 53, 28, 71, 41], // KOTAKBANK
+    [ 72, 70, 65, 76, 78,100, 58, 46, 62, 71, 68, 32, 69, 56], // INDUSINDBK
+    [ 78, 74, 96, 71, 64, 58,100, 91, 76, 52, 47, 39, 56, 48], // BANKBARODA
+    [ 64, 60, 89, 58, 50, 46, 91,100, 71, 48, 44, 51, 42, 50], // PNB
+    [ 74, 71, 78, 70, 68, 62, 76, 71,100, 76, 82, 44, 71, 64], // FEDERAL
+    [ 62, 64, 58, 67, 70, 71, 52, 48, 76,100, 78, 38, 74, 61], // IDFCFIRST
+    [ 56, 54, 51, 56, 53, 68, 47, 44, 82, 78,100, 48, 71, 72], // RBLBANK
+    [ 38, 36, 42, 33, 28, 32, 39, 51, 44, 38, 48,100, 28, 56], // YESBANK
+    [ 68, 65, 60, 67, 71, 69, 56, 42, 71, 74, 71, 28,100, 58], // AUBANK
+    [ 51, 48, 49, 44, 41, 56, 48, 50, 64, 61, 72, 56, 58,100]  // BANDHANBNK
+  ];
+  function classify(v){
+    if(v >= 100) return 'diag';
+    if(v >= 95) return 'h-strong';
+    if(v >= 85) return 'h-high';
+    if(v >= 70) return 'h-mid';
+    if(v >= 50) return 'h-low';
+    if(v >= 35) return 'h-neutral';
+    if(v >= 20) return 'h-neg-low';
+    return 'h-neg-mid';
+  }
+  const tbody = document.getElementById('matrixBody');
+  const rows = symbols.map((s,i)=>{
+    const cells = symbols.map((c,j)=>{
+      if(i===j) return `<td class="diag">—</td>`;
+      const v = seed[i][j];
+      const cls = classify(v);
+      return `<td class="cell ${cls}" data-x="${s}" data-y="${c}" title="coint(${s}, ${c}) score = ${v}">${v}</td>`;
+    }).join('');
+    return `<tr><td class="sticky-y">${s}</td>${cells}</tr>`;
+  }).join('');
+  tbody.innerHTML = rows;
+
+  // Drilldown wiring
+  const matrixSection = document.getElementById('matrixSection');
+  const detailSection = document.getElementById('detailSection');
+  function showDetail(){
+    matrixSection.classList.add('hidden');
+    detailSection.classList.add('active');
+    window.scrollTo({top: matrixSection.offsetTop - 80, behavior:'smooth'});
+  }
+  function showMatrix(){
+    matrixSection.classList.remove('hidden');
+    detailSection.classList.remove('active');
+  }
+  document.querySelectorAll('.matrix-table td.cell').forEach(c=>{
+    c.addEventListener('click', showDetail);
+  });
+  document.querySelectorAll('.pair-row').forEach(r=>{
+    r.addEventListener('click', showDetail);
+  });
+  document.getElementById('backToMatrix').addEventListener('click', showMatrix);
+
+  // View toggle
+  document.querySelectorAll('.view-toggle button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('.view-toggle button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      if(b.dataset.view === 'chart') showDetail(); else showMatrix();
+    });
+  });
+
+  // Tab switching
+  document.querySelectorAll('.tab-bar button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-bar button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      const t = b.dataset.tab;
+      document.querySelectorAll('.tab-pane').forEach(p=>{
+        p.hidden = p.dataset.pane !== t;
+      });
+    });
+  });
+})();
+</script>
+</body></html>

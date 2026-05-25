@@ -1,0 +1,17 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "reg_fax": "91-40-23001153/23420",
+      "reg_tel": "91-40-67162222",
+      "reg_add1": "Karvy Selenium Tow-B",
+      "reg_add2": "31&32 Financial Dist",
+      "reg_add3": "Nanakramguda",
+      "reg_add4": "Hyderabad-500032",
+      "reg_email": "einward.ris@karvy.com",
+      "reg_internet": "www.kfintech.com",
+      "RegistrarName": "KFin Techologies Ltd"
+    }
+  ]
+}

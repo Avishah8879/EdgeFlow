@@ -89,7 +89,7 @@ export function FinancialResultsPanel() {
         <div className="grid grid-cols-4 gap-3 p-3 border-b border-[#1a1a1a]">
           <div className="space-y-1">
             <div className="text-[10px] uppercase tracking-wider text-[#888888]">Period</div>
-            <div className="font-mono text-sm text-[#00BFFF]" data-testid="text-latest-period">
+            <div className="font-mono text-sm text-[#FF6B47]" data-testid="text-latest-period">
               {latestResult.period}
             </div>
           </div>
@@ -146,7 +146,7 @@ export function FinancialResultsPanel() {
               wrapperStyle={{ fontSize: '10px', fontFamily: 'monospace' }}
               iconType="rect"
             />
-            <Bar dataKey="Revenue" fill="#00BFFF" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="Revenue" fill="#FF6B47" radius={[4, 4, 0, 0]} />
             <Bar dataKey="Profit" fill="#00FF00" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -167,7 +167,7 @@ export function FinancialResultsPanel() {
               className="grid grid-cols-5 gap-1 py-2 border-b border-[#1a1a1a] hover:bg-[#1a1a1a] transition-colors"
               data-testid={`row-result-${index}`}
             >
-              <div className="text-[11px] text-[#00BFFF] font-mono" data-testid={`text-period-${index}`}>
+              <div className="text-[11px] text-[#FF6B47] font-mono" data-testid={`text-period-${index}`}>
                 {result.period}
               </div>
               <div className="text-right font-mono text-sm text-[#FFFFFF]" data-testid={`text-revenue-${index}`}>

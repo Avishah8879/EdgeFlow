@@ -1,0 +1,171 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portfolio optimizer · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.po-hd{padding:18px 32px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.po-hd h1{font-family:var(--font-display);font-size:26px;letter-spacing:-0.02em;margin:0;color:hsl(var(--brand-navy))}
+.dark .po-hd h1{color:hsl(38 30% 95%)}
+.po-grid{display:grid;grid-template-columns:320px 1fr 320px;gap:0;min-height:calc(100vh - 64px - 76px)}
+.po-side{padding:18px;background:hsl(var(--card));overflow-y:auto}
+.po-side.l{border-right:1px solid hsl(var(--border))}
+.po-side.r{border-left:1px solid hsl(var(--border))}
+.po-side h4{font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground));margin:0 0 12px}
+.po-main{padding:24px 32px;background:hsl(var(--background));overflow-y:auto}
+
+.toggle{display:flex;border:1px solid hsl(var(--border));border-radius:var(--radius-md);overflow:hidden;height:32px;margin-bottom:14px}
+.toggle button{flex:1;background:transparent;border:0;font-size:11.5px;font-weight:700;color:hsl(var(--muted-foreground));cursor:pointer}
+.toggle button.active{background:hsl(var(--brand-navy));color:white}
+.dark .toggle button.active{background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep))}
+
+.fld{margin-bottom:14px;font-family:var(--font-mono)}
+.fld label{display:flex;justify-content:space-between;font-size:10.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground));margin-bottom:6px}
+.fld label .v{font-size:13px;color:hsl(var(--foreground))}
+.fld input[type=range]{width:100%;accent-color:hsl(var(--brand-gold))}
+
+.assets{font-family:var(--font-mono);font-size:11.5px}
+.assets .row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed hsl(var(--border))}
+.assets .sym{font-family:var(--font-display);font-weight:700;font-size:13px;color:hsl(var(--foreground))}
+.assets .row .x{color:hsl(var(--muted-foreground));cursor:pointer;padding:0 6px}
+
+.ef-chart{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px;margin-bottom:18px}
+.ef-chart h3{margin:0 0 12px;font-family:var(--font-display);font-size:18px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .ef-chart h3{color:hsl(38 30% 95%)}
+.ef-chart svg{width:100%;height:340px}
+
+.weights{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.weights .hd{padding:14px 18px;border-bottom:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center}
+.weights h3{margin:0;font-family:var(--font-display);font-size:16px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .weights h3{color:hsl(38 30% 95%)}
+.weights table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12px}
+.weights th{font-size:10.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:9px 14px;background:hsl(var(--muted)/0.5);text-align:right}
+.weights th:first-child{text-align:left}
+.weights td{padding:9px 14px;border-bottom:1px solid hsl(var(--border));text-align:right}
+.weights td:first-child{text-align:left}
+.weights tr:last-child td{border-bottom:0}
+.weights .sym{font-family:var(--font-display);font-weight:700;font-size:13px;color:hsl(var(--brand-navy))}
+.dark .weights .sym{color:hsl(38 30% 95%)}
+.weight-bar{display:inline-block;width:100px;height:6px;background:hsl(var(--muted));border-radius:3px;margin-right:6px;vertical-align:middle;overflow:hidden}
+.weight-bar span{display:block;height:100%;background:hsl(var(--brand-gold))}
+
+.metric-card{padding:14px;border:1px solid hsl(var(--border));border-radius:var(--radius-md);background:hsl(var(--background));margin-bottom:10px}
+.metric-card .l{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.metric-card .v{font-family:var(--font-mono);font-size:22px;font-weight:700;color:hsl(var(--foreground));margin-top:4px}
+</style></head>
+<body data-page="portfolio-optimizer" data-screen-label="Terminal · 32 Optimizer">
+<div class="shell"><div data-shell-topbar></div>
+<div class="po-hd"><span class="eyebrow">Terminal · Allocation</span><h1>Portfolio optimizer</h1><p class="muted body-sm" style="margin:4px 0 0">Mean-variance, Black-Litterman, risk-parity. Solve for the efficient frontier given your constraints.</p></div>
+
+<main class="po-grid">
+  <aside class="po-side l">
+    <h4>Objective</h4>
+    <div class="toggle"><button class="active">Max Sharpe</button><button>Min vol</button></div>
+    <div class="toggle"><button>Mean-Var</button><button class="active">Black-Litt</button><button>Risk-Parity</button></div>
+
+    <h4 style="margin-top:18px">Constraints</h4>
+    <div class="fld"><label>Max single name <span class="v">25%</span></label><input type="range" min="5" max="50" value="25"></div>
+    <div class="fld"><label>Max sector <span class="v">35%</span></label><input type="range" min="10" max="60" value="35"></div>
+    <div class="fld"><label>Min holdings <span class="v">8</span></label><input type="range" min="3" max="30" value="8"></div>
+    <div class="fld"><label>Risk-free rate <span class="v">6.84%</span></label><input type="range" min="0" max="12" value="6.84" step="0.01"></div>
+    <div class="fld"><label>Long-only</label><div class="toggle"><button class="active">Yes</button><button>Long-short</button></div></div>
+
+    <h4>Universe (12 names)</h4>
+    <div class="assets">
+      <div class="row"><span class="sym">RELIANCE</span><span>·</span><span class="x">×</span></div>
+      <div class="row"><span class="sym">HDFCBANK</span><span>·</span><span class="x">×</span></div>
+      <div class="row"><span class="sym">TCS</span><span>·</span><span class="x">×</span></div>
+      <div class="row"><span class="sym">INFY</span><span>·</span><span class="x">×</span></div>
+      <div class="row"><span class="sym">ICICIBANK</span><span>·</span><span class="x">×</span></div>
+      <div class="row"><span class="sym">BHARTIARTL</span><span>·</span><span class="x">×</span></div>
+      <div class="row"><span class="sym">LT</span><span>·</span><span class="x">×</span></div>
+      <div class="row"><span class="sym">ITC</span><span>·</span><span class="x">×</span></div>
+      <div class="row"><span class="sym">MARUTI</span><span>·</span><span class="x">×</span></div>
+      <div class="row"><span class="sym">SUNPHARMA</span><span>·</span><span class="x">×</span></div>
+      <div class="row"><span class="sym">ASIANPAINT</span><span>·</span><span class="x">×</span></div>
+      <div class="row"><span class="sym">TITAN</span><span>·</span><span class="x">×</span></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px">+ Add asset</button>
+    <button class="btn btn-primary" style="width:100%;margin-top:14px">Optimize</button>
+  </aside>
+
+  <section class="po-main">
+    <div class="ef-chart">
+      <h3>Efficient frontier · 5y monthly returns</h3>
+      <svg viewBox="0 0 800 340">
+        <line x1="60" y1="300" x2="780" y2="300" stroke="hsl(var(--border))"/>
+        <line x1="60" y1="20" x2="60" y2="300" stroke="hsl(var(--border))"/>
+        <g stroke="hsl(var(--border))" stroke-dasharray="2 4"><line x1="60" y1="80" x2="780" y2="80"/><line x1="60" y1="160" x2="780" y2="160"/><line x1="60" y1="240" x2="780" y2="240"/></g>
+
+        <!-- frontier curve -->
+        <path d="M120,260 C200,200 320,140 480,80 C600,50 700,40 760,38" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="2.5"/>
+        <!-- capital market line -->
+        <line x1="60" y1="280" x2="780" y2="20" stroke="hsl(213 50% 50%)" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+        <!-- random portfolios scatter -->
+        <g fill="hsl(var(--muted-foreground))" opacity="0.45">
+          <circle cx="160" cy="232" r="2"/><circle cx="184" cy="216" r="2"/><circle cx="200" cy="244" r="2"/><circle cx="232" cy="208" r="2"/>
+          <circle cx="252" cy="220" r="2"/><circle cx="288" cy="190" r="2"/><circle cx="312" cy="178" r="2"/><circle cx="340" cy="200" r="2"/>
+          <circle cx="368" cy="160" r="2"/><circle cx="396" cy="184" r="2"/><circle cx="420" cy="148" r="2"/><circle cx="456" cy="172" r="2"/>
+          <circle cx="488" cy="124" r="2"/><circle cx="520" cy="148" r="2"/><circle cx="548" cy="118" r="2"/><circle cx="580" cy="100" r="2"/>
+          <circle cx="616" cy="120" r="2"/><circle cx="652" cy="84" r="2"/><circle cx="688" cy="98" r="2"/><circle cx="720" cy="62" r="2"/>
+        </g>
+
+        <!-- key points -->
+        <circle cx="180" cy="252" r="6" fill="hsl(213 50% 50%)" stroke="white" stroke-width="2"/>
+        <text x="190" y="248" font-family="ui-monospace" font-size="10" fill="hsl(var(--foreground))" font-weight="700">Min vol</text>
+        <text x="190" y="262" font-family="ui-monospace" font-size="9" fill="hsl(var(--muted-foreground))">σ 11.2 · μ 13.4</text>
+
+        <circle cx="480" cy="80" r="8" fill="hsl(var(--brand-gold))" stroke="white" stroke-width="2"/>
+        <text x="494" y="78" font-family="ui-monospace" font-size="11" fill="hsl(var(--brand-gold))" font-weight="700">Max Sharpe ★</text>
+        <text x="494" y="92" font-family="ui-monospace" font-size="9" fill="hsl(var(--muted-foreground))">σ 18.4 · μ 24.6 · S 0.96</text>
+
+        <circle cx="680" cy="48" r="5" fill="hsl(var(--negative))" stroke="white" stroke-width="2"/>
+        <text x="692" y="46" font-family="ui-monospace" font-size="10" fill="hsl(var(--foreground))" font-weight="700">Max return</text>
+
+        <!-- current portfolio -->
+        <circle cx="380" cy="180" r="6" fill="white" stroke="hsl(213 50% 50%)" stroke-width="2.5"/>
+        <text x="390" y="178" font-family="ui-monospace" font-size="10" fill="hsl(var(--foreground))" font-weight="700">Current</text>
+        <text x="390" y="190" font-family="ui-monospace" font-size="9" fill="hsl(var(--muted-foreground))">σ 16.8 · μ 18.6 · S 0.70</text>
+
+        <g font-family="ui-monospace" font-size="10" fill="hsl(var(--muted-foreground))">
+          <text x="56" y="304" text-anchor="end">0%</text><text x="56" y="244" text-anchor="end">10%</text><text x="56" y="164" text-anchor="end">20%</text><text x="56" y="84" text-anchor="end">30%</text><text x="56" y="24" text-anchor="end">40%</text>
+          <text x="60" y="320">0%</text><text x="240" y="320">10%</text><text x="420" y="320">20%</text><text x="600" y="320">30%</text><text x="780" y="320" text-anchor="end">vol →</text>
+          <text x="14" y="160" transform="rotate(-90 14 160)" text-anchor="middle">↑ expected return</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="weights">
+      <div class="hd"><h3>Optimal weights · Max-Sharpe</h3><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Compare current</button><button class="btn btn-primary btn-sm">Apply →</button></div></div>
+      <table>
+        <thead><tr><th>Stock</th><th>Current %</th><th>Optimal %</th><th>Δ</th><th>Allocation</th><th>Beta</th><th>Vol</th><th>Exp ret</th></tr></thead>
+        <tbody>
+          <tr><td><span class="sym">RELIANCE</span></td><td>41.3</td><td>22.4</td><td class="change-down">−18.9</td><td><span class="weight-bar"><span style="width:90%"></span></span>22.4%</td><td>1.12</td><td>22.4</td><td>+18.4%</td></tr>
+          <tr><td><span class="sym">HDFCBANK</span></td><td>12.8</td><td>18.6</td><td class="change-up">+5.8</td><td><span class="weight-bar"><span style="width:74%"></span></span>18.6%</td><td>0.84</td><td>14.6</td><td>+22.4%</td></tr>
+          <tr><td><span class="sym">ICICIBANK</span></td><td>9.6</td><td>14.2</td><td class="change-up">+4.6</td><td><span class="weight-bar"><span style="width:57%"></span></span>14.2%</td><td>0.92</td><td>15.2</td><td>+24.8%</td></tr>
+          <tr><td><span class="sym">TCS</span></td><td>10.8</td><td>11.8</td><td class="change-up">+1.0</td><td><span class="weight-bar"><span style="width:47%"></span></span>11.8%</td><td>0.92</td><td>18.4</td><td>+16.4%</td></tr>
+          <tr><td><span class="sym">BHARTIARTL</span></td><td>8.5</td><td>11.4</td><td class="change-up">+2.9</td><td><span class="weight-bar"><span style="width:46%"></span></span>11.4%</td><td>0.78</td><td>16.4</td><td>+22.8%</td></tr>
+          <tr><td><span class="sym">LT</span></td><td>5.1</td><td>9.8</td><td class="change-up">+4.7</td><td><span class="weight-bar"><span style="width:39%"></span></span>9.8%</td><td>1.04</td><td>20.4</td><td>+24.6%</td></tr>
+          <tr><td><span class="sym">MARUTI</span></td><td>3.4</td><td>6.4</td><td class="change-up">+3.0</td><td><span class="weight-bar"><span style="width:26%"></span></span>6.4%</td><td>0.96</td><td>22.4</td><td>+18.4%</td></tr>
+          <tr><td><span class="sym">SUNPHARMA</span></td><td>2.5</td><td>5.4</td><td class="change-up">+2.9</td><td><span class="weight-bar"><span style="width:22%"></span></span>5.4%</td><td>0.74</td><td>17.4</td><td>+15.6%</td></tr>
+          <tr><td><span class="sym">INFY</span></td><td>4.0</td><td>0.0</td><td class="change-down">−4.0</td><td><span style="color:hsl(var(--muted-foreground))">excluded</span></td><td>1.04</td><td>26.2</td><td>−4.2%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <aside class="po-side r">
+    <h4>Optimal portfolio metrics</h4>
+    <div class="metric-card"><div class="l">Expected return</div><div class="v change-up">+24.6%</div></div>
+    <div class="metric-card"><div class="l">Volatility (σ)</div><div class="v">18.4%</div></div>
+    <div class="metric-card"><div class="l">Sharpe ratio</div><div class="v">0.96</div></div>
+    <div class="metric-card"><div class="l">Max drawdown (sim)</div><div class="v change-down">−14.6%</div></div>
+    <div class="metric-card"><div class="l">Beta vs NIFTY</div><div class="v">0.92</div></div>
+    <div class="metric-card"><div class="l">CVaR 95%</div><div class="v change-down">−6.8%</div></div>
+    <h4 style="margin-top:14px">Δ vs current</h4>
+    <p class="muted body-sm" style="font-size:11.5px;line-height:1.6;margin:0">Reduces RELIANCE concentration from 41% → 22%. Adds HDFCBANK and ICICIBANK weight. Removes INFY (negative momentum). Expected Sharpe improves from 0.70 → 0.96.</p>
+  </aside>
+</main>
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

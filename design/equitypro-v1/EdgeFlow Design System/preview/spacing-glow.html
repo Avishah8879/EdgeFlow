@@ -1,0 +1,21 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin:0; padding:28px; background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-sans); }
+  .grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:24px; }
+  .cell { display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .glow { width:120px; height:60px; background: hsl(var(--card)); border-radius:10px; border:1px solid hsl(var(--border)); }
+  .name { font-size:11px; color:hsl(var(--muted-foreground)); font-family:var(--font-mono); }
+  .g1 { box-shadow: 0 0 12px hsl(var(--primary)/0.30), 0 0 24px hsl(var(--primary)/0.18); border-color: hsl(var(--primary)/0.5); }
+  .g2 { box-shadow: 0 0 12px hsl(var(--brand-orange)/0.30), 0 0 24px hsl(var(--brand-orange)/0.18); border-color: hsl(var(--brand-orange)/0.4); }
+  .g3 { box-shadow: 0 0 10px hsl(var(--positive)/0.4); border-color: hsl(var(--positive)/0.4); }
+  h1 { font-size:13px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color: hsl(var(--muted-foreground)); margin:0 0 14px; }
+</style></head>
+<body>
+  <h1>Glows — the brand "shadow" system</h1>
+  <div class="grid">
+    <div class="cell"><div class="glow g1"></div><div class="name">primary glow · cyan</div></div>
+    <div class="cell"><div class="glow g2"></div><div class="name">brand glow · orange</div></div>
+    <div class="cell"><div class="glow g3"></div><div class="name">positive glow · green</div></div>
+  </div>
+</body></html>

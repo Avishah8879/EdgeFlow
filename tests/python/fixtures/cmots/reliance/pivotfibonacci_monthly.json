@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "R1": 1324.2114000000001,
+      "R2": 1328.3886,
+      "R3": 1335.15,
+      "S1": 1310.6886,
+      "S2": 1306.5114,
+      "S3": 1299.75,
+      "co_code": 476.0,
+      "co_name": "Reliance Industries",
+      "CurrTime": "2026-04-13T00:00:00",
+      "currprice": 1314.55,
+      "PivotPoint": 1317.45
+    }
+  ]
+}

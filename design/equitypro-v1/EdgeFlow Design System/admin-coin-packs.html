@@ -1,0 +1,141 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coin packs · Admin</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.ad-shell{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
+.ad-side{background:hsl(var(--brand-navy-deep));color:hsl(38 30% 88%);padding:18px 0;font-family:var(--font-mono)}
+.ad-side h4{padding:8px 18px;margin:0;font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--brand-gold));font-family:var(--font-display)}
+.ad-side a{display:block;padding:8px 18px;font-size:12.5px;color:hsl(38 30% 75%);text-decoration:none;border-left:3px solid transparent}
+.ad-side a.active{background:hsl(213 50% 18%);color:hsl(var(--brand-gold));border-left-color:hsl(var(--brand-gold));font-weight:700}
+.ad-side a:hover{background:hsl(213 50% 18%);color:white}
+.ad-main{padding:24px 32px 60px;background:hsl(var(--background))}
+.ad-hd{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+.ad-hd h1{font-family:var(--font-display);font-size:28px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .ad-hd h1{color:hsl(38 30% 95%)}
+
+.packs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.pack{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.pack.featured{border:2px solid hsl(var(--brand-gold))}
+.pack.featured::before{content:"FEATURED";position:absolute;top:8px;right:-22px;background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));font-family:var(--font-mono);font-size:9px;font-weight:800;padding:2px 26px;transform:rotate(38deg);letter-spacing:0.05em}
+.pack .coin{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,hsl(var(--brand-gold)),hsl(38 70% 40%));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:22px;color:white;margin:0 0 12px;box-shadow:inset 0 -4px 8px rgba(0,0,0,0.2)}
+.pack h3{font-family:var(--font-display);font-size:18px;margin:0 0 4px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .pack h3{color:hsl(38 30% 95%)}
+.pack .desc{font-size:12px;color:hsl(var(--muted-foreground));margin:0 0 14px;line-height:1.5}
+.pack .price{font-family:var(--font-mono);font-size:28px;font-weight:700;color:hsl(var(--foreground));margin:6px 0 4px;letter-spacing:-0.02em}
+.pack .save{font-family:var(--font-mono);font-size:11px;color:hsl(var(--positive));font-weight:700;margin-bottom:12px}
+.pack .meta{font-family:var(--font-mono);font-size:11px;border-top:1px solid hsl(var(--border));padding-top:10px;margin-top:auto}
+.pack .meta .row{display:flex;justify-content:space-between;padding:4px 0;color:hsl(var(--muted-foreground))}
+.pack .meta .row b{color:hsl(var(--foreground));font-weight:700}
+.pack .actions{display:flex;gap:6px;margin-top:12px}
+.pack .actions button{flex:1}
+
+.tbl{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;margin-top:18px}
+.tbl th{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:10px 14px;background:hsl(var(--muted)/0.5);text-align:right}
+.tbl th:first-child{text-align:left}
+.tbl td{padding:10px 14px;border-bottom:1px solid hsl(var(--border));text-align:right}
+.tbl td:first-child{text-align:left;font-weight:700}
+.tbl tr:last-child td{border-bottom:0}
+</style></head>
+<body data-page="admin-coin-packs" data-screen-label="Admin · 45 Coin packs">
+<div class="shell"><div data-shell-topbar></div>
+
+<main class="ad-shell">
+  <aside class="ad-side">
+    <h4>Admin</h4>
+    <a href="admin-analytics.html">Analytics</a>
+    <a href="admin-users.html">Users</a>
+    <a href="admin-feature-flags.html">Feature flags</a>
+    <a href="admin-audit-logs.html">Audit logs</a>
+    <a href="admin-coin-packs.html" class="active">Coin packs</a>
+    <a href="admin-coin-transactions.html">Coin transactions</a>
+    <a href="admin-email-settings.html">Email settings</a>
+    <a href="admin-api-keys.html">API keys</a>
+  </aside>
+
+  <section class="ad-main">
+    <div class="ad-hd">
+      <div><span class="eyebrow">Admin · Monetization</span><h1>Coin packs &amp; subscriptions</h1></div>
+      <div class="flex gap-2"><button class="btn btn-ghost btn-sm">Pricing playbook</button><button class="btn btn-primary btn-sm">+ New pack</button></div>
+    </div>
+
+    <p class="muted body-sm" style="margin:-6px 0 18px;font-family:var(--font-mono);font-size:12px">EquityCoins are pre-purchased credits used for premium one-shot features (advanced reports, AI summaries, expert calls). 1 coin ≈ ₹1.</p>
+
+    <div class="packs">
+      <article class="pack">
+        <div class="coin">100</div>
+        <h3>Starter pack</h3>
+        <p class="desc">Try out premium reports and AI summaries. ~10 reports.</p>
+        <div class="price">₹100</div>
+        <div class="save">No discount · onboarding</div>
+        <div class="meta">
+          <div class="row"><span>Stripe SKU</span><b>coin_100_starter</b></div>
+          <div class="row"><span>Sold (30d)</span><b>2,420</b></div>
+          <div class="row"><span>Revenue</span><b>₹2.4L</b></div>
+          <div class="row"><span>Margin</span><b>72%</b></div>
+        </div>
+        <div class="actions"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-ghost btn-sm">Stats</button></div>
+      </article>
+
+      <article class="pack featured">
+        <div class="coin">500</div>
+        <h3>Pro pack</h3>
+        <p class="desc">Most popular. ~50 premium reports + 20 AI summaries.</p>
+        <div class="price">₹449</div>
+        <div class="save change-up">Save 10% · ₹51 off</div>
+        <div class="meta">
+          <div class="row"><span>Stripe SKU</span><b>coin_500_pro</b></div>
+          <div class="row"><span>Sold (30d)</span><b>3,142</b></div>
+          <div class="row"><span>Revenue</span><b>₹14.1L</b></div>
+          <div class="row"><span>Margin</span><b>76%</b></div>
+        </div>
+        <div class="actions"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-ghost btn-sm">Stats</button></div>
+      </article>
+
+      <article class="pack">
+        <div class="coin">1.5k</div>
+        <h3>Quant pack</h3>
+        <p class="desc">For active researchers. ~150 reports / 80 AI summaries.</p>
+        <div class="price">₹1,199</div>
+        <div class="save change-up">Save 20% · ₹301 off</div>
+        <div class="meta">
+          <div class="row"><span>Stripe SKU</span><b>coin_1500_quant</b></div>
+          <div class="row"><span>Sold (30d)</span><b>1,142</b></div>
+          <div class="row"><span>Revenue</span><b>₹13.7L</b></div>
+          <div class="row"><span>Margin</span><b>78%</b></div>
+        </div>
+        <div class="actions"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-ghost btn-sm">Stats</button></div>
+      </article>
+
+      <article class="pack">
+        <div class="coin">5k</div>
+        <h3>Enterprise pack</h3>
+        <p class="desc">Team-shareable. Includes 1 expert call &amp; bulk-API allotment.</p>
+        <div class="price">₹3,499</div>
+        <div class="save change-up">Save 30% · ₹1,501 off</div>
+        <div class="meta">
+          <div class="row"><span>Stripe SKU</span><b>coin_5000_ent</b></div>
+          <div class="row"><span>Sold (30d)</span><b>168</b></div>
+          <div class="row"><span>Revenue</span><b>₹5.9L</b></div>
+          <div class="row"><span>Margin</span><b>82%</b></div>
+        </div>
+        <div class="actions"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-ghost btn-sm">Stats</button></div>
+      </article>
+    </div>
+
+    <table class="tbl">
+      <thead><tr><th>Pack</th><th>Price</th><th>Coins</th><th>Discount</th><th>Sold (30d)</th><th>Revenue (30d)</th><th>Avg burn (days)</th><th>Repurchase rate</th></tr></thead>
+      <tbody>
+        <tr><td>Starter (100)</td><td>₹100</td><td>100</td><td>0%</td><td>2,420</td><td>₹2.4L</td><td>14d</td><td>32%</td></tr>
+        <tr><td>Pro (500)</td><td>₹449</td><td>500</td><td>10%</td><td>3,142</td><td>₹14.1L</td><td>22d</td><td>54%</td></tr>
+        <tr><td>Quant (1,500)</td><td>₹1,199</td><td>1,500</td><td>20%</td><td>1,142</td><td>₹13.7L</td><td>34d</td><td>68%</td></tr>
+        <tr><td>Enterprise (5,000)</td><td>₹3,499</td><td>5,000</td><td>30%</td><td>168</td><td>₹5.9L</td><td>62d</td><td>78%</td></tr>
+        <tr><td>Add-on · expert call (1)</td><td>₹999</td><td>—</td><td>—</td><td>284</td><td>₹2.8L</td><td>—</td><td>22%</td></tr>
+        <tr><td>Add-on · prem report (1)</td><td>₹49</td><td>50 burn</td><td>—</td><td>4,820</td><td>₹2.4L</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+</div>
+<script src="app.js"></script>
+</body></html>

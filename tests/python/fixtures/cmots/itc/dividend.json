@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "isin": "INE154A01025",
+      "divper": 785.0,
+      "remark": "Final",
+      "symbol": "ITC",
+      "co_code": 301.0,
+      "co_name": "ITC Ltd",
+      "divdate": "2025-05-28T00:00:00",
+      "divamount": 7.85,
+      "recorddate": "2025-05-28T00:00:00",
+      "description": "",
+      "announcementdate": "2025-05-22T00:00:00"
+    },
+    {
+      "isin": "INE154A01025",
+      "divper": 650.0,
+      "remark": "Interim",
+      "symbol": "ITC",
+      "co_code": 301.0,
+      "co_name": "ITC Ltd",
+      "divdate": "2026-02-04T00:00:00",
+      "divamount": 6.5,
+      "recorddate": "2026-02-04T00:00:00",
+      "description": "",
+      "announcementdate": "2026-01-29T00:00:00"
+    }
+  ]
+}

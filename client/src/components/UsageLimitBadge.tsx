@@ -47,7 +47,7 @@ export function UsageLimitBadge({ feature, showLabel = false, className }: Usage
   // Determine state
   const isWarning = percentage >= 80;
   const isExhausted = remaining === 0;
-  const isPremium = limits.tier === 'premium';
+  const isPremium = limits.tier === 'pro' || limits.tier === 'semi';
 
   // Don't show for premium users with high limits (100+)
   if (isPremium && total >= 100 && !isWarning) {

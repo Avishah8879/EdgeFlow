@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "isin": "INE002A01018",
+      "gmdate": "2025-08-29T00:00:00",
+      "symbol": "RELIANCE",
+      "co_code": 476.0,
+      "co_name": "Reliance Industries Ltd",
+      "purpose": "AGM",
+      "description": "The Forty-eighth Annual General Meeting (Post-IPO) of the members of the Company will be held on Friday, August 29, 2025 at 2:00 P.M. (IST) through Video Conferencing / Other Audio Visual Means.\r\n\r\nGist of the proceedings of the Forty-eighth Annual General Meeting (Post - IPO) of the Company held on August 29, 2025, is attached. \r\n\r\n(As Per BSE Announcement Dated on: 30/08/2025)",
+      "bcloserenddate": null,
+      "announcementdate": "2025-07-31T00:00:00",
+      "bcloserstartdate": null
+    }
+  ]
+}

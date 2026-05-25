@@ -7,9 +7,7 @@
 
 import { useState } from 'react';
 import { Link, useParams, useLocation } from 'wouter';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -28,6 +26,7 @@ import {
   Check,
   Share2,
   ExternalLink,
+  Home,
 } from 'lucide-react';
 import {
   useSavedScreenerResult,
@@ -35,6 +34,7 @@ import {
 } from '@/hooks/use-saved-results';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { Eyebrow } from '@/components/ui/eyebrow';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -51,9 +51,9 @@ export default function SavedScreenerDetail() {
 
   if (isLoading) {
     return (
-      <div className="container max-w-6xl mx-auto py-8 px-4">
+      <div className="max-w-6xl mx-auto py-16 px-4">
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--brand-gold))]" />
         </div>
       </div>
     );
@@ -61,16 +61,19 @@ export default function SavedScreenerDetail() {
 
   if (error || !result) {
     return (
-      <div className="container max-w-6xl mx-auto py-8 px-4">
+      <div className="max-w-6xl mx-auto py-16 px-4">
         <div className="text-center py-16">
-          <h2 className="text-xl font-semibold mb-2">Result not found</h2>
-          <p className="text-muted-foreground mb-4">
-            The screener result you're looking for doesn't exist or you don't have access to it.
+          <h2 className="font-display text-2xl font-bold text-[hsl(var(--brand-navy))] dark:text-foreground mb-2">
+            Result not found
+          </h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            The screener result you're looking for doesn't exist or you don't
+            have access to it.
           </p>
           <Link href="/saved-results">
-            <Button>
+            <Button className="rounded-full bg-[hsl(var(--brand-navy))] text-white hover:bg-[hsl(var(--brand-navy))]/90">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Saved Results
+              Back to saved results
             </Button>
           </Link>
         </div>
@@ -108,139 +111,180 @@ export default function SavedScreenerDetail() {
   };
 
   return (
-    <div className="container max-w-6xl mx-auto py-8 px-4">
-      {/* Back button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mb-4"
-        onClick={() => navigate('/saved-results')}
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Saved Results
-      </Button>
+    <div className="min-h-screen bg-background">
+      {/* Page masthead */}
+      <section className="border-b border-border bg-card">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-8">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
+            <Link
+              href="/home"
+              className="hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              <Home className="w-3 h-3" /> Home
+            </Link>
+            <ChevronRight className="w-3 h-3 opacity-40" />
+            <Link
+              href="/saved-results"
+              className="hover:text-foreground transition-colors"
+            >
+              Saved results
+            </Link>
+            <ChevronRight className="w-3 h-3 opacity-40" />
+            <span className="text-foreground font-medium truncate max-w-[200px]">
+              {result.name}
+            </span>
+          </nav>
 
-      {/* Header Card */}
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <CardTitle>{result.name}</CardTitle>
-              <CardDescription className="flex items-center gap-2">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="space-y-1.5 min-w-0">
+              <Eyebrow tone="gold" rule>
+                Saved screener
+              </Eyebrow>
+              <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+                {result.name}
+              </h1>
+              <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
                 <Clock className="h-3 w-3" />
-                {formatDistanceToNow(new Date(result.created_at), { addSuffix: true })}
+                {formatDistanceToNow(new Date(result.created_at), {
+                  addSuffix: true,
+                })}
                 {result.execution_time_ms && (
                   <>
-                    <span className="text-muted-foreground">•</span>
-                    <span>Executed in {(result.execution_time_ms / 1000).toFixed(2)}s</span>
+                    <span>·</span>
+                    <span>
+                      Executed in{' '}
+                      <span className="font-mono tabular-nums">
+                        {(result.execution_time_ms / 1000).toFixed(2)}s
+                      </span>
+                    </span>
                   </>
                 )}
-              </CardDescription>
+              </p>
             </div>
-            <Badge variant="secondary" className="text-lg px-3 py-1">
+            <span className="font-mono text-sm font-bold uppercase tracking-uppercase px-3 py-1.5 rounded-full bg-[hsl(var(--brand-gold))]/15 text-[hsl(var(--brand-gold))] tabular-nums">
               {result.result_count} matches
-            </Badge>
+            </span>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Expression</label>
-              <div className="bg-muted/50 rounded-md p-3 mt-1">
-                <code className="text-sm break-all">{result.expression}</code>
+
+          <div className="rounded-md bg-muted/40 p-3 mt-5">
+            <code className="text-[12.5px] font-mono break-all text-foreground">
+              {result.expression}
+            </code>
+          </div>
+
+          <div className="flex items-center gap-2 mt-4">
+            {result.is_shared && result.share_token ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={copyShareLink}
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                {copied ? 'Copied' : 'Copy share link'}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={handleShare}
+                disabled={shareScreenerMutation.isPending}
+              >
+                {shareScreenerMutation.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                ) : (
+                  <Share2 className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                Share
+              </Button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Results */}
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+        {matchingSymbols.length > 0 ? (
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <h2 className="font-display text-base font-bold text-[hsl(var(--brand-navy))] dark:text-foreground">
+                Matching stocks
+              </h2>
+              <div className="text-xs text-muted-foreground font-mono tabular-nums">
+                {startIndex + 1}–
+                {Math.min(endIndex, matchingSymbols.length)} of{' '}
+                {matchingSymbols.length}
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {result.is_shared && result.share_token ? (
-                <Button variant="outline" size="sm" onClick={copyShareLink}>
-                  {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                  {copied ? 'Copied' : 'Copy Share Link'}
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleShare}
-                  disabled={shareScreenerMutation.isPending}
-                >
-                  {shareScreenerMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  ) : (
-                    <Share2 className="h-4 w-4 mr-1" />
-                  )}
-                  Share
-                </Button>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Results Table */}
-      {matchingSymbols.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Matching Stocks</CardTitle>
-              <div className="text-sm text-muted-foreground">
-                Showing {startIndex + 1}-{Math.min(endIndex, matchingSymbols.length)} of {matchingSymbols.length}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="border rounded-md overflow-hidden">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="w-28 font-semibold">Symbol</TableHead>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="w-28 text-[10.5px] font-bold uppercase tracking-uppercase text-muted-foreground">
+                      Symbol
+                    </TableHead>
+                    {indicatorKeys.map((key) => (
+                      <TableHead
+                        key={key}
+                        className="text-right text-[10.5px] font-bold uppercase tracking-uppercase text-muted-foreground"
+                      >
+                        {key.toUpperCase()}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentPageSymbols.map((item: any) => (
+                    <TableRow
+                      key={item.symbol}
+                      className="hover:bg-muted/30 transition-colors duration-fast"
+                    >
+                      <TableCell>
+                        <Link
+                          href={`/stocks/${item.symbol}`}
+                          className="hover:underline text-[hsl(var(--brand-gold))] font-mono font-bold flex items-center gap-1"
+                        >
+                          {item.symbol}
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      </TableCell>
                       {indicatorKeys.map((key) => (
-                        <TableHead key={key} className="text-right font-semibold">
-                          {key.toUpperCase()}
-                        </TableHead>
+                        <TableCell
+                          key={key}
+                          className="text-right font-mono tabular-nums text-[12.5px]"
+                        >
+                          {item.indicators?.[key]?.toFixed(2) ?? '—'}
+                        </TableCell>
                       ))}
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentPageSymbols.map((item: any) => (
-                      <TableRow key={item.symbol} className="hover:bg-muted/30">
-                        <TableCell className="font-medium">
-                          <Link
-                            href={`/stocks/${item.symbol}`}
-                            className="hover:underline text-primary flex items-center gap-1"
-                          >
-                            {item.symbol}
-                            <ExternalLink className="h-3 w-3" />
-                          </Link>
-                        </TableCell>
-                        {indicatorKeys.map((key) => (
-                          <TableCell key={key} className="text-right font-mono text-sm">
-                            {item.indicators?.[key]?.toFixed(2) ?? '-'}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center justify-between p-4 border-t border-border">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  className="rounded-full"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
                   disabled={currentPage === 1}
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Previous
                 </Button>
 
-                <div className="flex items-center gap-2">
-                  {/* Page numbers */}
+                <div className="flex items-center gap-1">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNum: number;
                     if (totalPages <= 5) {
@@ -255,9 +299,11 @@ export default function SavedScreenerDetail() {
                     return (
                       <Button
                         key={pageNum}
-                        variant={currentPage === pageNum ? 'default' : 'outline'}
+                        variant={
+                          currentPage === pageNum ? 'default' : 'outline'
+                        }
                         size="sm"
-                        className="w-8 h-8 p-0"
+                        className="w-8 h-8 p-0 font-mono"
                         onClick={() => setCurrentPage(pageNum)}
                       >
                         {pageNum}
@@ -269,7 +315,10 @@ export default function SavedScreenerDetail() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  className="rounded-full"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
                   disabled={currentPage === totalPages}
                 >
                   Next
@@ -277,15 +326,13 @@ export default function SavedScreenerDetail() {
                 </Button>
               </div>
             )}
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
+          </div>
+        ) : (
+          <div className="rounded-xl border border-border bg-card py-12 text-center text-muted-foreground">
             No matching symbols data available
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

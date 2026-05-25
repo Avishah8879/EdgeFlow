@@ -21,6 +21,7 @@ logs/
 .env.production
 .env.*.local
 .local/
+.handoff-secrets/
 .python-version
 server/public/
 uploads/
@@ -41,4 +42,12 @@ Thumbs.db
 # Misc
 *.tar.gz
 vite.config.ts.*
+
+# Credentials
+fyers_token.json
+APIKey*.csv
+
+# DB backups (created in Step 0 of CMOTS integration)
+backups/*.dump
+backups/*.sql
 

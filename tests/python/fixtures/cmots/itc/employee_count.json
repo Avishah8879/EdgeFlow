@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "YRC": 202503,
+      "TotalEmpoyee": 47358.0,
+      "TotalEmpoyee_Male": 40490.0,
+      "TotalEmpoyee_Female": 6868.0,
+      "PermenantWomenEmployee": 2610.0,
+      "PermenantDisabledEmployee": 370.0,
+      "TotalEmployee_Contractbasis": 25317.0
+    }
+  ]
+}

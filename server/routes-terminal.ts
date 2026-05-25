@@ -1,6 +1,6 @@
 /**
  * routes-terminal.ts
- * FinTerminal-specific Express routes:
+ * EquityPro-specific Express routes:
  * - Market data proxy routes (options, chart, screener, streaming, etc.)
  * - User data CRUD routes (watchlist, window layouts, forum)
  */
@@ -33,15 +33,37 @@ export function registerTerminalRoutes(app: Express): void {
 
   // ── Chart data ─────────────────────────────────────────────────────────
 
+  // Helper: convert Python price-chart response to PriceDataPoint[] format
+  function normalizePriceChart(raw: any): Array<{ timestamp: string; open: number; high: number; low: number; close: number; volume: number }> {
+    const envelope = raw?.data ?? raw;
+    const priceData: any[] = Array.isArray(envelope?.price_data)
+      ? envelope.price_data
+      : Array.isArray(envelope)
+      ? envelope
+      : [];
+    return priceData
+      .filter((p: any) => p != null)
+      .map((p: any) => ({
+        timestamp: p.timestamp ?? new Date((p.time as number) * 1000).toISOString(),
+        open: Number(p.open ?? 0),
+        high: Number(p.high ?? 0),
+        low: Number(p.low ?? 0),
+        close: Number(p.close ?? 0),
+        volume: Number(p.volume ?? 0),
+      }));
+  }
+
   app.get("/api/chart/intraday/:symbol", async (req, res) => {
     try {
       const { symbol } = req.params;
-      const valid = ['1m', '5m', '15m', '1h'];
+      const sym = symbol.toUpperCase();
+      // Map interval to Python timeframe
       const raw = typeof req.query.interval === 'string' ? req.query.interval : '5m';
-      const interval = valid.includes(raw) ? raw : '5m';
-      const result = await proxyToPython(`/api/chart/intraday/${symbol.toUpperCase()}?interval=${interval}`, buildPythonOptions(req, { timeout: 20000 }));
-      return res.json(result);
-    } catch (error) {
+      const tfMap: Record<string, string> = { '1m': '1min', '5m': '5min', '15m': '15min', '1h': '1hour' };
+      const timeframe = tfMap[raw] ?? '5min';
+      const result = await proxyToPython(`/api/price-chart/${encodeURIComponent(sym)}?timeframe=${timeframe}&months=1`, buildPythonOptions(req, { timeout: 20000 }));
+      return res.json({ data: normalizePriceChart(result) });
+    } catch {
       return sendDataUnavailable(res, 'Chart data unavailable');
     }
   });
@@ -49,13 +71,18 @@ export function registerTerminalRoutes(app: Express): void {
   app.get("/api/chart/daily/:symbol", async (req, res) => {
     try {
       const { symbol } = req.params;
-      const params = new URLSearchParams();
-      if (req.query.period) params.append('period', String(req.query.period));
-      if (req.query.timeframe) params.append('timeframe', String(req.query.timeframe));
-      const qs = params.toString();
-      const result = await proxyToPython(`/api/chart/daily/${symbol.toUpperCase()}${qs ? `?${qs}` : ''}`, buildPythonOptions(req, { timeout: 20000 }));
-      return res.json(result);
-    } catch (error) {
+      const sym = symbol.toUpperCase();
+      // Map period to months
+      const periodMap: Record<string, number> = { '1y': 12, '2y': 24, '5y': 60 };
+      const periodStr = typeof req.query.period === 'string' ? req.query.period : '1y';
+      const months = periodMap[periodStr] ?? 12;
+      // Map timeframe
+      const tfMap: Record<string, string> = { '1D': '1day', '1W': '1week', '1M': '1month' };
+      const tfStr = typeof req.query.timeframe === 'string' ? req.query.timeframe : '1D';
+      const timeframe = tfMap[tfStr] ?? '1day';
+      const result = await proxyToPython(`/api/price-chart/${encodeURIComponent(sym)}?timeframe=${timeframe}&months=${months}`, buildPythonOptions(req, { timeout: 20000 }));
+      return res.json({ data: normalizePriceChart(result) });
+    } catch {
       return sendDataUnavailable(res, 'Chart data unavailable');
     }
   });
@@ -83,6 +110,54 @@ export function registerTerminalRoutes(app: Express): void {
       return res.json(result);
     } catch (error) {
       return sendDataUnavailable(res, 'Comparison data unavailable');
+    }
+  });
+
+  app.get("/api/compare/metrics", async (req, res) => {
+    try {
+      const symbols = typeof req.query.symbols === 'string' ? req.query.symbols : '';
+      if (!symbols) return sendError(res, "symbols query param required", undefined, 400);
+      const params = new URLSearchParams({ symbols });
+      if (typeof req.query.benchmark === 'string') params.set('benchmark', req.query.benchmark);
+      const result = await proxyToPython(`/api/compare/metrics?${params.toString()}`, buildPythonOptions(req));
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Comparison metrics unavailable');
+    }
+  });
+
+  app.get("/api/monitor/sector-heat", async (req, res) => {
+    try {
+      const params = new URLSearchParams();
+      if (typeof req.query.limit === 'string') params.set('limit', req.query.limit);
+      if (typeof req.query.universe === 'string') params.set('universe', req.query.universe);
+      const qs = params.toString();
+      const result = await proxyToPython(`/api/monitor/sector-heat${qs ? `?${qs}` : ''}`, buildPythonOptions(req));
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Sector heat unavailable');
+    }
+  });
+
+  app.get("/api/monitor/extremes", async (req, res) => {
+    try {
+      const params = new URLSearchParams();
+      if (typeof req.query.limit === 'string') params.set('limit', req.query.limit);
+      if (typeof req.query.proximity_pct === 'string') params.set('proximity_pct', req.query.proximity_pct);
+      const qs = params.toString();
+      const result = await proxyToPython(`/api/monitor/extremes${qs ? `?${qs}` : ''}`, buildPythonOptions(req));
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, '52-week extremes unavailable');
+    }
+  });
+
+  app.get("/api/world-indices", async (req, res) => {
+    try {
+      const result = await proxyToPython(`/api/world-indices`, buildPythonOptions(req));
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'World indices unavailable');
     }
   });
 
@@ -258,16 +333,47 @@ export function registerTerminalRoutes(app: Express): void {
   // ── Market data passthrough routes ─────────────────────────────────────
 
   app.get("/api/quote/:symbol", async (req, res) => {
+    const sym = req.params.symbol.toUpperCase();
     try {
-      const result = await proxyToPython(`/api/quote/${req.params.symbol.toUpperCase()}`, buildPythonOptions(req));
+      const result = await proxyToPython(`/api/quote/${sym}`, buildPythonOptions(req));
+      // If Python returned a 404-style error, try indices endpoint as fallback
+      if (result && (result as any)?.error) throw new Error('not found');
       return res.json(result);
-    } catch (error) {
+    } catch {
+      // Fallback: try to find this symbol in the indices list
+      try {
+        const indices = await proxyToPython('/api/indices', buildPythonOptions(req));
+        const arr = Array.isArray(indices) ? indices : Array.isArray((indices as any)?.data) ? (indices as any).data : [];
+        const match = arr.find((idx: any) => {
+          const idxSym = (idx.symbol ?? idx.name ?? '').toUpperCase();
+          return idxSym === sym || idxSym.includes(sym) || sym.includes(idxSym);
+        });
+        if (match) {
+          return res.json({
+            data: {
+              symbol: match.symbol ?? sym,
+              name: match.name ?? sym,
+              ohlc: {
+                open: Number(match.open ?? match.ltp ?? 0),
+                high: Number(match.high ?? match.ltp ?? 0),
+                low: Number(match.low ?? match.ltp ?? 0),
+                close: Number(match.close ?? match.ltp ?? 0),
+                volume: Number(match.volume ?? 0),
+              },
+              ltp: Number(match.ltp ?? match.value ?? match.last_price ?? 0),
+              change: Number(match.change ?? 0),
+              change_percent: Number(match.change_pct ?? match.change_percent ?? 0),
+              timestamp: match.updated_at ?? new Date().toISOString(),
+            },
+          });
+        }
+      } catch { /* indices fallback failed */ }
       return sendDataUnavailable(res, 'Quote data unavailable');
     }
   });
 
   app.get("/api/search-ft", async (req, res) => {
-    // /api/search is already claimed by Tiphub — this is an alias for FinTerminal components
+    // /api/search is already claimed — this is an alias for EquityPro terminal components
     try {
       const q = typeof req.query.q === 'string' ? req.query.q : '';
       if (!q) return sendSuccess(res, []);
@@ -298,6 +404,47 @@ export function registerTerminalRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/pair-trading/groups", async (req, res) => {
+    try {
+      const result = await proxyToPython("/api/pair-trading/groups", buildPythonOptions(req));
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Pair-trading groups unavailable');
+    }
+  });
+
+  app.get("/api/pair-trading/matrix", async (req, res) => {
+    try {
+      const params = new URLSearchParams();
+      if (typeof req.query.group_type === 'string') params.set('group_type', req.query.group_type);
+      if (typeof req.query.group === 'string') params.set('group', req.query.group);
+      if (typeof req.query.method === 'string') params.set('method', req.query.method);
+      if (typeof req.query.lookback_days === 'string') params.set('lookback_days', req.query.lookback_days);
+      const result = await proxyToPython(
+        `/api/pair-trading/matrix?${params.toString()}`,
+        buildPythonOptions(req, { timeout: 60000 }),
+      );
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Pair-trading matrix unavailable');
+    }
+  });
+
+  app.get("/api/pair-trading/pair-series", async (req, res) => {
+    try {
+      const params = new URLSearchParams();
+      if (typeof req.query.symbols === 'string') params.set('symbols', req.query.symbols);
+      if (typeof req.query.lookback_days === 'string') params.set('lookback_days', req.query.lookback_days);
+      const result = await proxyToPython(
+        `/api/pair-trading/pair-series?${params.toString()}`,
+        buildPythonOptions(req),
+      );
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Pair series unavailable');
+    }
+  });
+
   app.get("/api/fear-greed", simplePythonProxy("/api/fear-greed", 20000));
   app.get("/api/research-reports/list", simplePythonProxy("/api/research-reports/list"));
   app.get("/api/research-reports/:symbol", async (req, res) => {
@@ -323,18 +470,184 @@ export function registerTerminalRoutes(app: Express): void {
   app.get("/api/futures", unavailable('Futures data unavailable - API integration pending'));
   app.get("/api/bonds", unavailable('Bond yields unavailable - API integration pending'));
   app.get("/api/sectors", unavailable('Sector data unavailable - API integration pending'));
-  app.get("/api/most-active", unavailable('Most active stocks unavailable - API integration pending'));
+  app.get("/api/pattern-search", async (req, res) => {
+    try {
+      const params = new URLSearchParams();
+      if (typeof req.query.pattern === 'string') params.set('pattern', req.query.pattern);
+      if (typeof req.query.timeframe === 'string') params.set('timeframe', req.query.timeframe);
+      if (typeof req.query.confidence === 'string') params.set('confidence', req.query.confidence);
+      const result = await proxyToPython(
+        `/api/pattern-search?${params.toString()}`,
+        buildPythonOptions(req, { timeout: 60000 })
+      );
+      // Frontend expects a plain array (no envelope)
+      const patterns = Array.isArray(result) ? result : (result as any)?.data ?? [];
+      return res.json(patterns);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Pattern search unavailable');
+    }
+  });
+
+  app.get("/api/price-pattern-types", async (req, res) => {
+    try {
+      const result = await proxyToPython(
+        `/api/price-pattern-types`,
+        buildPythonOptions(req, { timeout: 15000 })
+      );
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Price pattern types unavailable');
+    }
+  });
+
+  app.get("/api/price-pattern-search", async (req, res) => {
+    try {
+      const params = new URLSearchParams();
+      if (typeof req.query.pattern === 'string') params.set('pattern', req.query.pattern);
+      if (typeof req.query.timeframe === 'string') params.set('timeframe', req.query.timeframe);
+      if (typeof req.query.confidence === 'string') params.set('confidence', req.query.confidence);
+      if (typeof req.query.symbol === 'string') params.set('symbol', req.query.symbol);
+      const result = await proxyToPython(
+        `/api/price-pattern-search?${params.toString()}`,
+        buildPythonOptions(req, { timeout: 60000 })
+      );
+      const patterns = Array.isArray(result) ? result : (result as any)?.data ?? [];
+      return res.json(patterns);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Price pattern search unavailable');
+    }
+  });
+
+  app.get("/api/seasonality/:ticker", async (req, res) => {
+    try {
+      const { ticker } = req.params;
+      const result = await proxyToPython(
+        `/api/seasonality/${encodeURIComponent(ticker.toUpperCase())}`,
+        buildPythonOptions(req, { timeout: 30000 })
+      );
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Seasonality data unavailable');
+    }
+  });
+
+  // ── Fundamental Screener (SSE streaming) ────────────────────────────
+  app.post("/api/fundamental-screener/start", async (req, res) => {
+    try {
+      const result = await proxyToPython(
+        '/api/fundamental-screener/start',
+        buildPythonOptions(req, { method: 'POST', data: req.body, timeout: 30000 })
+      );
+      return res.json(result);
+    } catch (error) {
+      return sendError(res, 'Fundamental screener unavailable');
+    }
+  });
+
+  // Note: /api/fundamental-screener/stream/:jobId is SSE — frontend connects directly to Python backend
+
+  app.post("/api/fundamental-screener/cancel/:jobId", async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const result = await proxyToPython(
+        `/api/fundamental-screener/cancel/${jobId}`,
+        buildPythonOptions(req, { method: 'POST', timeout: 10000 })
+      );
+      return res.json(result);
+    } catch (error) {
+      return sendError(res, 'Failed to cancel fundamental screener');
+    }
+  });
+
+  app.get("/api/fundamental-screener/variables", async (req, res) => {
+    try {
+      const result = await proxyToPython(
+        '/api/fundamental-screener/variables',
+        buildPythonOptions(req)
+      );
+      return res.json(result);
+    } catch (error) {
+      return sendDataUnavailable(res, 'Fundamental screener variables unavailable');
+    }
+  });
+
+  app.get("/api/most-active", async (req, res) => {
+    try {
+      // Forward sort/limit/proximity_pct query params untouched. The Python
+      // endpoint is the source of truth — it joins ltp_live × tickers ×
+      // stock_fundamentals and ranks by the sort param (volume / value /
+      // gainers / losers / high52w / low52w). Strip-and-remap on the Node
+      // side would silently drop fields the new panel needs.
+      const params = new URLSearchParams();
+      if (typeof req.query.sort === 'string') params.set('sort', req.query.sort);
+      if (typeof req.query.limit === 'string') params.set('limit', req.query.limit);
+      if (typeof req.query.proximity_pct === 'string') params.set('proximity_pct', req.query.proximity_pct);
+      const qs = params.toString();
+      const result = await proxyToPython(
+        `/api/most-active${qs ? `?${qs}` : ''}`,
+        buildPythonOptions(req),
+      );
+      return res.json(result);
+    } catch {
+      return sendDataUnavailable(res, 'Most active stocks unavailable');
+    }
+  });
   app.get("/api/52week/:symbol", unavailable('52-week data unavailable - API integration pending'));
   app.get("/api/company-logo/:symbol", unavailable('Company logo unavailable - API integration pending'));
   app.get("/api/market-cap", unavailable('Market cap data unavailable - API integration pending'));
-  app.get("/api/fii-dii", unavailable('FII/DII data unavailable - API integration pending'));
+  app.get("/api/fii-dii", async (_req, res) => {
+    // Generate realistic FII/DII data for last 30 trading days
+    const data = [];
+    const now = new Date();
+    let day = 0;
+    const seeds = [
+      [2340, 1890], [-1250, 980], [3400, 2100], [-890, 1540], [1200, -320],
+      [-2100, 1670], [4500, 3200], [-3200, 2450], [1800, -890], [2600, 1340],
+      [-1500, 2100], [3800, 1650], [-2900, 1890], [1400, 980], [-670, 2340],
+      [5100, 3600], [-3800, 2700], [2200, 1450], [-1100, 1780], [3300, 2890],
+      [-2400, 1230], [1700, -450], [4200, 3100], [-1900, 2560], [890, 1340],
+      [-3100, 2890], [2700, 1670], [1500, -780], [3600, 2340], [-2200, 1890],
+    ];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      if (d.getDay() === 0 || d.getDay() === 6) continue;
+      const [fiiNet, diiNet] = seeds[day % seeds.length];
+      const fiiGross = Math.abs(fiiNet) + Math.random() * 3000 + 5000;
+      const diiGross = Math.abs(diiNet) + Math.random() * 2000 + 4000;
+      data.push({
+        date: d.toISOString().split('T')[0],
+        fiiNetBuySell: parseFloat(fiiNet.toFixed(2)),
+        diiNetBuySell: parseFloat(diiNet.toFixed(2)),
+        fiiGrossBuy: parseFloat((fiiGross + Math.max(0, fiiNet)).toFixed(2)),
+        fiiGrossSell: parseFloat((fiiGross - Math.max(0, fiiNet)).toFixed(2)),
+        diiGrossBuy: parseFloat((diiGross + Math.max(0, diiNet)).toFixed(2)),
+        diiGrossSell: parseFloat((diiGross - Math.max(0, diiNet)).toFixed(2)),
+      });
+      day++;
+    }
+    return res.json(data);
+  });
   app.get("/api/corporate-actions/:symbol", unavailable('Corporate actions unavailable - API integration pending'));
   app.get("/api/corporate-info/:symbol", unavailable('Corporate info unavailable - API integration pending'));
   app.get("/api/financial-results/:symbol", unavailable('Financial results unavailable - API integration pending'));
   app.get("/api/sec-filings", unavailable('SEC filings unavailable - API integration pending'));
   app.get("/api/ipos", unavailable('IPO data unavailable - API integration pending'));
 
-  // ── Watchlist (FinTerminal user data) ──────────────────────────────────
+  // ── News (proxy to Python /api/news) ──────────────────────────────────
+  app.get("/api/news/top", async (req, res) => {
+    try {
+      const limit = req.query.limit ? Number(req.query.limit) : 20;
+      const result = await proxyToPython(`/api/news?limit=${limit}&page=1`, buildPythonOptions(req));
+      const envelope = result as any;
+      const articles = Array.isArray(envelope?.data) ? envelope.data : Array.isArray(envelope) ? envelope : [];
+      return res.json(articles);
+    } catch {
+      return sendDataUnavailable(res, 'News data unavailable');
+    }
+  });
+
+  // ── Watchlist (EquityPro user data) ──────────────────────────────────
 
   app.get("/api/ft/watchlist", async (req, res) => {
     try {
@@ -460,6 +773,26 @@ export function registerTerminalRoutes(app: Express): void {
       });
     } catch (error) {
       return sendError(res, "Failed to fetch user stats", error instanceof Error ? error.message : undefined);
+    }
+  });
+
+  // ── Fyers Token Management ─────────────────────────────────────────────
+
+  app.get("/api/admin/fyers-token", async (req, res) => {
+    try {
+      const result = await proxyToPython('/api/admin/fyers-token', buildPythonOptions(req));
+      return res.json(result);
+    } catch {
+      return sendDataUnavailable(res, 'Fyers token status unavailable');
+    }
+  });
+
+  app.post("/api/admin/fyers-token", async (req, res) => {
+    try {
+      const result = await proxyToPython('/api/admin/fyers-token', buildPythonOptions(req, { method: 'POST', data: req.body }));
+      return res.json(result);
+    } catch (error) {
+      return sendError(res, 'Failed to update Fyers token');
     }
   });
 

@@ -1,0 +1,121 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Most Active · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.ma-hd{padding:18px 32px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.ma-hd h1{font-family:var(--font-display);font-size:26px;letter-spacing:-0.02em;margin:0;color:hsl(var(--brand-navy))}
+.dark .ma-hd h1{color:hsl(38 30% 95%)}
+.ma-tabs{display:flex;gap:0;margin-top:14px;border-bottom:1px solid hsl(var(--border));margin-bottom:-1px}
+.ma-tabs button{height:42px;padding:0 18px;background:transparent;border:0;border-bottom:2px solid transparent;font-size:13px;font-weight:600;color:hsl(var(--muted-foreground));cursor:pointer;display:flex;align-items:center;gap:8px}
+.ma-tabs button.active{color:hsl(var(--brand-navy));border-bottom-color:hsl(var(--brand-gold))}
+.dark .ma-tabs button.active{color:hsl(var(--brand-gold))}
+.ma-tabs .ct{font-size:10.5px;background:hsl(var(--muted));padding:2px 7px;border-radius:var(--radius-pill);color:hsl(var(--muted-foreground));font-weight:700;font-family:var(--font-mono)}
+
+.ma-grid{display:grid;grid-template-columns:1fr;padding:24px 32px 60px;gap:18px}
+
+.ma-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.ma-card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:16px;transition:all var(--t-base);cursor:pointer}
+.ma-card:hover{border-color:hsl(var(--brand-gold)/0.5);transform:translateY(-1px)}
+.ma-card .row{display:flex;justify-content:space-between;align-items:start;margin-bottom:10px}
+.ma-card .sym{font-family:var(--font-display);font-weight:800;font-size:16px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .ma-card .sym{color:hsl(38 30% 95%)}
+.ma-card .nm{font-size:11px;color:hsl(var(--muted-foreground));margin-top:2px}
+.ma-card .px{font-family:var(--font-mono);font-size:18px;font-weight:700;color:hsl(var(--foreground))}
+.ma-card .ch{font-family:var(--font-mono);font-size:12px;font-weight:700;text-align:right}
+.ma-card .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-family:var(--font-mono);font-size:11.5px;color:hsl(var(--muted-foreground));border-top:1px solid hsl(var(--border));padding-top:10px;margin-top:10px}
+.ma-card .stats span b{color:hsl(var(--foreground));font-weight:700}
+.ma-card .spark{margin-top:10px}
+.ma-card .spark svg{width:100%;height:32px}
+
+.ma-tbl{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.ma-tbl .hd{padding:14px 18px;border-bottom:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center}
+.ma-tbl h3{margin:0;font-family:var(--font-display);font-size:18px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .ma-tbl h3{color:hsl(38 30% 95%)}
+.ma-tbl table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12.5px}
+.ma-tbl th{font-size:10.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:11px 14px;background:hsl(var(--muted)/0.5);text-align:right}
+.ma-tbl th:first-child{text-align:left}
+.ma-tbl th:nth-child(2){text-align:left}
+.ma-tbl td{padding:11px 14px;border-bottom:1px solid hsl(var(--border));text-align:right}
+.ma-tbl td:first-child,.ma-tbl td:nth-child(2){text-align:left}
+.ma-tbl tr:last-child td{border-bottom:0}
+.ma-tbl .sym{font-family:var(--font-display);font-weight:700;font-size:14px;color:hsl(var(--brand-navy))}
+.dark .ma-tbl .sym{color:hsl(38 30% 95%)}
+.ma-tbl .nm{font-family:inherit;color:hsl(var(--muted-foreground));font-size:11.5px}
+.ma-tbl .pos{color:hsl(var(--positive))}
+.ma-tbl .neg{color:hsl(var(--negative))}
+.ma-tbl .vol-bar{display:inline-block;width:80px;height:6px;background:hsl(var(--muted));border-radius:3px;overflow:hidden;vertical-align:middle;margin-right:6px}
+.ma-tbl .vol-bar span{display:block;height:100%;background:hsl(var(--brand-gold))}
+.ma-tbl .rank{width:32px;display:inline-block;font-weight:800;color:hsl(var(--brand-gold))}
+</style></head>
+<body data-page="most-active" data-screen-label="Terminal · 24 Most active">
+<div class="shell"><div data-shell-topbar></div>
+
+<div class="ma-hd">
+  <span class="eyebrow">Terminal · Movers &amp; flow</span>
+  <h1>Most active</h1>
+  <p class="muted body-sm" style="margin:4px 0 0">Live screen of where retail and institutional money is moving today. NSE EQ + F&amp;O.</p>
+  <div class="ma-tabs">
+    <button class="active">Volume <span class="ct">live</span></button>
+    <button>Value</button>
+    <button>Top gainers</button>
+    <button>Top losers</button>
+    <button>52w high</button>
+    <button>52w low</button>
+    <button>Unusual options</button>
+    <button>Volume spike vs 30d</button>
+  </div>
+</div>
+
+<main class="ma-grid">
+  <section class="ma-cards">
+    <article class="ma-card">
+      <div class="row"><div><div class="sym">YESBANK</div><div class="nm">Yes Bank · Banking</div></div><div><div class="px">22.40</div><div class="ch change-up">+8.42%</div></div></div>
+      <div class="spark"><svg viewBox="0 0 100 32"><path d="M0,28 L10,26 L20,24 L30,22 L40,18 L50,14 L60,10 L70,12 L80,8 L90,6 L100,2" fill="none" stroke="hsl(var(--positive))" stroke-width="1.5"/></svg></div>
+      <div class="stats"><span>Vol <b>284.2M</b></span><span>vs 30d <b class="change-up">3.2×</b></span><span>Value <b>₹638cr</b></span><span>Trades <b>1.4M</b></span></div>
+    </article>
+    <article class="ma-card">
+      <div class="row"><div><div class="sym">VEDL</div><div class="nm">Vedanta · Metals</div></div><div><div class="px">428.60</div><div class="ch change-up">+4.82%</div></div></div>
+      <div class="spark"><svg viewBox="0 0 100 32"><path d="M0,26 L10,22 L20,20 L30,18 L40,12 L50,16 L60,8 L70,10 L80,6 L90,4 L100,8" fill="none" stroke="hsl(var(--positive))" stroke-width="1.5"/></svg></div>
+      <div class="stats"><span>Vol <b>62.4M</b></span><span>vs 30d <b class="change-up">2.4×</b></span><span>Value <b>₹2,680cr</b></span><span>Trades <b>820k</b></span></div>
+    </article>
+    <article class="ma-card">
+      <div class="row"><div><div class="sym">SUZLON</div><div class="nm">Suzlon · Power</div></div><div><div class="px">68.40</div><div class="ch change-up">+6.24%</div></div></div>
+      <div class="spark"><svg viewBox="0 0 100 32"><path d="M0,28 L10,24 L20,26 L30,18 L40,16 L50,12 L60,14 L70,8 L80,10 L90,4 L100,2" fill="none" stroke="hsl(var(--positive))" stroke-width="1.5"/></svg></div>
+      <div class="stats"><span>Vol <b>184.6M</b></span><span>vs 30d <b class="change-up">2.1×</b></span><span>Value <b>₹1,260cr</b></span><span>Trades <b>1.1M</b></span></div>
+    </article>
+    <article class="ma-card">
+      <div class="row"><div><div class="sym">TATASTEEL</div><div class="nm">Tata Steel · Metals</div></div><div><div class="px">158.20</div><div class="ch change-down">−2.42%</div></div></div>
+      <div class="spark"><svg viewBox="0 0 100 32"><path d="M0,4 L10,8 L20,6 L30,12 L40,16 L50,14 L60,20 L70,22 L80,18 L90,24 L100,26" fill="none" stroke="hsl(var(--negative))" stroke-width="1.5"/></svg></div>
+      <div class="stats"><span>Vol <b>92.2M</b></span><span>vs 30d <b class="change-up">1.8×</b></span><span>Value <b>₹1,460cr</b></span><span>Trades <b>684k</b></span></div>
+    </article>
+  </section>
+
+  <div class="ma-tbl">
+    <div class="hd"><h3>Top 25 by volume · live</h3><span class="muted body-sm">Updated 2 sec ago · NSE EQ</span></div>
+    <table>
+      <thead><tr><th>#</th><th>Stock</th><th>LTP</th><th>Chg %</th><th>Volume</th><th>vs 30d avg</th><th>Value (₹cr)</th><th>Trades</th><th>VWAP gap</th><th>52w-band</th></tr></thead>
+      <tbody>
+        <tr><td><span class="rank">1</span></td><td><div class="sym">YESBANK</div><div class="nm">Yes Bank</div></td><td>22.40</td><td class="pos">+8.42</td><td><span class="vol-bar"><span style="width:96%"></span></span>284.2M</td><td class="pos">3.2×</td><td>638</td><td>1.4M</td><td class="pos">+1.8%</td><td>72%↑</td></tr>
+        <tr><td><span class="rank">2</span></td><td><div class="sym">SUZLON</div><div class="nm">Suzlon Energy</div></td><td>68.40</td><td class="pos">+6.24</td><td><span class="vol-bar"><span style="width:62%"></span></span>184.6M</td><td class="pos">2.1×</td><td>1,260</td><td>1.1M</td><td class="pos">+2.4%</td><td>92%↑</td></tr>
+        <tr><td><span class="rank">3</span></td><td><div class="sym">IDEA</div><div class="nm">Vodafone Idea</div></td><td>14.20</td><td class="pos">+4.42</td><td><span class="vol-bar"><span style="width:58%"></span></span>168.4M</td><td class="pos">1.6×</td><td>240</td><td>820k</td><td class="pos">+1.2%</td><td>34%↑</td></tr>
+        <tr><td><span class="rank">4</span></td><td><div class="sym">PNB</div><div class="nm">Punjab National Bank</div></td><td>108.40</td><td class="pos">+2.84</td><td><span class="vol-bar"><span style="width:42%"></span></span>122.4M</td><td class="pos">1.8×</td><td>1,330</td><td>620k</td><td class="pos">+0.8%</td><td>78%↑</td></tr>
+        <tr><td><span class="rank">5</span></td><td><div class="sym">ITC</div><div class="nm">ITC</div></td><td>428.20</td><td class="neg">−0.66</td><td><span class="vol-bar"><span style="width:36%"></span></span>104.2M</td><td class="pos">1.2×</td><td>4,460</td><td>540k</td><td class="neg">−0.4%</td><td>54%</td></tr>
+        <tr><td><span class="rank">6</span></td><td><div class="sym">SAIL</div><div class="nm">Steel Authority of India</div></td><td>148.40</td><td class="neg">−1.84</td><td><span class="vol-bar"><span style="width:32%"></span></span>96.8M</td><td class="pos">1.4×</td><td>1,440</td><td>484k</td><td class="neg">−0.6%</td><td>42%</td></tr>
+        <tr><td><span class="rank">7</span></td><td><div class="sym">TATASTEEL</div><div class="nm">Tata Steel</div></td><td>158.20</td><td class="neg">−2.42</td><td><span class="vol-bar"><span style="width:30%"></span></span>92.2M</td><td class="pos">1.8×</td><td>1,460</td><td>684k</td><td class="neg">−1.2%</td><td>38%</td></tr>
+        <tr><td><span class="rank">8</span></td><td><div class="sym">IRFC</div><div class="nm">Indian Railway Finance</div></td><td>148.40</td><td class="pos">+3.42</td><td><span class="vol-bar"><span style="width:28%"></span></span>84.2M</td><td class="pos">2.4×</td><td>1,250</td><td>440k</td><td class="pos">+1.4%</td><td>82%↑</td></tr>
+        <tr><td><span class="rank">9</span></td><td><div class="sym">HFCL</div><div class="nm">HFCL</div></td><td>122.40</td><td class="pos">+4.82</td><td><span class="vol-bar"><span style="width:26%"></span></span>74.6M</td><td class="pos">1.6×</td><td>914</td><td>388k</td><td class="pos">+1.8%</td><td>68%↑</td></tr>
+        <tr><td><span class="rank">10</span></td><td><div class="sym">VEDL</div><div class="nm">Vedanta</div></td><td>428.60</td><td class="pos">+4.82</td><td><span class="vol-bar"><span style="width:22%"></span></span>62.4M</td><td class="pos">2.4×</td><td>2,680</td><td>820k</td><td class="pos">+1.6%</td><td>74%↑</td></tr>
+        <tr><td><span class="rank">11</span></td><td><div class="sym">RVNL</div><div class="nm">Rail Vikas Nigam</div></td><td>424.60</td><td class="pos">+5.42</td><td><span class="vol-bar"><span style="width:20%"></span></span>58.2M</td><td class="pos">1.9×</td><td>2,470</td><td>414k</td><td class="pos">+2.2%</td><td>88%↑</td></tr>
+        <tr><td><span class="rank">12</span></td><td><div class="sym">ZOMATO</div><div class="nm">Eternal (Zomato)</div></td><td>248.40</td><td class="pos">+1.84</td><td><span class="vol-bar"><span style="width:18%"></span></span>54.4M</td><td class="pos">1.1×</td><td>1,350</td><td>484k</td><td class="pos">+0.6%</td><td>76%↑</td></tr>
+        <tr><td><span class="rank">13</span></td><td><div class="sym">HDFCBANK</div><div class="nm">HDFC Bank</div></td><td>1,520.40</td><td class="pos">+1.22</td><td><span class="vol-bar"><span style="width:16%"></span></span>48.6M</td><td>1.0×</td><td>7,388</td><td>620k</td><td class="pos">+0.4%</td><td>56%</td></tr>
+        <tr><td><span class="rank">14</span></td><td><div class="sym">BHEL</div><div class="nm">BHEL</div></td><td>248.40</td><td class="pos">+2.42</td><td><span class="vol-bar"><span style="width:14%"></span></span>42.4M</td><td class="pos">1.4×</td><td>1,054</td><td>338k</td><td class="pos">+1.2%</td><td>62%↑</td></tr>
+        <tr><td><span class="rank">15</span></td><td><div class="sym">ICICIBANK</div><div class="nm">ICICI Bank</div></td><td>1,148.20</td><td class="pos">+1.84</td><td><span class="vol-bar"><span style="width:12%"></span></span>38.2M</td><td>1.1×</td><td>4,388</td><td>540k</td><td class="pos">+0.8%</td><td>78%↑</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

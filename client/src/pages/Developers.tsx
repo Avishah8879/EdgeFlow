@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -65,24 +66,32 @@ export default function Developers() {
   return (
     <>
       <SEO
-        title="Developer API - Tiphub"
-        description="Access Tiphub market data programmatically. Manage API keys, view usage, and explore code examples."
+        title="Developer API - EquityPro"
+        description="Access EquityPro market data programmatically. Manage API keys, view usage, and explore code examples."
         noIndex
       />
 
       <div className="min-h-screen bg-background">
-        <div className="mx-auto w-full max-w-5xl px-6 py-8 space-y-8">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <h1 className="text-3xl font-bold">Developer API</h1>
-              <p className="text-muted-foreground mt-1">
-                Access Tiphub market data, screener, and analytics
-                programmatically.
+        {/* Page masthead */}
+        <section className="border-b border-border bg-card">
+          <div className="mx-auto w-full max-w-6xl px-6 md:px-8 py-8 md:py-10">
+            <div className="space-y-2">
+              <Eyebrow tone="gold" rule>
+                Settings · API
+              </Eyebrow>
+              <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+                Developer API.
+              </h1>
+              <p className="text-sm text-muted-foreground max-w-2xl">
+                Access EquityPro market data, screener, and analytics
+                programmatically. Manage API keys, monitor usage, and explore
+                code examples.
               </p>
             </div>
           </div>
+        </section>
 
+        <div className="mx-auto w-full max-w-6xl px-6 md:px-8 py-8 md:py-10 space-y-6">
           <Tabs defaultValue="keys">
             <TabsList>
               <TabsTrigger value="keys" className="gap-2">
@@ -147,7 +156,7 @@ export default function Developers() {
                     <Key className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
                     <h3 className="font-medium mb-1">No API keys yet</h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Create your first API key to start using the Tiphub API.
+                      Create your first API key to start using the EquityPro API.
                     </p>
                     <CreateKeyDialog
                       onCreate={handleCreate}
@@ -175,7 +184,7 @@ export default function Developers() {
                     <div className="space-y-1">
                       <p className="text-sm font-medium">Base URL</p>
                       <code className="text-sm font-mono bg-muted px-2 py-1 rounded block">
-                        https://tiphub.ai/v1/api/
+                        https://your-domain.com/v1/api/
                       </code>
                     </div>
                     <div className="space-y-1">

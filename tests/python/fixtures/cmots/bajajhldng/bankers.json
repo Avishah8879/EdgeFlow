@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "BNK_NAME": "Citibank N A"
+    },
+    {
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "BNK_NAME": "HDFC Bank Ltd"
+    }
+  ]
+}

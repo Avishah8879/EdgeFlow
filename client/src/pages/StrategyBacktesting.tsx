@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { EquityCurveChart } from "@/components/strategy-backtest/EquityCurveChart";
 import { SEO } from "@/components/SEO";
 import { PAGE_SEO } from "@/lib/seo-config";
@@ -66,6 +67,7 @@ import { useTracking } from "@/contexts/TrackingContext";
 import { useMutation } from "@tanstack/react-query";
 import type { BacktestResult } from "../../../shared/schema";
 import { toast } from "sonner";
+import { CoinGateAlert } from "@/components/CoinGateAlert";
 import { UsageLimitBadge } from "@/components/UsageLimitBadge";
 import { useUsageLimits, getTimeUntilReset } from "@/hooks/use-usage-limits";
 import { getApiBaseUrl } from "@/lib/api-config";
@@ -795,7 +797,7 @@ export default function StrategyBacktesting() {
         jsonLd={[
           generateFAQSchema(BACKTESTING_FAQS),
           generateSoftwareApplicationSchema(
-            'Tiphub Alpha Generation - AI Strategy Backtesting',
+            'Equity Pro Alpha Generation - AI Strategy Backtesting',
             'Free AI-powered strategy backtesting for Indian stocks. Optimize trading strategies using genetic algorithms with technical indicators on NSE stocks.',
             ['Strategy Backtesting', 'Alpha Generation', 'Genetic Algorithm', 'Trading Strategy', 'NSE Backtest']
           ),
@@ -810,13 +812,13 @@ export default function StrategyBacktesting() {
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-6">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-3">
-                <BarChart3 className="h-8 w-8 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold">Alpha Generation</h1>
-              </div>
+            <div className="space-y-2">
+              <Eyebrow tone="gold" rule>
+                Analysis
+              </Eyebrow>
+              <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground">
+                Alpha Generation
+              </h1>
             </div>
           <div className="flex items-center gap-2">
             <UsageLimitBadge feature="backtest" showLabel />
@@ -970,6 +972,11 @@ export default function StrategyBacktesting() {
             </div>
           </div>
         </Card>
+
+        {/* Coin gate 402 alert */}
+        {asyncBacktest.coinError && (
+          <CoinGateAlert coinError={asyncBacktest.coinError} className="mb-4" />
+        )}
 
         {/* Progress indicator for async backtests */}
         {asyncBacktest.isRunning && (

@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "lname": "ITC Ltd",
+      "PE_TTM": 10.98,
+      "EPS_Qtr": 4.06,
+      "EPS_TTM": 16.12,
+      "co_code": 301.0,
+      "PE_Yearly": 14.57,
+      "EBITDA_Qtr": 7069.24,
+      "EPS_Yearly": 28.12,
+      "DivYield_TTM": 4.71,
+      "EBITDA_Yearly": 43110.86,
+      "Pat_Growth_Qtr": -1.756624747578097,
+      "Pat_Growth_TTM": 68.21040135100593,
+      "DivYield_Yearly": 0.03501702605800304,
+      "Pat_Growth_Yearly": 72.34189453808814,
+      "QuickRatio_Yearly": 0.7191878827532862,
+      "CurrentRatio_Yearly": 1.59,
+      "NetSales_Growth_Qtr": 0.39313837762535137,
+      "NetSales_Growth_TTM": 7.717659537299648,
+      "DebtEquityRatio_Yearly": 0.0,
+      "NetSales_Growth_Yearly": 10.690724869275963
+    }
+  ]
+}

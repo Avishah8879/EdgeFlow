@@ -1,0 +1,42 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "yrc": 202503.0,
+      "Profit": 35262.0,
+      "ebitda": 74163.0,
+      "co_code": 476.0,
+      "sect_name": "Refineries",
+      "TotalAssets": 1022904.0,
+      "TotalRevenue": 557163.0,
+      "sharecapital": 13532.0,
+      "TotalExpenditure": 527129.0,
+      "TotalLiabilities": 1022904.0
+    },
+    {
+      "yrc": 202403.0,
+      "Profit": 42042.0,
+      "ebitda": 86393.0,
+      "co_code": 476.0,
+      "sect_name": "Refineries",
+      "TotalAssets": 960137.0,
+      "TotalRevenue": 574956.0,
+      "sharecapital": 6766.0,
+      "TotalExpenditure": 531811.0,
+      "TotalLiabilities": 960137.0
+    },
+    {
+      "yrc": 202303.0,
+      "Profit": 44190.0,
+      "ebitda": 79106.0,
+      "co_code": 476.0,
+      "sect_name": "Refineries",
+      "TotalAssets": 923055.0,
+      "TotalRevenue": 578088.0,
+      "sharecapital": 6766.0,
+      "TotalExpenditure": 535119.0,
+      "TotalLiabilities": 923055.0
+    }
+  ]
+}

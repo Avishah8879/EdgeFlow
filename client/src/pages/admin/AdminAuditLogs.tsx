@@ -499,24 +499,22 @@ export default function AdminAuditLogs() {
     : null;
 
   return (
-    <AdminLayout>
+    <AdminLayout
+      eyebrow="Admin · Compliance"
+      title="Audit logs"
+      description="Authentication and security event history."
+      rightSlot={
+        <Button
+          variant="outline"
+          onClick={() => handleExport(activeTab as "auth" | "audit")}
+          disabled={isExporting}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          {isExporting ? "Exporting..." : "Export CSV"}
+        </Button>
+      }
+    >
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Audit Logs</h1>
-            <p className="text-muted-foreground mt-1">
-              Authentication and security event history
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => handleExport(activeTab as "auth" | "audit")}
-            disabled={isExporting}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            {isExporting ? "Exporting..." : "Export CSV"}
-          </Button>
-        </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList>

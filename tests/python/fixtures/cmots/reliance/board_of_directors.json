@@ -1,0 +1,96 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "slno": 1.0,
+      "year": 2025.0,
+      "dir_desg": "Chairman & Managing Director",
+      "dir_name": "Mukesh D Ambani"
+    },
+    {
+      "slno": 2.0,
+      "year": 2025.0,
+      "dir_desg": "Executive Director",
+      "dir_name": "Nikhil Meswani"
+    },
+    {
+      "slno": 3.0,
+      "year": 2025.0,
+      "dir_desg": "Whole Time Director",
+      "dir_name": "Hital R Meswani"
+    },
+    {
+      "slno": 4.0,
+      "year": 2025.0,
+      "dir_desg": "Executive Director",
+      "dir_name": "PMS Prasad"
+    },
+    {
+      "slno": 6.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "Shumeet Banerji"
+    },
+    {
+      "slno": 7.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "Arundhati Bhattacharya"
+    },
+    {
+      "slno": 8.0,
+      "year": 2025.0,
+      "dir_desg": "Company Sec. & Compli. Officer",
+      "dir_name": "Savithri Parekh"
+    },
+    {
+      "slno": 9.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "K V Choudhary"
+    },
+    {
+      "slno": 10.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "His Excellency Yasir Othman H. Al Rumayyan"
+    },
+    {
+      "slno": 11.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "K V Kamath"
+    },
+    {
+      "slno": 12.0,
+      "year": 2025.0,
+      "dir_desg": "Non Executive Director",
+      "dir_name": "ISHA MUKESH AMBANI"
+    },
+    {
+      "slno": 13.0,
+      "year": 2025.0,
+      "dir_desg": "Non Executive Director",
+      "dir_name": "AKASH MUKESH AMBANI"
+    },
+    {
+      "slno": 14.0,
+      "year": 2025.0,
+      "dir_desg": "Whole Time Director",
+      "dir_name": "Anant M. Ambani"
+    },
+    {
+      "slno": 15.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "H Khaitan"
+    },
+    {
+      "slno": 16.0,
+      "year": 2025.0,
+      "dir_desg": "Independent Director",
+      "dir_name": "Dinesh Hashmukhrai Kanabar"
+    }
+  ]
+}

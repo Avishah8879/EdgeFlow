@@ -1,0 +1,175 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calculators · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.cl-hd{padding:18px 32px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.cl-hd h1{font-family:var(--font-display);font-size:26px;letter-spacing:-0.02em;margin:0;color:hsl(var(--brand-navy))}
+.dark .cl-hd h1{color:hsl(38 30% 95%)}
+
+.cl-grid{display:grid;grid-template-columns:240px 1fr;height:calc(100vh - 64px - 76px)}
+
+.cl-side{padding:14px 0;border-right:1px solid hsl(var(--border));background:hsl(var(--card));overflow-y:auto}
+.cl-side h4{padding:8px 18px;margin:0;font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.cl-item{padding:9px 18px;font-size:12.5px;color:hsl(var(--muted-foreground));cursor:pointer;border-left:3px solid transparent;display:flex;align-items:center;gap:8px}
+.cl-item:hover{background:hsl(var(--muted))}
+.cl-item.active{background:hsl(var(--accent));color:hsl(var(--brand-gold));font-weight:700;border-left-color:hsl(var(--brand-gold))}
+
+.cl-main{padding:32px 48px;background:hsl(var(--background));overflow-y:auto;display:grid;grid-template-columns:380px 1fr;gap:32px;align-items:start}
+
+.calc-form{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:24px}
+.calc-form h2{font-family:var(--font-display);font-size:22px;margin:0 0 6px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .calc-form h2{color:hsl(38 30% 95%)}
+.calc-form .desc{font-size:12.5px;color:hsl(var(--muted-foreground));margin:0 0 22px;line-height:1.5}
+.fld{margin-bottom:14px}
+.fld label{display:flex;justify-content:space-between;font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground));margin-bottom:6px}
+.fld .input-grp{display:flex;align-items:stretch;border:1px solid hsl(var(--border));border-radius:var(--radius-md);overflow:hidden;background:hsl(var(--background))}
+.fld .input-grp .pre{padding:0 12px;display:flex;align-items:center;background:hsl(var(--muted));font-family:var(--font-mono);font-size:13px;color:hsl(var(--muted-foreground));border-right:1px solid hsl(var(--border));font-weight:700}
+.fld .input-grp input{flex:1;height:38px;border:0;background:transparent;padding:0 12px;font-family:var(--font-mono);font-size:14px;font-weight:700;color:hsl(var(--foreground));outline:none}
+.fld input[type=range]{width:100%;accent-color:hsl(var(--brand-gold))}
+.toggle{display:flex;border:1px solid hsl(var(--border));border-radius:var(--radius-md);overflow:hidden;height:32px}
+.toggle button{flex:1;background:transparent;border:0;font-size:11.5px;font-weight:700;color:hsl(var(--muted-foreground));cursor:pointer}
+.toggle button.active{background:hsl(var(--brand-navy));color:white}
+.dark .toggle button.active{background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep))}
+
+.calc-out{display:flex;flex-direction:column;gap:18px}
+.hero-card{background:linear-gradient(155deg,hsl(var(--brand-navy)),hsl(var(--brand-navy-deep)));color:white;border-radius:var(--radius-xl);padding:32px;position:relative;overflow:hidden}
+.hero-card::before{content:"";position:absolute;right:-60px;top:-60px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,hsl(var(--brand-gold)/0.3),transparent 70%);filter:blur(20px)}
+.hero-card .ey{font-family:var(--font-display);font-size:11px;color:hsl(var(--brand-gold));font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase)}
+.hero-card .v{font-family:var(--font-mono);font-size:54px;font-weight:700;letter-spacing:-0.025em;margin-top:6px}
+.hero-card .breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px;border-top:1px solid hsl(38 30% 80% / 0.2);padding-top:18px;position:relative}
+.hero-card .breakdown div{font-family:var(--font-mono)}
+.hero-card .breakdown .l{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(38 30% 80%);font-weight:700}
+.hero-card .breakdown .vv{font-size:18px;font-weight:700;margin-top:4px}
+
+.chart-card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px}
+.chart-card h4{margin:0 0 12px;font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.chart-card svg{width:100%;height:200px}
+
+.tbl-out{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.tbl-out h4{padding:14px 18px;margin:0;border-bottom:1px solid hsl(var(--border));font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.tbl-out table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12px}
+.tbl-out th{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;padding:9px 14px;background:hsl(var(--muted)/0.5);text-align:right}
+.tbl-out th:first-child{text-align:left}
+.tbl-out td{padding:8px 14px;border-bottom:1px solid hsl(var(--border)/0.5);text-align:right}
+.tbl-out td:first-child{text-align:left;font-weight:700;color:hsl(var(--foreground))}
+.tbl-out tr:last-child td{border-bottom:0;background:hsl(var(--brand-gold)/0.06);font-weight:800}
+</style></head>
+<body data-page="calculator" data-screen-label="Terminal · 37 Calculator">
+<div class="shell"><div data-shell-topbar></div>
+
+<div class="cl-hd">
+  <span class="eyebrow">Terminal · Tools</span>
+  <h1>Calculators</h1>
+</div>
+
+<main class="cl-grid">
+  <aside class="cl-side">
+    <h4>Investment</h4>
+    <div class="cl-item active">SIP Calculator</div>
+    <div class="cl-item">Lumpsum CAGR</div>
+    <div class="cl-item">Goal-based</div>
+    <div class="cl-item">Step-up SIP</div>
+    <div class="cl-item">Retirement</div>
+    <h4>Loans</h4>
+    <div class="cl-item">EMI Calculator</div>
+    <div class="cl-item">Home loan eligibility</div>
+    <div class="cl-item">Loan against shares</div>
+    <h4>Tax</h4>
+    <div class="cl-item">Capital gains (LTCG)</div>
+    <div class="cl-item">STCG tax</div>
+    <div class="cl-item">Income tax FY26</div>
+    <h4>Trading</h4>
+    <div class="cl-item">Brokerage / charges</div>
+    <div class="cl-item">Margin / leverage</div>
+    <div class="cl-item">F&amp;O margin</div>
+    <div class="cl-item">Position size</div>
+    <h4>Inflation &amp; FX</h4>
+    <div class="cl-item">Inflation</div>
+    <div class="cl-item">Currency converter</div>
+  </aside>
+
+  <section class="cl-main">
+    <div class="calc-form">
+      <h2>SIP calculator</h2>
+      <p class="desc">Project the future value of a Systematic Investment Plan using monthly contributions, annual return rate, and tenure.</p>
+
+      <div class="fld">
+        <label>Monthly investment <span style="font-family:var(--font-mono);font-size:13px;color:hsl(var(--foreground));font-weight:700">₹25,000</span></label>
+        <div class="input-grp"><span class="pre">₹</span><input type="text" value="25,000"></div>
+        <input type="range" min="500" max="200000" value="25000" step="500" style="margin-top:6px">
+      </div>
+
+      <div class="fld">
+        <label>Expected annual return <span style="font-family:var(--font-mono);font-size:13px;color:hsl(var(--foreground));font-weight:700">14.0%</span></label>
+        <div class="input-grp"><input type="text" value="14.0"><span class="pre" style="border-left:1px solid hsl(var(--border));border-right:0">%</span></div>
+        <input type="range" min="4" max="30" value="14" step="0.1" style="margin-top:6px">
+      </div>
+
+      <div class="fld">
+        <label>Tenure <span style="font-family:var(--font-mono);font-size:13px;color:hsl(var(--foreground));font-weight:700">15 years</span></label>
+        <div class="input-grp"><input type="text" value="15"><span class="pre" style="border-left:1px solid hsl(var(--border));border-right:0">yrs</span></div>
+        <input type="range" min="1" max="40" value="15" step="1" style="margin-top:6px">
+      </div>
+
+      <div class="fld">
+        <label>Step-up annually</label>
+        <div class="toggle"><button>None</button><button class="active">10%</button><button>15%</button></div>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;margin-top:8px">Recalculate</button>
+    </div>
+
+    <div class="calc-out">
+      <div class="hero-card">
+        <div class="ey">Total corpus at year 15</div>
+        <div class="v">₹2.84 Cr</div>
+        <div style="font-family:var(--font-mono);font-size:13px;color:hsl(38 30% 88%);position:relative">After 180 monthly contributions · 14% CAGR · 10% step-up</div>
+        <div class="breakdown">
+          <div><div class="l">Total invested</div><div class="vv">₹95.6L</div></div>
+          <div><div class="l">Wealth gained</div><div class="vv" style="color:hsl(var(--brand-gold))">₹1.88 Cr</div></div>
+          <div><div class="l">Multiple</div><div class="vv">2.97×</div></div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h4>Growth trajectory · invested vs corpus</h4>
+        <svg viewBox="0 0 600 200">
+          <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl(var(--brand-gold))" stop-opacity="0.3"/><stop offset="1" stop-color="hsl(var(--brand-gold))" stop-opacity="0"/></linearGradient></defs>
+          <line x1="0" y1="180" x2="600" y2="180" stroke="hsl(var(--border))"/>
+          <line x1="0" y1="40" x2="600" y2="40" stroke="hsl(var(--border))" stroke-dasharray="2 4"/>
+          <line x1="0" y1="110" x2="600" y2="110" stroke="hsl(var(--border))" stroke-dasharray="2 4"/>
+          <!-- corpus curve (exp) -->
+          <path d="M0,180 C100,176 180,166 260,142 C340,116 420,82 500,46 L600,12 L600,180 L0,180 Z" fill="url(#cg)"/>
+          <path d="M0,180 C100,176 180,166 260,142 C340,116 420,82 500,46 L600,12" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="2.5"/>
+          <!-- invested (linear-ish, step-up) -->
+          <path d="M0,180 L60,170 L120,158 L180,144 L240,128 L300,114 L360,98 L420,82 L480,68 L540,56 L600,46" fill="none" stroke="hsl(213 50% 50%)" stroke-width="2" stroke-dasharray="4 3"/>
+
+          <g font-family="ui-monospace" font-size="10" fill="hsl(var(--muted-foreground))">
+            <text x="0" y="196">Y1</text><text x="100" y="196">Y3</text><text x="200" y="196">Y6</text><text x="300" y="196">Y9</text><text x="400" y="196">Y12</text><text x="500" y="196">Y14</text><text x="596" y="196" text-anchor="end">Y15</text>
+            <text x="2" y="14">₹3 Cr</text><text x="2" y="44">₹2.5</text><text x="2" y="114">₹1.5</text><text x="2" y="184">0</text>
+          </g>
+          <g transform="translate(380,12)" font-family="ui-monospace" font-size="10"><rect width="220" height="38" rx="6" fill="hsl(var(--card)/0.95)" stroke="hsl(var(--border))"/><line x1="14" y1="14" x2="36" y2="14" stroke="hsl(var(--brand-gold))" stroke-width="2"/><text x="42" y="18" fill="hsl(var(--foreground))">Corpus · ₹2.84 Cr</text><line x1="14" y1="30" x2="36" y2="30" stroke="hsl(213 50% 50%)" stroke-width="2" stroke-dasharray="3 2"/><text x="42" y="34" fill="hsl(var(--foreground))">Invested · ₹95.6 L</text></g>
+        </svg>
+      </div>
+
+      <div class="tbl-out">
+        <h4>Year-by-year breakdown · selected years</h4>
+        <table>
+          <thead><tr><th>Year</th><th>Monthly SIP</th><th>Invested (cum)</th><th>Corpus</th><th>Gain</th><th>Multiple</th></tr></thead>
+          <tbody>
+            <tr><td>Year 1</td><td>₹25,000</td><td>₹3,00,000</td><td>₹3,22,420</td><td>+₹22,420</td><td>1.07×</td></tr>
+            <tr><td>Year 3</td><td>₹30,250</td><td>₹10,84,200</td><td>₹13,42,180</td><td>+₹2,57,980</td><td>1.24×</td></tr>
+            <tr><td>Year 5</td><td>₹36,602</td><td>₹21,46,200</td><td>₹31,48,420</td><td>+₹10,02,220</td><td>1.47×</td></tr>
+            <tr><td>Year 10</td><td>₹58,948</td><td>₹54,84,200</td><td>₹1,12,84,200</td><td>+₹58,00,000</td><td>2.06×</td></tr>
+            <tr><td>Year 15</td><td>₹95,000</td><td>₹95,68,400</td><td>₹2,84,12,820</td><td>+₹1,88,44,420</td><td>2.97×</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

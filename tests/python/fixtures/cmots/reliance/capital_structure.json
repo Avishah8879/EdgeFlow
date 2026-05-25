@@ -1,0 +1,56 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "YRC": 202503.0,
+      "co_code": 476.0,
+      "FaceValue": 10.0,
+      "EquitySubs": 13532.0,
+      "EquityIssued": 13532.0,
+      "EquityPaidUp": 13532.0,
+      "EquityAuthorised": 49000.0,
+      "EquitySharesPaidUp": 13532515463.0
+    },
+    {
+      "YRC": 202403.0,
+      "co_code": 476.0,
+      "FaceValue": 10.0,
+      "EquitySubs": 6766.0,
+      "EquityIssued": 6766.0,
+      "EquityPaidUp": 6766.0,
+      "EquityAuthorised": 14000.0,
+      "EquitySharesPaidUp": 6766094014.0
+    },
+    {
+      "YRC": 202303.0,
+      "co_code": 476.0,
+      "FaceValue": 10.0,
+      "EquitySubs": 6766.0,
+      "EquityIssued": 6766.0,
+      "EquityPaidUp": 6766.0,
+      "EquityAuthorised": 14000.0,
+      "EquitySharesPaidUp": 6766094014.0
+    },
+    {
+      "YRC": 202203.0,
+      "co_code": 476.0,
+      "FaceValue": 10.0,
+      "EquitySubs": 6766.0,
+      "EquityIssued": 6766.0,
+      "EquityPaidUp": 6765.0,
+      "EquityAuthorised": 14000.0,
+      "EquitySharesPaidUp": 6765994014.0
+    },
+    {
+      "YRC": 202103.0,
+      "co_code": 476.0,
+      "FaceValue": 10.0,
+      "EquitySubs": 6445.0,
+      "EquityIssued": 6762.0,
+      "EquityPaidUp": 6445.0,
+      "EquityAuthorised": 14000.0,
+      "EquitySharesPaidUp": 6762068814.0
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202503.0,
+      "YEAR": 2025.0,
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Unspecified",
+      "SYMBOL": "BAJAJHLDNG",
+      "CO_CODE": 50.0,
+      "PRCODEN": "00011050"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202403.0,
+      "YEAR": 2024.0,
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Unspecified",
+      "SYMBOL": "BAJAJHLDNG",
+      "CO_CODE": 50.0,
+      "PRCODEN": "00011050"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202303.0,
+      "YEAR": 2023.0,
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Unspecified",
+      "SYMBOL": "BAJAJHLDNG",
+      "CO_CODE": 50.0,
+      "PRCODEN": "00011050"
+    },
+    {
+      "QTY": 0.0,
+      "UOM": "NA",
+      "YRC": 202203.0,
+      "YEAR": 2022.0,
+      "LNAME": "Bajaj Holdings & Investment Ltd",
+      "VALUE": 0.0,
+      "PRNAME": "Unspecified",
+      "SYMBOL": "BAJAJHLDNG",
+      "CO_CODE": 50.0,
+      "PRCODEN": "00011050"
+    }
+  ]
+}

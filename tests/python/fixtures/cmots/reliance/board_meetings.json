@@ -1,0 +1,51 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "isin": "INE002A01018",
+      "bmdate": "2025-07-18T00:00:00",
+      "symbol": "RELIANCE",
+      "co_code": 476.0,
+      "co_name": "Reliance Industries Ltd",
+      "description": "Reliance Industries Ltdhas informed BSE that the meeting of the Board of Directors of the Company is scheduled on 18/07/2025 inter alia to consider and approve the standalone and consolidated unaudited financial results of the Company for the quarter ended June 30 2025.\r\n\r\nConsolidated and Standalone Unaudited Financial Results for the quarter ended June 30, 2025 \r\n\r\n(As Per BSE Announcement Dated on: 18/07/2025)",
+      "announcementdate": "2025-07-11T00:00:00"
+    },
+    {
+      "isin": "INE002A01018",
+      "bmdate": "2025-08-29T00:00:00",
+      "symbol": "RELIANCE",
+      "co_code": 476.0,
+      "co_name": "Reliance Industries Ltd",
+      "description": "Disclosure under Regulation 30 of the Securities and Exchange Board of India (Listing Obligations and Disclosure Requirements) Regulations, 2015.",
+      "announcementdate": "2025-08-29T00:00:00"
+    },
+    {
+      "isin": "INE002A01018",
+      "bmdate": "2025-10-17T00:00:00",
+      "symbol": "RELIANCE",
+      "co_code": 476.0,
+      "co_name": "Reliance Industries Ltd",
+      "description": "Reliance Industries Ltdhas informed BSE that the meeting of the Board of Directors of the Company is scheduled on 17/10/2025 inter alia to consider and approve the standalone and consolidated unaudited financial results of the Company for the quarter and half year ended September 30 2025\r\n\r\nPlease find attached Consolidated and Standalone Unaudited Financial Results for the quarter and half year ended September 30, 2025\r\n\r\nPlease find attached Consolidated and Standalone Unaudited Financial Results for the quarter and half year ended September 30, 2025.\r\n\r\n(As Per BSE Announcement Dated on:17.10.2025)",
+      "announcementdate": "2025-10-09T00:00:00"
+    },
+    {
+      "isin": "INE002A01018",
+      "bmdate": "2026-01-16T00:00:00",
+      "symbol": "RELIANCE",
+      "co_code": 476.0,
+      "co_name": "Reliance Industries Ltd",
+      "description": "Quarterly Results\r\n\r\n Please find attached Consolidated and Standalone Unaudited Financial Results for the quarter and nine months ended December 31, 2025 \r\n\r\n(As Per BSE Announcement Dated on 16.01.2026)",
+      "announcementdate": "2026-01-08T00:00:00"
+    },
+    {
+      "isin": "INE002A01018",
+      "bmdate": "2026-04-24T00:00:00",
+      "symbol": "RELIANCE",
+      "co_code": 476.0,
+      "co_name": "Reliance Industries Ltd",
+      "description": "Reliance Industries Ltdhas informed BSE that the meeting of the Board of Directors of the Company is scheduled on 24/04/2026 inter alia to consider and approve i. the standalone and consolidated audited financial results of the Company for the quarter and year ended March 31 2026; and\r\nii. recommend dividend on equity shares of the Company for the financial year ended March 31 2026\r\n\r\nOutcome of the Board Meeting \r\n\r\n(As Per BSE Announcement Dated on: 24.04.2026)",
+      "announcementdate": "2026-04-17T00:00:00"
+    }
+  ]
+}

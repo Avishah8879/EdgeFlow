@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Landing Page - Highest Priority -->
   <url>
-    <loc>https://tiphub.ai/</loc>
+    <loc>https://equitypro.ai/</loc>
     <lastmod>2026-02-02</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -10,35 +10,35 @@
 
   <!-- Core Feature Pages -->
   <url>
-    <loc>https://tiphub.ai/home</loc>
+    <loc>https://equitypro.ai/home</loc>
     <lastmod>2026-02-02</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://tiphub.ai/stocks</loc>
+    <loc>https://equitypro.ai/stocks</loc>
     <lastmod>2026-02-02</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://tiphub.ai/indices</loc>
+    <loc>https://equitypro.ai/indices</loc>
     <lastmod>2026-02-02</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://tiphub.ai/screener</loc>
+    <loc>https://equitypro.ai/screener</loc>
     <lastmod>2026-02-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://tiphub.ai/alpha-generation</loc>
+    <loc>https://equitypro.ai/alpha-generation</loc>
     <lastmod>2026-02-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -46,28 +46,28 @@
 
   <!-- Content Pages -->
   <url>
-    <loc>https://tiphub.ai/blog</loc>
+    <loc>https://equitypro.ai/blog</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://tiphub.ai/blog/advanced-strategies</loc>
+    <loc>https://equitypro.ai/blog/advanced-strategies</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://tiphub.ai/market-reports</loc>
+    <loc>https://equitypro.ai/market-reports</loc>
     <lastmod>2026-01-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://tiphub.ai/market-reports/steel-sector-outlook</loc>
+    <loc>https://equitypro.ai/market-reports/steel-sector-outlook</loc>
     <lastmod>2026-01-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -75,14 +75,14 @@
 
   <!-- Implemented Feature Pages -->
   <url>
-    <loc>https://tiphub.ai/news</loc>
+    <loc>https://equitypro.ai/news</loc>
     <lastmod>2026-02-02</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://tiphub.ai/saved-results</loc>
+    <loc>https://equitypro.ai/saved-results</loc>
     <lastmod>2026-02-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -90,7 +90,7 @@
 
   <!-- Legal & Static Pages -->
   <url>
-    <loc>https://tiphub.ai/privacy</loc>
+    <loc>https://equitypro.ai/privacy</loc>
     <lastmod>2026-01-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
@@ -98,67 +98,67 @@
 
   <!-- LLM Context Files -->
   <url>
-    <loc>https://tiphub.ai/llms.txt</loc>
+    <loc>https://equitypro.ai/llms.txt</loc>
     <lastmod>2026-02-02</lastmod>
     <changefreq>quarterly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <url>
-    <loc>https://tiphub.ai/llms-full.txt</loc>
+    <loc>https://equitypro.ai/llms-full.txt</loc>
     <lastmod>2026-02-02</lastmod>
     <changefreq>quarterly</changefreq>
     <priority>0.2</priority>
   </url>
 
   <!-- Top NSE Stocks (Nifty 50 constituents) -->
-  <url><loc>https://tiphub.ai/stocks/RELIANCE</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/TCS</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/HDFCBANK</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/INFY</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/ICICIBANK</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/HINDUNILVR</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/ITC</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/SBIN</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/BHARTIARTL</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/KOTAKBANK</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/LT</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/AXISBANK</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/BAJFINANCE</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/ASIANPAINT</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/MARUTI</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/HCLTECH</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/WIPRO</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/SUNPHARMA</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/TITAN</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/ULTRACEMCO</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/NESTLEIND</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/BAJAJFINSV</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/TATAMOTORS</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/POWERGRID</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/NTPC</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/ONGC</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/TATASTEEL</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/JSWSTEEL</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/ADANIENT</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/ADANIPORTS</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/COALINDIA</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/TECHM</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/DRREDDY</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/CIPLA</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/APOLLOHOSP</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/EICHERMOT</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/GRASIM</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/HEROMOTOCO</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/HINDALCO</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/INDUSINDBK</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/M&amp;M</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/SBILIFE</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/HDFCLIFE</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/BRITANNIA</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/DIVISLAB</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/BPCL</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/TATACONSUM</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/LTIM</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tiphub.ai/stocks/BAJAJ-AUTO</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/RELIANCE</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/TCS</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/HDFCBANK</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/INFY</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/ICICIBANK</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/HINDUNILVR</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/ITC</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/SBIN</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/BHARTIARTL</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/KOTAKBANK</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/LT</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/AXISBANK</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/BAJFINANCE</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/ASIANPAINT</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/MARUTI</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/HCLTECH</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/WIPRO</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/SUNPHARMA</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/TITAN</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/ULTRACEMCO</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/NESTLEIND</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/BAJAJFINSV</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/TATAMOTORS</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/POWERGRID</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/NTPC</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/ONGC</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/TATASTEEL</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/JSWSTEEL</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/ADANIENT</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/ADANIPORTS</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/COALINDIA</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/TECHM</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/DRREDDY</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/CIPLA</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/APOLLOHOSP</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/EICHERMOT</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/GRASIM</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/HEROMOTOCO</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/HINDALCO</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/INDUSINDBK</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/M&amp;M</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/SBILIFE</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/HDFCLIFE</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/BRITANNIA</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/DIVISLAB</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/BPCL</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/TATACONSUM</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/LTIM</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://equitypro.ai/stocks/BAJAJ-AUTO</loc><lastmod>2026-02-02</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
 </urlset>

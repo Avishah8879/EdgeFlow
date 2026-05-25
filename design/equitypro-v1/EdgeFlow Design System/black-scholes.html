@@ -1,0 +1,174 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Black-Scholes calculator · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.bs-hd{padding:18px 32px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.bs-hd h1{font-family:var(--font-display);font-size:24px;letter-spacing:-0.01em;margin:0;color:hsl(var(--brand-navy))}
+.dark .bs-hd h1{color:hsl(38 30% 95%)}
+
+.bs-grid{display:grid;grid-template-columns:340px 1fr;gap:0;height:calc(100vh - 64px - 76px)}
+
+.bs-side{padding:20px;border-right:1px solid hsl(var(--border));background:hsl(var(--card));overflow-y:auto}
+.bs-side h3{font-family:var(--font-display);font-size:15px;margin:0 0 14px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .bs-side h3{color:hsl(38 30% 95%)}
+.fld{margin-bottom:14px}
+.fld label{display:flex;justify-content:space-between;font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground));margin-bottom:6px}
+.fld label .v{font-family:var(--font-mono);font-size:13px;font-weight:700;color:hsl(var(--foreground));text-transform:none;letter-spacing:0}
+.fld input[type=range]{width:100%;accent-color:hsl(var(--brand-gold))}
+.fld input[type=text],.fld input[type=number]{width:100%;height:36px;padding:0 12px;border:1px solid hsl(var(--border));border-radius:var(--radius-md);background:hsl(var(--background));color:hsl(var(--foreground));font-family:var(--font-mono);font-size:13px;font-weight:600}
+.fld .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.toggle{display:flex;gap:0;border:1px solid hsl(var(--border));border-radius:var(--radius-md);overflow:hidden;height:32px}
+.toggle button{flex:1;height:100%;background:transparent;border:0;font-size:11.5px;font-weight:700;color:hsl(var(--muted-foreground))}
+.toggle button.active{background:hsl(var(--brand-navy));color:white}
+.dark .toggle button.active{background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep))}
+
+.bs-main{padding:24px 32px;overflow-y:auto;background:hsl(var(--background))}
+.bs-out{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:24px}
+.out-card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:18px}
+.out-card.lg{grid-column:span 2;border:2px solid hsl(var(--brand-gold))}
+.out-card .l{font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.out-card .v{font-family:var(--font-mono);font-size:32px;font-weight:700;color:hsl(var(--foreground));margin-top:6px;letter-spacing:-0.02em}
+.out-card.lg .v{font-size:46px;color:hsl(var(--brand-gold))}
+.out-card .meta{font-family:var(--font-mono);font-size:11px;color:hsl(var(--muted-foreground));margin-top:6px}
+
+.greeks-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:18px;margin-bottom:18px}
+.greeks-row .g{text-align:center;padding:8px 6px;border-right:1px solid hsl(var(--border))}
+.greeks-row .g:last-child{border-right:0}
+.greeks-row .gk{font-family:var(--font-display);font-size:18px;font-weight:700;color:hsl(var(--brand-navy));font-style:italic}
+.dark .greeks-row .gk{color:hsl(var(--brand-gold))}
+.greeks-row .gv{font-family:var(--font-mono);font-size:18px;font-weight:700;margin-top:4px;color:hsl(var(--foreground))}
+.greeks-row .gd{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700;margin-top:4px}
+
+.bs-charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.bs-charts .c{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:18px}
+.bs-charts h4{margin:0 0 12px;font-size:11px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.bs-charts svg{width:100%;height:200px}
+
+.formula{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:24px;font-family:var(--font-mono)}
+.formula h4{margin:0 0 14px;font-family:var(--font-display);font-size:16px;color:hsl(var(--brand-navy));letter-spacing:-0.01em;font-style:italic}
+.dark .formula h4{color:hsl(38 30% 95%)}
+.formula .eq{font-size:14px;line-height:2;background:hsl(var(--muted)/0.5);padding:14px 18px;border-radius:var(--radius-md);border-left:3px solid hsl(var(--brand-gold));color:hsl(var(--foreground))}
+.formula .eq em{color:hsl(var(--brand-gold));font-style:italic}
+</style></head>
+<body data-page="black-scholes" data-screen-label="Terminal · 28 Black-Scholes">
+<div class="shell"><div data-shell-topbar></div>
+
+<div class="bs-hd">
+  <span class="eyebrow">Terminal · Pricing model</span>
+  <h1>Black-Scholes-Merton calculator</h1>
+</div>
+
+<main class="bs-grid">
+  <aside class="bs-side">
+    <h3>Inputs</h3>
+    <div class="fld">
+      <label>Option type</label>
+      <div class="toggle"><button class="active">CALL</button><button>PUT</button></div>
+    </div>
+    <div class="fld">
+      <label>Spot price (S) <span class="v">22,418</span></label>
+      <input type="range" min="20000" max="24000" value="22418">
+    </div>
+    <div class="fld">
+      <label>Strike (K) <span class="v">22,500</span></label>
+      <input type="range" min="20000" max="24000" value="22500">
+    </div>
+    <div class="fld">
+      <label>Days to expiry (T) <span class="v">11d</span></label>
+      <input type="range" min="1" max="365" value="11">
+    </div>
+    <div class="fld">
+      <label>Implied vol (σ) <span class="v">14.20%</span></label>
+      <input type="range" min="5" max="80" value="14" step="0.1">
+    </div>
+    <div class="fld">
+      <label>Risk-free rate (r) <span class="v">6.84%</span></label>
+      <input type="range" min="0" max="15" value="6.84" step="0.01">
+    </div>
+    <div class="fld">
+      <label>Dividend yield (q) <span class="v">0.32%</span></label>
+      <input type="range" min="0" max="10" value="0.32" step="0.01">
+    </div>
+    <div class="fld">
+      <label>Lot size</label>
+      <input type="number" value="50">
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px">Solve for IV</button>
+  </aside>
+
+  <section class="bs-main">
+    <div class="bs-out">
+      <div class="out-card lg">
+        <div class="l">Theoretical price · Call</div>
+        <div class="v">62.84</div>
+        <div class="meta">Intrinsic value 0.00 · Time value 62.84 · Lot premium ₹3,142</div>
+      </div>
+      <div class="out-card">
+        <div class="l">Mispricing vs market</div>
+        <div class="v change-up">+0.46</div>
+        <div class="meta">Market 62.40 · Theoretical 62.84 · slight underpriced</div>
+      </div>
+      <div class="out-card">
+        <div class="l">d1 / d2</div>
+        <div class="v" style="font-size:22px">0.142 / 0.094</div>
+        <div class="meta">N(d1) = 0.5564 · N(d2) = 0.5374</div>
+      </div>
+    </div>
+
+    <div class="greeks-row">
+      <div class="g"><div class="gk">Δ</div><div class="gv">0.556</div><div class="gd">Delta</div></div>
+      <div class="g"><div class="gk">Γ</div><div class="gv">0.0042</div><div class="gd">Gamma</div></div>
+      <div class="g"><div class="gk">Θ</div><div class="gv change-down">−5.84</div><div class="gd">Theta /day</div></div>
+      <div class="g"><div class="gk">𝜈</div><div class="gv">8.42</div><div class="gd">Vega /1%</div></div>
+      <div class="g"><div class="gk">Ρ</div><div class="gv">2.14</div><div class="gd">Rho /1%</div></div>
+    </div>
+
+    <div class="bs-charts">
+      <div class="c"><h4>Price vs underlying</h4>
+        <svg viewBox="0 0 380 200">
+          <line x1="40" y1="180" x2="380" y2="180" stroke="hsl(var(--border))"/>
+          <line x1="40" y1="20" x2="40" y2="180" stroke="hsl(var(--border))"/>
+          <path d="M40,180 L80,178 L120,170 L160,154 L200,128 L240,94 L280,60 L320,32 L380,12" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="2"/>
+          <path d="M40,180 L200,180 L380,8" fill="none" stroke="hsl(var(--negative))" stroke-width="1.4" stroke-dasharray="3 3"/>
+          <line x1="200" y1="20" x2="200" y2="180" stroke="hsl(var(--brand-gold)/0.5)" stroke-dasharray="2 3"/>
+          <text x="200" y="14" text-anchor="middle" font-family="ui-monospace" font-size="9" fill="hsl(var(--brand-gold))">K = 22,500</text>
+          <text x="36" y="184" text-anchor="end" font-family="ui-monospace" font-size="9" fill="hsl(var(--muted-foreground))">0</text>
+          <text x="36" y="20" text-anchor="end" font-family="ui-monospace" font-size="9" fill="hsl(var(--muted-foreground))">800</text>
+          <text x="40" y="194" font-family="ui-monospace" font-size="9" fill="hsl(var(--muted-foreground))">21k</text>
+          <text x="380" y="194" text-anchor="end" font-family="ui-monospace" font-size="9" fill="hsl(var(--muted-foreground))">24k</text>
+        </svg>
+      </div>
+      <div class="c"><h4>Theta decay vs DTE</h4>
+        <svg viewBox="0 0 380 200">
+          <line x1="40" y1="180" x2="380" y2="180" stroke="hsl(var(--border))"/>
+          <line x1="40" y1="20" x2="40" y2="180" stroke="hsl(var(--border))"/>
+          <path d="M40,180 C100,170 180,150 240,120 C300,80 340,40 380,18" fill="none" stroke="hsl(var(--brand-gold))" stroke-width="2"/>
+          <text x="36" y="184" text-anchor="end" font-family="ui-monospace" font-size="9" fill="hsl(var(--muted-foreground))">0</text>
+          <text x="36" y="20" text-anchor="end" font-family="ui-monospace" font-size="9" fill="hsl(var(--muted-foreground))">price</text>
+          <text x="40" y="194" font-family="ui-monospace" font-size="9" fill="hsl(var(--muted-foreground))">expiry</text>
+          <text x="380" y="194" text-anchor="end" font-family="ui-monospace" font-size="9" fill="hsl(var(--muted-foreground))">90 DTE</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="formula">
+      <h4>Black-Scholes formula</h4>
+      <div class="eq">
+        C = <em>S</em> · e<sup>−qT</sup> · N(d<sub>1</sub>) − <em>K</em> · e<sup>−rT</sup> · N(d<sub>2</sub>)<br>
+        d<sub>1</sub> = [ ln(S/K) + (r − q + σ²/2) · T ] / (σ · √T)<br>
+        d<sub>2</sub> = d<sub>1</sub> − σ · √T
+      </div>
+      <p class="muted body-sm" style="margin:14px 0 0;font-family:inherit;font-size:12px;line-height:1.55">Assumes log-normal returns, constant vol, no early exercise (European). For American/dividend-bearing securities, use binomial tree (toggle below).</p>
+      <div class="flex gap-2" style="margin-top:14px">
+        <button class="btn btn-ghost btn-sm">Use binomial</button>
+        <button class="btn btn-ghost btn-sm">Monte-Carlo</button>
+        <button class="btn btn-ghost btn-sm">Heston</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

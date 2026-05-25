@@ -1,0 +1,42 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "yrc": 202503.0,
+      "Profit": 35195.61,
+      "ebitda": 43110.86,
+      "co_code": 301.0,
+      "sect_name": "Tobacco Products",
+      "TotalAssets": 84506.62000000001,
+      "TotalRevenue": 74236.07,
+      "sharecapital": 1251.41,
+      "TotalExpenditure": 51689.520000000004,
+      "TotalLiabilities": 84506.62
+    },
+    {
+      "yrc": 202403.0,
+      "Profit": 20421.97,
+      "ebitda": 27535.45,
+      "co_code": 301.0,
+      "sect_name": "Tobacco Products",
+      "TotalAssets": 87862.79,
+      "TotalRevenue": 67292.6,
+      "sharecapital": 1248.47,
+      "TotalExpenditure": 45190.240000000005,
+      "TotalLiabilities": 87862.79000000001
+    },
+    {
+      "yrc": 202303.0,
+      "Profit": 18753.31,
+      "ebitda": 26486.72,
+      "co_code": 301.0,
+      "sect_name": "Tobacco Products",
+      "TotalAssets": 82787.58,
+      "TotalRevenue": 70251.28,
+      "sharecapital": 1242.8,
+      "TotalExpenditure": 48011.350000000006,
+      "TotalLiabilities": 82787.58000000002
+    }
+  ]
+}

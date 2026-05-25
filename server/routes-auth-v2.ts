@@ -42,6 +42,7 @@ import { verifyPasswordBcrypt, validatePasswordStrength } from './auth/password-
 import { createJwtSessionPayload } from './auth/session-jwt';
 import { verifyRefreshToken } from './auth/jwt';
 import { requireAuth } from './middleware/auth';
+import { grantSignupBonus } from './lib/coins';
 import jwt from 'jsonwebtoken';
 
 const router = Router();
@@ -124,7 +125,7 @@ router.post('/v2/signup', signupRateLimiter, async (req: Request, res: Response)
       username,
       password,
       name: name || username,
-      tier: 'premium', // Default all users to premium until payment is implemented
+      tier: 'free', // New users start on the free tier
       countryOfResidence: countryOfResidence.trim(),
       dateOfBirth: dateOfBirth, // ISO format: YYYY-MM-DD
       phoneNumber: normalizedPhone,
@@ -133,15 +134,18 @@ router.post('/v2/signup', signupRateLimiter, async (req: Request, res: Response)
       termsVersion: '1.0',
     });
 
-    // Log successful signup
-    await logAuthEventV2({
+    // Credit signup bonus (idempotent + soft-fail — never blocks signup)
+    grantSignupBonus(user.id).catch(() => {});
+
+    // Log successful signup — best-effort, don't block the response
+    logAuthEventV2({
       userId: user.id,
       eventType: 'signup',
       provider: 'password',
       ipAddress,
       userAgent,
       success: true,
-    });
+    }).catch((err) => console.warn('[AUTH_V2] auth_log insert failed:', err.message));
 
     // Send welcome email (non-blocking)
     sendWelcomeEmail({
@@ -166,6 +170,8 @@ router.post('/v2/signup', signupRateLimiter, async (req: Request, res: Response)
     res.status(201).json(session);
   } catch (error: any) {
     console.error('[AUTH_V2] Signup error:', error.message);
+    console.error('[AUTH_V2] Signup stack:', error.stack);
+    if (error.code) console.error('[AUTH_V2] PG code:', error.code, 'detail:', error.detail, 'constraint:', error.constraint);
 
     // Log failed signup
     await logAuthEventV2({
@@ -175,14 +181,19 @@ router.post('/v2/signup', signupRateLimiter, async (req: Request, res: Response)
       userAgent,
       success: false,
       failureReason: error.message,
-    });
+    }).catch(() => {}); // don't let log failure mask the real error
 
     // Return appropriate error message
     if (error.message.includes('email already exists') || error.message.includes('username is already taken')) {
       return res.status(409).json({ message: error.message });
     }
 
-    res.status(500).json({ message: 'Failed to create account. Please try again.' });
+    // In development, expose the underlying error so we can debug
+    const isDev = process.env.NODE_ENV !== 'production';
+    res.status(500).json({
+      message: 'Failed to create account. Please try again.',
+      ...(isDev ? { debug: error.message, code: error.code, constraint: error.constraint } : {}),
+    });
   }
 });
 
@@ -414,9 +425,19 @@ router.post('/v2/refresh', tokenRefreshRateLimiter, async (req: Request, res: Re
       return res.status(403).json({ message: 'Account deactivated' });
     }
 
-    // Revoke old session before creating new one
-    // This prevents duplicate session issues if multiple refreshes happen concurrently
-    await revokeSessionByRefreshTokenV2(refreshToken, 'token_refresh');
+    // Revoke old session before creating new one.
+    // This prevents duplicate session issues if multiple refreshes happen concurrently.
+    // The revoke only matches a *live* session, so a count of 0 means this refresh
+    // token's session was already revoked (logout / prior rotation) — reject instead
+    // of minting a new session, otherwise logout never actually ends the lineage and
+    // a still-cryptographically-valid refresh-token JWT resurrects a dead session.
+    const revokedCount = await revokeSessionByRefreshTokenV2(refreshToken, 'token_refresh');
+    if (revokedCount === 0) {
+      return res.status(401).json({
+        message: 'Invalid refresh token',
+        code: 'INVALID_REFRESH_TOKEN',
+      });
+    }
 
     // Log token refresh
     await logAuthEventV2({
@@ -566,7 +587,7 @@ router.post('/v2/complete-oauth-signup', async (req: Request, res: Response) => 
       return res.status(400).json({ error: 'Username must be at least 3 characters' });
     }
 
-    if (!['basic', 'premium'].includes(tier)) {
+    if (!['free', 'semi', 'pro'].includes(tier)) {
       return res.status(400).json({ error: 'Invalid tier selection' });
     }
 
@@ -620,6 +641,9 @@ router.post('/v2/complete-oauth-signup', async (req: Request, res: Response) => 
       termsAcceptedAt: new Date(),
       termsVersion: '1.0',
     });
+
+    // Credit signup bonus (idempotent + soft-fail — never blocks signup)
+    grantSignupBonus(user.id).catch(() => {});
 
     // Create session
     const session = await createJwtSessionPayload(user, {
@@ -1277,7 +1301,7 @@ router.get('/v2/export-my-data', requireAuth, async (req: Request, res: Response
     };
 
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename="tiphub-data-export-${userId}.json"`);
+    res.setHeader('Content-Disposition', `attachment; filename="equitypro-data-export-${userId}.json"`);
     return res.json(exportData);
   } catch (error: any) {
     console.error('[AUTH_V2] Export data error:', error.message);
@@ -1403,8 +1427,8 @@ router.get('/v2/usage-limits', requireAuth, async (req: Request, res: Response) 
 
     // Build limits (defaults < tier config < override)
     const defaultLimits: Record<string, { maxRequests: number; windowMs: number }> = {
-      api_screener: { maxRequests: userTier === 'premium' ? 50 : 3, windowMs: 3600000 },
-      api_backtest: { maxRequests: userTier === 'premium' ? 20 : 2, windowMs: 3600000 }
+      api_screener: { maxRequests: userTier === 'pro' ? 100 : userTier === 'semi' ? 20 : 3, windowMs: 3600000 },
+      api_backtest: { maxRequests: userTier === 'pro' ? 50 : userTier === 'semi' ? 10 : 2, windowMs: 3600000 }
     };
 
     const configs: Record<string, { maxRequests: number; windowMs: number }> = { ...defaultLimits };

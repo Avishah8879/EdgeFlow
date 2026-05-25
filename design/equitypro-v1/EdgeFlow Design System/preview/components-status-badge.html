@@ -1,0 +1,20 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin:0; padding:24px; background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-sans); display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+  .ms { position:relative; width:140px; height:30px; border-radius:8px; background: linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--card)) 100%); border:1px solid hsl(var(--border)); display:flex; align-items:center; justify-content:center; gap:8px; }
+  .dot { width:6px; height:6px; border-radius:50%; }
+  .open { color: hsl(var(--status-open)); }
+  .pre { color: hsl(var(--status-pre-market)); }
+  .closed { color: hsl(var(--status-closed)); }
+  .label { font-size:11px; font-weight:500; }
+  .pulse { box-shadow: 0 0 0 0 currentColor; animation: p 2s infinite; background: currentColor; }
+  @keyframes p { 0%,100% { box-shadow: 0 0 0 0 currentColor; opacity:1 } 50% { box-shadow: 0 0 6px 2px currentColor; opacity:.7 } }
+  .dot-static { background: currentColor; }
+</style></head>
+<body>
+  <div class="ms"><span class="dot pulse open"></span><span class="label open">Market Open</span></div>
+  <div class="ms"><span class="dot dot-static pre"></span><span class="label pre">Pre-Market</span></div>
+  <div class="ms"><span class="dot dot-static closed"></span><span class="label closed">Market Closed</span></div>
+  <div class="ms"><span class="dot dot-static" style="color:hsl(var(--neutral))"></span><span class="label" style="color:hsl(var(--neutral-foreground))">After Hours</span></div>
+</body></html>

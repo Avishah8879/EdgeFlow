@@ -96,6 +96,7 @@ task_routes = {
     "celery_tasks.refresh_hot_quotes": {"queue": "periodic"},
     "celery_tasks.refresh_options_chain": {"queue": "periodic"},
     "celery_tasks.refresh_options_visualizer": {"queue": "periodic"},
+    "celery_tasks.snapshot_options_oi": {"queue": "periodic"},
 }
 
 # =============================================================================
@@ -141,11 +142,27 @@ if beat_schedule_enabled:
             "options": {"queue": "periodic", "expires": 4},
         },
 
-        # Options Visualizer - every 30 seconds (exposure, surface, timeseries)
-        "refresh-options-visualizer-30s": {
+        # Options Visualizer ATM-GxOI recorder — every 60 seconds.
+        # Fires whether or not any user has the page open, so the time-series
+        # subplot can show the entire trading day (09:15–15:30 IST) on first
+        # user load. Implemented in celery_tasks.refresh_options_visualizer;
+        # task itself short-circuits outside market hours.
+        "refresh-options-visualizer-60s": {
             "task": "celery_tasks.refresh_options_visualizer",
-            "schedule": 30.0,
-            "options": {"queue": "periodic", "expires": 29},
+            "schedule": 60.0,
+            "options": {"queue": "periodic", "expires": 59},
+        },
+
+        # Options Chain OI snapshot — every 5 minutes.
+        # Powers the "OI Δ" column on /options. Each tick rotates the
+        # :current snapshot in Redis to :previous and writes a fresh
+        # :current; main.py:/api/options reads :previous to compute
+        # 5-minute deltas per strike. Task short-circuits outside
+        # market hours.
+        "snapshot-options-oi-5min": {
+            "task": "celery_tasks.snapshot_options_oi",
+            "schedule": 300.0,
+            "options": {"queue": "periodic", "expires": 290},
         },
 
         # =====================================================================

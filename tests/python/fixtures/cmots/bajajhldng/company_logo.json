@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "co_code": 50,
+      "Filepath": "https://complogosapi.cmots.com/complogodata/BajajHoldingsInvestmentLtd_59426251_50.png",
+      "CompanyName": "Bajaj Holdings & Investment Ltd"
+    }
+  ]
+}

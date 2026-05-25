@@ -209,7 +209,7 @@ function WatchlistRow({
                 <Line
                   type="monotone"
                   dataKey="value"
-                  stroke={isPositive ? "#00BFFF" : "#FF6B35"}
+                  stroke={isPositive ? "#16A34A" : "#FF6B35"}
                   strokeWidth={1.5}
                   dot={false}
                 />

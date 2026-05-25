@@ -6,9 +6,33 @@ export default {
   theme: {
     extend: {
       borderRadius: {
-        lg: ".5625rem", /* 9px */
-        md: ".375rem", /* 6px */
-        sm: ".1875rem", /* 3px */
+        lg: "var(--radius-lg)",
+        md: "var(--radius-md)",
+        sm: "var(--radius-sm)",
+        xl: "var(--radius-xl)",
+        "2xl": "var(--radius-2xl)",
+        pill: "var(--radius-pill)",
+      },
+      boxShadow: {
+        card: "var(--shadow-card)",
+        "card-lg": "var(--shadow-card-lg)",
+        "glow-primary": "var(--shadow-glow-primary)",
+        "glow-gold": "var(--shadow-glow-gold)",
+      },
+      transitionDuration: {
+        fast: "var(--t-fast)",
+        base: "var(--t-base)",
+        slow: "var(--t-slow)",
+      },
+      transitionTimingFunction: {
+        out: "var(--ease-out)",
+        spring: "var(--ease-spring)",
+        bounce: "var(--ease-bounce)",
+      },
+      letterSpacing: {
+        tight: "var(--ls-tight)",
+        wide: "var(--ls-wide)",
+        uppercase: "var(--ls-uppercase)",
       },
       colors: {
         // Flat / base colors (regular buttons)
@@ -99,6 +123,7 @@ export default {
         sans: ["var(--font-sans)"],
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
+        display: ["var(--font-display)"],
       },
       keyframes: {
         "accordion-down": {

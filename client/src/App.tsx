@@ -1,11 +1,12 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, Redirect } from "wouter";
 import { queryClient, prefetchTickerOptions } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense, useEffect } from "react";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AnimatePresence, motion } from "framer-motion";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PageVisibilityProvider } from "@/contexts/PageVisibilityContext";
 import { TrackingProvider } from "@/contexts/TrackingContext";
@@ -14,22 +15,34 @@ import { generateOrganizationSchema, generateWebSiteSchema } from "@/lib/json-ld
 import { useAdminUpdates } from "@/hooks/use-admin-updates";
 import { initNavigationTracker } from "@/lib/navigation-tracker";
 import { AppShell } from "@/components/layout";
+import { AuthGuard } from "@/components/AuthGuard";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ImpersonationBanner } from "@/components/ImpersonationBanner";
-import { NotificationBanner } from "@/components/NotificationBanner";
 import { PrivacyConsentBanner } from "@/components/PrivacyConsentBanner";
 
 // ── Pages loaded immediately ───────────────────────────────────────────────
-import Landing from "@/pages/Landing";
 import NotFound from "@/pages/not-found";
 import AuthCallback from "@/pages/AuthCallback";
 
-// ── Tiphub core pages (lazy) ───────────────────────────────────────────────
+// `/` renders the Landing marketing page for unauthenticated visitors;
+// authenticated users are redirected to /home. The brief auth-resolve
+// window shows the PageLoader spinner so authenticated users never
+// flash the landing page on cold load.
+function RootRoute() {
+  const { isAuthenticated, status } = useAuth();
+  if (status === "loading") return <PageLoader />;
+  if (isAuthenticated) return <Redirect to="/home" />;
+  return <Landing />;
+}
+
+// ── Equity Pro core pages (lazy) ───────────────────────────────────────────
+const Landing = lazy(() => import("@/pages/Landing"));
 const Home = lazy(() => import("@/pages/Home"));
 const StockDetail = lazy(() => import("@/pages/StockDetail"));
 const Stocks = lazy(() => import("@/pages/Stocks"));
 const Screener = lazy(() => import("@/pages/Screener"));
-const StrategyBacktesting = lazy(() => import("@/pages/StrategyBacktesting"));
+// /alpha-generation is no longer a hosted page — it redirects to EquityPro AI (external).
+import { ExternalRedirect } from "@/components/ExternalRedirect";
 const Indices = lazy(() => import("@/pages/Indices"));
 const IndexDetail = lazy(() => import("@/pages/IndexDetail"));
 const TipTease = lazy(() => import("@/pages/TipTease"));
@@ -37,6 +50,8 @@ const Developers = lazy(() => import("@/pages/Developers"));
 const SavedResults = lazy(() => import("@/pages/SavedResults"));
 const SavedScreenerDetail = lazy(() => import("@/pages/SavedScreenerDetail"));
 const SavedBacktestDetail = lazy(() => import("@/pages/SavedBacktestDetail"));
+const SavedFundamentalScreenerDetail = lazy(() => import("@/pages/SavedFundamentalScreenerDetail"));
+const SavedPortfolioOptimizerDetail = lazy(() => import("@/pages/SavedPortfolioOptimizerDetail"));
 const SharedResult = lazy(() => import("@/pages/SharedResult"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Blog = lazy(() => import("@/pages/Blog"));
@@ -48,9 +63,9 @@ const HealthcareSector = lazy(() => import("@/pages/market-reports/HealthcareSec
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 
 // ── Auth pages (deferred — placeholders for now) ───────────────────────────
-const TiphubLogin = lazy(() => import("@/pages/TiphubLogin"));
-const TiphubSignup = lazy(() => import("@/pages/TiphubSignup"));
-const TiphubForgotPassword = lazy(() => import("@/pages/TiphubForgotPassword"));
+const EquityProLogin = lazy(() => import("@/pages/EquityProLogin"));
+const EquityProSignup = lazy(() => import("@/pages/EquityProSignup"));
+const EquityProForgotPassword = lazy(() => import("@/pages/EquityProForgotPassword"));
 const OAuthSetup = lazy(() => import("@/pages/OAuthSetup"));
 
 // ── FinTerminal pages (lazy) ───────────────────────────────────────────────
@@ -67,8 +82,10 @@ const OrderBook = lazy(() => import("@/pages/ft/OrderBook"));
 const BlackScholes = lazy(() => import("@/pages/ft/BlackScholes"));
 const EquityScreener = lazy(() => import("@/pages/ft/EquityScreener"));
 const PatternSearch = lazy(() => import("@/pages/ft/PatternSearch"));
+const PricePattern = lazy(() => import("@/pages/ft/PricePattern"));
 const SystematicPatterns = lazy(() => import("@/pages/ft/SystematicPatterns"));
 const Compare = lazy(() => import("@/pages/ft/Compare"));
+const PairTrading = lazy(() => import("@/pages/ft/PairTrading"));
 const PortfolioOptimizer = lazy(() => import("@/pages/ft/PortfolioOptimizer"));
 const FinancialCalculatorPage = lazy(() => import("@/pages/ft/FinancialCalculatorPage"));
 const ResearchReports = lazy(() => import("@/pages/ft/ResearchReports"));
@@ -80,6 +97,8 @@ const Forum = lazy(() => import("@/pages/ft/Forum"));
 const Notes = lazy(() => import("@/pages/ft/Notes"));
 const Changelog = lazy(() => import("@/pages/ft/Changelog"));
 const Help = lazy(() => import("@/pages/ft/Help"));
+const Seasonality = lazy(() => import("@/pages/Seasonality"));
+const FyersTokenUpdate = lazy(() => import("@/pages/FyersTokenUpdate"));
 
 // ── Admin pages (lazy) ────────────────────────────────────────────────────
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
@@ -93,6 +112,14 @@ const AdminRateLimits = lazy(() => import("@/pages/admin/AdminRateLimits"));
 const AdminFeatureFlags = lazy(() => import("@/pages/admin/AdminFeatureFlags"));
 const AdminEmailSettings = lazy(() => import("@/pages/admin/AdminEmailSettings"));
 const AdminApiKeys = lazy(() => import("@/pages/admin/AdminApiKeys"));
+const AdminPlatforms = lazy(() => import("@/pages/admin/AdminPlatforms"));
+const AdminCoinTransactions = lazy(() => import("@/pages/admin/AdminCoinTransactions"));
+const AdminCoinPacks = lazy(() => import("@/pages/admin/AdminCoinPacks"));
+const AdminSignupBonus = lazy(() => import("@/pages/admin/AdminSignupBonus"));
+const AdminFeatureCosts = lazy(() => import("@/pages/admin/AdminFeatureCosts"));
+const AdminPayments = lazy(() => import("@/pages/admin/AdminPayments"));
+const Pricing = lazy(() => import("@/pages/Pricing"));
+const DesignShowcase = lazy(() => import("@/pages/DesignShowcase"));
 
 function PageLoader() {
   return (
@@ -110,33 +137,60 @@ function AdminUpdatesListener() {
   return null;
 }
 
-// Paths that render WITHOUT the AppShell (no sidebar/topbar)
+// Paths that render WITHOUT the AppShell (no sidebar/topbar) AND
+// are exempt from authentication. Keep this list minimal — only auth
+// flows, legal pages, marketing content, and integration callbacks belong here.
+//   - "/"                 → <RootRoute/>: renders <Landing/> for unauthed visitors,
+//                           redirects authenticated users to /home
+//   - "/login" etc.       → auth flows must be reachable while logged out
+//   - "/privacy"          → legal page, kept public
+//   - "/blog", "/market-reports" → public marketing content (no authed data,
+//                           no AppShell-dependent chrome)
+//   - "/fyers-token"      → broker integration callback
 const BARE_PATHS = new Set([
   "/", "/login", "/signup", "/forgot-password",
   "/auth/callback", "/auth/oauth-setup", "/privacy",
+  "/fyers-token",
+  "/blog", "/blog/advanced-strategies",
+  "/market-reports",
+  "/market-reports/steel-sector-outlook",
+  "/market-reports/gas-sector-outlook",
+  "/market-reports/healthcare-sector-outlook",
 ]);
 
 function AppRoutes() {
+  const [location] = useLocation();
   return (
     <Suspense fallback={<PageLoader />}>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={location}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+        >
       <Switch>
         {/* ── Public/bare routes ──────────────────────────── */}
-        <Route path="/" component={Landing} />
-        <Route path="/login" component={TiphubLogin} />
-        <Route path="/signup" component={TiphubSignup} />
-        <Route path="/forgot-password" component={TiphubForgotPassword} />
+        <Route path="/" component={RootRoute} />
+        <Route path="/login" component={EquityProLogin} />
+        <Route path="/signup" component={EquityProSignup} />
+        <Route path="/forgot-password" component={EquityProForgotPassword} />
         <Route path="/auth/callback" component={AuthCallback} />
         <Route path="/auth/oauth-setup" component={OAuthSetup} />
+        <Route path="/fyers-token" component={FyersTokenUpdate} />
         <Route path="/privacy" component={PrivacyPolicy} />
         <Route path="/shared/screener/:token" component={SharedResult} />
         <Route path="/shared/backtest/:token" component={SharedResult} />
 
-        {/* ── Tiphub core pages ────────────────────────────── */}
+        {/* ── Equity Pro core pages ────────────────────────── */}
         <Route path="/home" component={Home} />
         <Route path="/stocks" component={Stocks} />
         <Route path="/stocks/:ticker" component={StockDetail} />
         <Route path="/screener" component={Screener} />
-        <Route path="/alpha-generation" component={StrategyBacktesting} />
+        <Route path="/alpha-generation">
+          {() => <ExternalRedirect kind="equitypro-ai" />}
+        </Route>
         <Route path="/indices" component={Indices} />
         <Route path="/index/:symbol" component={IndexDetail} />
         <Route path="/tip-tease" component={TipTease} />
@@ -144,6 +198,8 @@ function AppRoutes() {
         <Route path="/saved-results" component={SavedResults} />
         <Route path="/saved-results/screener/:id" component={SavedScreenerDetail} />
         <Route path="/saved-results/backtest/:id" component={SavedBacktestDetail} />
+        <Route path="/saved-results/fundamental-screener/:id" component={SavedFundamentalScreenerDetail} />
+        <Route path="/saved-results/portfolio-optimizer/:id" component={SavedPortfolioOptimizerDetail} />
         <Route path="/profile" component={Profile} />
         <Route path="/blog" component={Blog} />
         <Route path="/blog/advanced-strategies" component={AdvancedStrategies} />
@@ -166,8 +222,11 @@ function AppRoutes() {
         <Route path="/black-scholes" component={BlackScholes} />
         <Route path="/equity-screener" component={EquityScreener} />
         <Route path="/pattern-search" component={PatternSearch} />
+        <Route path="/price-pattern" component={PricePattern} />
         <Route path="/systematic-patterns" component={SystematicPatterns} />
+        <Route path="/seasonality" component={Seasonality} />
         <Route path="/compare" component={Compare} />
+        <Route path="/pair-trading" component={PairTrading} />
         <Route path="/portfolio-optimizer" component={PortfolioOptimizer} />
         <Route path="/calculator" component={FinancialCalculatorPage} />
         <Route path="/research-reports" component={ResearchReports} />
@@ -192,10 +251,20 @@ function AppRoutes() {
         <Route path="/admin/feature-flags" component={AdminFeatureFlags} />
         <Route path="/admin/email-settings" component={AdminEmailSettings} />
         <Route path="/admin/api-keys" component={AdminApiKeys} />
+        <Route path="/admin/platforms" component={AdminPlatforms} />
+        <Route path="/admin/coins" component={AdminCoinTransactions} />
+        <Route path="/admin/coin-packs" component={AdminCoinPacks} />
+        <Route path="/admin/signup-bonus" component={AdminSignupBonus} />
+        <Route path="/admin/feature-costs" component={AdminFeatureCosts} />
+        <Route path="/admin/payments" component={AdminPayments} />
+        <Route path="/pricing" component={Pricing} />
+        <Route path="/_design" component={DesignShowcase} />
 
         {/* ── 404 ───────────────────────────────────────────── */}
         <Route component={NotFound} />
       </Switch>
+        </motion.div>
+      </AnimatePresence>
     </Suspense>
   );
 }
@@ -210,14 +279,18 @@ function Router() {
   }
 
   if (isAdmin) {
-    // Admin pages use their own AdminLayout internally — render without AppShell
+    // Admin pages use their own AdminLayout internally (which wraps with AdminGuard)
     return <AppRoutes />;
   }
 
+  // Every shell route requires authentication. AuthGuard redirects to
+  // /login?returnUrl=<current path> for unauthenticated visitors.
   return (
-    <AppShell>
-      <AppRoutes />
-    </AppShell>
+    <AuthGuard>
+      <AppShell>
+        <AppRoutes />
+      </AppShell>
+    </AuthGuard>
   );
 }
 
@@ -243,7 +316,7 @@ function App() {
       <AuthProvider>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           enableSystem={false}
           disableTransitionOnChange={false}
         >
@@ -255,7 +328,6 @@ function App() {
                   <JsonLd data={[generateOrganizationSchema(), generateWebSiteSchema()]} />
                   <AdminUpdatesListener />
                   <ImpersonationBanner />
-                  <NotificationBanner />
                   <ScrollToTop>
                     <Router />
                   </ScrollToTop>

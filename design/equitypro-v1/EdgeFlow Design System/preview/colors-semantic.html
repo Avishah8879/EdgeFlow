@@ -1,0 +1,20 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin:0; padding:24px; background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-sans); }
+  .grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; }
+  .swatch { display:flex; flex-direction:column; }
+  .chip { height:64px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-weight:600; }
+  .name { font-size:11px; margin-top:6px; color: hsl(var(--foreground)); text-transform:uppercase; letter-spacing:.05em; }
+  .val { font-family: var(--font-mono); font-size:10px; color: hsl(var(--muted-foreground)); }
+  h1 { font-size:13px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color: hsl(var(--muted-foreground)); margin:0 0 14px; }
+</style></head>
+<body>
+  <h1>Financial semantic colors</h1>
+  <div class="grid">
+    <div class="swatch"><div class="chip" style="background: hsl(var(--positive)); color:#000">+1.24%</div><div class="name">Positive</div><div class="val">gains · long · bullish</div></div>
+    <div class="swatch"><div class="chip" style="background: hsl(var(--negative)); color:#fff">−0.81%</div><div class="name">Negative</div><div class="val">losses · short · bearish</div></div>
+    <div class="swatch"><div class="chip" style="background: hsl(var(--neutral)); color:#fff">0.00%</div><div class="name">Neutral</div><div class="val">flat · no signal</div></div>
+    <div class="swatch"><div class="chip" style="background: hsl(var(--status-pre-market)); color:#000">PRE</div><div class="name">Pre-market</div><div class="val">amber · session badge</div></div>
+  </div>
+</body></html>

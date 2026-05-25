@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "ROA": 3.571470693356976,
+      "ROE": 9.87,
+      "YRC": 202503,
+      "co_code": 476
+    }
+  ]
+}

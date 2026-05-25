@@ -1,0 +1,189 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>All pages · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.hero{padding:60px 0 40px;background:linear-gradient(155deg,hsl(var(--brand-navy)),hsl(var(--brand-navy-deep)));color:white;border-bottom:1px solid hsl(var(--border));position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;right:-100px;top:-50px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,hsl(var(--brand-gold)/0.28),transparent 70%);filter:blur(40px)}
+.hero .container{position:relative;z-index:1}
+.hero h1{font-family:var(--font-display);font-size:42px;letter-spacing:-0.02em;margin:8px 0 8px;color:white}
+.hero h1 em{font-style:italic;color:hsl(var(--brand-gold))}
+.hero p{color:hsl(38 30% 88%);max-width:60ch;font-size:15px;line-height:1.55;margin:0}
+.hero .eyebrow{color:hsl(var(--brand-gold))}
+.summary{display:flex;gap:40px;margin-top:24px;font-family:var(--font-mono)}
+.summary div .v{font-size:28px;font-weight:700;color:hsl(var(--brand-gold))}
+.summary div .l{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:hsl(38 30% 80%);font-weight:700}
+
+.group{padding:36px 0;border-bottom:1px solid hsl(var(--border))}
+.group h2{font-family:var(--font-display);font-size:22px;letter-spacing:-0.01em;color:hsl(var(--brand-navy));margin:0 0 4px}
+.dark .group h2{color:hsl(38 30% 95%)}
+.group .desc{color:hsl(var(--muted-foreground));margin:0 0 20px;font-size:13.5px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:all var(--t-base)}
+.card:hover{border-color:hsl(var(--brand-gold)/0.5);transform:translateY(-2px);box-shadow:var(--shadow-card-lg)}
+.card .preview{aspect-ratio:16/10;background:hsl(var(--muted));position:relative;overflow:hidden;border-bottom:1px solid hsl(var(--border));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:32px;font-weight:800;color:hsl(var(--brand-navy)/0.18);letter-spacing:-0.04em}
+.card .preview span{position:relative;z-index:1}
+.card .preview::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,hsl(var(--brand-gold)/0.06),transparent)}
+.dark .card .preview{color:hsl(38 30% 95% / 0.18)}
+.card-body{padding:12px 14px}
+.card .num{font-family:var(--font-mono);font-size:10px;color:hsl(var(--brand-gold));font-weight:700;letter-spacing:0.05em}
+.card h3{font-family:var(--font-display);font-size:14.5px;letter-spacing:-0.01em;color:hsl(var(--brand-navy));margin:2px 0 3px}
+.dark .card h3{color:hsl(38 30% 95%)}
+.card p{font-size:11.5px;color:hsl(var(--muted-foreground));margin:0;line-height:1.45}
+.featured{grid-column:span 2}
+.featured .preview{aspect-ratio:16/8}
+</style></head>
+<body data-screen-label="00 All Pages">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="hero"><div class="container">
+  <span class="eyebrow">EquityPro · Design System v1</span>
+  <h1>All pages,<br><em>at a glance.</em></h1>
+  <p>The complete retail-investor research terminal — fifty-six screens spanning marketing, account, research, the FT-style trading workspace, and the internal admin console.</p>
+  <div class="summary">
+    <div><div class="v">56</div><div class="l">Screens</div></div>
+    <div><div class="v">9</div><div class="l">Sections</div></div>
+    <div><div class="v">3</div><div class="l">Tweak presets</div></div>
+    <div><div class="v">1</div><div class="l">Design system</div></div>
+  </div>
+</div></section>
+
+<main class="container">
+
+<section class="group">
+  <span class="eyebrow">Marketing &amp; auth</span>
+  <h2>Public surface</h2>
+  <p class="desc">Pages a prospect sees before signing in.</p>
+  <div class="cards">
+    <a class="card" href="index.html"><div class="preview"><span>Aa</span></div><div class="card-body"><div class="num">01</div><h3>Marketing landing</h3><p>Hero, four-pillar features, retail testimonials.</p></div></a>
+    <a class="card" href="pricing.html"><div class="preview"><span>₹</span></div><div class="card-body"><div class="num">07</div><h3>Pricing</h3><p>3-tier · Starter / Pro / Quant + FAQ.</p></div></a>
+    <a class="card" href="login.html"><div class="preview"><span>↪</span></div><div class="card-body"><div class="num">A1</div><h3>Sign in</h3><p>Two-pane auth + OAuth.</p></div></a>
+    <a class="card" href="signup.html"><div class="preview"><span>+</span></div><div class="card-body"><div class="num">A2</div><h3>Open account</h3><p>Multi-step signup flow.</p></div></a>
+    <a class="card" href="forgot.html"><div class="preview"><span>?</span></div><div class="card-body"><div class="num">A3</div><h3>Forgot password</h3><p>Single-card reset + success state.</p></div></a>
+    <a class="card" href="auth-callback.html"><div class="preview"><span>⟲</span></div><div class="card-body"><div class="num">A4</div><h3>Auth callback</h3><p>OAuth bounce-back loader.</p></div></a>
+    <a class="card" href="oauth-setup.html"><div class="preview"><span>⚙</span></div><div class="card-body"><div class="num">A5</div><h3>Connect broker</h3><p>Provider grid · Fyers / Zerodha / etc.</p></div></a>
+    <a class="card" href="fyers-token.html"><div class="preview"><span>🔑</span></div><div class="card-body"><div class="num">A6</div><h3>Fyers token</h3><p>Token health + refresh dashboard.</p></div></a>
+    <a class="card" href="privacy-policy.html"><div class="preview"><span>§</span></div><div class="card-body"><div class="num">A7</div><h3>Privacy policy</h3><p>Long-form legal doc with TOC.</p></div></a>
+    <a class="card" href="tip-tease.html"><div class="preview"><span>💡</span></div><div class="card-body"><div class="num">A8</div><h3>Tip tease</h3><p>Locked premium teaser / paywall.</p></div></a>
+  </div>
+</section>
+
+<section class="group">
+  <span class="eyebrow">Core terminal</span>
+  <h2>Research workspace</h2>
+  <p class="desc">The pages a paying user lives in every day.</p>
+  <div class="cards">
+    <a class="card featured" href="dashboard.html"><div class="preview"><span>Dashboard</span></div><div class="card-body"><div class="num">02</div><h3>Dashboard</h3><p>Personalized 3-column workspace · Classic / Focus / Terminal layouts.</p></div></a>
+    <a class="card featured" href="stock-detail.html"><div class="preview"><span>RELIANCE</span></div><div class="card-body"><div class="num">04</div><h3>Stock detail</h3><p>RELIANCE deep dive · scorecard · charts · technicals · fundamentals.</p></div></a>
+    <a class="card" href="stocks.html"><div class="preview"><span>≣</span></div><div class="card-body"><div class="num">03</div><h3>Stock browser</h3><p>Filter rail + sortable table.</p></div></a>
+    <a class="card" href="screener.html"><div class="preview"><span>Σ</span></div><div class="card-body"><div class="num">05</div><h3>Expert screener</h3><p>Visual rule builder + ranked match table.</p></div></a>
+    <a class="card" href="backtesting.html"><div class="preview"><span>↗</span></div><div class="card-body"><div class="num">06a</div><h3>Backtesting</h3><p>Equity curve + trade log + monthly heatmap.</p></div></a>
+    <a class="card" href="indices.html"><div class="preview"><span>NIFTY</span></div><div class="card-body"><div class="num">06b</div><h3>Indices</h3><p>Index quote grid + breadth.</p></div></a>
+    <a class="card" href="watchlist.html"><div class="preview"><span>★</span></div><div class="card-body"><div class="num">11</div><h3>Watchlists</h3><p>Multi-list table workspace.</p></div></a>
+    <a class="card" href="portfolio.html"><div class="preview"><span>₹L</span></div><div class="card-body"><div class="num">12</div><h3>Portfolio</h3><p>Holdings P/L + sector donut.</p></div></a>
+    <a class="card" href="saved-results.html"><div class="preview"><span>📁</span></div><div class="card-body"><div class="num">13</div><h3>Saved work</h3><p>Library of screens / backtests / lists.</p></div></a>
+  </div>
+</section>
+
+<section class="group">
+  <span class="eyebrow">Research &amp; content</span>
+  <h2>News, learning, sector views</h2>
+  <p class="desc">Editorial and educational surfaces.</p>
+  <div class="cards">
+    <a class="card" href="news.html"><div class="preview"><span>📰</span></div><div class="card-body"><div class="num">14</div><h3>News stream</h3><p>Wire feed + filters.</p></div></a>
+    <a class="card" href="market-reports.html"><div class="preview"><span>📑</span></div><div class="card-body"><div class="num">15</div><h3>Market reports</h3><p>Editorial / sector / strategy library.</p></div></a>
+    <a class="card" href="blog.html"><div class="preview"><span>✎</span></div><div class="card-body"><div class="num">16</div><h3>Blog</h3><p>EquityPro editorial home.</p></div></a>
+    <a class="card" href="learn.html"><div class="preview"><span>🎓</span></div><div class="card-body"><div class="num">17</div><h3>Learn / academy</h3><p>Course paths + progress.</p></div></a>
+    <a class="card" href="seasonality.html"><div class="preview"><span>◷</span></div><div class="card-body"><div class="num">18</div><h3>Seasonality</h3><p>Heatmap of monthly &amp; DOW patterns.</p></div></a>
+    <a class="card" href="advanced-strategies.html"><div class="preview"><span>⌥</span></div><div class="card-body"><div class="num">19</div><h3>Advanced strategies</h3><p>Multi-leg F&amp;O playbook.</p></div></a>
+  </div>
+</section>
+
+<section class="group">
+  <span class="eyebrow">FT terminal · charting &amp; quotes</span>
+  <h2>Trading workspace</h2>
+  <p class="desc">FT-style trader-grade charting &amp; quote views.</p>
+  <div class="cards">
+    <a class="card" href="advanced-chart.html"><div class="preview"><span>⤢</span></div><div class="card-body"><div class="num">20</div><h3>Advanced chart</h3><p>Pro chart with drawing tools.</p></div></a>
+    <a class="card" href="time-sales.html"><div class="preview"><span>⏱</span></div><div class="card-body"><div class="num">21</div><h3>Time &amp; sales</h3><p>Tick-by-tick tape.</p></div></a>
+    <a class="card" href="order-book.html"><div class="preview"><span>📊</span></div><div class="card-body"><div class="num">22</div><h3>Order book</h3><p>L2 depth visualization.</p></div></a>
+    <a class="card" href="compare.html"><div class="preview"><span>⇌</span></div><div class="card-body"><div class="num">23</div><h3>Compare</h3><p>Multi-symbol overlay.</p></div></a>
+    <a class="card" href="most-active.html"><div class="preview"><span>↑↓</span></div><div class="card-body"><div class="num">24</div><h3>Most active</h3><p>Gainers / losers / vol leaders.</p></div></a>
+    <a class="card" href="world-indices.html"><div class="preview"><span>🌐</span></div><div class="card-body"><div class="num">25</div><h3>World indices</h3><p>Global benchmark grid.</p></div></a>
+  </div>
+</section>
+
+<section class="group">
+  <span class="eyebrow">FT terminal · derivatives</span>
+  <h2>Options &amp; flows</h2>
+  <p class="desc">F&amp;O surfaces, valuation, and institutional flow.</p>
+  <div class="cards">
+    <a class="card" href="option-chain.html"><div class="preview"><span>⛓</span></div><div class="card-body"><div class="num">26</div><h3>Option chain</h3><p>Calls / puts grid with greeks.</p></div></a>
+    <a class="card" href="ft-options-visualizer.html"><div class="preview"><span>∿</span></div><div class="card-body"><div class="num">27</div><h3>Options visualizer</h3><p>Payoff diagram + greeks.</p></div></a>
+    <a class="card" href="black-scholes.html"><div class="preview"><span>𝛔</span></div><div class="card-body"><div class="num">28</div><h3>Black-Scholes</h3><p>Pricer + IV solver.</p></div></a>
+    <a class="card" href="fii-dii.html"><div class="preview"><span>₹↹</span></div><div class="card-body"><div class="num">29</div><h3>FII / DII flows</h3><p>Daily institutional buy/sell.</p></div></a>
+    <a class="card" href="corporate-actions.html"><div class="preview"><span>÷</span></div><div class="card-body"><div class="num">30</div><h3>Corporate actions</h3><p>Splits / div / bonus calendar.</p></div></a>
+  </div>
+</section>
+
+<section class="group">
+  <span class="eyebrow">FT terminal · strategies &amp; tools</span>
+  <h2>Quant &amp; pattern playground</h2>
+  <p class="desc">Algorithmic detection, optimization, calculators.</p>
+  <div class="cards">
+    <a class="card" href="pair-trading.html"><div class="preview"><span>⇄</span></div><div class="card-body"><div class="num">31</div><h3>Pair trading</h3><p>Stat-arb spread + z-score.</p></div></a>
+    <a class="card" href="pattern-search.html"><div class="preview"><span>⌕</span></div><div class="card-body"><div class="num">32</div><h3>Pattern search</h3><p>Chart pattern detection.</p></div></a>
+    <a class="card" href="portfolio-optimizer.html"><div class="preview"><span>∇</span></div><div class="card-body"><div class="num">33</div><h3>Portfolio optimizer</h3><p>Mean-variance frontier.</p></div></a>
+    <a class="card" href="calculator.html"><div class="preview"><span>🧮</span></div><div class="card-body"><div class="num">34</div><h3>Calculator</h3><p>SIP / margin / brokerage tools.</p></div></a>
+    <a class="card" href="monitor.html"><div class="preview"><span>◉</span></div><div class="card-body"><div class="num">35</div><h3>Live monitor</h3><p>Streaming watch grid.</p></div></a>
+  </div>
+</section>
+
+<section class="group">
+  <span class="eyebrow">FT terminal · workspace</span>
+  <h2>Notes, results, alerts</h2>
+  <p class="desc">Personal-research workspace inside the terminal.</p>
+  <div class="cards">
+    <a class="card" href="notes.html"><div class="preview"><span>✎</span></div><div class="card-body"><div class="num">36</div><h3>Research notes</h3><p>Markdown-style notebook.</p></div></a>
+    <a class="card" href="research-reports.html"><div class="preview"><span>▤</span></div><div class="card-body"><div class="num">37</div><h3>Research reports</h3><p>Broker reports library.</p></div></a>
+    <a class="card" href="financial-results.html"><div class="preview"><span>Q4</span></div><div class="card-body"><div class="num">38</div><h3>Financial results</h3><p>Quarterly earnings stream.</p></div></a>
+    <a class="card" href="ipo.html"><div class="preview"><span>I·P·O</span></div><div class="card-body"><div class="num">39</div><h3>IPO calendar</h3><p>Upcoming &amp; live IPOs.</p></div></a>
+    <a class="card" href="forum.html"><div class="preview"><span>💬</span></div><div class="card-body"><div class="num">40</div><h3>Community forum</h3><p>Threaded discussions.</p></div></a>
+    <a class="card" href="help.html"><div class="preview"><span>?</span></div><div class="card-body"><div class="num">41</div><h3>Help &amp; support</h3><p>Help center / contact.</p></div></a>
+  </div>
+</section>
+
+<section class="group">
+  <span class="eyebrow">Account &amp; ops</span>
+  <h2>Settings &amp; developers</h2>
+  <p class="desc">Self-serve account surfaces and the developer API.</p>
+  <div class="cards">
+    <a class="card" href="profile.html"><div class="preview"><span>@</span></div><div class="card-body"><div class="num">08</div><h3>Profile &amp; settings</h3><p>Account · prefs · billing.</p></div></a>
+    <a class="card" href="developers.html"><div class="preview"><span>{ }</span></div><div class="card-body"><div class="num">09</div><h3>Developers · API</h3><p>REST docs + key management.</p></div></a>
+    <a class="card" href="admin.html"><div class="preview"><span>◆</span></div><div class="card-body"><div class="num">10</div><h3>Admin overview</h3><p>System KPIs &amp; ops dashboard.</p></div></a>
+  </div>
+</section>
+
+<section class="group" style="background:hsl(var(--brand-navy-deep)/0.03);margin:0 -100vw;padding:36px 100vw">
+  <div class="container">
+  <span class="eyebrow" style="color:hsl(var(--brand-gold))">Internal · Admin console</span>
+  <h2>Operations dashboards</h2>
+  <p class="desc">Restricted to internal staff. KPIs, user management, billing, and the developer-API control plane.</p>
+  <div class="cards">
+    <a class="card" href="admin-analytics.html"><div class="preview"><span>📈</span></div><div class="card-body"><div class="num">42</div><h3>Analytics</h3><p>DAU / MRR / cohort dashboard.</p></div></a>
+    <a class="card" href="admin-users.html"><div class="preview"><span>👥</span></div><div class="card-body"><div class="num">43</div><h3>Users</h3><p>84k member table.</p></div></a>
+    <a class="card" href="admin-feature-flags.html"><div class="preview"><span>⚑</span></div><div class="card-body"><div class="num">44</div><h3>Feature flags</h3><p>Release tooling &amp; A/B.</p></div></a>
+    <a class="card" href="admin-audit-logs.html"><div class="preview"><span>≡</span></div><div class="card-body"><div class="num">45</div><h3>Audit logs</h3><p>Compliance event timeline.</p></div></a>
+    <a class="card" href="admin-coin-packs.html"><div class="preview"><span>◉</span></div><div class="card-body"><div class="num">46</div><h3>Coin packs</h3><p>Monetization SKUs.</p></div></a>
+    <a class="card" href="admin-coin-transactions.html"><div class="preview"><span>↹</span></div><div class="card-body"><div class="num">47</div><h3>Coin transactions</h3><p>Ledger of issuance &amp; spend.</p></div></a>
+    <a class="card" href="admin-email-settings.html"><div class="preview"><span>✉</span></div><div class="card-body"><div class="num">48</div><h3>Email settings</h3><p>SMTP, DNS, templates.</p></div></a>
+    <a class="card" href="admin-api-keys.html"><div class="preview"><span>⚿</span></div><div class="card-body"><div class="num">49</div><h3>API keys</h3><p>Customer key admin.</p></div></a>
+  </div>
+  </div>
+</section>
+
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

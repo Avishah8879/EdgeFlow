@@ -17,7 +17,7 @@ import { getAuthBaseUrl } from './api-config';
 const AUTH_BASE_URL = getAuthBaseUrl();
 
 // Session ID management
-const SESSION_KEY = 'tiphub_session_id';
+const SESSION_KEY = 'equitypro_session_id';
 
 export function getSessionId(): string {
   let sessionId = sessionStorage.getItem(SESSION_KEY);

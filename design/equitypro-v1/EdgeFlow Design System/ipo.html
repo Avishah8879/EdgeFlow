@@ -1,0 +1,187 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IPO &amp; primary market · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.ipo-hd{padding:18px 32px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.ipo-hd h1{font-family:var(--font-display);font-size:26px;letter-spacing:-0.02em;margin:0;color:hsl(var(--brand-navy))}
+.dark .ipo-hd h1{color:hsl(38 30% 95%)}
+.ipo-tabs{display:flex;gap:0;border-bottom:1px solid hsl(var(--border));margin-top:14px;margin-bottom:-1px}
+.ipo-tabs button{height:42px;padding:0 18px;background:transparent;border:0;border-bottom:2px solid transparent;font-size:13px;font-weight:600;color:hsl(var(--muted-foreground));cursor:pointer}
+.ipo-tabs button.active{color:hsl(var(--brand-navy));border-bottom-color:hsl(var(--brand-gold))}
+.dark .ipo-tabs button.active{color:hsl(var(--brand-gold))}
+
+.ipo-hero{display:grid;grid-template-columns:1fr 320px;gap:18px;padding:24px 32px}
+.ipo-feature{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-xl);padding:32px;display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:center;position:relative;overflow:hidden}
+.ipo-feature::before{content:"";position:absolute;right:-60px;top:-60px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,hsl(var(--brand-gold)/0.18),transparent 70%)}
+.ipo-feature .logo{width:80px;height:80px;border-radius:var(--radius-lg);background:linear-gradient(135deg,hsl(var(--brand-navy)),hsl(213 35% 35%));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:30px;font-weight:800;color:hsl(var(--brand-gold));position:relative}
+.ipo-feature h2{font-family:var(--font-display);font-size:26px;letter-spacing:-0.02em;margin:0 0 4px;color:hsl(var(--brand-navy));position:relative}
+.dark .ipo-feature h2{color:hsl(38 30% 95%)}
+.ipo-feature .desc{font-size:13px;color:hsl(var(--muted-foreground));margin:0 0 16px;line-height:1.55;position:relative}
+.ipo-feature .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;border-top:1px solid hsl(var(--border));padding-top:14px;position:relative}
+.ipo-feature .stats div{font-family:var(--font-mono)}
+.ipo-feature .stats .l{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);font-weight:700;color:hsl(var(--muted-foreground))}
+.ipo-feature .stats .v{font-size:18px;font-weight:700;color:hsl(var(--foreground));margin-top:2px}
+
+.gmp-card{background:linear-gradient(155deg,hsl(var(--brand-navy)),hsl(var(--brand-navy-deep)));color:white;border-radius:var(--radius-xl);padding:24px;position:relative;overflow:hidden}
+.gmp-card .l{font-family:var(--font-display);font-size:11px;color:hsl(var(--brand-gold));font-weight:700;text-transform:uppercase;letter-spacing:var(--ls-uppercase)}
+.gmp-card .v{font-family:var(--font-mono);font-size:42px;font-weight:700;letter-spacing:-0.02em;margin-top:8px}
+.gmp-card .pct{font-family:var(--font-mono);font-size:14px;color:hsl(var(--brand-gold));margin-top:4px;font-weight:700}
+.gmp-card .stats{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;border-top:1px solid hsl(38 30% 80% / 0.2);padding-top:14px;font-family:var(--font-mono);font-size:11px}
+.gmp-card .stats .ll{font-size:10px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(38 30% 80%);font-weight:700}
+.gmp-card .stats .vv{font-size:14px;font-weight:700;margin-top:2px}
+
+.ipo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:18px 32px 32px}
+.ipo-card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden}
+.ipo-card .top{padding:14px 16px;border-bottom:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:start}
+.ipo-card .nm{font-family:var(--font-display);font-weight:800;font-size:16px;color:hsl(var(--brand-navy))}
+.dark .ipo-card .nm{color:hsl(38 30% 95%)}
+.ipo-card .sec{font-size:11px;color:hsl(var(--muted-foreground));margin-top:2px}
+.ipo-card .badge{font-size:9.5px;padding:3px 8px;border-radius:var(--radius-pill);font-weight:800;text-transform:uppercase;letter-spacing:0.04em;font-family:var(--font-mono)}
+.ipo-card .badge.live{background:hsl(var(--positive)/0.15);color:hsl(var(--positive))}
+.ipo-card .badge.upcoming{background:hsl(var(--brand-gold)/0.18);color:hsl(var(--brand-gold))}
+.ipo-card .badge.listed{background:hsl(213 14% 30% / 0.12);color:hsl(213 14% 35%)}
+.ipo-card .body{padding:14px 16px;font-family:var(--font-mono);font-size:11.5px}
+.ipo-card .row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed hsl(var(--border)/0.5)}
+.ipo-card .row b{color:hsl(var(--foreground));font-weight:700}
+.ipo-card .row:last-child{border-bottom:0}
+.subscribe-bar{margin-top:10px;height:8px;background:hsl(var(--muted));border-radius:4px;overflow:hidden;display:flex}
+.subscribe-bar .a{background:hsl(var(--brand-gold))}
+.subscribe-bar .b{background:hsl(213 50% 50%)}
+.subscribe-bar .c{background:hsl(150 50% 40%)}
+.subscribe-leg{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;margin-top:6px;color:hsl(var(--muted-foreground))}
+.ipo-card .foot{padding:10px 16px;border-top:1px solid hsl(var(--border));display:flex;justify-content:space-between;align-items:center}
+.list-gain{font-family:var(--font-mono);font-weight:700;font-size:13px}
+</style></head>
+<body data-page="ipo" data-screen-label="Terminal · 38 IPO">
+<div class="shell"><div data-shell-topbar></div>
+
+<div class="ipo-hd">
+  <span class="eyebrow">Terminal · Primary market</span>
+  <h1>IPO calendar &amp; analysis</h1>
+  <p class="muted body-sm" style="margin:4px 0 0">Live issues, GMP tracker, allotment status, listing day P&amp;L. NSE-emerge SME &amp; mainboard.</p>
+  <div class="ipo-tabs">
+    <button class="active">Open now (3)</button>
+    <button>Upcoming (8)</button>
+    <button>Recently listed (12)</button>
+    <button>SME (24)</button>
+    <button>My applications</button>
+    <button>GMP tracker</button>
+  </div>
+</div>
+
+<section class="ipo-hero">
+  <div class="ipo-feature">
+    <div class="logo">SW</div>
+    <div>
+      <span class="eyebrow">Featured · Open now</span>
+      <h2>Swiggy Limited</h2>
+      <p class="desc">India's leading on-demand convenience platform. Issue size ₹11,800cr · Fresh + OFS · QIB 50% · Retail 35%.</p>
+      <div class="stats">
+        <div><div class="l">Price band</div><div class="v">₹371 – 390</div></div>
+        <div><div class="l">Lot size</div><div class="v">38 sh</div></div>
+        <div><div class="l">Min invest</div><div class="v">₹14,820</div></div>
+        <div><div class="l">Closes</div><div class="v">25 Apr</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gmp-card">
+    <div class="l">Grey Market Premium</div>
+    <div class="v">+₹62</div>
+    <div class="pct">+15.9% over upper band</div>
+    <div class="stats">
+      <div><div class="ll">Implied list</div><div class="vv">₹452</div></div>
+      <div><div class="ll">Trend</div><div class="vv">↑ Rising</div></div>
+      <div><div class="ll">Day low</div><div class="vv">+₹54</div></div>
+      <div><div class="ll">Day high</div><div class="vv">+₹68</div></div>
+    </div>
+    <p style="margin:14px 0 0;font-size:10px;color:hsl(38 30% 75%);font-family:var(--font-mono);line-height:1.5">GMP is informal &amp; unregulated. Use only as sentiment indicator.</p>
+  </div>
+</section>
+
+<main class="ipo-grid">
+  <article class="ipo-card">
+    <div class="top"><div><div class="nm">Swiggy Limited</div><div class="sec">Internet · Q-comm</div></div><span class="badge live">Open</span></div>
+    <div class="body">
+      <div class="row"><span class="muted">Price band</span><b>₹371–390</b></div>
+      <div class="row"><span class="muted">Issue size</span><b>₹11,800cr</b></div>
+      <div class="row"><span class="muted">Lot · Min</span><b>38 · ₹14,820</b></div>
+      <div class="row"><span class="muted">GMP</span><b class="change-up">+₹62 (+15.9%)</b></div>
+      <div class="row"><span class="muted">Closes</span><b>25 Apr (3d left)</b></div>
+      <div class="row"><span class="muted">Subscribed</span><b>2.34×</b></div>
+      <div class="subscribe-bar"><div class="a" style="width:32%"></div><div class="b" style="width:18%"></div><div class="c" style="width:24%"></div></div>
+      <div class="subscribe-leg"><span>QIB 4.6×</span><span>NII 1.8×</span><span>Retail 1.4×</span></div>
+    </div>
+    <div class="foot"><span class="muted body-sm" style="font-size:11px">Lead: Kotak · Citi · JM</span><button class="btn btn-primary btn-sm">Apply ASBA</button></div>
+  </article>
+
+  <article class="ipo-card">
+    <div class="top"><div><div class="nm">NSE Limited</div><div class="sec">Exchanges</div></div><span class="badge live">Open</span></div>
+    <div class="body">
+      <div class="row"><span class="muted">Price band</span><b>₹2,948–3,124</b></div>
+      <div class="row"><span class="muted">Issue size</span><b>₹38,400cr</b></div>
+      <div class="row"><span class="muted">Lot · Min</span><b>4 · ₹12,496</b></div>
+      <div class="row"><span class="muted">GMP</span><b class="change-up">+₹240 (+7.7%)</b></div>
+      <div class="row"><span class="muted">Closes</span><b>23 Apr (1d left)</b></div>
+      <div class="row"><span class="muted">Subscribed</span><b>4.82×</b></div>
+      <div class="subscribe-bar"><div class="a" style="width:48%"></div><div class="b" style="width:24%"></div><div class="c" style="width:18%"></div></div>
+      <div class="subscribe-leg"><span>QIB 8.2×</span><span>NII 4.4×</span><span>Retail 2.6×</span></div>
+    </div>
+    <div class="foot"><span class="muted body-sm" style="font-size:11px">Lead: Morgan Stanley · GS</span><button class="btn btn-primary btn-sm">Apply ASBA</button></div>
+  </article>
+
+  <article class="ipo-card">
+    <div class="top"><div><div class="nm">Belstar Microfinance</div><div class="sec">NBFC · Microfinance</div></div><span class="badge live">Open</span></div>
+    <div class="body">
+      <div class="row"><span class="muted">Price band</span><b>₹162–168</b></div>
+      <div class="row"><span class="muted">Issue size</span><b>₹1,300cr</b></div>
+      <div class="row"><span class="muted">Lot · Min</span><b>88 · ₹14,784</b></div>
+      <div class="row"><span class="muted">GMP</span><b class="change-up">+₹14 (+8.3%)</b></div>
+      <div class="row"><span class="muted">Closes</span><b>24 Apr (2d left)</b></div>
+      <div class="row"><span class="muted">Subscribed</span><b>0.68×</b></div>
+      <div class="subscribe-bar"><div class="a" style="width:14%"></div><div class="b" style="width:22%"></div><div class="c" style="width:32%"></div></div>
+      <div class="subscribe-leg"><span>QIB 0.4×</span><span>NII 0.8×</span><span>Retail 1.2×</span></div>
+    </div>
+    <div class="foot"><span class="muted body-sm" style="font-size:11px">Lead: ICICI · Axis</span><button class="btn btn-primary btn-sm">Apply ASBA</button></div>
+  </article>
+
+  <article class="ipo-card">
+    <div class="top"><div><div class="nm">Hexaware Technologies</div><div class="sec">IT services</div></div><span class="badge upcoming">Opens 28 Apr</span></div>
+    <div class="body">
+      <div class="row"><span class="muted">Price band</span><b>TBD</b></div>
+      <div class="row"><span class="muted">Issue size</span><b>~₹8,400cr</b></div>
+      <div class="row"><span class="muted">Open – Close</span><b>28 Apr – 30 Apr</b></div>
+      <div class="row"><span class="muted">DRHP filed</span><b>14 Mar 2026</b></div>
+      <div class="row"><span class="muted">GMP (initial)</span><b>—</b></div>
+    </div>
+    <div class="foot"><span class="muted body-sm" style="font-size:11px">Lead: Kotak · Citi</span><button class="btn btn-ghost btn-sm">Set alert</button></div>
+  </article>
+
+  <article class="ipo-card">
+    <div class="top"><div><div class="nm">PB Fintech</div><div class="sec">Fintech</div></div><span class="badge upcoming">DRHP filed</span></div>
+    <div class="body">
+      <div class="row"><span class="muted">Issue size</span><b>~₹5,200cr</b></div>
+      <div class="row"><span class="muted">Expected window</span><b>May 2026</b></div>
+      <div class="row"><span class="muted">DRHP</span><b>02 Apr 2026</b></div>
+      <div class="row"><span class="muted">Pre-IPO valuation</span><b>~$8.4bn</b></div>
+    </div>
+    <div class="foot"><span class="muted body-sm" style="font-size:11px">Lead: Morgan Stanley</span><button class="btn btn-ghost btn-sm">Set alert</button></div>
+  </article>
+
+  <article class="ipo-card">
+    <div class="top"><div><div class="nm">Vishal Mega Mart</div><div class="sec">Retail</div></div><span class="badge listed">Listed 18 Apr</span></div>
+    <div class="body">
+      <div class="row"><span class="muted">Issue price</span><b>₹78</b></div>
+      <div class="row"><span class="muted">Listing price</span><b class="change-up">₹104 (+33%)</b></div>
+      <div class="row"><span class="muted">CMP</span><b>₹118.40</b></div>
+      <div class="row"><span class="muted">Listing day high</span><b>₹114.80</b></div>
+      <div class="row"><span class="muted">From issue price</span><b class="change-up">+51.8%</b></div>
+    </div>
+    <div class="foot"><span class="muted body-sm" style="font-size:11px">Allotted ₹14,820 → now ₹22,496</span><span class="list-gain change-up">+₹7,676</span></div>
+  </article>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

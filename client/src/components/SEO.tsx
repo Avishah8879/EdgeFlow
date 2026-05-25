@@ -1,5 +1,5 @@
 /**
- * SEO Component for Tiphub
+ * SEO Component for EquityPro
  * Handles meta tags, Open Graph, Twitter Cards, and JSON-LD structured data
  */
 
@@ -7,7 +7,7 @@ import { Helmet } from 'react-helmet-async';
 import { SEO_CONFIG, getCanonicalUrl, getOgImageUrl, truncateDescription } from '@/lib/seo-config';
 
 interface SEOProps {
-  /** Page title - will be appended with site name if not ending with "Tiphub" */
+  /** Page title - will be appended with site name if not ending with "EquityPro" */
   title?: string;
   /** Meta description - will be truncated to 155 chars if longer */
   description?: string;
@@ -43,9 +43,9 @@ export function SEO({
 }: SEOProps) {
   // Build the full title
   const fullTitle = title
-    ? title.includes('Tiphub')
+    ? title.includes('EquityPro')
       ? title
-      : `${title} | Tiphub`
+      : `${title} | EquityPro`
     : SEO_CONFIG.defaultTitle;
 
   // Get truncated description

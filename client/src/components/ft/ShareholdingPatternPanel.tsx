@@ -17,7 +17,7 @@ interface ShareholdingPattern {
 
 const COLORS = {
   promoter: '#00FF00',
-  fii: '#00BFFF',
+  fii: '#FF6B47',
   dii: '#FFD700',
   public: '#FF6B35',
   others: '#888888',

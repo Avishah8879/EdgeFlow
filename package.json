@@ -16,7 +16,8 @@
     "check": "npx tsc --noEmit",
     "db:push": "npx drizzle-kit push",
     "db:migrate": "npx tsx server/db/migrate.ts",
-    "db:reset-auth": "npx tsx server/db/reset-auth-db.ts",
+    "db:verify-shared": "npx tsx scripts/verify-shared-db.ts",
+    "platform:key": "npx tsx scripts/mint-platform-key.ts",
     "test": "npx vitest run",
     "test:watch": "npx vitest",
     "test:hooks": "npx vitest run --reporter=verbose tests/hooks/",
@@ -64,6 +65,7 @@
     "@tanstack/react-query": "^5.60.5",
     "@tanstack/react-table": "^8.21.3",
     "@types/cors": "^2.8.19",
+    "@types/http-proxy": "^1.17.17",
     "@types/multer": "^2.0.0",
     "@types/three": "^0.181.0",
     "axios": "^1.14.0",
@@ -83,6 +85,7 @@
     "express-session": "^1.18.1",
     "framer-motion": "^11.13.1",
     "helmet": "^8.1.0",
+    "http-proxy": "^1.18.1",
     "input-otp": "^1.4.2",
     "ioredis": "^5.9.3",
     "jsonwebtoken": "^9.0.2",
@@ -158,6 +161,7 @@
     "tsx": "^4.20.5",
     "typescript": "^5.9.3",
     "vite": "^8.0.3",
+    "vite-plugin-node-polyfills": "^0.26.0",
     "vitest": "^4.0.18"
   }
 }

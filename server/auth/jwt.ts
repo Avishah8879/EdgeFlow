@@ -20,15 +20,30 @@ const JWT_REFRESH_EXPIRY = process.env.JWT_REFRESH_EXPIRY || '7d';
 export type UserRole = 'user' | 'moderator' | 'admin' | 'super_admin';
 
 /**
+ * User Subscription Tier
+ *
+ * Migration 025 replaced the basic/premium model with three tiers:
+ *  - 'free' — minimal access; coin-gated features blocked.
+ *  - 'semi' — pays a monthly fee; coin-gated features debit coins.
+ *  - 'pro'  — pays more; coin-gated features run free, no debits.
+ */
+export type UserTier = 'free' | 'semi' | 'pro';
+
+/**
  * Access Token Payload
  */
 export interface AccessTokenPayload {
   userId: string;
   email: string;
   username: string;
-  tier: 'basic' | 'premium';
+  tier: UserTier;
   provider: 'password' | 'google';
   role?: UserRole; // Optional for backward compatibility with existing tokens
+  /**
+   * The platform on which this token was issued. Optional for backward
+   * compatibility with tokens minted before migration 024.
+   */
+  platformId?: string;
   type: 'access';
   iat?: number; // Issued at (automatically added by jwt.sign)
   exp?: number; // Expiry (automatically added by jwt.sign)
@@ -63,9 +78,10 @@ export function generateAccessToken(user: {
   id: string;
   email: string;
   username: string;
-  tier: 'basic' | 'premium';
+  tier: UserTier;
   provider: 'password' | 'google';
   role?: UserRole;
+  primaryPlatformId?: string | null;
 }): string {
   const payload: Omit<AccessTokenPayload, 'iat' | 'exp'> = {
     userId: user.id,
@@ -76,6 +92,9 @@ export function generateAccessToken(user: {
     role: user.role || 'user', // Default to 'user' if not provided
     type: 'access',
   };
+  if (user.primaryPlatformId) {
+    payload.platformId = user.primaryPlatformId;
+  }
 
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: JWT_ACCESS_EXPIRY as jwt.SignOptions['expiresIn'],
@@ -291,9 +310,10 @@ export function generateTokenPair(user: {
   id: string;
   email: string;
   username: string;
-  tier: 'basic' | 'premium';
+  tier: UserTier;
   provider: 'password' | 'google';
   role?: UserRole;
+  primaryPlatformId?: string | null;
 }): {
   accessToken: string;
   refreshToken: string;

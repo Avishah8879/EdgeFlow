@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "message": "Sucessful",
+  "data": [
+    {
+      "isin": "INE154A01025",
+      "gmdate": "2025-07-25T00:00:00",
+      "symbol": "ITC",
+      "co_code": 301.0,
+      "co_name": "ITC Ltd",
+      "purpose": "AGM",
+      "description": "Publication of Notice re: 114th Annual General Meeting of the Company to be held on 25th July, 2025 through Video Conferencing /Other Audio Visual Means.\r\n\r\nReport and Accounts for the financial year ended 31st March, 2025.\r\n\r\nReport and Accounts 2025\r\n\r\n(As Per BSE Announcement Dated on :27.06.2025)\r\n\r\nSummary of proceedings and Voting Results\r\n\r\n(As per BSE Announcement Dated on 25/07/2025)",
+      "bcloserenddate": null,
+      "announcementdate": "2025-06-24T00:00:00",
+      "bcloserstartdate": null
+    }
+  ]
+}

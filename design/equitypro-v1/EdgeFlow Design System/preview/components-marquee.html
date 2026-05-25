@@ -1,0 +1,29 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin:0; padding:24px; background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-sans); }
+  .marquee { overflow:hidden; height:36px; background: hsl(var(--sidebar)); border-top:1px solid hsl(var(--border)); border-bottom:1px solid hsl(var(--border)); display:flex; align-items:center; }
+  .track { display:flex; gap:32px; padding-left:24px; white-space:nowrap; animation: m 30s linear infinite; }
+  @keyframes m { 0% { transform: translateX(0) } 100% { transform: translateX(-50%) } }
+  .item { display:inline-flex; gap:8px; align-items:center; font-size:13px; }
+  .ticker { font-family: var(--font-mono); font-weight:700; }
+  .price { font-family: var(--font-mono); }
+  .pos { color: hsl(var(--positive)); font-family: var(--font-mono); font-size:12px; }
+  .neg { color: hsl(var(--negative)); font-family: var(--font-mono); font-size:12px; }
+</style></head>
+<body>
+  <div class="marquee">
+    <div class="track">
+      <span class="item"><span class="ticker">RELIANCE</span><span class="price">2,847.50</span><span class="pos">+1.85%</span></span>
+      <span class="item"><span class="ticker">TCS</span><span class="price">3,941.20</span><span class="neg">−0.42%</span></span>
+      <span class="item"><span class="ticker">HDFCBANK</span><span class="price">1,632.85</span><span class="pos">+0.74%</span></span>
+      <span class="item"><span class="ticker">INFY</span><span class="price">1,488.00</span><span class="pos">+2.10%</span></span>
+      <span class="item"><span class="ticker">ICICIBANK</span><span class="price">1,084.30</span><span class="neg">−0.18%</span></span>
+      <span class="item"><span class="ticker">RELIANCE</span><span class="price">2,847.50</span><span class="pos">+1.85%</span></span>
+      <span class="item"><span class="ticker">TCS</span><span class="price">3,941.20</span><span class="neg">−0.42%</span></span>
+      <span class="item"><span class="ticker">HDFCBANK</span><span class="price">1,632.85</span><span class="pos">+0.74%</span></span>
+      <span class="item"><span class="ticker">INFY</span><span class="price">1,488.00</span><span class="pos">+2.10%</span></span>
+      <span class="item"><span class="ticker">ICICIBANK</span><span class="price">1,084.30</span><span class="neg">−0.18%</span></span>
+    </div>
+  </div>
+</body></html>

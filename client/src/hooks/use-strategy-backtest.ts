@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { getApiBaseUrl } from "@/lib/api-config";
+import { getApiBaseUrl, getAuthBaseUrl } from "@/lib/api-config";
+import { parseCoinError, type CoinError } from "@/lib/coin-error";
 
 export interface BacktestProgress {
   phase: "fetching_data" | "computing_indicators" | "merging_indicators" | "optimizing";
@@ -68,6 +69,7 @@ export function useStrategyBacktest() {
   const [progress, setProgress] = useState<BacktestProgress | null>(null);
   const [result, setResult] = useState<BacktestResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [coinError, setCoinError] = useState<CoinError | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [duration, setDuration] = useState<number | null>(null);
 
@@ -75,6 +77,8 @@ export function useStrategyBacktest() {
   const taskIdRef = useRef<string | null>(null);
   const abortedRef = useRef(false);
   const baseUrl = getApiBaseUrl();
+  // /start goes through Node so coinGate can debit. SSE stream + cancel hit Python directly.
+  const gateBaseUrl = getAuthBaseUrl();
 
   const runBacktest = useCallback(
     async (request: BacktestRequest) => {
@@ -91,8 +95,8 @@ export function useStrategyBacktest() {
         // Determine endpoint based on whether we have pre-computed indicators
         const isHybrid = request.indicators_json && request.compute_backend;
         const endpoint = isHybrid
-          ? `${baseUrl}/api/strategy-backtest/hybrid/start`
-          : `${baseUrl}/api/strategy-backtest/start`;
+          ? `${gateBaseUrl}/api/strategy-backtest/hybrid/start`
+          : `${gateBaseUrl}/api/strategy-backtest/start`;
 
         // Build FormData (backend expects multipart/form-data)
         const formData = new FormData();
@@ -113,6 +117,12 @@ export function useStrategyBacktest() {
 
         if (!startResponse.ok) {
           const errorData = await startResponse.json().catch(() => ({ detail: "Unknown error" }));
+          const coinErr = parseCoinError(startResponse.status, errorData);
+          if (coinErr) {
+            setCoinError(coinErr);
+            setIsRunning(false);
+            return;
+          }
           throw new Error(errorData.detail || `Failed to start backtest: ${startResponse.status}`);
         }
 
@@ -270,6 +280,7 @@ export function useStrategyBacktest() {
     progress,
     result,
     error,
+    coinError,
     isRunning,
     duration,
     runBacktest,

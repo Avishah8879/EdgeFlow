@@ -1,0 +1,153 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Saved work · EquityPro</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.sw-hd{padding:24px 0;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.sw-hd h1{font-family:var(--font-display);font-size:32px;letter-spacing:-0.02em;margin:6px 0 0;color:hsl(var(--brand-navy))}
+.dark .sw-hd h1{color:hsl(38 30% 95%)}
+.tab-bar{display:flex;gap:0;border-bottom:1px solid hsl(var(--border));margin-top:16px;margin-bottom:-1px}
+.tab-bar button{height:42px;padding:0 18px;background:transparent;border:0;border-bottom:2px solid transparent;font-size:13px;font-weight:600;color:hsl(var(--muted-foreground));cursor:pointer}
+.tab-bar button.active{color:hsl(var(--brand-navy));border-bottom-color:hsl(var(--brand-gold))}
+.dark .tab-bar button.active{color:hsl(var(--brand-gold))}
+
+.sw-bar{display:flex;justify-content:space-between;padding:18px 0;align-items:center}
+.sw-bar .filt{display:flex;gap:8px}
+.chip{height:30px;padding:0 12px;border-radius:var(--radius-pill);border:1px solid hsl(var(--border));background:hsl(var(--card));font-size:12px;font-weight:600;color:hsl(var(--muted-foreground));cursor:pointer}
+.chip.active{background:hsl(var(--brand-navy));color:white;border-color:hsl(var(--brand-navy))}
+.dark .chip.active{background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));border-color:hsl(var(--brand-gold))}
+
+.sw-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;padding:0 0 60px}
+.swc{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);padding:20px}
+.swc-hd{display:flex;justify-content:space-between;align-items:start;gap:14px;margin-bottom:14px}
+.swc h3{font-family:var(--font-display);font-size:18px;margin:0 0 4px;color:hsl(var(--brand-navy));letter-spacing:-0.01em}
+.dark .swc h3{color:hsl(38 30% 95%)}
+.swc .desc{font-size:12px;color:hsl(var(--muted-foreground));margin:0;line-height:1.5}
+.swc .icn{width:36px;height:36px;border-radius:var(--radius-md);background:hsl(var(--brand-gold)/0.15);color:hsl(var(--brand-gold));display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--font-display);flex-shrink:0}
+.swc-mid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px 0;border-top:1px solid hsl(var(--border));border-bottom:1px solid hsl(var(--border));margin-bottom:14px}
+.swc-mid .ey{font-size:9.5px;text-transform:uppercase;letter-spacing:var(--ls-uppercase);color:hsl(var(--muted-foreground));font-weight:700}
+.swc-mid .v{font-family:var(--font-mono);font-size:14px;font-weight:700;margin-top:2px;color:hsl(var(--foreground))}
+.swc-foot{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:hsl(var(--muted-foreground));font-family:var(--font-mono)}
+.swc-foot .a{display:flex;gap:6px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:10.5px;padding:2px 8px;border-radius:var(--radius-pill);background:hsl(var(--muted));color:hsl(var(--muted-foreground));font-weight:600;border:1px solid hsl(var(--border))}
+</style></head>
+<body data-page="saved" data-screen-label="17 Saved work">
+<div class="shell"><div data-shell-topbar></div>
+
+<section class="sw-hd"><div class="container">
+  <span class="eyebrow">Research · Saved work</span>
+  <h1>Your library</h1>
+  <p class="muted body-sm" style="margin:6px 0 0">Every screen, backtest, watchlist, alert and note in one place. Filter, share, schedule.</p>
+  <div class="tab-bar">
+    <button class="active">All <span class="muted" style="margin-left:6px">42</span></button>
+    <button>Screens <span class="muted" style="margin-left:6px">14</span></button>
+    <button>Backtests <span class="muted" style="margin-left:6px">11</span></button>
+    <button>Watchlists <span class="muted" style="margin-left:6px">8</span></button>
+    <button>Alerts <span class="muted" style="margin-left:6px">6</span></button>
+    <button>Notes <span class="muted" style="margin-left:6px">3</span></button>
+  </div>
+</div></section>
+
+<main class="container">
+  <div class="sw-bar">
+    <div class="filt">
+      <button class="chip active">Recent</button>
+      <button class="chip">Starred</button>
+      <button class="chip">Shared with me</button>
+      <button class="chip">Archived</button>
+      <button class="chip">Auto-running</button>
+    </div>
+    <div class="flex gap-2 items-center">
+      <span class="muted body-sm">Sort:</span>
+      <button class="btn btn-ghost btn-sm">Recently updated ▾</button>
+      <button class="btn btn-primary btn-sm">+ New</button>
+    </div>
+  </div>
+
+  <div class="sw-grid">
+    <article class="swc">
+      <div class="swc-hd"><div><h3>Quality + momentum · Nifty 500</h3><p class="desc">ROE&gt;15 ∧ Debt/Equity&lt;0.6 ∧ 6m return&gt;12%</p><div class="tags"><span class="tag">screen</span><span class="tag">multi-factor</span><span class="tag">starred ★</span></div></div><div class="icn">S</div></div>
+      <div class="swc-mid">
+        <div><div class="ey">Matches</div><div class="v">38</div></div>
+        <div><div class="ey">Last run</div><div class="v">2h ago</div></div>
+        <div><div class="ey">Schedule</div><div class="v">Daily</div></div>
+      </div>
+      <div class="swc-foot"><span>Updated 2 days ago · Anjali</span><div class="a"><a href="screener.html" class="btn btn-ghost btn-sm">Open</a><button class="btn btn-ghost btn-sm">⋯</button></div></div>
+    </article>
+
+    <article class="swc">
+      <div class="swc-hd"><div><h3>MOMO-BB · NIFTY 50</h3><p class="desc">RSI(14)&gt;55 ∧ Close&gt;UpperBB(20,2). 12-yr backtest.</p><div class="tags"><span class="tag">backtest</span><span class="tag">momentum</span><span class="tag">QGA-built</span></div></div><div class="icn" style="background:hsl(var(--positive)/0.12);color:hsl(var(--positive))">B</div></div>
+      <div class="swc-mid">
+        <div><div class="ey">CAGR</div><div class="v change-up">+38.4%</div></div>
+        <div><div class="ey">Sharpe</div><div class="v">1.42</div></div>
+        <div><div class="ey">MaxDD</div><div class="v change-down">−14.8%</div></div>
+      </div>
+      <div class="swc-foot"><span>Last run · 6 hrs ago</span><div class="a"><a href="backtesting.html" class="btn btn-ghost btn-sm">Open</a><button class="btn btn-ghost btn-sm">⋯</button></div></div>
+    </article>
+
+    <article class="swc">
+      <div class="swc-hd"><div><h3>Core long-term · 12 names</h3><p class="desc">Compounders held since 2019. Earnings + capex tracked weekly.</p><div class="tags"><span class="tag">watchlist</span><span class="tag">long-term</span></div></div><div class="icn" style="background:hsl(213 35% 22% / 0.12);color:hsl(var(--brand-navy))">W</div></div>
+      <div class="swc-mid">
+        <div><div class="ey">Holdings</div><div class="v">12</div></div>
+        <div><div class="ey">Today</div><div class="v change-up">+1.4%</div></div>
+        <div><div class="ey">YTD</div><div class="v change-up">+24.6%</div></div>
+      </div>
+      <div class="swc-foot"><span>Updated yesterday</span><div class="a"><a href="watchlist.html" class="btn btn-ghost btn-sm">Open</a><button class="btn btn-ghost btn-sm">⋯</button></div></div>
+    </article>
+
+    <article class="swc">
+      <div class="swc-hd"><div><h3>RSI Mean-Rev · BANKNIFTY</h3><p class="desc">RSI(2)&lt;10 ∧ EMA(50) up; exit at SMA(20). Walk-forward valid.</p><div class="tags"><span class="tag">backtest</span><span class="tag">mean-rev</span></div></div><div class="icn" style="background:hsl(var(--positive)/0.12);color:hsl(var(--positive))">B</div></div>
+      <div class="swc-mid">
+        <div><div class="ey">CAGR</div><div class="v change-up">+14.2%</div></div>
+        <div><div class="ey">Sharpe</div><div class="v">0.84</div></div>
+        <div><div class="ey">MaxDD</div><div class="v change-down">−9.2%</div></div>
+      </div>
+      <div class="swc-foot"><span>5 days ago · auto-rerun on</span><div class="a"><a href="backtesting.html" class="btn btn-ghost btn-sm">Open</a><button class="btn btn-ghost btn-sm">⋯</button></div></div>
+    </article>
+
+    <article class="swc">
+      <div class="swc-hd"><div><h3>Alert: NIFTY breaks 22,500</h3><p class="desc">Push + email + Telegram on close above 22,500. Active.</p><div class="tags"><span class="tag">alert</span><span class="tag">price</span><span class="tag">live</span></div></div><div class="icn" style="background:hsl(var(--brand-gold)/0.15);color:hsl(var(--brand-gold))">A</div></div>
+      <div class="swc-mid">
+        <div><div class="ey">Trigger</div><div class="v">≥22,500</div></div>
+        <div><div class="ey">Distance</div><div class="v">0.36%</div></div>
+        <div><div class="ey">Tries</div><div class="v">2 fired</div></div>
+      </div>
+      <div class="swc-foot"><span>Created 1 wk ago · Aanya</span><div class="a"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-ghost btn-sm">⋯</button></div></div>
+    </article>
+
+    <article class="swc">
+      <div class="swc-hd"><div><h3>Pairs · TCS / INFY</h3><p class="desc">Z-score spread mean-reversion; threshold ±2σ. Live since Mar.</p><div class="tags"><span class="tag">pair</span><span class="tag">stat-arb</span><span class="tag">live</span></div></div><div class="icn" style="background:hsl(var(--positive)/0.12);color:hsl(var(--positive))">B</div></div>
+      <div class="swc-mid">
+        <div><div class="ey">CAGR</div><div class="v change-up">+8.4%</div></div>
+        <div><div class="ey">Sharpe</div><div class="v">1.18</div></div>
+        <div><div class="ey">MaxDD</div><div class="v change-down">−4.2%</div></div>
+      </div>
+      <div class="swc-foot"><span>3 wks ago · 14 trades</span><div class="a"><a href="pair-trading.html" class="btn btn-ghost btn-sm">Open</a><button class="btn btn-ghost btn-sm">⋯</button></div></div>
+    </article>
+
+    <article class="swc">
+      <div class="swc-hd"><div><h3>F&amp;O Watchlist · Active retail</h3><p class="desc">High-OI stocks with rising IV. Refreshed every 15 min.</p><div class="tags"><span class="tag">watchlist</span><span class="tag">F&amp;O</span></div></div><div class="icn" style="background:hsl(213 35% 22% / 0.12);color:hsl(var(--brand-navy))">W</div></div>
+      <div class="swc-mid">
+        <div><div class="ey">Symbols</div><div class="v">42</div></div>
+        <div><div class="ey">IV bias</div><div class="v change-up">↑ 14%</div></div>
+        <div><div class="ey">Today</div><div class="v change-up">+2.2%</div></div>
+      </div>
+      <div class="swc-foot"><span>Updated 2 days ago</span><div class="a"><button class="btn btn-ghost btn-sm">Open</button><button class="btn btn-ghost btn-sm">⋯</button></div></div>
+    </article>
+
+    <article class="swc">
+      <div class="swc-hd"><div><h3>Note · Cement thesis Q1FY26</h3><p class="desc">Capacity wave + south-pricing. Linked to UltraTech, Shree, Dalmia.</p><div class="tags"><span class="tag">note</span><span class="tag">sector</span></div></div><div class="icn" style="background:hsl(38 30% 50% / 0.15);color:hsl(38 60% 38%)">N</div></div>
+      <div class="swc-mid">
+        <div><div class="ey">Words</div><div class="v">1,420</div></div>
+        <div><div class="ey">Linked</div><div class="v">3 stocks</div></div>
+        <div><div class="ey">Updated</div><div class="v">2d ago</div></div>
+      </div>
+      <div class="swc-foot"><span>Created 12 Apr</span><div class="a"><button class="btn btn-ghost btn-sm">Open</button><button class="btn btn-ghost btn-sm">⋯</button></div></div>
+    </article>
+  </div>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

@@ -12,6 +12,15 @@ export interface StrikeExposure {
   ce_gex: number;
   pe_gex: number;
   net_gex: number;
+  ce_vega: number;
+  pe_vega: number;
+  net_vega: number;
+  ce_vxoi: number;
+  pe_vxoi: number;
+  net_vxoi: number;
+  ce_vex: number;
+  pe_vex: number;
+  net_vex: number;
   ce_oi: number;
   pe_oi: number;
   ce_iv: number;
@@ -32,6 +41,11 @@ export interface ExposureData {
 export interface TimeSeriesPoint {
   timestamp: string;
   atm_gxoi: number;
+  atm_straddle: number | null;
+  atm_strike: number | null;
+  spot: number;
+  ce_ltp: number;
+  pe_ltp: number;
 }
 
 export interface TimeSeriesData {

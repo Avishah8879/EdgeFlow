@@ -66,14 +66,14 @@ function loadConfig(): EmailConfig {
       pass: process.env.SMTP_PASS || '',
     },
     from: {
-      email: process.env.EMAIL_FROM || process.env.SES_FROM_EMAIL || 'noreply@tiphub.in',
-      name: process.env.EMAIL_FROM_NAME || 'Tiphub',
+      email: process.env.EMAIL_FROM || process.env.SES_FROM_EMAIL || 'noreply@your-domain.com',
+      name: process.env.EMAIL_FROM_NAME || 'EquityPro',
     },
     app: {
-      name: 'Tiphub',
-      url: process.env.APP_URL || 'https://tiphub.in',
-      supportEmail: process.env.SUPPORT_EMAIL || 'support@tiphub.in',
-      logoUrl: process.env.LOGO_URL || 'https://tiphub.in/logo.svg',
+      name: 'EquityPro',
+      url: process.env.APP_URL || 'https://your-domain.com',
+      supportEmail: process.env.SUPPORT_EMAIL || 'support@your-domain.com',
+      logoUrl: process.env.LOGO_URL || 'https://your-domain.com/logo.svg',
     },
   };
 }
@@ -289,7 +289,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
 // =============================================================================
 
 /**
- * Base email template with Tiphub branding
+ * Base email template with EquityPro branding
  */
 function baseTemplate(content: string, preheader: string = ''): string {
   return `
@@ -325,7 +325,7 @@ function baseTemplate(content: string, preheader: string = ''): string {
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <!-- Tiphub Text Logo -->
+                    <!-- EquityPro Text Logo -->
                     <span style="font-size: 28px; font-weight: 700; color: #ffa31a; letter-spacing: -0.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">${config.app.name}</span>
                   </td>
                 </tr>

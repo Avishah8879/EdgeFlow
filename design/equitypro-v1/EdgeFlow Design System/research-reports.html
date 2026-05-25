@@ -1,0 +1,91 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Research reports · EquityPro Terminal</title>
+<link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="app.css">
+<style>
+.rr-hd{padding:18px 32px;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card))}
+.rr-hd h1{font-family:var(--font-display);font-size:26px;letter-spacing:-0.02em;margin:0;color:hsl(var(--brand-navy))}
+.dark .rr-hd h1{color:hsl(38 30% 95%)}
+.rr-bar{display:flex;justify-content:space-between;padding:18px 32px;align-items:center;border-bottom:1px solid hsl(var(--border));background:hsl(var(--card)/0.5)}
+.rr-bar .filt{display:flex;gap:8px;flex-wrap:wrap}
+.chip{height:30px;padding:0 12px;border-radius:var(--radius-pill);border:1px solid hsl(var(--border));background:hsl(var(--card));font-size:12px;font-weight:600;color:hsl(var(--muted-foreground));cursor:pointer}
+.chip.active{background:hsl(var(--brand-navy));color:white;border-color:hsl(var(--brand-navy))}
+.dark .chip.active{background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));border-color:hsl(var(--brand-gold))}
+
+.rr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:24px 32px 60px}
+
+.rep{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column;transition:all var(--t-base);cursor:pointer}
+.rep:hover{border-color:hsl(var(--brand-gold)/0.5);transform:translateY(-1px)}
+.rep .cover{height:140px;background:linear-gradient(155deg,hsl(var(--brand-navy)),hsl(var(--brand-navy-deep)));position:relative;overflow:hidden;padding:14px;color:white}
+.rep .cover::before{content:"";position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,hsl(var(--brand-gold)/0.4),transparent 70%)}
+.rep .cover .br{font-family:var(--font-display);font-style:italic;font-size:11px;color:hsl(var(--brand-gold));position:relative}
+.rep .cover h3{font-family:var(--font-display);font-size:18px;margin:6px 0 0;color:white;letter-spacing:-0.01em;line-height:1.2;position:relative}
+.rep .cover .meta{position:absolute;bottom:14px;left:14px;font-family:var(--font-mono);font-size:10.5px;color:hsl(38 30% 80%);display:flex;gap:14px}
+
+.rep.alt-1 .cover{background:linear-gradient(155deg,hsl(213 35% 22%),hsl(213 50% 18%))}
+.rep.alt-2 .cover{background:linear-gradient(155deg,hsl(0 50% 30%),hsl(0 50% 22%))}
+.rep.alt-3 .cover{background:linear-gradient(155deg,hsl(150 40% 22%),hsl(150 40% 16%))}
+.rep.alt-4 .cover{background:linear-gradient(155deg,hsl(280 35% 25%),hsl(280 35% 18%))}
+
+.rep .body{padding:14px;flex:1;display:flex;flex-direction:column}
+.rep .summary{font-size:12.5px;color:hsl(var(--muted-foreground));line-height:1.55;margin:0 0 12px;flex:1}
+.rep .stocks{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.rep .stock{font-family:var(--font-mono);font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--radius-pill);background:hsl(var(--muted));color:hsl(var(--foreground))}
+.rep .stock.buy{background:hsl(150 50% 40% / 0.18);color:hsl(150 50% 30%)}
+.dark .rep .stock.buy{color:hsl(150 50% 65%)}
+.rep .stock.sell{background:hsl(0 60% 50% / 0.18);color:hsl(0 60% 45%)}
+.dark .rep .stock.sell{color:hsl(0 60% 70%)}
+.rep .foot{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-size:10.5px;color:hsl(var(--muted-foreground));border-top:1px solid hsl(var(--border));padding-top:10px}
+.rep .pages{font-weight:700}
+
+.rec-pill{font-family:var(--font-mono);font-size:9px;font-weight:800;padding:2px 7px;border-radius:var(--radius-pill);background:hsl(var(--brand-gold));color:hsl(var(--brand-navy-deep));text-transform:uppercase;letter-spacing:0.04em}
+</style></head>
+<body data-page="research-reports" data-screen-label="Terminal · 35 Reports">
+<div class="shell"><div data-shell-topbar></div>
+
+<div class="rr-hd">
+  <span class="eyebrow">Terminal · Sell-side research</span>
+  <h1>Research reports</h1>
+  <p class="muted body-sm" style="margin:4px 0 0">8,420+ reports from 28 brokers. Filter by sector, broker, recommendation, target price.</p>
+</div>
+
+<div class="rr-bar">
+  <div class="filt">
+    <button class="chip active">All · 8,420</button>
+    <button class="chip">Buy</button>
+    <button class="chip">Sell</button>
+    <button class="chip">Sector reports</button>
+    <button class="chip">Initiations</button>
+    <button class="chip">Earnings reviews</button>
+    <button class="chip">Macro</button>
+  </div>
+  <div class="flex gap-2">
+    <button class="btn btn-ghost btn-sm">Filter by broker ▾</button>
+    <button class="btn btn-ghost btn-sm">Date ▾</button>
+    <button class="btn btn-primary btn-sm">+ Upload PDF</button>
+  </div>
+</div>
+
+<main class="rr-grid">
+  <article class="rep"><div class="cover"><span class="br">Morgan Stanley · 22 Apr</span><h3>India Strategy Q4FY26: Defensives over cyclicals</h3><div class="meta"><span>Karan Sharma</span><span>·</span><span>42 pages</span></div></div><div class="body"><p class="summary">We see late-cycle dynamics in Indian equities. Reduce metals and capgoods, add IT and pharma. Earnings revisions ratio rolling over. Index target 23,500.</p><div class="stocks"><span class="stock">SECTOR</span><span class="stock buy">TCS · BUY</span><span class="stock buy">SUNPHARMA · BUY</span><span class="stock sell">JSWSTEEL · UW</span></div><div class="foot"><span class="pages">PDF · 42p</span><span><span class="rec-pill">Top Pick</span></span></div></div></article>
+
+  <article class="rep alt-1"><div class="cover"><span class="br">Goldman Sachs · 21 Apr</span><h3>RELIANCE — Initiate Buy, ₹3,420 PT</h3><div class="meta"><span>Ankit Joshi</span><span>·</span><span>38 pages</span></div></div><div class="body"><p class="summary">SOTP suggests 16% upside. Jio listing in H2FY27 unlocks ~₹160/share. Retail EBITDA margin re-rating from 8.4% → 10.4% over 3 years.</p><div class="stocks"><span class="stock buy">RELIANCE · BUY</span><span class="stock">PT ₹3,420</span></div><div class="foot"><span class="pages">PDF · 38p</span><span><span class="rec-pill">Initiation</span></span></div></div></article>
+
+  <article class="rep alt-2"><div class="cover"><span class="br">Kotak Institutional · 20 Apr</span><h3>Cement: Cycle inflection · UltraTech, Shree top picks</h3><div class="meta"><span>Riya Mehta</span><span>·</span><span>56 pages</span></div></div><div class="body"><p class="summary">National utilisation crossed 72%. South pricing turning. UltraTech FY26 EPS revised +8%. Sector EBITDA/t to expand 14% over 18 months.</p><div class="stocks"><span class="stock">SECTOR</span><span class="stock buy">ULTRACEMCO · BUY</span><span class="stock buy">SHREECEM · BUY</span><span class="stock buy">DALBHARAT · BUY</span></div><div class="foot"><span class="pages">PDF · 56p</span><span>11 stocks</span></div></div></article>
+
+  <article class="rep"><div class="cover"><span class="br">JP Morgan · 19 Apr</span><h3>HDFCBANK Q4 review — merger synergies tracking</h3><div class="meta"><span>Vikram Rao</span><span>·</span><span>16 pages</span></div></div><div class="body"><p class="summary">NIM stabilises at 3.42%. CASA ratio 38.6%. Credit-deposit ratio improving. Merger benefits: ₹4,200cr cost-saves over 2 years. PT raised to ₹1,840.</p><div class="stocks"><span class="stock buy">HDFCBANK · BUY</span><span class="stock">PT ₹1,840</span></div><div class="foot"><span class="pages">PDF · 16p</span><span>Earnings · Q4</span></div></div></article>
+
+  <article class="rep alt-3"><div class="cover"><span class="br">Macquarie · 18 Apr</span><h3>India IT services — INFY downgrade, prefer TCS</h3><div class="meta"><span>Ishita Rao</span><span>·</span><span>28 pages</span></div></div><div class="body"><p class="summary">FY27 guidance narrowed at INFY suggests demand softness. TCS BFSI vertical share gain ongoing. Margin gap re-widens. Downgrade INFY to Neutral.</p><div class="stocks"><span class="stock buy">TCS · BUY</span><span class="stock">INFY · NEUTRAL</span><span class="stock sell">WIPRO · UW</span></div><div class="foot"><span class="pages">PDF · 28p</span><span>Sector</span></div></div></article>
+
+  <article class="rep alt-4"><div class="cover"><span class="br">Nomura · 17 Apr</span><h3>Auto: 2W demand at 5y high · Hero Moto top idea</h3><div class="meta"><span>Sanjay Gupta</span><span>·</span><span>24 pages</span></div></div><div class="body"><p class="summary">Two-wheeler retail volumes +14% YoY. Premium mix expanding. EV penetration plateauing. Tractor cycle nearing trough. Maruti FY27 EPS +6%.</p><div class="stocks"><span class="stock buy">HEROMOTOCO · BUY</span><span class="stock buy">MARUTI · BUY</span><span class="stock buy">M&amp;M · BUY</span></div><div class="foot"><span class="pages">PDF · 24p</span><span><span class="rec-pill">Top Pick</span></span></div></div></article>
+
+  <article class="rep"><div class="cover"><span class="br">Citi · 17 Apr</span><h3>Bank Nifty weekly playbook</h3><div class="meta"><span>Karan Mehta</span><span>·</span><span>12 pages</span></div></div><div class="body"><p class="summary">PSU bank rally extending. ICICI &amp; HDFC remain consensus picks. Watch SBI for Q4 surprise. Selling premium on 47800-48600 strangle.</p><div class="stocks"><span class="stock buy">ICICIBANK · BUY</span><span class="stock buy">SBIN · BUY</span><span class="stock buy">AXISBANK · BUY</span></div><div class="foot"><span class="pages">PDF · 12p</span><span>F&amp;O</span></div></div></article>
+
+  <article class="rep alt-2"><div class="cover"><span class="br">CLSA · 16 Apr</span><h3>Pharma — generics pricing turning, exports thesis</h3><div class="meta"><span>Anjali Joshi</span><span>·</span><span>34 pages</span></div></div><div class="body"><p class="summary">US generics price erosion stabilising at −2%. Sun Pharma specialty portfolio gaining traction. Cipla margin tailwind from inhalers.</p><div class="stocks"><span class="stock buy">SUNPHARMA · BUY</span><span class="stock buy">CIPLA · BUY</span><span class="stock">DRREDDY · NEUTRAL</span></div><div class="foot"><span class="pages">PDF · 34p</span><span>Sector</span></div></div></article>
+
+  <article class="rep alt-3"><div class="cover"><span class="br">UBS · 14 Apr</span><h3>India Macro — RBI on hold through H1FY27</h3><div class="meta"><span>Priya Nair</span><span>·</span><span>18 pages</span></div></div><div class="body"><p class="summary">CPI sticky at 4.6%. RBI to hold through Sep. First cut in Dec'26. INR range 82.40-83.80. 10-year yield to retest 7.10%.</p><div class="stocks"><span class="stock">MACRO</span><span class="stock">USDINR</span><span class="stock">G-SEC</span></div><div class="foot"><span class="pages">PDF · 18p</span><span>Macro</span></div></article>
+</main>
+
+<div data-shell-footer></div></div>
+<script src="app.js"></script>
+</body></html>

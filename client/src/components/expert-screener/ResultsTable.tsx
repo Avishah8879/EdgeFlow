@@ -1,28 +1,20 @@
 import { useMemo, useState, memo } from "react";
 import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  SortingState,
-  flexRender,
-  ColumnDef,
-} from "@tanstack/react-table";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Download, ArrowUpDown } from "lucide-react";
 import { Link } from "wouter";
+import { cn } from "@/lib/utils";
 import MiniPriceChart from "./MiniPriceChart";
 
 interface ExpertScreenerResult {
@@ -34,191 +26,93 @@ interface ExpertScreenerResult {
   indicators: Record<string, number | null>;
 }
 
-// Memoized symbol cell to prevent hover reset on table updates
-const SymbolCell = memo(
-  ({ symbol, fullSymbol }: { symbol: string; fullSymbol: string }) => {
-    return (
-      <HoverCard openDelay={300} closeDelay={100}>
-        <HoverCardTrigger asChild>
-          <Link
-            href={`/stocks/${symbol}`}
-            className="font-semibold text-primary hover:underline"
-          >
-            {symbol}
-          </Link>
-        </HoverCardTrigger>
-        <HoverCardContent className="w-[340px] p-4" align="start">
-          <MiniPriceChart ticker={fullSymbol} />
-        </HoverCardContent>
-      </HoverCard>
-    );
-  },
-  (prevProps, nextProps) => {
-    // Only re-render if symbol or fullSymbol actually changed
-    return prevProps.symbol === nextProps.symbol && prevProps.fullSymbol === nextProps.fullSymbol;
-  }
+type SortKey = "symbol" | "close" | "volume" | "liquidity" | string;
+type SortDirection = "asc" | "desc";
+
+const formatLiquidity = (value: number) => {
+  if (value >= 1e9) return `₹${(value / 1e9).toFixed(2)}B`;
+  if (value >= 1e7) return `₹${(value / 1e7).toFixed(2)}Cr`;
+  return `₹${(value / 1e5).toFixed(2)}L`;
+};
+
+const formatVolume = (value: number) => {
+  if (value >= 1e7) return `${(value / 1e7).toFixed(2)}Cr`;
+  if (value >= 1e5) return `${(value / 1e5).toFixed(2)}L`;
+  if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`;
+  return value.toLocaleString("en-IN");
+};
+
+const tickerInitials = (symbol: string) => {
+  const cleaned = symbol.replace(/[^A-Z0-9]/gi, "");
+  return cleaned.slice(0, 2).toUpperCase();
+};
+
+const SymbolHoverLink = memo(
+  ({ symbol }: { symbol: string }) => (
+    <HoverCard openDelay={300} closeDelay={100}>
+      <HoverCardTrigger asChild>
+        <Link
+          href={`/stocks/${symbol}`}
+          className="font-mono text-sm font-semibold text-foreground hover:text-primary transition-colors"
+          data-testid={`link-result-${symbol}`}
+        >
+          {symbol}
+        </Link>
+      </HoverCardTrigger>
+      <HoverCardContent className="w-[340px] p-4" align="start">
+        <MiniPriceChart ticker={symbol} />
+      </HoverCardContent>
+    </HoverCard>
+  ),
+  (prev, next) => prev.symbol === next.symbol,
 );
-SymbolCell.displayName = "SymbolCell";
+SymbolHoverLink.displayName = "SymbolHoverLink";
 
 interface ResultsTableProps {
   results: ExpertScreenerResult[];
   indicatorColumns?: string[];
 }
 
-export default function ResultsTable({
-  results,
-  indicatorColumns = [],
-}: ResultsTableProps) {
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "liquidity", desc: true },
-  ]);
+export default function ResultsTable({ results, indicatorColumns = [] }: ResultsTableProps) {
+  const [sortKey, setSortKey] = useState<SortKey>("liquidity");
+  const [sortDir, setSortDir] = useState<SortDirection>("desc");
 
-  const columns = useMemo<ColumnDef<ExpertScreenerResult>[]>(() => {
-    const baseColumns: ColumnDef<ExpertScreenerResult>[] = [
-      {
-        accessorKey: "symbol",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              className="-ml-4"
-            >
-              Symbol
-              <ArrowUpDown className="ml-2 h-3 w-3" />
-            </Button>
-          );
-        },
-        cell: ({ row }) => {
-          const symbol = row.original.symbol;
-          return <SymbolCell symbol={symbol} fullSymbol={symbol} />;
-        },
-      },
-      {
-        accessorKey: "close",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              className="-ml-4"
-            >
-              Close
-              <ArrowUpDown className="ml-2 h-3 w-3" />
-            </Button>
-          );
-        },
-        cell: ({ row }) => {
-          return (
-            <span className="font-mono">₹{row.original.close.toLocaleString()}</span>
-          );
-        },
-      },
-      {
-        accessorKey: "volume",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              className="-ml-4"
-            >
-              Volume
-              <ArrowUpDown className="ml-2 h-3 w-3" />
-            </Button>
-          );
-        },
-        cell: ({ row }) => {
-          return (
-            <span className="font-mono text-xs">
-              {row.original.volume.toLocaleString()}
-            </span>
-          );
-        },
-      },
-      {
-        accessorKey: "liquidity",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              className="-ml-4"
-            >
-              Liquidity
-              <ArrowUpDown className="ml-2 h-3 w-3" />
-            </Button>
-          );
-        },
-        cell: ({ row }) => {
-          const value = row.original.liquidity;
-          const formatted =
-            value >= 1e9
-              ? `₹${(value / 1e9).toFixed(2)}B`
-              : value >= 1e7
-              ? `₹${(value / 1e7).toFixed(2)}Cr`
-              : `₹${(value / 1e5).toFixed(2)}L`;
-          return <span className="font-mono text-xs font-semibold">{formatted}</span>;
-        },
-      },
-    ];
+  const sortOptions = useMemo(
+    () => [
+      { key: "liquidity", label: "Liquidity" },
+      { key: "close", label: "Close" },
+      { key: "volume", label: "Volume" },
+      { key: "symbol", label: "Symbol" },
+      ...indicatorColumns.map((ind) => ({ key: ind, label: ind })),
+    ],
+    [indicatorColumns],
+  );
 
-    // Add indicator columns
-    const indicatorCols: ColumnDef<ExpertScreenerResult>[] = indicatorColumns.map(
-      (indicator) => ({
-        id: indicator,
-        accessorFn: (row) => row.indicators?.[indicator] ?? null,
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              className="-ml-4"
-            >
-              {indicator}
-              <ArrowUpDown className="ml-2 h-3 w-3" />
-            </Button>
-          );
-        },
-        cell: ({ row }) => {
-          const value = row.original.indicators?.[indicator];
-          return (
-            <span className="font-mono text-xs">
-              {value != null ? value.toFixed(2) : "—"}
-            </span>
-          );
-        },
-      })
-    );
-
-    return [...baseColumns, ...indicatorCols];
-  }, [indicatorColumns]);
-
-  const table = useReactTable({
-    data: results,
-    columns,
-    state: {
-      sorting,
-    },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getRowId: (row) => row.symbol, // Stable row IDs prevent re-renders
-  });
+  const sorted = useMemo(() => {
+    const getValue = (r: ExpertScreenerResult): number | string => {
+      if (sortKey === "symbol") return r.symbol;
+      if (sortKey === "close") return r.close;
+      if (sortKey === "volume") return r.volume;
+      if (sortKey === "liquidity") return r.liquidity;
+      return r.indicators?.[sortKey] ?? -Infinity;
+    };
+    return [...results].sort((a, b) => {
+      const av = getValue(a);
+      const bv = getValue(b);
+      let cmp: number;
+      if (typeof av === "string" && typeof bv === "string") {
+        cmp = av.localeCompare(bv);
+      } else {
+        cmp = (av as number) - (bv as number);
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+  }, [results, sortKey, sortDir]);
 
   const downloadCSV = () => {
     if (results.length === 0) return;
-
-    // Build CSV header
     const headers = ["Symbol", "Close", "Volume", "Liquidity", ...indicatorColumns];
     const csvRows = [headers.join(",")];
-
-    // Add data rows
     results.forEach((result) => {
       const row = [
         result.symbol,
@@ -229,10 +123,7 @@ export default function ResultsTable({
       ];
       csvRows.push(row.join(","));
     });
-
-    // Create and download blob
-    const csvContent = csvRows.join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -252,57 +143,102 @@ export default function ResultsTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h3 className="text-lg font-semibold">
-            {results.length} {results.length === 1 ? "Match" : "Matches"}
+          <h3 className="text-lg font-medium text-foreground">
+            {results.length} {results.length === 1 ? "match" : "matches"}
           </h3>
           <p className="text-xs text-muted-foreground">
-            Ranked by liquidity
+            Sorted by {sortOptions.find((o) => o.key === sortKey)?.label ?? sortKey}
           </p>
         </div>
-
-        <Button
-          onClick={downloadCSV}
-          variant="outline"
-          size="sm"
-          className="gap-2"
-        >
-          <Download className="w-4 h-4" />
-          Download CSV
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+            <SelectTrigger className="h-9 w-[160px] rounded-full" data-testid="select-sort-key">
+              <SelectValue placeholder="Sort by…" />
+            </SelectTrigger>
+            <SelectContent>
+              {sortOptions.map((opt) => (
+                <SelectItem key={opt.key} value={opt.key}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 rounded-full gap-1.5"
+            onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+            data-testid="button-toggle-sort-direction"
+          >
+            <ArrowUpDown className="w-3.5 h-3.5" />
+            {sortDir === "asc" ? "Asc" : "Desc"}
+          </Button>
+          <Button
+            onClick={downloadCSV}
+            variant="outline"
+            size="sm"
+            className="h-9 rounded-full gap-1.5"
+            data-testid="button-download-csv"
+          >
+            <Download className="w-3.5 h-3.5" /> CSV
+          </Button>
+        </div>
       </div>
 
-      <div className="rounded-lg border overflow-hidden">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} className="hover:bg-muted/50">
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      {/* Card list */}
+      <div className="space-y-2">
+        {sorted.map((result) => (
+          <div
+            key={result.symbol}
+            className="flex items-center gap-4 px-4 md:px-5 py-4 rounded-2xl border border-border/50 bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors"
+            data-testid={`row-result-${result.symbol}`}
+          >
+            {/* Avatar */}
+            <div className="shrink-0 w-11 h-11 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-mono text-xs font-semibold text-primary">
+              {tickerInitials(result.symbol)}
+            </div>
+
+            {/* Symbol + meta */}
+            <div className="flex-1 min-w-0 space-y-0.5">
+              <SymbolHoverLink symbol={result.symbol} />
+              <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                <span>Liq <span className="font-mono text-foreground/80">{formatLiquidity(result.liquidity)}</span></span>
+                <span className="opacity-40">·</span>
+                <span>Vol <span className="font-mono text-foreground/80">{formatVolume(result.volume)}</span></span>
+              </div>
+            </div>
+
+            {/* Indicators (compact) — hidden on mobile to keep the row scannable */}
+            {indicatorColumns.length > 0 && (
+              <div className="hidden md:flex items-center gap-3 max-w-[40%] overflow-x-auto">
+                {indicatorColumns.slice(0, 4).map((ind) => {
+                  const val = result.indicators?.[ind];
+                  return (
+                    <div key={ind} className="flex flex-col gap-0.5 shrink-0 min-w-[60px]">
+                      <span className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground/80 truncate">{ind}</span>
+                      <span className={cn(
+                        "font-mono text-xs",
+                        val == null ? "text-muted-foreground" : "text-foreground",
+                      )}>
+                        {val != null ? val.toFixed(2) : "—"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Price */}
+            <div className="shrink-0 text-right">
+              <div className="font-mono text-sm font-semibold text-foreground tabular-nums">
+                ₹{result.close.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+              </div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-[0.15em]">close</div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
