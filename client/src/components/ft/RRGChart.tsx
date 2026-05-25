@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
 import { DataUnavailable } from "@/components/ft/DataUnavailable";
+import { useRRG, type RRGPeriod } from "@/hooks/useRRG";
 import {
   ResponsiveContainer,
   ScatterChart,
@@ -15,33 +14,7 @@ import {
   ReferenceLine,
 } from "recharts";
 
-export type RRGPeriod = "1y" | "2y" | "5y";
-
-export type RRGResponse = {
-  image?: string | null;
-  legend: { symbol: string; rsRatio: number; rsMom: number }[];
-  benchmark?: string;
-  ranges?: { xMin: number; xMax: number; yMin: number; yMax: number };
-  trails?: {
-    symbol: string;
-    label?: string;
-    color?: string;
-    points: {
-      x: number;
-      y: number;
-      ratio: number;
-      momentum: number;
-      date?: string;
-    }[];
-    current?: {
-      x: number;
-      y: number;
-      ratio: number;
-      momentum: number;
-      date?: string;
-    };
-  }[];
-};
+export type { RRGPeriod, RRGResponse } from "@/hooks/useRRG";
 
 interface RRGChartProps {
   /** Symbols to plot. Need at least 2 for the API to compute. */
@@ -97,29 +70,7 @@ export function RRGChart({
   const debouncedSymbols = useDebouncedValue(symbols, 500);
   const debouncedPeriod = useDebouncedValue(period, 300);
 
-  const queryKey = useMemo(
-    () => ["/api/rrg-image", debouncedSymbols.join(","), debouncedPeriod],
-    [debouncedSymbols, debouncedPeriod]
-  );
-
-  const { data, isLoading, isError, refetch, error } = useQuery<RRGResponse>({
-    queryKey,
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        symbols: debouncedSymbols.join(","),
-        period: debouncedPeriod,
-      });
-      const response = await apiRequest("GET", `/api/rrg-image?${params.toString()}`);
-      const json = await response.json();
-      return (json?.data || json) as RRGResponse;
-    },
-    enabled: debouncedSymbols.length >= 2,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    retry: 2,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
-  });
+  const { data, isLoading, isError, refetch, error } = useRRG(debouncedSymbols, debouncedPeriod);
 
   const trails = useMemo(() => data?.trails || [], [data?.trails]);
   const chartRanges = data?.ranges || { xMin: -120, xMax: 120, yMin: -40, yMax: 40 };

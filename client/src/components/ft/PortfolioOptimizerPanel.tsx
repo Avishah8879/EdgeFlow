@@ -55,6 +55,7 @@ import {
 } from "@/hooks/usePortfolioOptimizer";
 import { getCSSColor } from "@/lib/theme-utils";
 import { RRGChart } from "@/components/ft/RRGChart";
+import { RRGQuadrantTable } from "@/components/ft/RRGQuadrantTable";
 import { Link } from "wouter";
 import { toast } from "sonner";
 
@@ -969,6 +970,12 @@ export function OptimizationResults({ result }: { result: OptimizationResult }) 
               period="2y"
               height={420}
             />
+            <div className="mt-3">
+              <RRGQuadrantTable
+                symbols={result.weight_comparison.map((w) => w.symbol)}
+                period="2y"
+              />
+            </div>
           </div>
         )}
 
