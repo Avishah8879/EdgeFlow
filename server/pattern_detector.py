@@ -153,7 +153,7 @@ def scan_patterns(
             continue
 
     # Sort by confidence descending
-    results.sort(key=lambda x: x['confidence'], reverse=True)
+    results.sort(key=lambda x: (x['endDate'], x['confidence']), reverse=True)
     return results
 
 

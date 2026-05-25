@@ -160,7 +160,7 @@ def scan_price_patterns(
         except Exception as exc:
             logger.debug("Price pattern scan failed for %s: %s", ticker.get('symbol'), exc)
 
-    results.sort(key=lambda item: item['confidence'], reverse=True)
+    results.sort(key=lambda item: (item['detectedAt'], item['confidence']), reverse=True)
     return results
 
 
