@@ -42,6 +42,14 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
     return { times, gxoiValues, straddleValues };
   }, [timeSeriesData]);
 
+  // Anchor intraday axes to the full NSE session regardless of when data starts.
+  // IST = UTC+5:30; adding 5h30m to UTC now gives the current IST date reliably
+  // in any browser locale.
+  const todayIst = new Date(Date.now() + (5 * 60 + 30) * 60 * 1000);
+  const todayDate = todayIst.toISOString().slice(0, 10); // "YYYY-MM-DD"
+  const sessionStart = new Date(`${todayDate}T09:16:00+05:30`);
+  const sessionEnd = new Date(`${todayDate}T15:30:00+05:30`);
+
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -118,8 +126,8 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               x: strikes,
               y: gxoiValues,
               fill: 'tozeroy',
-              fillcolor: 'rgba(0, 255, 255, 0.4)',
-              line: { color: 'cyan', width: 2 },
+              fillcolor: 'rgba(0, 229, 255, 0.15)',
+              line: { color: '#00E5FF', width: 2 },
               name: 'GxOI',
               xaxis: 'x',
               yaxis: 'y',
@@ -154,8 +162,9 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               x: formattedTimeSeries.times,
               y: formattedTimeSeries.gxoiValues,
               mode: 'lines+markers' as const,
-              line: { color: 'white', width: 2 },
-              marker: { color: 'white', size: 4 },
+              line: { color: '#00E5FF', width: 2 },
+              marker: { color: '#00E5FF', size: 4 },
+              hovertemplate: '%{x|%H:%M}  GxOI: %{y:.2f}<extra></extra>',
               name: 'ATM GxOI',
               xaxis: 'x4',
               yaxis: 'y4',
@@ -251,6 +260,7 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               tickfont: { color: '#38bdf8', size: 9 },
               tickformat: '%H:%M',
               gridcolor: 'rgba(128, 128, 128, 0.3)',
+              range: [sessionStart, sessionEnd],
             },
             yaxis4: {
               domain: [0.23, 0.39],
@@ -267,8 +277,9 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
               anchor: 'y5',
               title: { text: 'Time (IST)', font: { color: '#38bdf8', size: 10 } },
               tickfont: { color: '#38bdf8', size: 9 },
-              tickformat: '%H:%M\n%b %d',
+              tickformat: '%H:%M',
               gridcolor: 'rgba(128, 128, 128, 0.3)',
+              range: [sessionStart, sessionEnd],
             },
             yaxis5: {
               domain: [0, 0.19],
