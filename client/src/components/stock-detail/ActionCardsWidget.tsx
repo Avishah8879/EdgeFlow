@@ -11,7 +11,7 @@ interface ActionCardsWidgetProps {
  * ActionCardsWidget - Two-card CTA widget with hover-expand effect.
  *
  * Features:
- * - Generate Alpha card → opens EquityPro AI (external) in a new tab
+ * - Generate Pinescript card → opens EquityPro AI (external) in a new tab
  * - Tip Tease AI card → links to in-app Tip Tease chat with context
  * - Smooth hover expand animation (flex: 1 → flex: 4)
  * - Description and button revealed on hover
@@ -20,7 +20,7 @@ export default function ActionCardsWidget({ ticker }: ActionCardsWidgetProps) {
   const equityProAiUrl = `${getEquityProAiUrl()}?ticker=${encodeURIComponent(ticker)}`;
   return (
     <div className="action-cards-widget h-full">
-      {/* Generate Alpha — external EquityPro AI */}
+      {/* Generate Pinescript — external EquityPro AI */}
       <a
         href={equityProAiUrl}
         {...EXTERNAL_LINK_PROPS}
@@ -31,7 +31,7 @@ export default function ActionCardsWidget({ ticker }: ActionCardsWidgetProps) {
           <div className="action-card-icon">
             <TrendingUp className="w-4 h-4" />
           </div>
-          <span className="action-card-title">Generate Alpha</span>
+          <span className="action-card-title">Generate Pinescript</span>
         </div>
         <div className="action-card-content">
           <p className="action-card-description">

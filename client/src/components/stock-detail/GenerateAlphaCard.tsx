@@ -21,7 +21,7 @@ export default function GenerateAlphaCard({ ticker }: GenerateAlphaCardProps) {
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
-          Generate Alpha
+          Generate Pinescript
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-center space-y-4">

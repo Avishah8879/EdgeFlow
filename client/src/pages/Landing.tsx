@@ -414,7 +414,7 @@ function CtaBand() {
                 className="block text-[11px] font-semibold uppercase tracking-[0.12em]"
                 style={{ color: "hsl(var(--brand-gold))" }}
               >
-                Generate alpha
+                Generate Pinescript
               </span>
               <h2 className="font-display mt-3 text-[44px] font-bold leading-[1.1] tracking-[-0.02em] text-white">
                 Find your edge in 60 seconds.

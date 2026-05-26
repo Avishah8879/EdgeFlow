@@ -269,7 +269,7 @@ export const commands: Command[] = [
     title: 'EquityPro AI',
     description: 'Open EquityPro AI strategy lab (external) in a new tab',
     shortcut: 'AI',
-    aliases: ['AI', 'ALPHA', 'EQUITYPRO AI', 'GENERATE ALPHA'],
+    aliases: ['AI', 'ALPHA', 'EQUITYPRO AI', 'GENERATE PINESCRIPT'],
     keywords: ['equitypro', 'ai', 'alpha', 'generation', 'strategy', 'backtest', 'external'],
     category: 'Analysis',
     icon: Brain,

@@ -50,7 +50,7 @@ interface HeroStripProps {
   mcapTier: string | null;
   /** Whether to render the static NIFTY 50 badge. Static for now per Phase 0 q2. */
   nifty50Member?: boolean;
-  /** Slot for the right-aligned quick actions (Generate Alpha button, etc.). */
+  /** Slot for the right-aligned quick actions (Generate Pinescript button, etc.). */
   quickActions?: ReactNode;
 }
 
