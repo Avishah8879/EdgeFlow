@@ -314,7 +314,7 @@ export default function StockDetail() {
               .join(" · ") || null;
             // Quick actions: Watchlist + Compare hidden per Phase 0 §7 q14 lock
             // (Watchlist is hidden in app per CLAUDE.md Known Issues; Compare has no route).
-            // Generate Alpha → external EquityPro AI URL.
+            // Generate Pinescript → external EquityPro AI URL.
             const quickActions = (
               <Button
                 asChild
@@ -323,7 +323,7 @@ export default function StockDetail() {
               >
                 <a href={`${getEquityProAiUrl()}?ticker=${encodeURIComponent(basic.symbol)}`} {...EXTERNAL_LINK_PROPS}>
                   <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                  Generate Alpha
+                  Generate Pinescript
                   <ExternalLink className="h-3 w-3 ml-1.5" />
                 </a>
               </Button>

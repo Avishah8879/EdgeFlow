@@ -225,7 +225,7 @@ function AlphaCTA() {
           EquityPro AI · external
         </div>
         <h3 className="font-display text-lg font-bold text-white mt-1.5">
-          Generate alpha for your strategies
+          Generate Pinescript for your strategies
         </h3>
         <p className="text-[12.5px] leading-snug text-[hsl(38_30%_88%)] mt-2 mb-3">
           Build, backtest, and tune AI-driven trading strategies on the EquityPro AI

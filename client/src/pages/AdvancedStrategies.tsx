@@ -399,7 +399,7 @@ export default function AdvancedStrategies() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
               <h3 className="text-xl font-semibold mb-1">
-                Ready to Generate Alpha?
+                Ready to Generate Pinescript?
               </h3>
               <p className="text-muted-foreground">
                 Put these strategies into practice with our alpha generation
