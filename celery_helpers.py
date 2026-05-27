@@ -36,6 +36,7 @@ from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 import pandas as pd
 import numpy as np
+from sentiment_article_fetcher import fetch_sentiment_articles
 
 # Load environment
 env_file = '.env.production' if os.getenv('NODE_ENV') == 'production' else '.env'
@@ -428,41 +429,51 @@ def get_celery_sentiment_analyzer():
     return _celery_sentiment_analyzer
 
 
-def fetch_articles_for_celery(query: str) -> list:
+def _resolve_company_name_for_celery(ticker: str) -> Optional[str]:
+    conn = None
+    try:
+        conn = get_celery_db_connection()
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(
+                """
+                SELECT COALESCE(sf.long_name, t.name, t.symbol) AS company_name
+                FROM tickers t
+                LEFT JOIN stock_fundamentals sf ON sf.ticker_id = t.id
+                WHERE UPPER(t.symbol) = %s
+                LIMIT 1
+                """,
+                (ticker.upper().strip(),),
+            )
+            row = cursor.fetchone()
+            return row.get("company_name") if row else None
+    except Exception as e:
+        logger.warning(f"[CELERY SENTIMENT] Company name lookup failed for {ticker}: {e}")
+        return None
+    finally:
+        if conn:
+            release_celery_db_connection(conn)
+
+
+def fetch_articles_for_celery(query: str) -> dict:
     """
-    Fetch news articles using GoogleNews API (for Celery workers).
+    Fetch news articles using the shared GoogleNews + Pulse fallback helper.
 
     Args:
         query: Search query (typically ticker symbol)
 
     Returns:
-        List of article dictionaries with title, desc, date, link, source
+        Dict containing articles and optional error/source metadata.
     """
-    from GoogleNews import GoogleNews
-
-    articles = []
-    try:
-        logger.info(f"[CELERY SENTIMENT] Fetching articles for '{query}'")
-        googlenews = GoogleNews(lang="en")
-        googlenews.set_period('1d')
-        googlenews.search(f"{query} stock market news today")
-        gn_articles = googlenews.result()
-
-        for a in gn_articles:
-            articles.append({
-                "title": a.get("title", ""),
-                "desc": a.get("desc", a.get("title", "")),
-                "date": a.get("date", ""),
-                "link": a.get("link", "#"),
-                "source": "GoogleNews"
-            })
-
-        logger.info(f"[CELERY SENTIMENT] Fetched {len(articles)} articles")
-        return articles
-
-    except Exception as e:
-        logger.error(f"[CELERY SENTIMENT] GoogleNews fetch failed: {e}")
-        raise
+    ticker = query.upper().strip()
+    company_name = _resolve_company_name_for_celery(ticker)
+    result = fetch_sentiment_articles(ticker, company_name)
+    logger.info(
+        "[CELERY SENTIMENT] Fetched %s articles for %s via %s",
+        len(result.get("articles", [])),
+        ticker,
+        result.get("source"),
+    )
+    return result
 
 
 def analyze_article_sentiment_celery(article: dict) -> dict:

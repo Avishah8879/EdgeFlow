@@ -1,11 +1,9 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import {
-  sentimentAnalysisRequestSchema,
   backtestRequestSchema,
 } from "../shared/schema.js";
 import type {
-  SentimentAnalysisResult,
   BacktestResult,
 } from "../shared/schema.js";
 import multer from "multer";
@@ -15,6 +13,59 @@ import YahooFinance from "yahoo-finance2";
 import axios from "axios";
 
 const PYTHON_API_URL = process.env.PYTHON_API_URL || "http://localhost:8100";
+
+function buildDevSentimentFallback(path: string, body: any) {
+  if (
+    process.env.NODE_ENV !== "development" ||
+    !path.startsWith("/api/sentiment-analysis/start")
+  ) {
+    return null;
+  }
+
+  const ticker = String(body?.ticker || "DEMO").toUpperCase();
+  const today = new Date().toISOString().split("T")[0];
+  return {
+    success: true,
+    data: {
+      task_id: null,
+      status: "CACHED",
+      cached: true,
+      result: {
+        ticker,
+        articles: [
+          {
+            title: `${ticker} stock gains as investors track earnings outlook`,
+            desc: `${ticker} saw renewed investor interest as market participants reviewed recent business momentum and sector trends.`,
+            date: today,
+            link: `https://news.google.com/search?q=${encodeURIComponent(`${ticker} stock news`)}`,
+            source: "Development fallback",
+            sentiment: { label: "positive", score: 0.82 },
+          },
+          {
+            title: `${ticker} analysts weigh valuation after recent market moves`,
+            desc: `Brokerage commentary on ${ticker} remained balanced, with investors watching execution, margins, and broader market conditions.`,
+            date: today,
+            link: `https://news.google.com/search?q=${encodeURIComponent(`${ticker} analyst news`)}`,
+            source: "Development fallback",
+            sentiment: { label: "neutral", score: 0 },
+          },
+          {
+            title: `${ticker} faces pressure from cautious market sentiment`,
+            desc: `${ticker} traded with some caution as traders assessed near-term risks and macro conditions.`,
+            date: today,
+            link: `https://news.google.com/search?q=${encodeURIComponent(`${ticker} market news`)}`,
+            source: "Development fallback",
+            sentiment: { label: "negative", score: 0.68 },
+          },
+        ],
+        fundamentals: {},
+        price_data: [],
+        price_error: null,
+        cached: true,
+      },
+    },
+  };
+}
 
 /**
  * Catch-all proxy: forwards any unmatched /api/* request to the Python backend.
@@ -45,6 +96,11 @@ export async function pythonCatchAllProxy(req: Request, res: Response): Promise<
     response.data.pipe(res);
   } catch (err: any) {
     if (!res.headersSent) {
+      const fallback = buildDevSentimentFallback(req.originalUrl, req.body);
+      if (fallback) {
+        res.status(200).json(fallback);
+        return;
+      }
       res.status(503).json({ success: false, message: "Python backend unavailable", error: err.message });
     }
   }
@@ -57,67 +113,6 @@ const upload = multer({ dest: "uploads/" });
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // V1 auth routes removed - use V2 routes (/auth/v2/*) instead
-
-  app.post("/api/sentiment-analysis", async (req, res) => {
-    try {
-      const { ticker } = sentimentAnalysisRequestSchema.parse(req.body);
-      
-      const result: SentimentAnalysisResult = {
-        articles: [
-          {
-            title: `${ticker} Reports Strong Q3 Earnings`,
-            desc: `${ticker} reported quarterly earnings that beat analyst estimates, driven by strong revenue growth and improved operational efficiency across key business segments...`,
-            date: new Date().toISOString().split('T')[0],
-            link: `https://news.google.com/${ticker}`,
-            source: "GoogleNews",
-            sentiment: { label: "positive", score: 0.89 }
-          },
-          {
-            title: `${ticker} Announces Strategic Partnership`,
-            desc: `${ticker} unveiled a major partnership aimed at expanding market presence and technological capabilities, positioning the company for significant growth in emerging markets...`,
-            date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
-            link: `https://news.google.com/${ticker}`,
-            source: "GoogleNews",
-            sentiment: { label: "positive", score: 0.92 }
-          },
-          {
-            title: `Analysts Mixed on ${ticker} Growth Prospects`,
-            desc: `Market analysts provide mixed views on ${ticker}'s future growth trajectory, citing both opportunities in digital transformation and challenges from competitive pressures...`,
-            date: new Date(Date.now() - 172800000).toISOString().split('T')[0],
-            link: `https://news.google.com/${ticker}`,
-            source: "GoogleNews",
-            sentiment: { label: "neutral", score: 0.52 }
-          },
-          {
-            title: `${ticker} Faces Regulatory Scrutiny`,
-            desc: `Regulatory authorities announced an inquiry into ${ticker}'s business practices, raising concerns among investors about potential compliance costs and operational restrictions...`,
-            date: new Date(Date.now() - 259200000).toISOString().split('T')[0],
-            link: `https://news.google.com/${ticker}`,
-            source: "GoogleNews",
-            sentiment: { label: "negative", score: 0.78 }
-          },
-          {
-            title: `${ticker} Stock Shows Resilience Amid Market Volatility`,
-            desc: `Despite broader market fluctuations, ${ticker} stock demonstrates relative stability supported by strong fundamentals and investor confidence in long-term strategy...`,
-            date: new Date(Date.now() - 345600000).toISOString().split('T')[0],
-            link: `https://news.google.com/${ticker}`,
-            source: "GoogleNews",
-            sentiment: { label: "positive", score: 0.81 }
-          }
-        ],
-        fundamentals: {
-          "Market Cap": "₹14.5T",
-          "P/E": "28.4",
-          "Beta": "1.15",
-          "Price": "₹2,845.60"
-        }
-      };
-      
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
 
   app.post("/api/backtest", upload.single("csvFile"), async (req, res) => {
     try {

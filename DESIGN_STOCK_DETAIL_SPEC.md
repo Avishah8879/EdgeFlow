@@ -210,11 +210,13 @@ Table of every visible data point with its current source. Status legend:
 
 | Design element | Data type | Current source | Action needed |
 |---|---|---|---|
-| Sentiment score 72/100 | numeric | sentiment-analysis endpoint returns a positive/negative/neutral breakdown; **single "score" field NOT clearly defined** | 🟡 derive from existing FinBERT analysis (e.g. `positive% - negative%` rescaled to 0–100) |
+| Sentiment score 72/100 | numeric | async sentiment flow returns a positive/negative/neutral breakdown; **single "score" field NOT clearly defined** | 🟡 derive from existing FinBERT analysis (e.g. `positive% - negative%` rescaled to 0–100) |
 | Bullish/Bearish verdict | enum | derive from score | 🟡 derive |
-| 3-bar % breakdown (Pos / Neu / Neg) | percentages | sentiment-analysis returns article-level scores; aggregate to % | ✅ data exists, presentation new |
-| Article count "23 of 31" | count | sentiment-analysis result count | ✅ exists |
-| News items (3) — headline, summary, source, time, sentiment score | object | sentiment-analysis returns article list with GoogleNews articles | ✅ exists, but page must trigger the analysis (it's a Celery task — slow first hit; uses 24h cache) |
+| 3-bar % breakdown (Pos / Neu / Neg) | percentages | async sentiment result returns article-level scores; aggregate to % | ✅ data exists, presentation new |
+| Article count "23 of 31" | count | async sentiment result count | ✅ exists |
+| News items (3) — headline, summary, source, time, sentiment score | object | async sentiment result returns article list from GoogleNews/Pulse fallback | ✅ exists, but page must trigger the analysis (Celery task; uses 24h cache for non-empty results) |
+
+Frontend contract: stock-detail sentiment uses only the async flow: `POST /api/sentiment-analysis/start` → `GET /api/sentiment-analysis/stream/{task_id}` → render the final result. The legacy sync Python endpoint `POST /api/sentiment-analysis` is internal/backward-compatible only and is not a frontend path.
 
 ### Technicals
 
@@ -330,7 +332,7 @@ Table of every visible data point with its current source. Status legend:
 | `POST /api/reverse-dcf/{ticker}` | Reverse DCF sidebar | Used |
 | `GET /api/shareholding/{ticker}` | Shareholding pattern | Used |
 | `GET /api/stock-detail/{ticker}/analyst` | Analyst targets sidebar (counts, target) | Used |
-| `POST /api/sentiment-analysis/start` + `GET /stream/{id}` | AI Sentiment section | Used — but slow first hit (Celery + 24h cache) |
+| `POST /api/sentiment-analysis/start` + `GET /api/sentiment-analysis/stream/{id}` | AI Sentiment section | Used — async frontend contract (Celery + 24h cache for non-empty results) |
 | `GET /v1/api/tickers/{ticker}/has-cmots-data` | Gating | Used |
 | `GET /v1/api/tickers/{ticker}/corporate-actions` | (no direct equivalent in design; documents section uses external_analyst.announcements) | **Likely unused on this page** |
 | `GET /v1/api/tickers/{ticker}/credit-ratings` | Documents column 3 | Used |

@@ -265,7 +265,8 @@ def run_sentiment_analysis_task(
             'elapsed': 0
         })
 
-        articles = fetch_articles_for_celery(ticker_upper)
+        article_result = fetch_articles_for_celery(ticker_upper)
+        articles = article_result.get("articles", []) if isinstance(article_result, dict) else article_result
         total_articles = len(articles)
 
         logger.info(f"[Sentiment {self.request.id}] Fetched {total_articles} articles")
@@ -324,7 +325,7 @@ def run_sentiment_analysis_task(
                 "source": article.get("source", "GoogleNews"),
                 "sentiment": {
                     "label": normalize_sentiment_label(sentiment.get("label", "")),
-                    "score": float(sentiment.get("score", 0.5)) if sentiment.get("score") else 0.5
+                    "score": float(sentiment.get("score")) if sentiment.get("score") is not None else 0.5
                 }
             })
 
@@ -338,7 +339,8 @@ def run_sentiment_analysis_task(
                 'articles': articles_payload,
                 'fundamentals': fundamentals,
                 'article_count': len(articles_payload),
-                'cached': False
+                'cached': False,
+                'error': article_result.get('error') if isinstance(article_result, dict) else None,
             },
             'duration': duration
         }
