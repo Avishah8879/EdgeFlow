@@ -69,6 +69,7 @@ import json
 import hashlib
 import feedparser
 import pytz
+from sentiment_article_fetcher import fetch_sentiment_articles
 
 # Import database accessor classes
 import sys
@@ -1434,42 +1435,46 @@ def get_sentiment_analyzer():
 
 
 # -----------------------
-# News Fetching Function (GoogleNews)
+# News Fetching Function (GoogleNews + Pulse fallback)
 # -----------------------
-def _fetch_articles_inner(query):
-    """Internal: fetch articles (no timeout)."""
-    articles = []
-    googlenews = GoogleNews(lang="en")
-    googlenews.set_period('1d')
-    googlenews.search(f"{query} stock market news today")
-    gn_articles = googlenews.result()
-    for a in gn_articles:
-        articles.append({
-            "title": a.get("title", ""),
-            "desc": a.get("desc", a.get("title", "")),
-            "date": a.get("date", ""),
-            "link": a.get("link", "#"),
-            "source": "GoogleNews"
-        })
-    return articles
+def _resolve_company_name_for_sentiment(ticker: str) -> Optional[str]:
+    conn = None
+    try:
+        conn = get_db_connection()
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(
+                """
+                SELECT COALESCE(sf.long_name, t.name, t.symbol) AS company_name
+                FROM tickers t
+                LEFT JOIN stock_fundamentals sf ON sf.ticker_id = t.id
+                WHERE UPPER(t.symbol) = %s
+                LIMIT 1
+                """,
+                (ticker.upper().strip(),),
+            )
+            row = cursor.fetchone()
+            return row.get("company_name") if row else None
+    except Exception as exc:
+        logging.warning("[Sentiment] Could not resolve company name for %s: %s", ticker, exc)
+        return None
+    finally:
+        if conn:
+            release_db_connection(conn)
 
 
 def fetch_articles(query):
-    """Fetch news articles using GoogleNews API with 30s timeout."""
-    try:
-        logging.info(f"Fetching articles for '{query}' via GoogleNews.")
-        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(_fetch_articles_inner, query)
-            articles = future.result(timeout=30)
-        logging.info(f"Fetched {len(articles)} articles via GoogleNews.")
-        return articles
-    except FuturesTimeoutError:
-        logging.error(f"GoogleNews fetch timed out for '{query}' (30s)")
-        raise Exception(f"News fetch timed out for '{query}'. Try again later...")
-    except Exception as e:
-        logging.error(f"GoogleNews fetch failed for '{query}': {e}")
-        raise Exception(f"Unable to fetch any articles for '{query}'. Try again later...")
+    """Fetch sentiment articles with Google 7d search and Pulse fallback."""
+    ticker = query.upper().strip()
+    company_name = _resolve_company_name_for_sentiment(ticker)
+    result = fetch_sentiment_articles(ticker, company_name)
+    articles = result.get("articles", [])
+    logging.info(
+        "[Sentiment] Article fetch for %s returned %s articles via %s",
+        ticker,
+        len(articles),
+        result.get("source"),
+    )
+    return result
 
 
 # -----------------------
@@ -3625,15 +3630,19 @@ async def sentiment_analysis_api(payload: SentimentAnalysisRequestBody):
     cache_key = make_sentiment_key(ticker)
     cached_result = get_cached(cache_key)
     if cached_result:
-        logging.info(f"[CACHE HIT] Sentiment analysis for {ticker}")
-        cached_result["cached"] = True
-        return success_response(cached_result)
+        if cached_result.get("articles"):
+            logging.info(f"[CACHE HIT] Sentiment analysis for {ticker}")
+            cached_result["cached"] = True
+            return success_response(cached_result)
+        logging.info(f"[CACHE STALE] Dropping empty sentiment cache for {ticker}")
+        delete_cached(cache_key)
 
     logging.info(f"[CACHE MISS] Sentiment analysis for {ticker} - running ML inference")
 
     try:
         # Use async wrappers to avoid blocking event loop
-        articles = await fetch_articles_async(ticker)
+        article_result = await fetch_articles_async(ticker)
+        articles = article_result.get("articles", []) if isinstance(article_result, dict) else article_result
         analyzed_articles = await analyze_articles_batch_async(articles)
         fundamentals = await get_fundamentals_async(ticker)
 
@@ -3666,9 +3675,13 @@ async def sentiment_analysis_api(payload: SentimentAnalysisRequestBody):
             "price_error": price_error,
             "cached": False
         }
+        if isinstance(article_result, dict) and article_result.get("error"):
+            result["error"] = article_result.get("error")
 
-        # Cache the result (24-hour TTL)
-        set_cached(cache_key, result, TTL_SENTIMENT)
+        # Cache only useful sentiment payloads. An empty no-news result should
+        # stay live so the next request can benefit from fresher news.
+        if articles_payload:
+            set_cached(cache_key, result, TTL_SENTIMENT)
 
         return success_response(result)
     except HTTPException:
@@ -3710,13 +3723,16 @@ async def start_sentiment_analysis_async(request: Request, payload: SentimentAna
     cache_key = make_sentiment_key(ticker)
     cached_result = get_cached(cache_key)
     if cached_result:
-        logging.info(f"[SENTIMENT ASYNC] Cache hit for {ticker}, returning cached result")
-        return success_response({
-            "task_id": None,
-            "status": "CACHED",
-            "cached": True,
-            "result": cached_result
-        })
+        if cached_result.get("articles"):
+            logging.info(f"[SENTIMENT ASYNC] Cache hit for {ticker}, returning cached result")
+            return success_response({
+                "task_id": None,
+                "status": "CACHED",
+                "cached": True,
+                "result": cached_result
+            })
+        logging.info(f"[SENTIMENT ASYNC] Dropping empty sentiment cache for {ticker}")
+        delete_cached(cache_key)
 
     # Per-user concurrent task limit
     user_id = get_task_user_id(request)
@@ -3834,7 +3850,7 @@ async def stream_sentiment_progress(task_id: str):
                     if isinstance(task_result, dict) and task_result.get('status') == 'complete':
                         result_data = task_result.get('result', {})
                         ticker = result_data.get('ticker', '')
-                        if ticker:
+                        if ticker and result_data.get("articles"):
                             cache_key = make_sentiment_key(ticker)
                             set_cached(cache_key, result_data, TTL_SENTIMENT)
                             logging.info(f"[SENTIMENT ASYNC] Cached result for {ticker}")
@@ -10848,9 +10864,16 @@ async def ft_monitor_extremes(
         try:
             conn = get_db_connection()
             with conn.cursor() as cur:
-                # 52-week highs: LTP within proximity of the stored high
+                # 52-week highs: one row per ticker (latest tick), LTP within proximity of stored high
                 cur.execute(
                     """
+                    WITH latest_ltp AS (
+                        SELECT DISTINCT ON (ticker_id)
+                               ticker_id, ltp, percent_change
+                        FROM ltp_live
+                        WHERE ltp IS NOT NULL
+                        ORDER BY ticker_id, timestamp DESC
+                    )
                     SELECT t.symbol,
                            COALESCE(sf.long_name, t.name) AS name,
                            ltp.ltp,
@@ -10858,13 +10881,14 @@ async def ft_monitor_extremes(
                            sf.fifty_two_week_high,
                            sf.fifty_two_week_low,
                            ((ltp.ltp - sf.fifty_two_week_high) / sf.fifty_two_week_high) * 100.0 AS distance_pct
-                    FROM ltp_live ltp
+                    FROM latest_ltp ltp
                     JOIN tickers t ON t.id = ltp.ticker_id
                     JOIN stock_fundamentals sf ON sf.ticker_id = t.id
                     WHERE t.is_active = true
                       AND sf.fifty_two_week_high IS NOT NULL
                       AND sf.fifty_two_week_high > 0
-                      AND ltp.ltp IS NOT NULL
+                      AND sf.fifty_two_week_low IS NOT NULL
+                      AND sf.fifty_two_week_high > sf.fifty_two_week_low
                       AND ltp.ltp >= sf.fifty_two_week_high * %s
                     ORDER BY ltp.percent_change DESC NULLS LAST
                     LIMIT %s
@@ -10873,9 +10897,16 @@ async def ft_monitor_extremes(
                 )
                 highs_rows = cur.fetchall()
 
-                # 52-week lows: LTP within proximity of the stored low
+                # 52-week lows: one row per ticker (latest tick), LTP within proximity of stored low
                 cur.execute(
                     """
+                    WITH latest_ltp AS (
+                        SELECT DISTINCT ON (ticker_id)
+                               ticker_id, ltp, percent_change
+                        FROM ltp_live
+                        WHERE ltp IS NOT NULL
+                        ORDER BY ticker_id, timestamp DESC
+                    )
                     SELECT t.symbol,
                            COALESCE(sf.long_name, t.name) AS name,
                            ltp.ltp,
@@ -10883,13 +10914,14 @@ async def ft_monitor_extremes(
                            sf.fifty_two_week_high,
                            sf.fifty_two_week_low,
                            ((ltp.ltp - sf.fifty_two_week_low) / sf.fifty_two_week_low) * 100.0 AS distance_pct
-                    FROM ltp_live ltp
+                    FROM latest_ltp ltp
                     JOIN tickers t ON t.id = ltp.ticker_id
                     JOIN stock_fundamentals sf ON sf.ticker_id = t.id
                     WHERE t.is_active = true
                       AND sf.fifty_two_week_low IS NOT NULL
                       AND sf.fifty_two_week_low > 0
-                      AND ltp.ltp IS NOT NULL
+                      AND sf.fifty_two_week_high IS NOT NULL
+                      AND sf.fifty_two_week_high > sf.fifty_two_week_low
                       AND ltp.ltp <= sf.fifty_two_week_low * %s
                     ORDER BY ltp.percent_change ASC NULLS LAST
                     LIMIT %s

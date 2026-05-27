@@ -337,7 +337,12 @@ function useExtremes() {
 function HighsCell() {
   const { data, isLoading } = useExtremes();
   const rows: RankRow[] = useMemo(() => {
-    return (data?.highs ?? []).map((r) => ({
+    const seen = new Set<string>();
+    return (data?.highs ?? []).filter((r) => {
+      if (seen.has(r.symbol)) return false;
+      seen.add(r.symbol);
+      return true;
+    }).map((r) => ({
       symbol: r.symbol,
       name: r.name ?? undefined,
       ltp: r.ltp,
@@ -357,7 +362,12 @@ function HighsCell() {
 function LowsCell() {
   const { data, isLoading } = useExtremes();
   const rows: RankRow[] = useMemo(() => {
-    return (data?.lows ?? []).map((r) => ({
+    const seen = new Set<string>();
+    return (data?.lows ?? []).filter((r) => {
+      if (seen.has(r.symbol)) return false;
+      seen.add(r.symbol);
+      return true;
+    }).map((r) => ({
       symbol: r.symbol,
       name: r.name ?? undefined,
       ltp: r.ltp,
@@ -522,7 +532,7 @@ function SectorHeatCell() {
             const pct = s.avg_change_percent;
             const intensity = Math.min(1, Math.abs(pct) / 2);
             const positive = pct >= 0;
-            const alpha = 0.25 + intensity * 0.55;
+            const alpha = 0.55 + intensity * 0.35;
             const bg = positive
               ? `hsl(150 50% ${42 - intensity * 12}% / ${alpha.toFixed(2)})`
               : `hsl(0 60% ${52 - intensity * 12}% / ${alpha.toFixed(2)})`;
@@ -561,27 +571,40 @@ export function QuickMonitor() {
           Multi-asset workspace
         </h2>
         <div className="flex items-center gap-1.5 flex-wrap font-mono text-[11.5px]">
-          {WORKSPACES.map((w) => (
+          {WORKSPACES.map((w) => {
+            const isBuilt = w === 'Intraday';
+            return (
             <button
               key={w}
               type="button"
-              onClick={() => setWorkspace(w)}
+              disabled={!isBuilt}
+              title={isBuilt ? undefined : 'Coming soon'}
+              onClick={() => { if (isBuilt) setWorkspace(w); }}
               className={cn(
                 'h-7 px-3 rounded-md border font-bold transition-colors',
-                workspace === w
-                  ? 'bg-[hsl(var(--brand-navy))] text-white border-[hsl(var(--brand-navy))] dark:bg-[hsl(var(--brand-gold))] dark:text-[hsl(var(--brand-navy))] dark:border-[hsl(var(--brand-gold))]'
-                  : 'bg-background border-border text-muted-foreground hover:bg-muted',
+                !isBuilt
+                  ? 'opacity-40 cursor-not-allowed border-border text-muted-foreground bg-background'
+                  : workspace === w
+                    ? 'bg-[hsl(var(--brand-navy))] text-white border-[hsl(var(--brand-navy))] dark:bg-[hsl(var(--brand-gold))] dark:text-[hsl(var(--brand-navy))] dark:border-[hsl(var(--brand-gold))]'
+                    : 'bg-background border-border text-muted-foreground hover:bg-muted',
               )}
             >
               {w}
             </button>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* Dashboard grid — 12 cols, auto-flowing rows with sensible min heights.
-          Container scrolls on small viewports rather than squashing cells. */}
+      {/* Dashboard grid — only Intraday is fully built; other workspaces are stubs */}
       <div className="flex-1 overflow-y-auto bg-background">
+        {workspace !== 'Intraday' ? (
+          // TODO: implement Pre-market / Earnings week / F&O dashboard / Macro workspace layouts
+          <div className="h-full flex flex-col items-center justify-center gap-2 text-center">
+            <span className="font-mono text-[13px] font-bold text-foreground">{workspace}</span>
+            <span className="font-mono text-[11px] text-muted-foreground">Coming soon</span>
+          </div>
+        ) : (
         <div className="grid grid-cols-12 gap-1.5 p-1.5">
           {/* Row 1: 3 quote tiles (160px) */}
           <div className="col-span-12 sm:col-span-4 h-[160px]">
@@ -619,6 +642,7 @@ export function QuickMonitor() {
             <SectorHeatCell />
           </div>
         </div>
+        )}
       </div>
     </div>
   );
