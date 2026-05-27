@@ -61,6 +61,7 @@ const SteelSectorOutlook = lazy(() => import("@/pages/market-reports/SteelSector
 const GasSectorOutlook = lazy(() => import("@/pages/market-reports/GasSectorOutlook"));
 const HealthcareSector = lazy(() => import("@/pages/market-reports/HealthcareSector"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
+const PlatformEmbed = lazy(() => import("@/pages/PlatformEmbed"));
 
 // ── Auth pages (deferred — placeholders for now) ───────────────────────────
 const EquityProLogin = lazy(() => import("@/pages/EquityProLogin"));
@@ -201,6 +202,7 @@ function AppRoutes() {
         <Route path="/saved-results/fundamental-screener/:id" component={SavedFundamentalScreenerDetail} />
         <Route path="/saved-results/portfolio-optimizer/:id" component={SavedPortfolioOptimizerDetail} />
         <Route path="/profile" component={Profile} />
+        <Route path="/platforms/:slug" component={PlatformEmbed} />
         <Route path="/blog" component={Blog} />
         <Route path="/blog/advanced-strategies" component={AdvancedStrategies} />
         <Route path="/market-reports" component={MarketReports} />
