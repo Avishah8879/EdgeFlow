@@ -1224,9 +1224,10 @@ router.post('/v2/request-deletion', requireAuth, async (req: Request, res: Respo
 
     if (!emailResult.success) {
       console.error('[AUTH_V2] Failed to send deletion email:', emailResult.error);
-    } else {
-      console.log('[AUTH_V2] Deletion email sent via', emailResult.provider, 'to', userEmail);
+      return res.status(500).json({ error: 'Failed to send confirmation email. Please try again.' });
     }
+
+    console.log('[AUTH_V2] Deletion email sent via', emailResult.provider, 'to', userEmail);
 
     // In development, log OTP for testing
     if (process.env.NODE_ENV !== 'production') {

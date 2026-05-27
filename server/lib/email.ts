@@ -245,19 +245,23 @@ async function sendViaSMTP(options: SendEmailOptions): Promise<SendEmailResult> 
  * Tries AWS SES first, falls back to SMTP if SES fails
  */
 export async function sendEmail(options: SendEmailOptions): Promise<SendEmailResult> {
-  // In development without email config, just log
+  // In development without email config, print to terminal but do NOT fake success.
+  // Returning success:true here masked delivery failures in production-like envs.
   if (process.env.NODE_ENV !== 'production') {
     const sesAvailable = !!getSESClient();
     const smtpAvailable = !!getSMTPTransporter();
 
     if (!sesAvailable && !smtpAvailable) {
-      console.log('[EMAIL] Development mode - No email provider configured');
-      console.log('[EMAIL] Would send to:', options.to);
+      console.log('='.repeat(60));
+      console.log('[EMAIL] DEV MODE — no provider configured, printing email');
+      console.log('[EMAIL] To:     ', options.to);
       console.log('[EMAIL] Subject:', options.subject);
+      console.log('[EMAIL] Body (text):', options.text ?? '(no plain-text body)');
+      console.log('='.repeat(60));
       return {
-        success: true,
+        success: false,
         provider: 'none',
-        messageId: 'dev-' + Date.now(),
+        error: 'No email provider configured (SES and SMTP both absent)',
       };
     }
   }
