@@ -61,9 +61,9 @@ export const NAV: NavSection[] = [
         { label: "Option Chain", href: "/options", sublabel: "Live NSE options" },
         { label: "Options Visualizer", href: "/options-visualizer", sublabel: "GEX + IV surface" },
         { label: "Black-Scholes", href: "/black-scholes", sublabel: "Options pricing" },
-        { label: "Pair Trading", href: "/pair-trading", sublabel: "Cointegration matrix" },
       ],
       [
+        { label: "Pair Trading", href: "/pair-trading", sublabel: "Cointegration matrix" },
         { label: "Monitor", href: "/monitor", sublabel: "Live alerts" },
         { label: "News", href: "/news", sublabel: "Live financial feed" },
       ],
