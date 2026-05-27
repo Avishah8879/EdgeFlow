@@ -146,6 +146,7 @@ export interface Fundamentals {
 export interface SentimentAnalysisResult {
   articles: SentimentArticle[];
   fundamentals: Fundamentals;
+  error?: "no_articles_found" | string;
   priceData?: Array<{
     time: number;
     open: number;

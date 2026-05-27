@@ -86,6 +86,8 @@ task_default_routing_key = "default"
 
 # Route tasks to appropriate queues
 task_routes = {
+    "sentiment.analyze": {"queue": "default"},
+    "backtest.run": {"queue": "default"},
     "celery_tasks.run_equity_screener": {"queue": "heavy"},
     "celery_tasks.generate_rrg_data": {"queue": "heavy"},
     "celery_tasks.warm_ohlcv_cache": {"queue": "heavy"},

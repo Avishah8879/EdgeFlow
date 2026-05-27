@@ -75,6 +75,8 @@ import celery_config as _celery_conf  # noqa: E402
 celery_app.conf.beat_schedule = _celery_conf.beat_schedule
 celery_app.conf.task_queues = _celery_conf.task_queues
 celery_app.conf.task_routes = _celery_conf.task_routes
+celery_app.conf.task_default_queue = _celery_conf.task_default_queue
+celery_app.conf.task_default_routing_key = _celery_conf.task_default_routing_key
 
 
 # Import worker_init to register signal handlers for preloading
