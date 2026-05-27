@@ -66,8 +66,6 @@ export const NAV: NavSection[] = [
       [
         { label: "Monitor", href: "/monitor", sublabel: "Live alerts" },
         { label: "News", href: "/news", sublabel: "Live financial feed" },
-        { label: "Forum", href: "/forum", sublabel: "Community" },
-        { label: "Help", href: "/help", sublabel: "Docs + support" },
       ],
     ],
     wide: true,
@@ -79,7 +77,6 @@ export const NAV: NavSection[] = [
         { label: "Profile", href: "/profile", sublabel: "Account + preferences" },
         { label: "Coins wallet", href: "/profile?tab=coins", sublabel: "Buy + transactions" },
         { label: "Pricing", href: "/pricing", sublabel: "Plans + coin packs" },
-        { label: "Developers", href: "/developers", sublabel: "API keys + usage" },
       ],
     ],
   },
