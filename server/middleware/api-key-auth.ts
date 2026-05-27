@@ -204,7 +204,10 @@ function setCorsHeaders(res: Response, origin: string | undefined): boolean {
   const defaultOrigins = process.env.NODE_ENV !== 'production'
     ? ['http://localhost:5173', 'http://localhost:5000']
     : [];
-  const allAllowed = [...corsOrigins, ...defaultOrigins];
+  const platformOrigins = [process.env.PLATFORM_A_ORIGIN, process.env.PLATFORM_B_ORIGIN]
+    .map(o => o?.trim())
+    .filter(Boolean) as string[];
+  const allAllowed = [...corsOrigins, ...defaultOrigins, ...platformOrigins];
 
   if (allAllowed.includes(origin) || corsOrigins.includes('*')) {
     res.set('Access-Control-Allow-Origin', origin);
@@ -394,7 +397,7 @@ async function cacheKey(hash: string, key: ApiKey | null): Promise<void> {
 // Validation endpoint
 // =============================================================================
 
-router.get('/', async (req: Request, res: Response) => {
+const validateApiKeyRequest = async (req: Request, res: Response) => {
   const rawKey = extractApiKey(req);
   const origin = req.headers['origin'] as string | undefined;
   const authorization = req.headers['authorization'] as string | undefined;
@@ -456,6 +459,19 @@ router.get('/', async (req: Request, res: Response) => {
       });
     }
 
+    if (apiKey.key_type === 'platform_embed') {
+      const isValidationRequest = endpointPath === '' || endpointPath.startsWith('/internal/validate-api-key');
+      if (!isValidationRequest) {
+        res.set('X-Auth-Error-Code', 'ENDPOINT_NOT_ALLOWED');
+        return res.status(403).json({
+          error: {
+            code: 'ENDPOINT_NOT_ALLOWED',
+            message: 'Platform embed keys can only be used for internal validation.',
+          },
+        });
+      }
+    }
+
     // IP whitelist check
     if (!isIpAllowed(clientIp, apiKey.allowed_ips)) {
       res.set('X-Auth-Error-Code', 'IP_NOT_ALLOWED');
@@ -473,7 +489,9 @@ router.get('/', async (req: Request, res: Response) => {
     }
 
     // Tier-based endpoint enforcement
-    const endpointTier = classifyEndpoint(endpointPath);
+    const endpointTier = apiKey.key_type === 'platform_embed'
+      ? 'public'
+      : classifyEndpoint(endpointPath);
 
     if (endpointTier === 'internal') {
       res.set('X-Auth-Error-Code', 'ENDPOINT_NOT_ALLOWED');
@@ -660,6 +678,9 @@ router.get('/', async (req: Request, res: Response) => {
       ],
     },
   });
-});
+};
+
+router.get('/', validateApiKeyRequest);
+router.post('/', validateApiKeyRequest);
 
 export default router;

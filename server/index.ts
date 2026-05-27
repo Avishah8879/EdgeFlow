@@ -16,6 +16,21 @@ import type { Server } from "http";
 
 const app = express();
 
+function redactSensitiveResponse(body: unknown): unknown {
+  if (Array.isArray(body)) {
+    return body.map(redactSensitiveResponse);
+  }
+  if (body && typeof body === 'object') {
+    return Object.fromEntries(
+      Object.entries(body as Record<string, unknown>).map(([key, value]) => [
+        key,
+        key.toLowerCase() === 'apikey' ? '[REDACTED]' : redactSensitiveResponse(value),
+      ])
+    );
+  }
+  return body;
+}
+
 // Trust first proxy (ngrok, nginx, load balancer, etc.)
 // Required for correct IP detection when behind a reverse proxy
 app.set('trust proxy', 1);
@@ -40,6 +55,8 @@ const defaultOrigins = [
   process.env.VITE_GRADIO_BASE_URL,  // Python backend URL
   process.env.VITE_AUTH_BASE_URL,     // Node backend URL (ngrok)
   process.env.VITE_OPTIONS_TRADING_URL, // OptionsFlow / sibling app origin
+  process.env.PLATFORM_A_ORIGIN,
+  process.env.PLATFORM_B_ORIGIN,
 ];
 
 const allowedOrigins = Array.from(new Set([
@@ -95,7 +112,7 @@ app.use((req, res, next) => {
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        logLine += ` :: ${JSON.stringify(redactSensitiveResponse(capturedJsonResponse))}`;
       }
 
       if (logLine.length > 80) {
@@ -126,6 +143,7 @@ app.use((req, res, next) => {
   const { default: userTemplatesRoutes } = await import('./routes-user-templates.js');
   const { default: trackingRoutes } = await import('./routes-tracking.js');
   const { default: developerRoutes } = await import('./routes-developer.js');
+  const { default: platformEmbedRoutes } = await import('./routes-platform-embeds.js');
   const { default: platformsRoutes } = await import('./routes-platforms.js');
   const { default: coinsRoutes }    = await import('./routes-coins.js');
   const { default: paymentsRoutes } = await import('./routes-payments.js');
@@ -184,6 +202,9 @@ app.use((req, res, next) => {
   // Mount developer API key management routes
   app.use('/api/developer', developerRoutes);
 
+  // Mount user-facing sister platform embed session routes
+  app.use('/api/platforms', platformEmbedRoutes);
+
   // Mount internal API key validation endpoint (called by nginx auth_request)
   app.use('/internal/validate-api-key', apiKeyAuthRouter);
 
@@ -197,6 +218,7 @@ app.use((req, res, next) => {
   log('[SAVED] Saved results routes mounted at /api/saved/*');
   log('[TRACKING] Tracking routes mounted at /api/track/*');
   log('[DEVELOPER] Developer API routes mounted at /api/developer/*');
+  log('[PLATFORMS] Platform embed routes mounted at /api/platforms/*');
   log('[API_KEY] Internal validation endpoint mounted at /internal/validate-api-key');
 
   // Test authentication database connection

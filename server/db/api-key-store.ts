@@ -7,7 +7,7 @@
 
 import crypto from 'crypto';
 import { query, queryOne, transaction } from './auth-connection';
-import { encryptApiKey } from '../lib/key-encryption';
+import { decryptApiKey, encryptApiKey } from '../lib/key-encryption';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -19,8 +19,10 @@ export interface ApiKey {
   name: string;
   key_prefix: string;
   key_hash: string;
+  encrypted_key?: string;
   tier: 'basic' | 'premium' | 'enterprise';
-  key_type: 'standard' | 'admin';
+  key_type: 'standard' | 'admin' | 'platform_embed';
+  platform_slug: string | null;
   rate_limit_per_minute: number;
   rate_limit_per_hour: number;
   rate_limit_per_day: number;
@@ -45,7 +47,8 @@ export interface CreateKeyOptions {
   allowedOrigins?: string[];
   // Admin key options (only used when creating admin/enterprise keys)
   tier?: 'basic' | 'premium' | 'enterprise';
-  keyType?: 'standard' | 'admin';
+  keyType?: 'standard' | 'admin' | 'platform_embed';
+  platformSlug?: string;
   rateLimitPerMinute?: number;
   rateLimitPerHour?: number;
   rateLimitPerDay?: number;
@@ -127,10 +130,11 @@ export async function createApiKey(opts: CreateKeyOptions): Promise<{ fullKey: s
   const result = await queryOne<ApiKey>(
     `INSERT INTO api_keys (
       user_id, name, key_prefix, key_hash, encrypted_key, tier, key_type,
+      platform_slug,
       rate_limit_per_minute, rate_limit_per_hour, rate_limit_per_day,
       allowed_origins, allowed_ips, allowed_endpoints,
       created_by, description, expires_at
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
     RETURNING *`,
     [
       opts.userId,
@@ -140,6 +144,7 @@ export async function createApiKey(opts: CreateKeyOptions): Promise<{ fullKey: s
       encrypted,
       tier,
       keyType,
+      opts.platformSlug || null,
       opts.rateLimitPerMinute ?? defaults.min,
       opts.rateLimitPerHour ?? defaults.hr,
       opts.rateLimitPerDay ?? defaults.day,
@@ -153,6 +158,35 @@ export async function createApiKey(opts: CreateKeyOptions): Promise<{ fullKey: s
   );
 
   return { fullKey: key, record: result! };
+}
+
+/**
+ * Find an active, non-expired embed key for a user/platform pair.
+ */
+export async function findActivePlatformKey(userId: string, slug: string): Promise<ApiKey | null> {
+  return queryOne<ApiKey>(
+    `SELECT *
+     FROM api_keys
+     WHERE user_id = $1
+       AND platform_slug = $2
+       AND key_type = 'platform_embed'
+       AND is_active = TRUE
+       AND revoked_at IS NULL
+       AND (expires_at IS NULL OR expires_at > NOW())
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [userId, slug]
+  );
+}
+
+/**
+ * Decrypt the stored plaintext representation for reveal-style flows.
+ */
+export function revealApiKey(record: ApiKey): string {
+  if (!record.encrypted_key) {
+    throw new Error('API key cannot be revealed because encrypted_key is missing');
+  }
+  return decryptApiKey(record.encrypted_key);
 }
 
 /**
@@ -292,13 +326,15 @@ export async function rotateKey(
     const result = await client.query(
       `INSERT INTO api_keys (
         user_id, name, key_prefix, key_hash, encrypted_key, tier, key_type,
+        platform_slug,
         rate_limit_per_minute, rate_limit_per_hour, rate_limit_per_day,
         allowed_origins, allowed_ips, allowed_endpoints,
         created_by, description, expires_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
       RETURNING *`,
       [
         old.user_id, old.name, prefix, hash, encrypted, old.tier, old.key_type,
+        old.platform_slug,
         old.rate_limit_per_minute, old.rate_limit_per_hour, old.rate_limit_per_day,
         old.allowed_origins, old.allowed_ips, old.allowed_endpoints,
         old.created_by, old.description, old.expires_at,

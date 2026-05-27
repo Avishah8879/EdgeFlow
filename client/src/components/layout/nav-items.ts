@@ -71,6 +71,15 @@ export const NAV: NavSection[] = [
     wide: true,
   },
   {
+    title: "Platforms",
+    children: [
+      [
+        { label: "OptionFlow", href: "/platforms/platform-a", sublabel: "Options analytics and trading workspace" },
+        { label: "EquityPro AI", href: "/platforms/platform-b", sublabel: "PineScript AI strategy lab" },
+      ],
+    ],
+  },
+  {
     title: "Account",
     children: [
       [
