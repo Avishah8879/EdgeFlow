@@ -9,10 +9,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { TickerCombobox } from "@/components/strategy-backtest/TickerCombobox";
+import { GranularSeasonalityHeatmaps } from "@/components/seasonality/GranularSeasonalityHeatmaps";
 import { useHourlyTickerOptions } from "@/hooks/use-hourly-ticker-options";
 import { useSeasonality } from "@/hooks/use-seasonality";
 import type { WeeklyStat, MonthlyStat, YearlyHeatmapEntry } from "@/hooks/use-seasonality";
 import { useSmartLoader } from "@/hooks/use-smart-loader";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SEO } from "@/components/SEO";
 import {
   BarChart,
@@ -280,6 +288,7 @@ function WeeklyStatsTable({ data }: { data: WeeklyStat[] }) {
 
 export default function Seasonality() {
   const [ticker, setTicker] = useState("");
+  const [years, setYears] = useState(10);
 
   const tickersQuery = useHourlyTickerOptions();
   const tickerOptions = tickersQuery.data ?? [];
@@ -313,15 +322,31 @@ export default function Seasonality() {
         {/* Controls */}
         <Card className="mb-6">
           <CardContent className="pt-4 pb-4">
-            <div className="max-w-md">
-              <Label className="text-xs mb-1.5 block">Stock</Label>
-              <TickerCombobox
-                options={tickerOptions}
-                value={ticker}
-                onValueChange={setTicker}
-                placeholder="Search and select stock..."
-                isLoading={tickersQuery.isLoading}
-              />
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="max-w-md flex-1">
+                <Label className="text-xs mb-1.5 block">Stock</Label>
+                <TickerCombobox
+                  options={tickerOptions}
+                  value={ticker}
+                  onValueChange={setTicker}
+                  placeholder="Search and select stock..."
+                  isLoading={tickersQuery.isLoading}
+                />
+              </div>
+              <div className="min-w-[120px]">
+                <Label className="text-xs mb-1.5 block">Years</Label>
+                <Select value={String(years)} onValueChange={(value) => setYears(Number(value))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Years" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1Y</SelectItem>
+                    <SelectItem value="3">3Y</SelectItem>
+                    <SelectItem value="5">5Y</SelectItem>
+                    <SelectItem value="10">10Y</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -427,6 +452,12 @@ export default function Seasonality() {
               <MonthlyBarChart data={data.monthly_stats} />
               <WeeklyStatsTable data={data.weekly_stats} />
             </div>
+          </div>
+        )}
+
+        {ticker && (
+          <div className="mt-6">
+            <GranularSeasonalityHeatmaps ticker={ticker} years={years} />
           </div>
         )}
       </div>

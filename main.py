@@ -12966,6 +12966,39 @@ async def seasonality_api(ticker: str):
     return {"data": result}
 
 
+@fastapi_app.get("/api/seasonality/granular/{ticker}", tags=["Technical Analysis"])
+async def seasonality_granular_api(
+    ticker: str,
+    years: int = Query(10, ge=1, le=20),
+):
+    """
+    Calculate granular daily seasonality buckets for a stock.
+
+    Returns monthly, week-of-month by month, and weekday by week-of-month heatmaps.
+    """
+    from server.seasonality_granular import calculate_granular_seasonality
+
+    ticker = unquote(ticker).upper()
+
+    cache_key = f"seasonality:granular:{ticker}:{years}"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return {"data": cached}
+
+    pool = get_db_pool()
+    conn = pool.getconn()
+    try:
+        result = calculate_granular_seasonality(conn, ticker, years)
+    finally:
+        pool.putconn(conn)
+
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"No data found for ticker {ticker}")
+
+    set_cached(cache_key, result, 3600)
+    return {"data": result}
+
+
 # =============================================================================
 # Fyers Token Management Endpoint
 # =============================================================================
