@@ -68,6 +68,14 @@ celery_app.conf.update(
     result_extended=True,  # Include task name and args in result
 )
 
+# Wire beat schedule, task queues, and routes from celery_config.
+# celery_config reads CELERY_BEAT_ENABLED which is already in os.environ
+# (loaded from .env / .env.production above via load_dotenv).
+import celery_config as _celery_conf  # noqa: E402
+celery_app.conf.beat_schedule = _celery_conf.beat_schedule
+celery_app.conf.task_queues = _celery_conf.task_queues
+celery_app.conf.task_routes = _celery_conf.task_routes
+
 
 # Import worker_init to register signal handlers for preloading
 # This must happen AFTER celery_app is created
