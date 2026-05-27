@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import { SEO } from "@/components/SEO";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { cn } from "@/lib/utils";
@@ -29,7 +28,6 @@ import {
 } from "@/hooks/use-subscription";
 import { useSessions, useRevokeSession, useRevokeAllSessions, parseDeviceInfo } from "@/hooks/use-sessions";
 import { useSendVerification, useVerifyEmail } from "@/hooks/use-email-verification";
-import { useUsageLimits, getUsagePercentage, getTimeUntilReset } from "@/hooks/use-usage-limits";
 import { useRequestDeletion, useDeleteAccount, useExportData, downloadExportAsFile } from "@/hooks/use-account";
 import { useOAuthLinking } from "@/hooks/use-oauth-linking";
 import { useUpdatePhone, useHasPassword } from "@/hooks/use-profile-update";
@@ -50,7 +48,6 @@ import {
   XCircle,
   Trash2,
   Download,
-  Activity,
   Key,
   MailCheck,
   Link2,
@@ -68,7 +65,7 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState<string>(() => {
     if (typeof window === "undefined") return "account";
     const tab = new URLSearchParams(window.location.search).get("tab");
-    const allowed = new Set(["account", "security", "usage", "coins", "danger"]);
+    const allowed = new Set(["account", "security", "coins", "danger"]);
     return tab && allowed.has(tab) ? tab : "account";
   });
 
@@ -110,8 +107,6 @@ export default function Profile() {
   const sendVerificationMutation = useSendVerification();
   const verifyEmailMutation = useVerifyEmail();
 
-  // Usage limits hooks
-  const { data: usageLimits, isLoading: limitsLoading } = useUsageLimits();
 
   // Account hooks
   const requestDeletionMutation = useRequestDeletion();
@@ -484,10 +479,9 @@ export default function Profile() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="account">Account</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="usage">Usage</TabsTrigger>
             <TabsTrigger value="coins">Coins</TabsTrigger>
             <TabsTrigger value="danger">Danger Zone</TabsTrigger>
           </TabsList>
@@ -963,72 +957,6 @@ export default function Profile() {
                       </p>
                     )}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Usage Tab */}
-          <TabsContent value="usage" className="space-y-6 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Usage Limits
-                </CardTitle>
-                <CardDescription>
-                  Your current usage for rate-limited features
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {limitsLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  </div>
-                ) : usageLimits ? (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>Tier: <Badge variant="outline">{usageLimits.tier}</Badge></span>
-                      <span>Resets in {getTimeUntilReset(usageLimits.resetsAt)}</span>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Technical Screener</span>
-                          <span>
-                            {usageLimits.usage.screenerRuns} / {usageLimits.limits.screenerRunsPerHour}
-                          </span>
-                        </div>
-                        <Progress
-                          value={getUsagePercentage(usageLimits.usage.screenerRuns, usageLimits.limits.screenerRunsPerHour)}
-                          className="h-2"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          {usageLimits.remaining.screenerRuns} runs remaining
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Strategy Backtest</span>
-                          <span>
-                            {usageLimits.usage.backtestRuns} / {usageLimits.limits.backtestRunsPerHour}
-                          </span>
-                        </div>
-                        <Progress
-                          value={getUsagePercentage(usageLimits.usage.backtestRuns, usageLimits.limits.backtestRunsPerHour)}
-                          className="h-2"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          {usageLimits.remaining.backtestRuns} runs remaining
-                        </p>
-                      </div>
-
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-center py-8">Failed to load usage limits</p>
                 )}
               </CardContent>
             </Card>
