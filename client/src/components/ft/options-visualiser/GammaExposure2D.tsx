@@ -89,26 +89,26 @@ export function GammaExposure2D({ exposureData, timeSeriesData, isLoading }: Gam
   return (
     <div className="flex flex-col gap-2 p-2 overflow-auto">
       {/* Header with key metrics */}
-      <div className="flex items-center justify-between px-2 py-1 bg-sidebar rounded border border-border">
+      <div className="flex items-center justify-between px-2 py-1 bg-sidebar rounded border border-slate-500">
         <div className="flex gap-4 text-[10px] font-mono uppercase">
-          <span className="text-muted-foreground">
-            SPOT: <span className="text-foreground">{spot?.toFixed(2)}</span>
+          <span className="text-slate-300">
+            SPOT: <span className="text-white font-bold">{spot?.toFixed(2)}</span>
           </span>
-          <span className="text-muted-foreground">
-            ATM: <span className="text-foreground">{atm_strike}</span>
+          <span className="text-slate-300">
+            ATM: <span className="text-white font-bold">{atm_strike}</span>
           </span>
-          <span className="text-muted-foreground">
+          <span className="text-slate-300">
             TOTAL GEX:{' '}
-            <span className={total_gex >= 0 ? 'text-primary' : 'text-destructive'}>
+            <span className={`font-bold ${total_gex >= 0 ? 'text-[#4ade80]' : 'text-[#f87171]'}`}>
               {(total_gex / 1e9).toFixed(2)}B
             </span>
           </span>
         </div>
         <div
-          className={`text-[10px] font-mono px-2 py-0.5 rounded ${
+          className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
             gamma_regime === 'LONG GAMMA'
-              ? 'bg-primary/20 text-primary'
-              : 'bg-destructive/20 text-destructive'
+              ? 'bg-[#4ade80]/20 text-[#4ade80]'
+              : 'bg-[#f87171]/20 text-[#f87171]'
           }`}
         >
           {gamma_regime}

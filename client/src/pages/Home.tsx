@@ -29,12 +29,6 @@ import { PAGE_SEO } from "@/lib/seo-config";
 import { generateWebPageSchema } from "@/lib/json-ld";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const heatmapTabs: TabBarItem<"sectors" | "industries" | "cap">[] = [
-  { id: "sectors", label: "Sectors" },
-  { id: "industries", label: "Industries" },
-  { id: "cap", label: "Cap" },
-];
-
 function fmtNum(value: number, decimals = 2): string {
   return value.toLocaleString("en-IN", {
     minimumFractionDigits: decimals,
@@ -268,12 +262,9 @@ function SectorHeatmap() {
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-3 border-b border-border">
-        <div>
-          <Eyebrow className="block">Top movers · Heatmap</Eyebrow>
-          <h3 className="text-sm font-bold mt-0.5">NSE 200 · today</h3>
-        </div>
-        <TabBar tabs={heatmapTabs} value="sectors" onChange={() => {}} variant="segmented" />
+      <div className="px-4 sm:px-5 py-3 border-b border-border">
+        <Eyebrow className="block">Top movers · Heatmap</Eyebrow>
+        <h3 className="text-sm font-bold mt-0.5">NSE 200 · today</h3>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-1 p-3">
         {cells.map((c, i) => {

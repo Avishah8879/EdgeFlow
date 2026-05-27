@@ -53,7 +53,7 @@ export function OptionsVisualiser({ defaultSymbol = 'NIFTY' }: OptionsVisualiser
       <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-sidebar">
         {/* Symbol Selector */}
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono uppercase text-muted-foreground">SYMBOL:</span>
+          <span className="text-[10px] font-mono uppercase text-slate-300">SYMBOL:</span>
           <div className="flex gap-1">
             {(['NIFTY', 'BANKNIFTY'] as const).map((sym) => (
               <button
@@ -75,7 +75,7 @@ export function OptionsVisualiser({ defaultSymbol = 'NIFTY' }: OptionsVisualiser
         <div className="flex items-center gap-3">
           {/* Refresh Interval Selector */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono uppercase text-muted-foreground">INTERVAL:</span>
+            <span className="text-[10px] font-mono uppercase text-slate-300">INTERVAL:</span>
             <select
               value={refreshInterval}
               onChange={(e) => setRefreshInterval(Number(e.target.value))}
@@ -124,6 +124,35 @@ export function OptionsVisualiser({ defaultSymbol = 'NIFTY' }: OptionsVisualiser
         </div>
       </div>
 
+      {/* Status Bar */}
+      <div className="flex items-center justify-between px-3 py-1 border-b border-slate-500 bg-sidebar text-[9px] font-mono text-slate-300">
+        <div className="flex items-center gap-4">
+          <span>
+            LAST UPDATE:{' '}
+            <span className="text-white font-bold">
+              {exposure?.timestamp
+                ? new Date(exposure.timestamp).toLocaleTimeString('en-IN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false,
+                  })
+                : '--:--:--'}
+            </span>
+          </span>
+          {timeSeries?.is_market_open && (
+            <span className="text-[#4ade80] font-bold">● MARKET OPEN</span>
+          )}
+          {!timeSeries?.is_market_open && timeSeries && (
+            <span className="text-slate-400">○ MARKET CLOSED</span>
+          )}
+        </div>
+        <span>
+          DATA POINTS: <span className="text-white font-bold">{timeSeries?.data?.length || 0}</span>
+          {' '}| STRIKES: <span className="text-white font-bold">{exposure?.by_strike?.length || 0}</span>
+        </span>
+      </div>
+
       {/* Tab Content */}
       <Tabs
         value={activeTab}
@@ -162,32 +191,6 @@ export function OptionsVisualiser({ defaultSymbol = 'NIFTY' }: OptionsVisualiser
           />
         </TabsContent>
       </Tabs>
-
-      {/* Status Bar */}
-      <div className="flex items-center justify-between px-3 py-1 border-t border-border bg-sidebar text-[9px] font-mono text-muted-foreground">
-        <div className="flex items-center gap-4">
-          <span>
-            LAST UPDATE:{' '}
-            {exposure?.timestamp
-              ? new Date(exposure.timestamp).toLocaleTimeString('en-IN', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: false,
-                })
-              : '--:--:--'}
-          </span>
-          {timeSeries?.is_market_open && (
-            <span className="text-primary">● MARKET OPEN</span>
-          )}
-          {!timeSeries?.is_market_open && timeSeries && (
-            <span className="text-muted-foreground">○ MARKET CLOSED</span>
-          )}
-        </div>
-        <span>
-          DATA POINTS: {timeSeries?.data?.length || 0} | STRIKES: {exposure?.by_strike?.length || 0}
-        </span>
-      </div>
     </div>
   );
 }
