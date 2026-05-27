@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { useStockQuote } from '@/hooks/useStockQuote';
@@ -62,16 +62,6 @@ interface SectorHeatRow {
   avg_change_percent: number;
   member_count: number;
 }
-
-// ─── Workspace tabs (visual presets — all currently render same content) ────
-const WORKSPACES = [
-  'Pre-market',
-  'Intraday',
-  'Earnings week',
-  'F&O dashboard',
-  'Macro',
-] as const;
-type Workspace = (typeof WORKSPACES)[number];
 
 // ─── Formatters ──────────────────────────────────────────────────────────────
 const fmt = (n: number | null | undefined, d = 2) =>
@@ -561,50 +551,9 @@ function SectorHeatCell() {
 
 // ─── Panel ───────────────────────────────────────────────────────────────────
 export function QuickMonitor() {
-  const [workspace, setWorkspace] = useState<Workspace>('Intraday');
-
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Workspace tab strip */}
-      <div className="flex items-center justify-between px-4 md:px-6 py-2.5 border-b border-border bg-card flex-shrink-0">
-        <h2 className="font-display text-[18px] md:text-[20px] font-bold tracking-tight text-[hsl(var(--brand-navy))] dark:text-foreground hidden md:block">
-          Multi-asset workspace
-        </h2>
-        <div className="flex items-center gap-1.5 flex-wrap font-mono text-[11.5px]">
-          {WORKSPACES.map((w) => {
-            const isBuilt = w === 'Intraday';
-            return (
-            <button
-              key={w}
-              type="button"
-              disabled={!isBuilt}
-              title={isBuilt ? undefined : 'Coming soon'}
-              onClick={() => { if (isBuilt) setWorkspace(w); }}
-              className={cn(
-                'h-7 px-3 rounded-md border font-bold transition-colors',
-                !isBuilt
-                  ? 'opacity-40 cursor-not-allowed border-border text-muted-foreground bg-background'
-                  : workspace === w
-                    ? 'bg-[hsl(var(--brand-navy))] text-white border-[hsl(var(--brand-navy))] dark:bg-[hsl(var(--brand-gold))] dark:text-[hsl(var(--brand-navy))] dark:border-[hsl(var(--brand-gold))]'
-                    : 'bg-background border-border text-muted-foreground hover:bg-muted',
-              )}
-            >
-              {w}
-            </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Dashboard grid — only Intraday is fully built; other workspaces are stubs */}
       <div className="flex-1 overflow-y-auto bg-background">
-        {workspace !== 'Intraday' ? (
-          // TODO: implement Pre-market / Earnings week / F&O dashboard / Macro workspace layouts
-          <div className="h-full flex flex-col items-center justify-center gap-2 text-center">
-            <span className="font-mono text-[13px] font-bold text-foreground">{workspace}</span>
-            <span className="font-mono text-[11px] text-muted-foreground">Coming soon</span>
-          </div>
-        ) : (
         <div className="grid grid-cols-12 gap-1.5 p-1.5">
           {/* Row 1: 3 quote tiles (160px) */}
           <div className="col-span-12 sm:col-span-4 h-[160px]">
@@ -642,7 +591,6 @@ export function QuickMonitor() {
             <SectorHeatCell />
           </div>
         </div>
-        )}
       </div>
     </div>
   );
