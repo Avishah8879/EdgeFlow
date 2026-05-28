@@ -93,10 +93,7 @@ task_routes = {
     "celery_tasks.warm_ohlcv_cache": {"queue": "heavy"},
     "celery_tasks.full_prewarm": {"queue": "heavy"},
     "celery_tasks.update_market_movers": {"queue": "periodic"},
-    "celery_tasks.update_indices": {"queue": "periodic"},
     "celery_tasks.update_fear_greed": {"queue": "periodic"},
-    "celery_tasks.refresh_hot_quotes": {"queue": "periodic"},
-    "celery_tasks.refresh_options_chain": {"queue": "periodic"},
     "celery_tasks.refresh_options_visualizer": {"queue": "periodic"},
     "celery_tasks.snapshot_options_oi": {"queue": "periodic"},
 }
@@ -116,32 +113,11 @@ if beat_schedule_enabled:
         # HOT DATA - Refresh frequently during market hours
         # =====================================================================
 
-        # Hot quotes - symbols actively being viewed (every 5 seconds)
-        "refresh-hot-quotes-5s": {
-            "task": "celery_tasks.refresh_hot_quotes",
-            "schedule": 5.0,
-            "options": {"queue": "periodic", "expires": 4},  # Expire before next run
-        },
-
-        # Indices - every 10 seconds
-        "update-indices-10s": {
-            "task": "celery_tasks.update_indices",
-            "schedule": 10.0,
-            "options": {"queue": "periodic", "expires": 9},
-        },
-
         # Market movers - every 15 seconds
         "update-market-movers-15s": {
             "task": "celery_tasks.update_market_movers",
             "schedule": 15.0,
             "options": {"queue": "periodic", "expires": 14},
-        },
-
-        # Options chain - every 5 seconds (NIFTY, BANKNIFTY)
-        "refresh-options-5s": {
-            "task": "celery_tasks.refresh_options_chain",
-            "schedule": 5.0,
-            "options": {"queue": "periodic", "expires": 4},
         },
 
         # Options Visualizer ATM-GxOI recorder — every 60 seconds.

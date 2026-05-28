@@ -15,6 +15,7 @@ import asyncio
 import json
 import logging
 import math
+import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
@@ -436,6 +437,12 @@ def fetch_nse_index_option_chain(
 
     Uses in-memory cache as fallback when Redis unavailable.
     """
+    for _proxy_key in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
+        _proxy_value = os.getenv(_proxy_key, "")
+        if "127.0.0.1:9" in _proxy_value or "localhost:9" in _proxy_value:
+            os.environ.pop(_proxy_key, None)
+            logger.warning("[SentimentNews] Ignored dead local proxy setting from %s", _proxy_key)
+
     now = datetime.now()
     normalized_symbol = symbol.upper()
 

@@ -383,6 +383,7 @@ try:
         compute_atm_straddle as _ovz_compute_atm_straddle,
         append_atm_gxoi as _ovz_append_atm_gxoi,
         append_minute_bar as _ovz_append_minute_bar,
+        get_minute_bars as _ovz_get_minute_bars,
         cache_exposure_data as _ovz_cache_exposure_data,
     )
     from option_chain_live import fetch_nse_index_option_chain as _ovz_fetch_chain
@@ -393,6 +394,7 @@ except ImportError as _ovz_imp_err:
     _ovz_compute_atm_straddle = None  # type: ignore
     _ovz_append_atm_gxoi = None  # type: ignore
     _ovz_append_minute_bar = None  # type: ignore
+    _ovz_get_minute_bars = None  # type: ignore
     _ovz_cache_exposure_data = None  # type: ignore
     _ovz_fetch_chain = None  # type: ignore
     _OVZ_AVAILABLE = False
@@ -415,6 +417,7 @@ def refresh_options_visualizer():
 
     now = datetime.now(_OVZ_IST)
     written = []
+    skipped = []
     errors = {}
     for symbol in _OVZ_SYMBOLS:
         try:
@@ -449,12 +452,31 @@ def refresh_options_visualizer():
             }
 
             async def _write_all():
+                existing_bars = await _ovz_get_minute_bars(symbol, now.strftime("%Y-%m-%d"))
+                last_bar = existing_bars[-1] if existing_bars else None
+                if last_bar:
+                    same_spot = last_bar.get("spot") == bar["spot"]
+                    same_ce = last_bar.get("ce_ltp") == bar["ce_ltp"]
+                    same_pe = last_bar.get("pe_ltp") == bar["pe_ltp"]
+                    if same_spot and same_ce and same_pe:
+                        logger.warning(
+                            "refresh_options_visualizer(%s) skipped stale bar: spot=%s ce_ltp=%s pe_ltp=%s",
+                            symbol,
+                            bar["spot"],
+                            bar["ce_ltp"],
+                            bar["pe_ltp"],
+                        )
+                        return "skipped"
                 await _ovz_append_atm_gxoi(symbol, now, atm_gxoi)
                 await _ovz_append_minute_bar(symbol, now, bar)
                 await _ovz_cache_exposure_data(symbol, exposure)
+                return "written"
 
-            asyncio.run(_write_all())
-            written.append(symbol)
+            write_status = asyncio.run(_write_all())
+            if write_status == "skipped":
+                skipped.append(symbol)
+            else:
+                written.append(symbol)
         except Exception as e:
             errors[symbol] = str(e)
             logger.exception(
@@ -462,8 +484,9 @@ def refresh_options_visualizer():
             )
 
     return {
-        "status": "ok" if written else "error",
+        "status": "ok" if written or skipped else "error",
         "written": written,
+        "skipped": skipped,
         "errors": errors,
         "ts": now.isoformat(),
     }
