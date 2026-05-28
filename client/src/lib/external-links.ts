@@ -7,7 +7,7 @@
  * source of truth so a domain change is one edit.
  */
 
-const FALLBACK_EQUITYPRO_AI_URL = "https://ai.equitypro.app";
+const FALLBACK_EQUITYPRO_AI_URL = "https://ai.equitypro.ai";
 
 export function getEquityProAiUrl(): string {
   const fromEnv = (import.meta.env.VITE_EQUITYPRO_AI_URL as string | undefined)?.trim();

@@ -28,8 +28,8 @@ const PLATFORM_CONFIGS: Record<PlatformSlug, PlatformEmbedConfig> = {
   'platform-b': {
     slug: 'platform-b',
     name: process.env.PLATFORM_B_NAME || 'EquityPro AI',
-    url: process.env.PLATFORM_B_URL || process.env.VITE_PLATFORM_B_URL || 'https://ai.equitypro.app',
-    origin: process.env.PLATFORM_B_ORIGIN || 'https://ai.equitypro.app',
+    url: process.env.PLATFORM_B_URL || process.env.VITE_PLATFORM_B_URL || 'https://ai.equitypro.ai',
+    origin: process.env.PLATFORM_B_ORIGIN || 'https://ai.equitypro.ai',
     description: process.env.PLATFORM_B_DESCRIPTION || 'PineScript AI strategy lab',
   },
 };

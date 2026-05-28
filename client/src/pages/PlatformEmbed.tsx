@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { SEO } from "@/components/SEO";
 import { getPlatform, getPlatformOrigin, type PlatformSlug } from "@/lib/platforms";
 import { usePlatformSession } from "@/hooks/use-platform-session";
+import { useAuth } from "@/contexts/AuthContext";
 
 function PlatformLoader({ label }: { label: string }) {
   return (
@@ -23,6 +24,7 @@ export default function PlatformEmbed() {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const session = usePlatformSession(platform?.slug as PlatformSlug | undefined);
+  const { token, refreshToken } = useAuth();
 
   useEffect(() => {
     if (!iframeLoaded || !platform || !session.data || !iframeRef.current?.contentWindow) {
@@ -35,10 +37,12 @@ export default function PlatformEmbed() {
         version: 1,
         apiKey: session.data.apiKey,
         userId: session.data.userId,
+        token,
+        refreshToken,
       },
       getPlatformOrigin(platform),
     );
-  }, [iframeLoaded, platform, session.data]);
+  }, [iframeLoaded, platform, session.data, token, refreshToken]);
 
   if (!platform) {
     return (
@@ -86,7 +90,7 @@ export default function PlatformEmbed() {
           ref={iframeRef}
           src={platform.url}
           title={platform.name}
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
           className={iframeLoaded ? "h-[calc(100vh-5rem)] w-full border-0" : "hidden"}
           onLoad={() => setIframeLoaded(true)}
         />

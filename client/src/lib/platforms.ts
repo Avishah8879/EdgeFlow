@@ -17,7 +17,7 @@ const PLATFORMS: PlatformConfig[] = [
   {
     slug: "platform-b",
     name: "EquityPro AI",
-    url: import.meta.env.VITE_PLATFORM_B_URL || "https://ai.equitypro.app",
+    url: import.meta.env.VITE_PLATFORM_B_URL || "https://ai.equitypro.ai",
     description: "PineScript AI strategy lab",
   },
 ];

@@ -59,7 +59,7 @@ from shared.depth_subscription import (
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv(PROJECT_ROOT / ".env")
+load_dotenv(PROJECT_ROOT / ('.env.production' if os.getenv('NODE_ENV') == 'production' else '.env.development'))
 
 # Fyers imports
 try:

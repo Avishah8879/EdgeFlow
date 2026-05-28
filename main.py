@@ -96,7 +96,7 @@ from server.sankey import get_sankey_data, get_available_years
 
 # Load environment variables from correct .env file based on NODE_ENV
 # Use override=True to ensure .env file values take precedence over stale shell env vars
-env_file = '.env.production' if os.getenv('NODE_ENV') == 'production' else '.env'
+env_file = '.env.production' if os.getenv('NODE_ENV') == 'production' else '.env.development'
 load_dotenv(env_file, override=True)
 print(f"[ENV] Loaded environment from: {env_file}")
 

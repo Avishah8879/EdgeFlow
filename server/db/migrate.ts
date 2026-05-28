@@ -11,7 +11,7 @@ import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
 // Load environment variables
-const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
 dotenv.config({ path: join(process.cwd(), envFile) });
 
 // Validate required environment variables

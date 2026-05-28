@@ -49,7 +49,7 @@ TEST_CO_CODE_RANGE_START = 999000
 @pytest.fixture(scope="session", autouse=True)
 def _load_dotenv() -> None:
     """Load EdgeFlow/.env once per test session (no python-dotenv dependency)."""
-    env_path = Path(__file__).resolve().parents[2] / ".env"
+    env_path = Path(__file__).resolve().parents[2] / ".env.development"
     if not env_path.exists():
         return
     for line in env_path.read_text(encoding="utf-8").splitlines():

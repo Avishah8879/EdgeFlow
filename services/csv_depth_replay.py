@@ -32,7 +32,7 @@ import msgpack
 import redis.asyncio as redis
 from dotenv import load_dotenv
 
-load_dotenv(PROJECT_ROOT / ".env")
+load_dotenv(PROJECT_ROOT / ('.env.production' if os.getenv('NODE_ENV') == 'production' else '.env.development'))
 
 # Redis configuration
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")

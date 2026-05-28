@@ -31,7 +31,7 @@ from pathlib import Path
 
 # ─── Load EdgeFlow/.env ─────────────────────────────────────────────────────
 
-env_path = Path(__file__).resolve().parents[2] / ".env"
+env_path = Path(__file__).resolve().parents[2] / ".env.development"
 for line in env_path.read_text(encoding="utf-8").splitlines():
     line = line.strip()
     if not line or line.startswith("#") or "=" not in line:

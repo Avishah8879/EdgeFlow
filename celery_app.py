@@ -26,7 +26,7 @@ from celery import Celery
 from dotenv import load_dotenv
 
 # Load appropriate .env file based on NODE_ENV
-env_file = '.env.production' if os.getenv('NODE_ENV') == 'production' else '.env'
+env_file = '.env.production' if os.getenv('NODE_ENV') == 'production' else '.env.development'
 load_dotenv(env_file, override=True)
 
 # Redis URL for broker and result backend

@@ -30,7 +30,7 @@ if sys.platform == 'win32':
 
 # Load environment variables
 from dotenv import load_dotenv
-env_file = '.env.production' if os.path.exists('.env.production') else '.env'
+env_file = '.env.production' if os.getenv('NODE_ENV') == 'production' else '.env.development'
 load_dotenv(env_file, override=True)
 print(f"[ENV] Loaded environment from: {env_file}")
 

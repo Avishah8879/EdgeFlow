@@ -39,7 +39,7 @@ import numpy as np
 from sentiment_article_fetcher import fetch_sentiment_articles
 
 # Load environment
-env_file = '.env.production' if os.getenv('NODE_ENV') == 'production' else '.env'
+env_file = '.env.production' if os.getenv('NODE_ENV') == 'production' else '.env.development'
 load_dotenv(env_file, override=True)
 print(f"[CELERY HELPERS] Loaded environment from: {env_file}")
 
