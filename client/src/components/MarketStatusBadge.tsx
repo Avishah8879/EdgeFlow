@@ -17,16 +17,11 @@ export default function MarketStatusBadge() {
   }
 
   const status = marketStatus.status;
-  const isOpen = status === "OPEN";
+  const isOpen = marketStatus.is_open === true;
 
   // Get display text for status
   const getStatusText = () => {
-    switch (status) {
-      case "OPEN": return "Market Open";
-      case "CLOSED": return "Market Closed";
-      case "PRE-MARKET": return "Pre-Market";
-      case "POST-MARKET": return "After Hours";
-    }
+    return isOpen ? "Market Open" : "Market Closed";
   };
 
   return (

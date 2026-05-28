@@ -110,13 +110,15 @@ export function getRatingTextClass(rating: string): string {
  * @param status - "OPEN" | "CLOSED" | "PRE_MARKET" | "AFTER_HOURS"
  */
 export function getStatusColorClass(status: string): string {
-  const normalizedStatus = status.toUpperCase();
+  const normalizedStatus = status.toUpperCase().replace("-", "_");
 
   switch (normalizedStatus) {
     case "OPEN":
     case "LIVE":
       return "text-positive border-positive bg-positive/10";
     case "CLOSED":
+    case "HOLIDAY":
+    case "WEEKEND":
       return "text-destructive border-destructive bg-destructive/10";
     case "PRE_MARKET":
     case "AFTER_HOURS":

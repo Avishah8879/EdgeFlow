@@ -4065,7 +4065,8 @@ async def market_status_api():
     Returns:
         JSON with market status information:
         - is_open: boolean indicating if market is currently open
-        - status: "LIVE" or "CLOSED"
+        - status: "HOLIDAY", "WEEKEND", "PRE_MARKET", "OPEN", or "AFTER_HOURS"
+        - reason: display reason matching status
         - message: Human-readable status message
         - current_time: Current IST time
         - next_open: When market opens next (if closed)
@@ -4079,6 +4080,7 @@ async def market_status_api():
         return success_response({
             "is_open": False,
             "status": "CLOSED",
+            "reason": "CLOSED",
             "message": "Unable to determine market status",
             "current_time": datetime.now().strftime("%I:%M %p IST")
         })

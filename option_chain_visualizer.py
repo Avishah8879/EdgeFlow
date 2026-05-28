@@ -14,11 +14,24 @@ Key functions:
 import json
 import logging
 import math
-from datetime import datetime, timedelta, date
+from datetime import datetime, date
 from typing import Any, Dict, List, Optional
 from zoneinfo import ZoneInfo
 
 from scipy.stats import norm
+
+try:
+    from market_hours import (
+        get_next_market_open as _canonical_next_market_open,
+        is_market_open as _canonical_is_market_open,
+        is_trading_day as _canonical_is_trading_day,
+    )
+except ImportError:  # pragma: no cover - package import fallback
+    from server.market_hours import (
+        get_next_market_open as _canonical_next_market_open,
+        is_market_open as _canonical_is_market_open,
+        is_trading_day as _canonical_is_trading_day,
+    )
 
 from redis_cache import get_redis, cache_get, cache_set
 
@@ -31,59 +44,18 @@ logger = logging.getLogger(__name__)
 IST = ZoneInfo("Asia/Kolkata")
 RISK_FREE_RATE = 0.065  # India risk-free rate (~6.5%)
 
-# NSE Trading Holidays 2025
-NSE_HOLIDAYS_2025 = {
-    date(2025, 2, 26),   # Mahashivratri
-    date(2025, 3, 14),   # Holi
-    date(2025, 3, 31),   # Id-Ul-Fitr
-    date(2025, 4, 10),   # Shri Mahavir Jayanti
-    date(2025, 4, 14),   # Dr. Ambedkar Jayanti
-    date(2025, 4, 18),   # Good Friday
-    date(2025, 5, 1),    # Maharashtra Day
-    date(2025, 6, 7),    # Bakri Id
-    date(2025, 8, 15),   # Independence Day
-    date(2025, 8, 27),   # Janmashtami
-    date(2025, 10, 2),   # Gandhi Jayanti
-    date(2025, 10, 21),  # Diwali Laxmi Pujan
-    date(2025, 10, 22),  # Diwali Balipratipada
-    date(2025, 11, 5),   # Prakash Gurpurab Sri Guru Nanak Dev
-    date(2025, 12, 25),  # Christmas
-}
-
-# NSE Trading Holidays 2026 (partial - add more as NSE announces)
-NSE_HOLIDAYS_2026 = {
-    date(2026, 1, 26),  # Republic Day
-}
-
-ALL_HOLIDAYS = NSE_HOLIDAYS_2025 | NSE_HOLIDAYS_2026
-
-
 # =============================================================================
 # Market Hours & Trading Day Utilities
 # =============================================================================
 
 def is_trading_day(dt: date) -> bool:
     """Check if a given date is a trading day (not weekend, not holiday)."""
-    if dt.weekday() >= 5:  # Saturday = 5, Sunday = 6
-        return False
-    if dt in ALL_HOLIDAYS:
-        return False
-    return True
+    return _canonical_is_trading_day(dt)
 
 
 def is_market_hours() -> bool:
     """Check if NSE market is currently open."""
-    now = datetime.now(IST)
-
-    # Must be a trading day
-    if not is_trading_day(now.date()):
-        return False
-
-    # Market hours: 9:15 AM - 3:30 PM IST
-    market_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
-    market_close = now.replace(hour=15, minute=30, second=0, microsecond=0)
-
-    return market_open <= now <= market_close
+    return _canonical_is_market_open()
 
 
 def get_ttl_until_next_market_open() -> int:
@@ -92,16 +64,7 @@ def get_ttl_until_next_market_open() -> int:
     Accounts for weekends and holidays.
     """
     now = datetime.now(IST)
-
-    # Start with next 9:15 AM
-    next_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
-    if now >= next_open:
-        next_open += timedelta(days=1)
-
-    # Skip non-trading days (weekends + holidays)
-    while not is_trading_day(next_open.date()):
-        next_open += timedelta(days=1)
-
+    next_open = _canonical_next_market_open(now)
     return int((next_open - now).total_seconds())
 
 

@@ -29,12 +29,31 @@ export function MarketStatusPill({ className }: { className?: string }) {
   }
 
   const status = marketStatus.status;
+  const reason = marketStatus.reason ?? status;
+  const isOpen = marketStatus.is_open === true;
+  const isPreOrPost =
+    status === "PRE_MARKET" ||
+    status === "PRE-MARKET" ||
+    status === "AFTER_HOURS" ||
+    status === "POST-MARKET";
+  const closedReasonLabel: Record<string, string> = {
+    HOLIDAY: "Holiday",
+    WEEKEND: "Weekend",
+    PRE_MARKET: "Pre-market",
+    "PRE-MARKET": "Pre-market",
+    AFTER_HOURS: "After hours",
+    "POST-MARKET": "After hours",
+    CLOSED: "Closed",
+  };
   const tone =
-    status === "OPEN"
+    isOpen
       ? { dot: "bg-[hsl(var(--status-open))]", text: "text-[hsl(var(--status-open))]", border: "border-[hsl(var(--status-open)/0.3)]", bg: "bg-[hsl(var(--status-open)/0.08)]", pulse: true, label: "Market Open" }
-      : status === "PRE-MARKET" || status === "POST-MARKET"
-        ? { dot: "bg-[hsl(var(--status-pre-market))]", text: "text-[hsl(var(--status-pre-market))]", border: "border-[hsl(var(--status-pre-market)/0.3)]", bg: "bg-[hsl(var(--status-pre-market)/0.08)]", pulse: true, label: status === "PRE-MARKET" ? "Pre-Market" : "After Hours" }
+      : isPreOrPost
+        ? { dot: "bg-[hsl(var(--status-pre-market))]", text: "text-[hsl(var(--status-pre-market))]", border: "border-[hsl(var(--status-pre-market)/0.3)]", bg: "bg-[hsl(var(--status-pre-market)/0.08)]", pulse: false, label: "Market Closed" }
         : { dot: "bg-[hsl(var(--status-closed))]", text: "text-[hsl(var(--status-closed))]", border: "border-[hsl(var(--status-closed)/0.3)]", bg: "bg-[hsl(var(--status-closed)/0.08)]", pulse: false, label: "Market Closed" };
+  const title = isOpen
+    ? marketStatus.message
+    : `${closedReasonLabel[reason] ?? reason}: ${marketStatus.message}`;
 
   return (
     <span
@@ -45,7 +64,7 @@ export function MarketStatusPill({ className }: { className?: string }) {
         tone.text,
         className,
       )}
-      title={marketStatus.message}
+      title={title}
     >
       <span
         className={cn(

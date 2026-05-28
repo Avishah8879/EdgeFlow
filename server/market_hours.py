@@ -4,20 +4,88 @@ Market Hours Utility for NSE (National Stock Exchange of India)
 Provides functions to check if the market is currently open and get market status information.
 """
 
-from datetime import datetime, time
+from datetime import datetime, time, timedelta, date
 import pytz
 
 # NSE market timings (IST)
-PRE_MARKET_START_TIME = time(8, 0)  # 8:00 AM IST
 MARKET_OPEN_TIME = time(9, 15)  # 9:15 AM IST
 MARKET_CLOSE_TIME = time(15, 30)  # 3:30 PM IST
-POST_MARKET_END_TIME = time(17, 0)  # 5:00 PM IST
 IST_TIMEZONE = pytz.timezone('Asia/Kolkata')
+
+# Source: NSE equity holidays 2026. Update annually each November.
+NSE_HOLIDAYS = {
+    "2026-01-26": "Republic Day",
+    "2026-02-15": "Mahashivratri",
+    "2026-03-03": "Holi",
+    "2026-03-21": "Id-Ul-Fitr (Ramadan Eid)",
+    "2026-03-26": "Shri Ram Navami",
+    "2026-03-31": "Shri Mahavir Jayanti",
+    "2026-04-03": "Good Friday",
+    "2026-04-14": "Dr. Baba Saheb Ambedkar Jayanti",
+    "2026-05-01": "Maharashtra Day",
+    "2026-05-28": "Bakri Id",
+    "2026-06-26": "Muharram",
+    "2026-08-15": "Independence Day",
+    "2026-09-14": "Ganesh Chaturthi",
+    "2026-10-02": "Mahatma Gandhi Jayanti",
+    "2026-10-20": "Dussehra",
+    "2026-11-08": "Diwali Laxmi Pujan",
+    "2026-11-10": "Diwali-Balipratipada",
+    "2026-11-24": "Prakash Gurpurb Sri Guru Nanak Dev",
+    "2026-12-25": "Christmas",
+}
 
 
 def get_current_ist_time():
     """Get current time in IST timezone."""
     return datetime.now(IST_TIMEZONE)
+
+
+def _as_ist(value=None):
+    if value is None:
+        return get_current_ist_time()
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            return IST_TIMEZONE.localize(value)
+        return value.astimezone(IST_TIMEZONE)
+    raise TypeError("Expected datetime or None")
+
+
+def get_holiday_name(check_date: date) -> str | None:
+    """Return NSE holiday name for a date, if configured."""
+    return NSE_HOLIDAYS.get(check_date.isoformat())
+
+
+def is_nse_holiday(check_date: date) -> bool:
+    """Check whether a date is a configured NSE equity holiday."""
+    return get_holiday_name(check_date) is not None
+
+
+def is_trading_day(check_date: date) -> bool:
+    """Check whether a date is an NSE trading day."""
+    return check_date.weekday() < 5 and not is_nse_holiday(check_date)
+
+
+def get_next_market_open(now=None):
+    """Get the next trading-session open datetime in IST."""
+    now = _as_ist(now)
+    candidate = now.replace(
+        hour=MARKET_OPEN_TIME.hour,
+        minute=MARKET_OPEN_TIME.minute,
+        second=0,
+        microsecond=0,
+    )
+    if now >= candidate or not is_trading_day(candidate.date()):
+        candidate += timedelta(days=1)
+        while not is_trading_day(candidate.date()):
+            candidate += timedelta(days=1)
+        candidate = candidate.replace(
+            hour=MARKET_OPEN_TIME.hour,
+            minute=MARKET_OPEN_TIME.minute,
+            second=0,
+            microsecond=0,
+        )
+    return candidate
 
 
 def format_relative_time(target_datetime):
@@ -53,97 +121,69 @@ def is_market_open():
         bool: True if market is open, False otherwise
     """
     now = get_current_ist_time()
-
-    # Check if it's a weekday (Monday=0, Sunday=6)
-    if now.weekday() >= 5:  # Saturday or Sunday
+    if not is_trading_day(now.date()):
         return False
-
-    # Check if current time is within market hours
     current_time = now.time()
     return MARKET_OPEN_TIME <= current_time <= MARKET_CLOSE_TIME
 
 
-def get_market_status():
+def get_market_status(now=None):
     """
     Get detailed market status information.
 
     Returns:
         dict: Market status with keys:
             - is_open (bool): Whether market is currently open
-            - status (str): "PRE-MARKET", "OPEN", "POST-MARKET", or "CLOSED"
-            - message (str): Human-readable status message (current IST time when open, relative time when closed)
-            - next_open (str): When market opens next (if not open)
+            - status (str): "HOLIDAY", "WEEKEND", "PRE_MARKET", "OPEN", or "AFTER_HOURS"
+            - reason (str): Same enum as status, for display classification
+            - message (str): Human-readable status message
             - current_time (str): Current IST time
     """
-    now = get_current_ist_time()
+    now = _as_ist(now)
     current_time = now.time()
-    weekday = now.weekday()
+    today = now.date()
 
     status_data = {
-        "current_time": now.strftime("%I:%M %p IST")
+        "current_time": now.strftime("%I:%M %p IST"),
+        "is_open": False,
     }
 
-    # Determine market status based on time and day
-    is_weekday = weekday < 5
-
-    if is_weekday and PRE_MARKET_START_TIME <= current_time < MARKET_OPEN_TIME:
-        # PRE-MARKET (8:00 AM - 9:15 AM on weekdays)
-        status_data["is_open"] = False
-        status_data["status"] = "PRE-MARKET"
-        next_open = now.replace(hour=MARKET_OPEN_TIME.hour, minute=MARKET_OPEN_TIME.minute, second=0, microsecond=0)
-        status_data["message"] = f"opens in {format_relative_time(next_open)}"
-        status_data["next_open"] = f"Today {MARKET_OPEN_TIME.strftime('%I:%M %p')}"
-
-    elif is_weekday and MARKET_OPEN_TIME <= current_time < MARKET_CLOSE_TIME:
-        # OPEN (9:15 AM - 3:30 PM on weekdays)
-        status_data["is_open"] = True
-        status_data["status"] = "OPEN"
-        status_data["message"] = now.strftime("%I:%M %p IST")
-
-    elif is_weekday and MARKET_CLOSE_TIME <= current_time < POST_MARKET_END_TIME:
-        # POST-MARKET (3:30 PM - 5:00 PM on weekdays)
-        status_data["is_open"] = False
-        status_data["status"] = "POST-MARKET"
-        # Calculate next market open (tomorrow or Monday if Friday)
-        from datetime import timedelta
-        if weekday == 4:  # Friday
-            next_open = (now + timedelta(days=3)).replace(hour=MARKET_OPEN_TIME.hour, minute=MARKET_OPEN_TIME.minute, second=0, microsecond=0)
-            status_data["message"] = f"opens in {format_relative_time(next_open)}"
-            status_data["next_open"] = f"Monday {MARKET_OPEN_TIME.strftime('%I:%M %p')}"
-        else:
-            next_open = (now + timedelta(days=1)).replace(hour=MARKET_OPEN_TIME.hour, minute=MARKET_OPEN_TIME.minute, second=0, microsecond=0)
-            status_data["message"] = f"opens in {format_relative_time(next_open)}"
-            status_data["next_open"] = f"Tomorrow {MARKET_OPEN_TIME.strftime('%I:%M %p')}"
-
+    holiday_name = get_holiday_name(today)
+    if holiday_name:
+        status_data.update({
+            "status": "HOLIDAY",
+            "reason": "HOLIDAY",
+            "message": f"Holiday: {holiday_name}",
+            "next_open": get_next_market_open(now).strftime("%A %I:%M %p"),
+        })
+    elif today.weekday() >= 5:
+        status_data.update({
+            "status": "WEEKEND",
+            "reason": "WEEKEND",
+            "message": "Weekend: market closed",
+            "next_open": get_next_market_open(now).strftime("%A %I:%M %p"),
+        })
+    elif current_time < MARKET_OPEN_TIME:
+        status_data.update({
+            "status": "PRE_MARKET",
+            "reason": "PRE_MARKET",
+            "message": "Market opens at 9:15 AM IST",
+            "next_open": "Today 09:15 AM",
+        })
+    elif MARKET_OPEN_TIME <= current_time <= MARKET_CLOSE_TIME:
+        status_data.update({
+            "is_open": True,
+            "status": "OPEN",
+            "reason": "OPEN",
+            "message": now.strftime("%I:%M %p IST"),
+        })
     else:
-        # CLOSED (weekends, after 5 PM, before 8 AM)
-        status_data["is_open"] = False
-        status_data["status"] = "CLOSED"
-
-        # Calculate next market open
-        from datetime import timedelta
-        if weekday >= 5:  # Weekend
-            days_until_monday = (7 - weekday) % 7
-            if days_until_monday == 0:
-                days_until_monday = 1
-            next_open = (now + timedelta(days=days_until_monday)).replace(hour=MARKET_OPEN_TIME.hour, minute=MARKET_OPEN_TIME.minute, second=0, microsecond=0)
-            status_data["message"] = f"opens in {format_relative_time(next_open)}"
-            status_data["next_open"] = f"Monday {MARKET_OPEN_TIME.strftime('%I:%M %p')}"
-        elif current_time < PRE_MARKET_START_TIME:
-            # Before 8 AM today
-            next_open = now.replace(hour=MARKET_OPEN_TIME.hour, minute=MARKET_OPEN_TIME.minute, second=0, microsecond=0)
-            status_data["message"] = f"opens in {format_relative_time(next_open)}"
-            status_data["next_open"] = f"Today {MARKET_OPEN_TIME.strftime('%I:%M %p')}"
-        else:
-            # After 5 PM today
-            if weekday == 4:  # Friday
-                next_open = (now + timedelta(days=3)).replace(hour=MARKET_OPEN_TIME.hour, minute=MARKET_OPEN_TIME.minute, second=0, microsecond=0)
-                status_data["message"] = f"opens in {format_relative_time(next_open)}"
-                status_data["next_open"] = f"Monday {MARKET_OPEN_TIME.strftime('%I:%M %p')}"
-            else:
-                next_open = (now + timedelta(days=1)).replace(hour=MARKET_OPEN_TIME.hour, minute=MARKET_OPEN_TIME.minute, second=0, microsecond=0)
-                status_data["message"] = f"opens in {format_relative_time(next_open)}"
-                status_data["next_open"] = f"Tomorrow {MARKET_OPEN_TIME.strftime('%I:%M %p')}"
+        status_data.update({
+            "status": "AFTER_HOURS",
+            "reason": "AFTER_HOURS",
+            "message": "After market hours",
+            "next_open": get_next_market_open(now).strftime("%A %I:%M %p"),
+        })
 
     return status_data
 

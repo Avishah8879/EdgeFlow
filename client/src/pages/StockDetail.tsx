@@ -293,13 +293,17 @@ export default function StockDetail() {
             // Status line: "LIVE · NSE · 14:32 IST" or "CLOSED · NSE" variants.
             const statusLabel = (() => {
               if (!marketStatus) return null;
+              if (marketStatus.is_open) return "LIVE";
               const map: Record<string, string> = {
-                OPEN: "LIVE",
+                PRE_MARKET: "PRE-MARKET",
                 "PRE-MARKET": "PRE-MARKET",
-                "POST-MARKET": "POST-MARKET",
+                AFTER_HOURS: "CLOSED",
+                "POST-MARKET": "CLOSED",
+                HOLIDAY: "CLOSED",
+                WEEKEND: "CLOSED",
                 CLOSED: "CLOSED",
               };
-              return map[marketStatus.status] ?? marketStatus.status;
+              return map[marketStatus.status] ?? "CLOSED";
             })();
             const quoteTime = ltpData?.timestamp
               ? new Date(ltpData.timestamp).toLocaleTimeString("en-IN", {

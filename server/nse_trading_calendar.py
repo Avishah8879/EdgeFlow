@@ -9,8 +9,21 @@ Date: December 2025
 """
 
 from datetime import datetime, date, timedelta
-from typing import List, Tuple
+from typing import List
 import pytz
+
+try:
+    from market_hours import (
+        NSE_HOLIDAYS,
+        is_nse_holiday as _canonical_is_nse_holiday,
+        is_trading_day as _canonical_is_trading_day,
+    )
+except ImportError:  # pragma: no cover - package import fallback
+    from server.market_hours import (
+        NSE_HOLIDAYS,
+        is_nse_holiday as _canonical_is_nse_holiday,
+        is_trading_day as _canonical_is_trading_day,
+    )
 
 # IST Timezone
 IST_TIMEZONE = pytz.timezone('Asia/Kolkata')
@@ -18,64 +31,6 @@ IST_TIMEZONE = pytz.timezone('Asia/Kolkata')
 # NSE Market Hours (IST)
 MARKET_OPEN_TIME = "09:15"
 MARKET_CLOSE_TIME = "15:30"
-
-# NSE Holidays 2024-2026 (Hardcoded)
-# Format: (year, month, day, description)
-NSE_HOLIDAYS = [
-    # 2024
-    (2024, 1, 26, "Republic Day"),
-    (2024, 3, 8, "Maha Shivaratri"),
-    (2024, 3, 25, "Holi"),
-    (2024, 3, 29, "Good Friday"),
-    (2024, 4, 11, "Id-Ul-Fitr"),
-    (2024, 4, 17, "Shri Ram Navami"),
-    (2024, 4, 21, "Mahavir Jayanti"),
-    (2024, 5, 1, "Maharashtra Day"),
-    (2024, 6, 17, "Bakri Id"),
-    (2024, 7, 17, "Moharram"),
-    (2024, 8, 15, "Independence Day"),
-    (2024, 10, 2, "Mahatma Gandhi Jayanti"),
-    (2024, 11, 1, "Diwali Laxmi Pujan"),
-    (2024, 11, 15, "Gurunanak Jayanti"),
-    (2024, 12, 25, "Christmas"),
-
-    # 2025
-    (2025, 1, 26, "Republic Day"),
-    (2025, 2, 26, "Maha Shivaratri"),
-    (2025, 3, 14, "Holi"),
-    (2025, 3, 31, "Id-Ul-Fitr"),
-    (2025, 4, 10, "Mahavir Jayanti"),
-    (2025, 4, 14, "Dr. Baba Saheb Ambedkar Jayanti"),
-    (2025, 4, 18, "Good Friday"),
-    (2025, 5, 1, "Maharashtra Day"),
-    (2025, 6, 7, "Bakri Id"),
-    (2025, 8, 15, "Independence Day"),
-    (2025, 8, 27, "Ganesh Chaturthi"),
-    (2025, 10, 2, "Mahatma Gandhi Jayanti"),
-    (2025, 10, 20, "Dussehra"),
-    (2025, 10, 21, "Diwali Laxmi Pujan"),
-    (2025, 11, 5, "Gurunanak Jayanti"),
-    (2025, 12, 25, "Christmas"),
-
-    # 2026
-    (2026, 1, 26, "Republic Day"),
-    (2026, 3, 3, "Holi"),
-    (2026, 3, 20, "Id-Ul-Fitr"),
-    (2026, 4, 2, "Mahavir Jayanti"),
-    (2026, 4, 6, "Shri Ram Navami"),
-    (2026, 4, 10, "Good Friday"),
-    (2026, 4, 14, "Dr. Baba Saheb Ambedkar Jayanti"),
-    (2026, 5, 1, "Maharashtra Day"),
-    (2026, 5, 27, "Bakri Id"),
-    (2026, 8, 15, "Independence Day"),
-    (2026, 9, 16, "Ganesh Chaturthi"),
-    (2026, 10, 2, "Mahatma Gandhi Jayanti"),
-    (2026, 10, 8, "Dussehra"),
-    (2026, 10, 9, "Diwali Laxmi Pujan"),
-    (2026, 11, 25, "Gurunanak Jayanti"),
-    (2026, 12, 25, "Christmas"),
-]
-
 
 def get_nse_holidays(year: int = None) -> List[date]:
     """
@@ -87,11 +42,10 @@ def get_nse_holidays(year: int = None) -> List[date]:
     Returns:
         List of date objects representing NSE holidays
     """
-    holidays = []
-    for y, m, d, desc in NSE_HOLIDAYS:
-        if year is None or y == year:
-            holidays.append(date(y, m, d))
-    return holidays
+    holidays = [date.fromisoformat(value) for value in NSE_HOLIDAYS]
+    if year is not None:
+        holidays = [holiday for holiday in holidays if holiday.year == year]
+    return sorted(holidays)
 
 
 def is_weekend(check_date: date) -> bool:
@@ -117,7 +71,7 @@ def is_nse_holiday(check_date: date) -> bool:
     Returns:
         True if NSE holiday, False otherwise
     """
-    return check_date in get_nse_holidays(check_date.year)
+    return _canonical_is_nse_holiday(check_date)
 
 
 def is_trading_day(check_date: date) -> bool:
@@ -130,7 +84,7 @@ def is_trading_day(check_date: date) -> bool:
     Returns:
         True if trading day, False otherwise
     """
-    return not is_weekend(check_date) and not is_nse_holiday(check_date)
+    return _canonical_is_trading_day(check_date)
 
 
 def get_previous_trading_day(from_date: date = None) -> date:

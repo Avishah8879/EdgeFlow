@@ -24,6 +24,7 @@ import { Slider } from '@/components/ui/slider';
 import { cn, getCurrentFuturesInfo } from '@/lib/utils';
 import Plot from '@/components/ft/PlotlyChart';
 import { useDepthWebSocket, type DepthData } from '@/hooks/useDepthWebSocket';
+import { useMarketStatus } from '@/hooks/use-market-status';
 import { useSymbolSearch } from '@/hooks/useSymbolSearch';
 
 // Get futures info with expiry dates
@@ -209,6 +210,8 @@ export function OrderBookHeatmap({ symbol: initialSymbol, onSymbolChange }: Prop
 
   // Symbol search hook
   const { data: searchResults, isLoading: isSearching } = useSymbolSearch(searchQuery);
+  const { data: marketStatus } = useMarketStatus();
+  const isMarketOpen = marketStatus?.is_open === true;
 
   // WebSocket connection
   const {
@@ -720,10 +723,15 @@ export function OrderBookHeatmap({ symbol: initialSymbol, onSymbolChange }: Prop
               <Loader2 className="w-3 h-3 mr-1 animate-spin" />
               SUBSCRIBING
             </Badge>
-          ) : isConnected ? (
+          ) : isConnected && isMarketOpen ? (
             <Badge variant="outline" className="border-green-500/50 text-green-400 text-[10px] px-1 py-0">
               <Wifi className="w-3 h-3 mr-1" />
               LIVE
+            </Badge>
+          ) : !isMarketOpen ? (
+            <Badge variant="outline" className="border-gray-500/50 text-gray-400 text-[10px] px-1 py-0">
+              <WifiOff className="w-3 h-3 mr-1" />
+              MARKET CLOSED
             </Badge>
           ) : (
             <Badge variant="outline" className="border-red-500/50 text-red-400 text-[10px] px-1 py-0">

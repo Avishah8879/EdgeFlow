@@ -3,7 +3,8 @@ import { getApiBaseUrl } from "@/lib/api-config";
 
 interface MarketStatus {
   is_open: boolean;
-  status: "PRE-MARKET" | "OPEN" | "POST-MARKET" | "CLOSED";
+  status: "OPEN" | "PRE_MARKET" | "AFTER_HOURS" | "HOLIDAY" | "WEEKEND" | "CLOSED" | "PRE-MARKET" | "POST-MARKET";
+  reason?: "OPEN" | "PRE_MARKET" | "AFTER_HOURS" | "HOLIDAY" | "WEEKEND" | "CLOSED" | string;
   message: string;
   current_time: string;
   next_open?: string;
