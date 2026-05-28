@@ -92,8 +92,6 @@ task_routes = {
     "celery_tasks.generate_rrg_data": {"queue": "heavy"},
     "celery_tasks.warm_ohlcv_cache": {"queue": "heavy"},
     "celery_tasks.full_prewarm": {"queue": "heavy"},
-    "celery_tasks.update_market_movers": {"queue": "periodic"},
-    "celery_tasks.update_fear_greed": {"queue": "periodic"},
     "celery_tasks.refresh_options_visualizer": {"queue": "periodic"},
     "celery_tasks.snapshot_options_oi": {"queue": "periodic"},
 }
@@ -112,13 +110,6 @@ if beat_schedule_enabled:
         # =====================================================================
         # HOT DATA - Refresh frequently during market hours
         # =====================================================================
-
-        # Market movers - every 15 seconds
-        "update-market-movers-15s": {
-            "task": "celery_tasks.update_market_movers",
-            "schedule": 15.0,
-            "options": {"queue": "periodic", "expires": 14},
-        },
 
         # Options Visualizer ATM-GxOI recorder — every 60 seconds.
         # Fires whether or not any user has the page open, so the time-series
@@ -146,13 +137,6 @@ if beat_schedule_enabled:
         # =====================================================================
         # WARM DATA - Refresh less frequently
         # =====================================================================
-
-        # Fear & Greed index - every 5 minutes
-        "update-fear-greed-5min": {
-            "task": "celery_tasks.update_fear_greed",
-            "schedule": 300.0,
-            "options": {"queue": "periodic"},
-        },
 
         # =====================================================================
         # COLD DATA - Daily/periodic warming
