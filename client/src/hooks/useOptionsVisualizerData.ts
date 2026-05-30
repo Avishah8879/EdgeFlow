@@ -53,6 +53,12 @@ export interface TimeSeriesData {
   data: TimeSeriesPoint[];
   is_market_open: boolean;
   date: string;
+  requested_date?: string | null;
+  display_date?: string | null;
+  is_fallback_session?: boolean;
+  fallback_reason?: string | null;
+  valid_bar_count?: number;
+  message?: string | null;
 }
 
 export interface SurfaceData {

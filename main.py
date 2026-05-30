@@ -8932,6 +8932,7 @@ try:
         get_atm_gxoi_timeseries as _ft_get_atm_gxoi_timeseries,
         append_minute_bar as _ft_append_minute_bar,
         get_minute_bars as _ft_get_minute_bars,
+        resolve_minute_bars_session as _ft_resolve_minute_bars_session,
         append_surface_snapshot as _ft_append_surface_snapshot,
         get_surface_history as _ft_get_surface_history,
         cache_exposure_data as _ft_cache_exposure_data,
@@ -8948,6 +8949,7 @@ except ImportError:
     _ft_get_atm_gxoi_timeseries = None  # type: ignore
     _ft_append_minute_bar = None  # type: ignore
     _ft_get_minute_bars = None  # type: ignore
+    _ft_resolve_minute_bars_session = None  # type: ignore
     _ft_append_surface_snapshot = None  # type: ignore
     _ft_get_surface_history = None  # type: ignore
     _ft_cache_exposure_data = None  # type: ignore
@@ -9683,10 +9685,11 @@ async def ft_get_options_timeseries(symbol: str, date: str = Query(None)):
         if normalized not in {"NIFTY", "BANKNIFTY"}:
             return _ft_api_error("Only NIFTY and BANKNIFTY supported", 400)
 
-        if _ft_get_minute_bars is None or _ft_viz_is_market_hours is None:
+        if _ft_resolve_minute_bars_session is None or _ft_viz_is_market_hours is None:
             return _ft_api_error("option_chain_visualizer module unavailable", 503)
 
-        bars = await _ft_get_minute_bars(normalized, date)
+        session = await _ft_resolve_minute_bars_session(normalized, date)
+        bars = session.get("bars", [])
 
         # Map minute bars to the wire shape. `timestamp` keeps the existing
         # contract used by the 2D chart's GxOI line; new fields drive the 5th
@@ -9716,11 +9719,19 @@ async def ft_get_options_timeseries(symbol: str, date: str = Query(None)):
                 "pe_ltp": pe_ltp,
             })
 
+        is_live_session = _ft_viz_is_market_hours() and not session.get("is_fallback_session", False)
+
         return _ft_api_response({
             "symbol": normalized,
             "data": data,
-            "is_market_open": _ft_viz_is_market_hours(),
-            "date": date or datetime.now(_FT_IST).strftime("%Y-%m-%d"),
+            "is_market_open": is_live_session,
+            "date": session.get("date") or date or datetime.now(_FT_IST).strftime("%Y-%m-%d"),
+            "requested_date": session.get("requested_date"),
+            "display_date": session.get("display_date"),
+            "is_fallback_session": session.get("is_fallback_session", False),
+            "fallback_reason": session.get("fallback_reason"),
+            "valid_bar_count": session.get("valid_bar_count", 0),
+            "message": session.get("message"),
         }, "Options visualizer minute bars")
 
     except Exception as e:
@@ -11309,7 +11320,7 @@ _WORLD_INDICES_CONFIG = {
         ("FTSE",          "FTSE 100",        "^FTSE"),
         ("DAX",           "DAX",             "^GDAXI"),
         ("CAC",           "CAC 40",          "^FCHI"),
-        ("STOXX",         "STOXX 600",       "^STOXX"),
+        ("STOXX",         "STOXX 600",       "^STOXX"),    # Price Return (PR) variant — correct, not TR
     ],
     "Americas": [
         ("SPX",           "S&P 500",         "^GSPC"),
@@ -11320,7 +11331,7 @@ _WORLD_INDICES_CONFIG = {
     "Commodities & FX": [
         ("BRENT",         "Brent crude",     "BZ=F"),
         ("GOLD",          "Gold futures",    "GC=F"),
-        ("USDINR",        "USD / INR",       "INR=X"),
+        ("USDINR",        "USD / INR",       "USDINR=X"),
         ("BTC",           "Bitcoin",         "BTC-USD"),
     ],
 }
@@ -11389,6 +11400,7 @@ async def ft_world_indices():
                     FROM ltp_live ltp
                     JOIN tickers t ON t.id = ltp.ticker_id
                     WHERE UPPER(t.symbol) = UPPER(%s) AND t.is_active = true
+                    ORDER BY ltp.timestamp DESC
                     LIMIT 1
                     """,
                     [symbol_in_db],
@@ -11443,33 +11455,84 @@ async def ft_world_indices():
                 release_db_connection(conn)
 
     def _fetch_yf_history(yf_ticker: str):
-        """Fetch ~1Y of daily closes via yfinance with NaN-safe filter.
-
-        Wrapped to be called inside asyncio.to_thread so the event loop
-        isn't blocked by yfinance's synchronous HTTP calls.
         """
+        Returns (quote_dict, series) for a global ticker.
+
+        Live quote comes from fast_info.last_price (intraday-fresh when market
+        is open; session close otherwise).  The 1-year daily-close series used
+        for sparkline / YTD / 30-day-vol is cached separately for 4 hours so
+        the heavy history() call is rare in steady state.
+
+        Change baseline uses fast_info.previous_close (always yesterday's
+        official close) rather than series[-1], which can be today's in-progress
+        bar when the market is open and would produce change ≈ 0.
+        """
+        from datetime import date as _date
         try:
             ticker = yf.Ticker(yf_ticker)
-            history = ticker.history(period="1y", interval="1d")
-            if history is None or history.empty:
+
+            # ── Series: long-lived cache (4 h) or full history fetch ─────
+            series_key = f"world_idx_series:{yf_ticker}"
+            series_cached = get_cached(series_key)
+            if series_cached is not None:
+                # Dates were serialised as ISO strings; restore (date, float)
+                series = [(_date.fromisoformat(row[0]), float(row[1]))
+                          for row in series_cached]
+            else:
+                history = ticker.history(period="1y", interval="1d")
+                if history is None or history.empty:
+                    return None, []
+                valid = history.dropna(subset=["Close"])
+                if valid.empty:
+                    return None, []
+                series = [(idx.date(), float(row["Close"]))
+                          for idx, row in valid.iterrows()
+                          if not pd.isna(row["Close"])]
+                # Store as [[iso_date_str, close], ...] — JSON-safe
+                set_cached(series_key, [[str(d), c] for d, c in series], 14400)
+
+            if not series:
                 return None, []
-            valid = history.dropna(subset=["Close"])
-            if valid.empty:
-                return None, []
-            last_close = float(valid["Close"].iloc[-1])
-            prev_close = float(valid["Close"].iloc[-2]) if len(valid) >= 2 else last_close
-            day_low = float(valid["Low"].iloc[-1]) if not pd.isna(valid["Low"].iloc[-1]) else last_close
-            day_high = float(valid["High"].iloc[-1]) if not pd.isna(valid["High"].iloc[-1]) else last_close
-            change = last_close - prev_close
+
+            # ── Live quote from fast_info ────────────────────────────────
+            fi = ticker.fast_info
+            last_price = fi.last_price
+            if last_price is None or (isinstance(last_price, float)
+                                      and math.isnan(last_price)):
+                last_price = series[-1][1]
+
+            # Inversion guard for FX pairs that come back inverted.
+            # Assumes all current FX pairs in _WORLD_INDICES_CONFIG trade > 1.0
+            # (e.g. USDINR=X ~85). Would misfire for pairs like USD/EUR or
+            # USD/GBP if added. Revisit if the FX list grows.
+            if yf_ticker.endswith("=X") and last_price < 1.0:
+                last_price = 1.0 / last_price
+
+            # previous_close is yesterday's official close — always the correct
+            # baseline. series[-1][1] is last-resort only: when the market is
+            # open, series[-1] may be today's in-progress bar, making change ≈ 0.
+            raw_pc = fi.previous_close
+            if raw_pc is None or (isinstance(raw_pc, float) and math.isnan(raw_pc)):
+                prev_close = series[-1][1]
+            else:
+                prev_close = float(raw_pc)
+
+            raw_low  = fi.day_low
+            raw_high = fi.day_high
+            day_low  = float(raw_low)  if (raw_low  is not None and not math.isnan(raw_low))  else last_price
+            day_high = float(raw_high) if (raw_high is not None and not math.isnan(raw_high)) else last_price
+
+            change     = last_price - prev_close
             change_pct = (change / prev_close * 100.0) if prev_close > 0 else 0.0
-            series = [(idx.date(), float(row["Close"])) for idx, row in valid.iterrows() if not pd.isna(row["Close"])]
+
             return {
-                "ltp": last_close,
-                "change": change,
+                "ltp":            last_price,
+                "change":         change,
                 "change_percent": change_pct,
-                "day_low": day_low,
-                "day_high": day_high,
+                "day_low":        day_low,
+                "day_high":       day_high,
             }, series
+
         except Exception as e:
             print(f"[world-indices] yfinance lookup failed for {yf_ticker}: {e}")
             return None, []

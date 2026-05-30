@@ -288,7 +288,7 @@ function WeeklyStatsTable({ data }: { data: WeeklyStat[] }) {
 
 export default function Seasonality() {
   const [ticker, setTicker] = useState("");
-  const [years, setYears] = useState(10);
+  const [years, setYears] = useState(1);
 
   const tickersQuery = useHourlyTickerOptions();
   const tickerOptions = tickersQuery.data ?? [];

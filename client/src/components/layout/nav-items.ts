@@ -57,7 +57,6 @@ export const NAV: NavSection[] = [
     title: "Terminal",
     children: [
       [
-        { label: "Advanced Chart", href: "/chart", sublabel: "OHLC + indicators" },
         { label: "Option Chain", href: "/options", sublabel: "Live NSE options" },
         { label: "Options Visualizer", href: "/options-visualizer", sublabel: "GEX + IV surface" },
         { label: "Black-Scholes", href: "/black-scholes", sublabel: "Options pricing" },

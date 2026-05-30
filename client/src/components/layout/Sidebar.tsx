@@ -9,7 +9,6 @@ import {
   Globe,
   Zap,
   Calendar,
-  LineChart,
   Newspaper,
   Link2,
   BookOpen,
@@ -59,7 +58,6 @@ const navSections: NavSection[] = [
   {
     title: "CHARTS & DATA",
     items: [
-      { label: "Advanced Chart", href: "/chart", icon: LineChart },
       { label: "Pair Trading", href: "/pair-trading", icon: Activity },
       { label: "News", href: "/news", icon: Newspaper },
     ],

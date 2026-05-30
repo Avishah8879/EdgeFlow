@@ -14,7 +14,7 @@ Key functions:
 import json
 import logging
 import math
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import Any, Dict, List, Optional
 from zoneinfo import ZoneInfo
 
@@ -43,6 +43,9 @@ logger = logging.getLogger(__name__)
 
 IST = ZoneInfo("Asia/Kolkata")
 RISK_FREE_RATE = 0.065  # India risk-free rate (~6.5%)
+VALID_MINUTE_BAR_THRESHOLD = 10
+SESSION_BAR_TTL_SECONDS = 7 * 24 * 60 * 60
+MAX_FALLBACK_TRADING_DAYS = 20
 
 # =============================================================================
 # Market Hours & Trading Day Utilities
@@ -66,6 +69,11 @@ def get_ttl_until_next_market_open() -> int:
     now = datetime.now(IST)
     next_open = _canonical_next_market_open(now)
     return int((next_open - now).total_seconds())
+
+
+def get_session_bar_ttl() -> int:
+    """Keep recent sessions available long enough for market-closed fallback."""
+    return max(get_ttl_until_next_market_open(), SESSION_BAR_TTL_SECONDS)
 
 
 def get_visualization_ttl() -> int:
@@ -425,6 +433,63 @@ def _empty_surface_response(spot: float, expiry: Optional[str]) -> Dict[str, Any
 # Redis Time Series Storage
 # =============================================================================
 
+def _minute_bar_key(symbol: str, date_str: str) -> str:
+    return f"options_viz:minute_bar:{symbol.upper()}:{date_str}"
+
+
+def _last_session_key(symbol: str) -> str:
+    return f"options_viz:last_session:{symbol.upper()}"
+
+
+def _is_non_zero_number(value: Any) -> bool:
+    try:
+        return float(value) != 0
+    except (TypeError, ValueError):
+        return False
+
+
+def is_valid_minute_bar(bar: Dict[str, Any]) -> bool:
+    """A valid plotted bar needs all live market inputs and computed outputs."""
+    return (
+        bool(bar.get("ts"))
+        and _is_non_zero_number(bar.get("spot"))
+        and _is_non_zero_number(bar.get("ce_ltp"))
+        and _is_non_zero_number(bar.get("pe_ltp"))
+        and _is_non_zero_number(bar.get("atm_straddle"))
+        and _is_non_zero_number(bar.get("atm_gxoi"))
+    )
+
+
+def count_valid_minute_bars(bars: List[Dict[str, Any]]) -> int:
+    return sum(1 for bar in bars if is_valid_minute_bar(bar))
+
+
+def _format_session_date(date_str: str) -> str:
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d").strftime("%d %b %Y")
+    except ValueError:
+        return date_str
+
+
+async def _set_last_session_pointer(
+    redis,
+    symbol: str,
+    date_str: str,
+    bar_key: Optional[str] = None,
+) -> None:
+    ttl = get_session_bar_ttl()
+    if bar_key:
+        existing_ttl = await redis.ttl(bar_key)
+        if existing_ttl and existing_ttl > 0:
+            ttl = existing_ttl
+        else:
+            await redis.expire(bar_key, ttl)
+
+    pointer_key = _last_session_key(symbol)
+    await redis.set(pointer_key, date_str)
+    await redis.expire(pointer_key, ttl)
+
+
 async def append_minute_bar(
     symbol: str,
     timestamp: datetime,
@@ -445,14 +510,16 @@ async def append_minute_bar(
         ist_ts = timestamp.astimezone(IST) if timestamp.tzinfo else timestamp.replace(tzinfo=IST)
         date_key = ist_ts.strftime("%Y-%m-%d")
         minute_field = ist_ts.strftime("%H:%M")
-        redis_key = f"options_viz:minute_bar:{symbol.upper()}:{date_key}"
+        redis_key = _minute_bar_key(symbol, date_key)
 
         record = dict(payload)
         record["ts"] = ist_ts.replace(second=0, microsecond=0).isoformat()
 
         redis = await get_redis()
         await redis.hset(redis_key, minute_field, json.dumps(record))
-        await redis.expire(redis_key, get_ttl_until_next_market_open())
+        ttl = get_session_bar_ttl()
+        await redis.expire(redis_key, ttl)
+        await _set_last_session_pointer(redis, symbol, date_key, redis_key)
         return True
     except Exception as e:
         logger.warning(f"Failed to append minute bar for {symbol}: {e}")
@@ -473,7 +540,7 @@ async def get_minute_bars(
         if date_str is None:
             date_str = datetime.now(IST).strftime("%Y-%m-%d")
 
-        redis_key = f"options_viz:minute_bar:{symbol.upper()}:{date_str}"
+        redis_key = _minute_bar_key(symbol, date_str)
         redis = await get_redis()
         raw = await redis.hgetall(redis_key)
         if not raw:
@@ -490,6 +557,110 @@ async def get_minute_bars(
     except Exception as e:
         logger.warning(f"Failed to get minute bars for {symbol}: {e}")
         return []
+
+
+async def resolve_minute_bars_session(
+    symbol: str,
+    date_str: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Resolve which session the default chart should display.
+
+    The default view uses today's IST session only after it has enough valid
+    bars. Otherwise, it falls back to the most recent valid trading session.
+    Explicit date requests never fallback.
+    """
+    normalized = symbol.upper()
+    today = datetime.now(IST).date()
+    today_str = today.isoformat()
+    market_open = is_market_hours()
+
+    if date_str:
+        bars = await get_minute_bars(normalized, date_str)
+        return {
+            "bars": bars,
+            "date": date_str,
+            "requested_date": date_str,
+            "display_date": date_str,
+            "is_fallback_session": False,
+            "fallback_reason": None,
+            "valid_bar_count": count_valid_minute_bars(bars),
+            "message": None,
+        }
+
+    redis = await get_redis()
+    today_bars = await get_minute_bars(normalized, today_str)
+    today_valid_count = count_valid_minute_bars(today_bars)
+
+    if is_trading_day(today) and today_valid_count >= VALID_MINUTE_BAR_THRESHOLD:
+        fallback_reason = "market_closed" if not market_open else None
+        message = (
+            f"Market Closed · Showing last session: {_format_session_date(today_str)}"
+            if fallback_reason
+            else None
+        )
+        return {
+            "bars": today_bars,
+            "date": today_str,
+            "requested_date": None,
+            "display_date": today_str,
+            "is_fallback_session": bool(fallback_reason),
+            "fallback_reason": fallback_reason,
+            "valid_bar_count": today_valid_count,
+            "message": message,
+        }
+
+    pointer_date = await redis.get(_last_session_key(normalized))
+    pointer_date = pointer_date.decode("utf-8") if isinstance(pointer_date, bytes) else pointer_date
+    fallback_reason = "insufficient_today_bars" if market_open else "market_closed"
+
+    async def get_valid_session(candidate: str) -> Optional[Dict[str, Any]]:
+        if candidate == today_str and not is_trading_day(today):
+            return None
+        bars = await get_minute_bars(normalized, candidate)
+        valid_count = count_valid_minute_bars(bars)
+        if valid_count < VALID_MINUTE_BAR_THRESHOLD:
+            return None
+        bar_key = _minute_bar_key(normalized, candidate)
+        await _set_last_session_pointer(redis, normalized, candidate, bar_key)
+        return {
+            "bars": bars,
+            "date": candidate,
+            "requested_date": None,
+            "display_date": candidate,
+            "is_fallback_session": True,
+            "fallback_reason": fallback_reason,
+            "valid_bar_count": valid_count,
+            "message": f"Market Closed · Showing last session: {_format_session_date(candidate)}",
+        }
+
+    if pointer_date:
+        pointed = await get_valid_session(pointer_date)
+        if pointed:
+            return pointed
+
+    cursor = today
+    checked = 0
+    while checked < MAX_FALLBACK_TRADING_DAYS:
+        cursor = cursor - timedelta(days=1)
+        if not is_trading_day(cursor):
+            continue
+        checked += 1
+        candidate = cursor.isoformat()
+        found = await get_valid_session(candidate)
+        if found:
+            return found
+
+    return {
+        "bars": [],
+        "date": today_str,
+        "requested_date": None,
+        "display_date": None,
+        "is_fallback_session": True,
+        "fallback_reason": "no_recent_session",
+        "valid_bar_count": 0,
+        "message": "No recent options visualizer session found",
+    }
 
 
 async def append_atm_gxoi(symbol: str, timestamp: datetime, atm_gxoi: float) -> bool:

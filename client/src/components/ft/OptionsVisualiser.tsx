@@ -11,6 +11,17 @@ interface OptionsVisualiserProps {
   defaultSymbol?: SupportedSymbol;
 }
 
+function formatSessionDate(date?: string | null): string {
+  if (!date) return '';
+
+  return new Date(`${date}T00:00:00+05:30`).toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Asia/Kolkata',
+  });
+}
+
 export function OptionsVisualiser({ defaultSymbol = 'NIFTY' }: OptionsVisualiserProps) {
   const [symbol, setSymbol] = useState<SupportedSymbol>(defaultSymbol);
   const [activeTab, setActiveTab] = useState<'2d' | '3d'>('2d');
@@ -46,6 +57,15 @@ export function OptionsVisualiser({ defaultSymbol = 'NIFTY' }: OptionsVisualiser
   const toggleAutoRefresh = useCallback(() => {
     setAutoRefresh((prev) => !prev);
   }, []);
+
+  const fallbackSessionDate = timeSeries?.display_date;
+  const showFallbackBanner =
+    !!timeSeries &&
+    !timeSeries.is_market_open &&
+    (!!timeSeries.is_fallback_session || !!timeSeries.message);
+  const fallbackBannerText = fallbackSessionDate
+    ? `Market Closed · Showing last session: ${formatSessionDate(fallbackSessionDate)}`
+    : timeSeries?.message || 'No recent options visualizer session found';
 
   return (
     <div className="flex flex-col bg-background overflow-auto" style={{ height: 'calc(100vh - 6rem)' }}>
@@ -152,6 +172,12 @@ export function OptionsVisualiser({ defaultSymbol = 'NIFTY' }: OptionsVisualiser
           {' '}| STRIKES: <span className="text-white font-bold">{exposure?.by_strike?.length || 0}</span>
         </span>
       </div>
+
+      {showFallbackBanner && (
+        <div className="px-3 py-2 border-b border-amber-500/30 bg-amber-500/10 text-[10px] font-mono font-semibold text-amber-300">
+          {fallbackBannerText}
+        </div>
+      )}
 
       {/* Tab Content */}
       <Tabs
