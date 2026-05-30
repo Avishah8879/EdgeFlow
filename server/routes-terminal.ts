@@ -11,6 +11,7 @@ import { insertWatchlistItemSchema, insertWindowLayoutSchema } from "@shared/sch
 import { proxyToPython, type ProxyRequestOptions } from "./lib/pythonProxy";
 import { sendDataUnavailable, sendSuccess, sendError } from "./lib/apiResponse";
 import { storage } from "./storage-ft";
+import { getFiiDiiRows } from "./fii-dii-upstox";
 
 const PYTHON_API_URL = process.env.PYTHON_API_URL || "http://localhost:8100";
 
@@ -596,37 +597,16 @@ export function registerTerminalRoutes(app: Express): void {
   app.get("/api/company-logo/:symbol", unavailable('Company logo unavailable - API integration pending'));
   app.get("/api/market-cap", unavailable('Market cap data unavailable - API integration pending'));
   app.get("/api/fii-dii", async (_req, res) => {
-    // Generate realistic FII/DII data for last 30 trading days
-    const data = [];
-    const now = new Date();
-    let day = 0;
-    const seeds = [
-      [2340, 1890], [-1250, 980], [3400, 2100], [-890, 1540], [1200, -320],
-      [-2100, 1670], [4500, 3200], [-3200, 2450], [1800, -890], [2600, 1340],
-      [-1500, 2100], [3800, 1650], [-2900, 1890], [1400, 980], [-670, 2340],
-      [5100, 3600], [-3800, 2700], [2200, 1450], [-1100, 1780], [3300, 2890],
-      [-2400, 1230], [1700, -450], [4200, 3100], [-1900, 2560], [890, 1340],
-      [-3100, 2890], [2700, 1670], [1500, -780], [3600, 2340], [-2200, 1890],
-    ];
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      if (d.getDay() === 0 || d.getDay() === 6) continue;
-      const [fiiNet, diiNet] = seeds[day % seeds.length];
-      const fiiGross = Math.abs(fiiNet) + Math.random() * 3000 + 5000;
-      const diiGross = Math.abs(diiNet) + Math.random() * 2000 + 4000;
-      data.push({
-        date: d.toISOString().split('T')[0],
-        fiiNetBuySell: parseFloat(fiiNet.toFixed(2)),
-        diiNetBuySell: parseFloat(diiNet.toFixed(2)),
-        fiiGrossBuy: parseFloat((fiiGross + Math.max(0, fiiNet)).toFixed(2)),
-        fiiGrossSell: parseFloat((fiiGross - Math.max(0, fiiNet)).toFixed(2)),
-        diiGrossBuy: parseFloat((diiGross + Math.max(0, diiNet)).toFixed(2)),
-        diiGrossSell: parseFloat((diiGross - Math.max(0, diiNet)).toFixed(2)),
+    try {
+      const data = await getFiiDiiRows();
+      return res.json(data);
+    } catch (error: any) {
+      console.error(`[FII_DII] Upstox data unavailable: ${error.message}`);
+      return res.status(503).json({
+        error: 'FII_DII_UPSTOX_UNAVAILABLE',
+        message: 'Unable to load FII/DII data from Upstox right now.',
       });
-      day++;
     }
-    return res.json(data);
   });
   app.get("/api/corporate-actions/:symbol", unavailable('Corporate actions unavailable - API integration pending'));
   app.get("/api/corporate-info/:symbol", unavailable('Corporate info unavailable - API integration pending'));

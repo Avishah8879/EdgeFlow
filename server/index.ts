@@ -151,6 +151,7 @@ app.use((req, res, next) => {
   const { testAuthDbConnection } = await import('./db/auth-connection.js');
   const { initSubscriptionCronJobs, stopSubscriptionCronJobs } = await import('./cron/subscription-tasks.js');
   const { initUsageFlushCron, stopUsageFlushCron } = await import('./cron/api-usage-flush.js');
+  const { initFiiDiiRefreshCron, stopFiiDiiRefreshCron } = await import('./cron/fii-dii-refresh.js');
 
   // Initialize Passport for OAuth
   app.use(passport.initialize());
@@ -248,6 +249,8 @@ app.use((req, res, next) => {
   // order, so the gate fires first; on success it forwards to Python via
   // pythonCatchAllProxy, bypassing the terminal-route handlers (which are
   // also just thin proxies — no business logic that we'd lose).
+  initFiiDiiRefreshCron();
+
   const { coinGate } = await import('./middleware/coin-gate.js');
   const { pythonCatchAllProxy } = await import('./routes.js');
   const { requireAuth: requireAuthMW } = await import('./middleware/auth.js');
@@ -351,6 +354,7 @@ app.use((req, res, next) => {
       // Stop cron jobs first
       stopSubscriptionCronJobs();
       stopUsageFlushCron();
+      stopFiiDiiRefreshCron();
 
       // Stop accepting new connections
       await new Promise<void>((resolve, reject) => {
@@ -374,6 +378,9 @@ app.use((req, res, next) => {
       // Close Redis connection
       const { closeRedis } = await import('./lib/redis.js');
       await closeRedis();
+
+      const { closeFiiDiiPool } = await import('./fii-dii-upstox.js');
+      await closeFiiDiiPool();
 
       // Auth DB pool has its own SIGINT handler, give it time to close
       // (logs: "[AUTH_DB] SIGINT received, closing pool...")

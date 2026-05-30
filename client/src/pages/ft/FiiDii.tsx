@@ -81,6 +81,8 @@ export default function FiiDii() {
     queryKey: ["/api/fii-dii"],
     staleTime: 3600000,
   });
+  const rows = useMemo(() => (Array.isArray(data) ? data : []), [data]);
+  const hasInvalidPayload = !!data && !Array.isArray(data);
 
   // Theme-aware chart chrome — recomputes on theme switch
   const chartColors = useMemo(
@@ -100,11 +102,11 @@ export default function FiiDii() {
 
   // ── Summary KPIs derived from the 30-session window ─────────────────
   const summary = useMemo(() => {
-    if (!data || data.length === 0) return null;
-    const today = data[data.length - 1];
+    if (rows.length === 0) return null;
+    const today = rows[rows.length - 1];
     const monthStart = new Date(today.date);
     monthStart.setDate(1);
-    const mtd = data.filter((r) => new Date(r.date) >= monthStart);
+    const mtd = rows.filter((r) => new Date(r.date) >= monthStart);
     const fiiMtd = mtd.reduce((s, r) => s + r.fiiNetBuySell, 0);
     const diiMtd = mtd.reduce((s, r) => s + r.diiNetBuySell, 0);
     const fiiPosSessions = mtd.filter((r) => r.fiiNetBuySell > 0).length;
@@ -117,24 +119,23 @@ export default function FiiDii() {
       fiiPosSessions,
       diiPosSessions,
     };
-  }, [data]);
+  }, [rows]);
 
   // ── Charts: paired-bar + cumulative ─────────────────────────────────
   const flowsChartData = useMemo(
     () =>
-      (data ?? []).slice(-30).map((r) => ({
+      rows.slice(-30).map((r) => ({
         date: formatDateShort(r.date),
         FII: Math.round(r.fiiNetBuySell),
         DII: Math.round(r.diiNetBuySell),
       })),
-    [data],
+    [rows],
   );
 
   const cumulativeChartData = useMemo(() => {
-    if (!data) return [];
     let fiiCum = 0;
     let diiCum = 0;
-    return data.map((r) => {
+    return rows.map((r) => {
       fiiCum += r.fiiNetBuySell;
       diiCum += r.diiNetBuySell;
       return {
@@ -143,7 +144,7 @@ export default function FiiDii() {
         DII: Math.round(diiCum),
       };
     });
-  }, [data]);
+  }, [rows]);
 
   // ── States ──────────────────────────────────────────────────────────
   if (isLoading) {
@@ -157,7 +158,7 @@ export default function FiiDii() {
     );
   }
 
-  if (isError || !data || !summary) {
+  if (isError || hasInvalidPayload || !summary) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <AlertCircle className="h-8 w-8 text-destructive" data-testid="error-icon-fii-dii" />
@@ -182,8 +183,8 @@ export default function FiiDii() {
           FII &amp; DII activity
         </h1>
         <p className="text-sm text-muted-foreground max-w-3xl">
-          Cash market net flows by FIIs/FPIs and DIIs from NSE/BSE provisional data.
-          Updated post 06:00 PM IST daily.
+          Cash market net flows by FIIs/FPIs and DIIs · NSE cash segment · Source: Upstox.
+          Updated post 07:00 PM IST daily.
         </p>
       </div>
 
@@ -340,10 +341,10 @@ export default function FiiDii() {
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
             <h3 className="font-display text-base font-bold text-[hsl(var(--brand-navy))] dark:text-foreground">
-              Session-by-session · last {Math.min(data.length, 14)} days
+              Session-by-session · last {Math.min(rows.length, 14)} days
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Source: NSE/BSE provisional · ₹ crore
+              Source: Upstox · NSE cash segment · ₹ crore
             </p>
           </div>
           <Button
@@ -370,7 +371,7 @@ export default function FiiDii() {
               </tr>
             </thead>
             <tbody>
-              {data
+              {rows
                 .slice()
                 .reverse()
                 .slice(0, 14)

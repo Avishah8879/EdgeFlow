@@ -22,6 +22,8 @@ export function FIIDIIPanel() {
     queryKey: ['/api/fii-dii'],
     staleTime: 3600000, // 1 hour
   });
+  const rows = useMemo(() => (Array.isArray(data) ? data : []), [data]);
+  const hasInvalidPayload = !!data && !Array.isArray(data);
 
   // Theme-aware chart chrome — re-resolves on light/dark switch
   const { resolvedTheme } = useTheme();
@@ -54,8 +56,8 @@ export function FIIDIIPanel() {
     }
   };
 
-  const latestData = data && data.length > 0 ? data[data.length - 1] : null;
-  const chartData = data?.slice(-30).map(d => ({
+  const latestData = rows.length > 0 ? rows[rows.length - 1] : null;
+  const chartData = rows.slice(-30).map(d => ({
     date: formatDate(d.date),
     FII: d.fiiNetBuySell,
     DII: d.diiNetBuySell,
@@ -69,7 +71,7 @@ export function FIIDIIPanel() {
     );
   }
 
-  if (isError) {
+  if (isError || hasInvalidPayload) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 bg-background">
         <AlertCircle className="w-8 h-8 text-destructive" data-testid="error-icon-fii-dii" />
@@ -201,7 +203,7 @@ export function FIIDIIPanel() {
             <div className="text-right">FII Net</div>
             <div className="text-right">DII Net</div>
           </div>
-          {data?.slice().reverse().map((item, index) => (
+          {rows.slice().reverse().map((item, index) => (
             <div
               key={item.date}
               className="grid grid-cols-3 gap-1 py-2 border-b border-border hover:bg-accent transition-colors"

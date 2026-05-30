@@ -11339,19 +11339,50 @@ _WORLD_INDICES_CONFIG = {
 # Approximate market session windows (IST, weekdays only). Used for the
 # session badge — open / pre-market / closed.
 _SESSION_HOURS_IST = {
-    "India":            (datetime.strptime("09:15", "%H:%M").time(), datetime.strptime("15:30", "%H:%M").time()),
-    "Asia-Pacific":     (datetime.strptime("06:00", "%H:%M").time(), datetime.strptime("13:00", "%H:%M").time()),  # rough
-    "Europe":           (datetime.strptime("13:00", "%H:%M").time(), datetime.strptime("21:30", "%H:%M").time()),  # rough
-    "Americas":         (datetime.strptime("19:00", "%H:%M").time(), datetime.strptime("23:59", "%H:%M").time()),  # 9:30am ET → ~19:00 IST
-    "Commodities & FX": None,  # 24h
+    "India":        (datetime.strptime("09:15", "%H:%M").time(), datetime.strptime("15:30", "%H:%M").time()),
+    "Asia-Pacific": (datetime.strptime("06:00", "%H:%M").time(), datetime.strptime("13:00", "%H:%M").time()),  # rough
+    "Europe":       (datetime.strptime("13:00", "%H:%M").time(), datetime.strptime("21:30", "%H:%M").time()),  # rough
+    "Americas":     (datetime.strptime("19:00", "%H:%M").time(), datetime.strptime("23:59", "%H:%M").time()),  # 9:30am ET → ~19:00 IST
+    # Commodities & FX handled per-instrument in _world_session_status
 }
 
+# US Eastern tz for futures/FX weekend-gap check (handles EDT/EST automatically).
+_ET_TZ = pytz.timezone("US/Eastern")
 
-def _world_session_status(region: str) -> str:
-    """Return 'open' | 'closed' | 'pre-market' for the region (rough IST mapping)."""
-    if region == "Commodities & FX":
-        return "open"  # 24h
+
+def _world_session_status(region: str, yf_ticker=None) -> str:
+    """Return 'open' | 'closed' | 'pre-market' for the region (rough IST mapping).
+
+    For Commodities & FX, yf_ticker distinguishes BTC-USD (crypto, 24/7) from
+    futures (BZ=F, GC=F) and FX (USDINR=X), which are closed Fri 17:00 ET through
+    Sun 17:00 ET. The ET window is computed via pytz US/Eastern so EDT/EST DST
+    transitions are handled automatically.
+
+    Known limitations (by design, consistent with existing behaviour):
+    - Futures daily CME/COMEX maintenance break (~17:00–18:00 ET weekdays) is NOT
+      modelled; the badge may show 'open' during that ~1 h halt.
+    - Market holidays are not modelled for any region; a holiday will still show
+      'open'. Consistent with existing equity-region behaviour.
+    """
     now_ist = get_current_ist_time()
+
+    if region == "Commodities & FX":
+        # Crypto trades 24/7.
+        if yf_ticker == "BTC-USD":
+            return "open"
+        # Futures (BZ=F, GC=F) and FX (USDINR=X): closed Fri 17:00 ET → Sun 17:00 ET.
+        now_et  = now_ist.astimezone(_ET_TZ)
+        et_wd   = now_et.weekday()          # 0=Mon … 6=Sun
+        et_hmin = now_et.hour * 60 + now_et.minute
+        _CLOSE  = 17 * 60                   # 17:00 ET
+        in_gap  = (
+            (et_wd == 4 and et_hmin >= _CLOSE)   # Friday on/after 17:00 ET
+            or et_wd == 5                         # all Saturday ET
+            or (et_wd == 6 and et_hmin < _CLOSE) # Sunday before 17:00 ET
+        )
+        return "closed" if in_gap else "open"
+
+    # ── Equity regions (unchanged) ──────────────────────────────────────────
     weekday = now_ist.weekday()  # 0=Mon, 6=Sun
     if weekday >= 5:
         return "closed"
@@ -11577,7 +11608,7 @@ async def ft_world_indices():
     semaphore = asyncio.Semaphore(5)  # cap concurrent yfinance calls
 
     async def _fetch_one(region: str, symbol: str, name: str, yf_ticker):
-        session = _world_session_status(region)
+        session = _world_session_status(region, yf_ticker)
         quote: dict = {}
         series: list = []
         try:

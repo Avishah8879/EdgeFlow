@@ -380,13 +380,14 @@ function FiiDiiCell() {
     queryKey: ['/api/fii-dii'],
     staleTime: 60 * 60 * 1000,
   });
+  const rows = useMemo(() => (Array.isArray(data) ? data : []), [data]);
 
   const summary = useMemo(() => {
-    if (!data || data.length === 0) return null;
-    const today = data[data.length - 1];
+    if (rows.length === 0) return null;
+    const today = rows[rows.length - 1];
     const monthStart = new Date(today.date);
     monthStart.setDate(1);
-    const mtd = data.filter((r) => new Date(r.date) >= monthStart);
+    const mtd = rows.filter((r) => new Date(r.date) >= monthStart);
     const fiiMtd = mtd.reduce((s, r) => s + r.fiiNetBuySell, 0);
     const diiMtd = mtd.reduce((s, r) => s + r.diiNetBuySell, 0);
     return {
@@ -396,7 +397,7 @@ function FiiDiiCell() {
       diiMtd,
       mtdSessions: mtd.length,
     };
-  }, [data]);
+  }, [rows]);
 
   return (
     <Cell title="FII / DII flows">
