@@ -1,6 +1,6 @@
 # EdgeFlow Production Environment
 
-Last discovered: 2026-05-28 IST
+Last discovered: 2026-05-31 IST
 
 Host: `164.52.192.245`
 
@@ -30,7 +30,7 @@ sync-equitypro-to-auth
 Current HEAD:
 
 ```text
-74881f8 fix(celery): remove remaining dead beat tasks
+fd74aa6 feat(fii-dii): refresh NSE provisional flows
 ```
 
 Pull latest code that matches the local development repository:
