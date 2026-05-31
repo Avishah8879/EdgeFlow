@@ -11,7 +11,7 @@ import { insertWatchlistItemSchema, insertWindowLayoutSchema } from "@shared/sch
 import { proxyToPython, type ProxyRequestOptions } from "./lib/pythonProxy";
 import { sendDataUnavailable, sendSuccess, sendError } from "./lib/apiResponse";
 import { storage } from "./storage-ft";
-import { getFiiDiiRows } from "./fii-dii-upstox";
+import { getFiiDiiRows } from "./fii-dii-nse";
 
 const PYTHON_API_URL = process.env.PYTHON_API_URL || "http://localhost:8100";
 
@@ -601,10 +601,10 @@ export function registerTerminalRoutes(app: Express): void {
       const data = await getFiiDiiRows();
       return res.json(data);
     } catch (error: any) {
-      console.error(`[FII_DII] Upstox data unavailable: ${error.message}`);
+      console.error(`[FII_DII] NSE data unavailable: ${error.message}`);
       return res.status(503).json({
-        error: 'FII_DII_UPSTOX_UNAVAILABLE',
-        message: 'Unable to load FII/DII data from Upstox right now.',
+        error: 'FII_DII_NSE_UNAVAILABLE',
+        message: 'Unable to load FII/DII data from NSE right now.',
       });
     }
   });

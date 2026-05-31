@@ -379,7 +379,7 @@ app.use((req, res, next) => {
       const { closeRedis } = await import('./lib/redis.js');
       await closeRedis();
 
-      const { closeFiiDiiPool } = await import('./fii-dii-upstox.js');
+      const { closeFiiDiiPool } = await import('./fii-dii-nse.js');
       await closeFiiDiiPool();
 
       // Auth DB pool has its own SIGINT handler, give it time to close

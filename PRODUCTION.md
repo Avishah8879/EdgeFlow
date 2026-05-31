@@ -67,6 +67,9 @@ nssm status edgeflow-celery
 nssm status edgeflow-celery-beat
 ```
 
+FII/DII refresh is not a separate Windows service. It is an in-process `node-cron`
+job initialized by `edgeflow-node` from `server/cron/fii-dii-refresh.ts`.
+
 ## Ports
 
 Relevant listening ports observed with `netstat -ano | findstr LISTENING` and process command-line checks:
@@ -209,7 +212,8 @@ Restart only the services affected by the change:
 nssm restart edgeflow-node
 ```
 
-Use for Node, Express, frontend bundle, or `dist\index.js` changes.
+Use for Node, Express, frontend bundle, `dist\index.js` changes, and in-process
+Node cron jobs such as the FII/DII refresh.
 
 ```powershell
 nssm restart edgeflow-python
@@ -238,6 +242,37 @@ Recommended order for a full deploy:
 4. Restart `edgeflow-python` for Python API changes.
 5. Restart `edgeflow-celery-beat`, then `edgeflow-celery`, for Celery changes.
 6. Check `E:\sites\edgeflow\logs\*-err.log` and service status.
+
+## Node Cron Jobs
+
+These cron jobs run inside the `edgeflow-node` NSSM service. Restart
+`edgeflow-node` after changing any of these files or their dependent service
+code.
+
+| Job | Source file | Schedule | Time zone | Purpose | Cache/storage |
+| --- | --- | --- | --- | --- | --- |
+| Subscription expiration checks | `server/cron/subscription-tasks.ts` | Hourly at `:00` | Server local | Expire ended trials/subscriptions | Auth DB |
+| API usage flush | `server/cron/api-usage-flush.ts` | Every 60 seconds | Server local | Flush API usage events from Redis to PostgreSQL | Redis + PostgreSQL |
+| FII/DII NSE provisional refresh | `server/cron/fii-dii-refresh.ts` | `0 19 * * 1-5` | `Asia/Kolkata` | Fetch NSE provisional FII/DII cash-market data and persist it | Redis key `fii_dii:nse_cash:1D`, table `fii_dii_flows` |
+
+FII/DII data source and behavior:
+
+```text
+NSE session page: https://www.nseindia.com
+NSE JSON endpoint: https://www.nseindia.com/api/fiidiiTradeReact
+Source label: NSE_PROVISIONAL
+Redis cache TTL: 1 hour
+DB table: fii_dii_flows
+Participant rows: FII and DII
+Segment: CASH
+```
+
+The FII/DII cron also runs a startup backfill check. If fewer than 30 cash-market
+sessions exist in `fii_dii_flows`, it tries to fetch the NSE historical range
+using the same cookie/session flow. At discovery time the public NSE endpoint was
+observed to return only the latest session even when date parameters are
+provided, so history will primarily accumulate through the weekday 19:00 IST
+refresh.
 
 ## Redis / Memurai
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
 import {
@@ -16,7 +16,6 @@ import {
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
-import { TabBar, type TabBarItem } from "@/components/ui/tab-bar";
 import { getCSSColor } from "@/lib/theme-utils";
 import { cn } from "@/lib/utils";
 
@@ -29,18 +28,6 @@ interface FIIDIIRow {
   diiGrossBuy: number;
   diiGrossSell: number;
 }
-
-const flowTabs: TabBarItem<"cash" | "fno" | "sectoral">[] = [
-  { id: "cash", label: "Cash" },
-  { id: "fno", label: "F&O" },
-  { id: "sectoral", label: "Sectoral" },
-];
-
-const cumTabs: TabBarItem<"3m" | "ytd" | "1y">[] = [
-  { id: "3m", label: "3M" },
-  { id: "ytd", label: "YTD" },
-  { id: "1y", label: "1Y" },
-];
 
 function formatCr(value: number, signed = true): string {
   const abs = Math.abs(value);
@@ -74,8 +61,6 @@ function formatDateRow(d: string): { day: string; weekday: string } {
 
 export default function FiiDii() {
   const { resolvedTheme } = useTheme();
-  const [flowMode, setFlowMode] = useState<"cash" | "fno" | "sectoral">("cash");
-  const [cumMode, setCumMode] = useState<"3m" | "ytd" | "1y">("ytd");
 
   const { data, isLoading, isError, refetch } = useQuery<FIIDIIRow[]>({
     queryKey: ["/api/fii-dii"],
@@ -183,8 +168,7 @@ export default function FiiDii() {
           FII &amp; DII activity
         </h1>
         <p className="text-sm text-muted-foreground max-w-3xl">
-          Cash market net flows by FIIs/FPIs and DIIs · NSE cash segment · Source: Upstox.
-          Updated post 07:00 PM IST daily.
+          Cash market net flows by FIIs/FPIs and DIIs from NSE/BSE provisional data · Updated post 06:30 PM IST daily.
         </p>
       </div>
 
@@ -229,7 +213,6 @@ export default function FiiDii() {
                 Paired bars (gold = FII · sky = DII) · ₹ crore
               </p>
             </div>
-            <TabBar tabs={flowTabs} value={flowMode} onChange={setFlowMode} variant="segmented" />
           </div>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -280,7 +263,6 @@ export default function FiiDii() {
                 Running total from window start · ₹ crore
               </p>
             </div>
-            <TabBar tabs={cumTabs} value={cumMode} onChange={setCumMode} variant="segmented" />
           </div>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -341,10 +323,10 @@ export default function FiiDii() {
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
             <h3 className="font-display text-base font-bold text-[hsl(var(--brand-navy))] dark:text-foreground">
-              Session-by-session · last {Math.min(rows.length, 14)} days
+              Session-by-session · last 30 sessions
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Source: Upstox · NSE cash segment · ₹ crore
+              Source: NSE/BSE provisional · ₹ crore
             </p>
           </div>
           <Button
