@@ -27,7 +27,7 @@ export default function PlatformEmbed() {
   const { token, refreshToken } = useAuth();
 
   useEffect(() => {
-    if (!iframeLoaded || !platform || !session.data || !iframeRef.current?.contentWindow) {
+    if (!iframeLoaded || !platform || !session.data || !token || !iframeRef.current?.contentWindow) {
       return;
     }
 
